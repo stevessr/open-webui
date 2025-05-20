@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  build:
-    name: 'Format & Build Frontend'
+  quality-checks:
+    name: 'Format & i18n Checks'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -18,15 +18,27 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install Dependencies
-        run: npm i -g pnpm && pnpm update && pnpm install
+      # Use pnpm/action-setup to install pnpm and set up caching
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: latest # Or specify your pnpm version
 
-      - name: fix missing Dependencies
+      - name: Install Dependencies
+        run: pnpm install
+        # The 'pnpm update' command is usually for updating your lockfile,
+        # typically done locally. 'pnpm install' is for CI.
+
+      - name: Fix missing Dependencies (IMPORTANT: Add these to your package.json)
+        # This step indicates your package.json is missing these explicit dependencies.
+        # You should run these commands locally and commit the updated package.json and pnpm-lock.yaml.
+        # Keeping it here for now to match original behavior, but it's not ideal.
         run: |
-          pnpm add @codemirror/view @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets 
-          pnpm add onnxruntime-web 
+          pnpm add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
+          pnpm add onnxruntime-web
           pnpm add lowlight
           pnpm add @floating-ui/utils
+        # Consider if these need --save-dev or just --save depending on their usage
 
       - name: Format Frontend
         run: pnpm format
@@ -34,16 +46,68 @@ jobs:
       - name: Run i18next
         run: pnpm i18n:parse
 
+  build:
+    name: 'Build Frontend'
+    runs-on: ubuntu-latest
+    needs: quality-checks # Ensures quality checks pass before building
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: latest
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Fix missing Dependencies (IMPORTANT: Add these to your package.json)
+        # Duplicating this here. Again, best practice is to fix your package.json.
+        run: |
+          pnpm add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
+          pnpm add onnxruntime-web
+          pnpm add lowlight
+          pnpm add @floating-ui/utils
+
       - name: Build Frontend
         run: pnpm build
-        
-      - name: Deploy to blog-sakura repository
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: build/ # Path to the directory to upload
+
+  deploy:
+    name: 'Deploy Frontend to owu repository'
+    runs-on: ubuntu-latest
+    needs: build # Ensures build is successful before deploying
+    if: github.ref == 'refs/heads/main' # Only deploy on pushes to main
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: build # Download to a directory named 'build'
+
+      - name: Deploy to owu repository
+        env:
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          rm -rf .git
           cd build
           git init
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
           git add .
-          git commit -m "Deploy owu site"
-          git push --force --quiet "https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/stevessr/owu.git" master:owu
+          git commit -m "Deploy owu site (build ${{ github.sha }})"
+          git remote add origin "https://${{ env.PERSONAL_ACCESS_TOKEN }}@github.com/stevessr/owu.git"
+          git push --force --quiet origin HEAD:owu
+          # Using HEAD:owu pushes the current branch (master/main by default after init) to the remote 'owu' branch.
+          # If you explicitly want to push to a branch named 'master' on the remote, use master:owu.
+          # But since you init a new repo, HEAD is likely what you want for the current commit.
