@@ -1,4 +1,4 @@
-name: Build and Deploy Hexo
+name: Build and Deploy frontend
 
 on:
   push:
@@ -20,6 +20,13 @@ jobs:
 
       - name: Install Dependencies
         run: npm i -g pnpm && pnpm update && pnpm install
+
+      - name: fix missing Dependencies
+        run: |
+          pnpm add @codemirror/view @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets 
+          pnpm add onnxruntime-web 
+          pnpm add lowligh
+          pnpm add @floating-ui/utils
 
       - name: Format Frontend
         run: pnpm format
