@@ -25,7 +25,7 @@ jobs:
         run: |
           pnpm add @codemirror/view @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets 
           pnpm add onnxruntime-web 
-          pnpm add lowligh
+          pnpm add lowlight
           pnpm add @floating-ui/utils
 
       - name: Format Frontend
