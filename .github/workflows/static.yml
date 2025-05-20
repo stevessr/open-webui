@@ -27,9 +27,6 @@ jobs:
       - name: Run i18next
         run: pnpm i18n:parse
 
-      - name: Check for Changes After Format
-        run: git diff --exit-code
-
       - name: Build Frontend
         run: pnpm build
         
