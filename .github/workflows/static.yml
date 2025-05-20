@@ -1,0 +1,45 @@
+name: Build and Deploy Hexo
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: 'Format & Build Frontend'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Dependencies
+        run: npm i -g pnpm && pnpm update && pnpm install
+
+      - name: Format Frontend
+        run: pnpm format
+
+      - name: Run i18next
+        run: pnpm i18n:parse
+
+      - name: Check for Changes After Format
+        run: git diff --exit-code
+
+      - name: Build Frontend
+        run: pnpm build
+        
+      - name: Deploy to blog-sakura repository
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          rm -rf .git
+          cd public
+          git init
+          git add .
+          git commit -m "Deploy owu site"
+          git push --force --quiet "https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/stevessr/owu.git" master:owu
