@@ -165,7 +165,7 @@
 
 	const dragImage = new Image();
 	dragImage.src =
-		'/user.png';
+		'/user.gif';
 
 	let x;
 	let y;

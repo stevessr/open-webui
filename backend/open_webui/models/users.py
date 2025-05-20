@@ -107,7 +107,7 @@ class UsersTable:
         id: str,
         name: str,
         email: str,
-        profile_image_url: str = "/user.png",
+        profile_image_url: str = "/user.gif",
         role: str = "pending",
         oauth_sub: Optional[str] = None,
     ) -> Optional[UserModel]:
