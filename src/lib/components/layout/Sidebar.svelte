@@ -25,7 +25,35 @@
 	} from '$lib/stores';
 	import { onMount, getContext, tick, onDestroy } from 'svelte';
 
-	const i18n = getContext('i18n');
+	interface Chat {
+		id: string;
+		title: string;
+		time_range: string;
+		folder_id: string | null;
+		pinned: boolean;
+		[key: string]: any; // Allow other properties
+	}
+
+	interface Folder {
+		id: string;
+		name: string;
+		created_at: number; // Assuming timestamp
+		updated_at: number; // Assuming timestamp
+		parent_id: string | null;
+		childrenIds?: string[];
+		new?: boolean;
+		[key: string]: any; // Allow other properties
+	}
+
+	const i18n: { t: (key: string) => string } = getContext('i18n');
+
+	let customBaseUrl = ''; // Variable to hold the custom base URL input
+
+	// Function to save the custom base URL to localStorage
+	const saveCustomBaseUrl = () => {
+		localStorage.setItem('custom_webui_base_url', customBaseUrl);
+		toast.success(i18n.t('Custom WEBUI Base URL saved.'));
+	};
 
 	import {
 		deleteChatById,
@@ -63,10 +91,10 @@
 
 	const BREAKPOINT = 768;
 
-	let navElement;
+	let navElement: HTMLElement | undefined;
 	let shiftKey = false;
 
-	let selectedChatId = null;
+	let selectedChatId: string | null = null;
 	let showDropdown = false;
 	let showPinnedChat = true;
 
@@ -76,8 +104,8 @@
 	let chatListLoading = false;
 	let allChatsLoaded = false;
 
-	let folders = {};
-	let newFolderId = null;
+	let folders: { [id: string]: Folder } = {};
+	let newFolderId: string | null = null;
 
 	const initFolders = async () => {
 		const folderList = await getFolders(localStorage.token).catch((error) => {
@@ -90,7 +118,7 @@
 		// First pass: Initialize all folder entries
 		for (const folder of folderList) {
 			// Ensure folder is added to folders with its data
-			folders[folder.id] = { ...(folders[folder.id] || {}), ...folder };
+			folders[folder.id] = { ...(folders[folder.id] as Folder || {} as Folder), ...folder };
 
 			if (newFolderId && folder.id === newFolderId) {
 				folders[folder.id].new = true;
@@ -103,16 +131,19 @@
 			if (folder.parent_id) {
 				// Ensure the parent folder is initialized if it doesn't exist
 				if (!folders[folder.parent_id]) {
-					folders[folder.parent_id] = {}; // Create a placeholder if not already present
+					// Create a placeholder with required properties
+					folders[folder.parent_id] = { id: folder.parent_id, name: '', created_at: 0, updated_at: 0, parent_id: null, childrenIds: [] };
 				}
 
 				// Initialize childrenIds array if it doesn't exist and add the current folder id
-				folders[folder.parent_id].childrenIds = folders[folder.parent_id].childrenIds
-					? [...folders[folder.parent_id].childrenIds, folder.id]
-					: [folder.id];
+				if (!folders[folder.parent_id].childrenIds) {
+					folders[folder.parent_id].childrenIds = [];
+				}
+				folders[folder.parent_id].childrenIds!.push(folder.id);
+
 
 				// Sort the children by updated_at field
-				folders[folder.parent_id].childrenIds.sort((a, b) => {
+				folders[folder.parent_id].childrenIds!.sort((a: string, b: string) => {
 					return folders[b].updated_at - folders[a].updated_at;
 				});
 			}
@@ -121,7 +152,7 @@
 
 	const createFolder = async (name = 'Untitled') => {
 		if (name === '') {
-			toast.error($i18n.t('Folder name cannot be empty.'));
+			toast.error(i18n.t('Folder name cannot be empty.'));
 			return;
 		}
 
@@ -142,11 +173,12 @@
 		const tempId = uuidv4();
 		folders = {
 			...folders,
-			tempId: {
+			[tempId]: { // Use bracket notation for dynamic key
 				id: tempId,
 				name: name,
 				created_at: Date.now(),
-				updated_at: Date.now()
+				updated_at: Date.now(),
+				parent_id: null // Add parent_id
 			}
 		};
 
@@ -191,12 +223,12 @@
 
 		// once the bottom of the list has been reached (no results) there is no need to continue querying
 		allChatsLoaded = newChatList.length === 0;
-		await chats.set([...($chats ? $chats : []), ...newChatList]);
+		await chats.set([...($chats || []), ...newChatList] as Chat[] | null); // Add type assertion
 
 		chatListLoading = false;
 	};
 
-	const importChatHandler = async (items, pinned = false, folderId = null) => {
+	const importChatHandler = async (items: Array<{ chat?: any; meta?: any }>, pinned = false, folderId: string | null = null) => {
 		console.log('importChatHandler', items, pinned, folderId);
 		for (const item of items) {
 			console.log(item);
@@ -208,19 +240,22 @@
 		initChatList();
 	};
 
-	const inputFilesHandler = async (files) => {
+	const inputFilesHandler = async (files: File[]) => {
 		console.log(files);
 
 		for (const file of files) {
 			const reader = new FileReader();
-			reader.onload = async (e) => {
-				const content = e.target.result;
+			reader.onload = async (e: ProgressEvent<FileReader>) => {
+				const content = e.target?.result;
 
 				try {
+					if (typeof content !== 'string') {
+						throw new Error('File content is not a string');
+					}
 					const chatItems = JSON.parse(content);
 					importChatHandler(chatItems);
 				} catch {
-					toast.error($i18n.t(`Invalid file format.`));
+					toast.error(i18n.t(`Invalid file format.`));
 				}
 			};
 
@@ -228,7 +263,7 @@
 		}
 	};
 
-	const tagEventHandler = async (type, tagName, chatId) => {
+	const tagEventHandler = async (type: string, tagName: string, chatId: string) => {
 		console.log(type, tagName, chatId);
 		if (type === 'delete') {
 			initChatList();
@@ -239,7 +274,7 @@
 
 	let draggedOver = false;
 
-	const onDragOver = (e) => {
+	const onDragOver = (e: DragEvent) => {
 		e.preventDefault();
 
 		// Check if a file is being draggedOver.
@@ -254,7 +289,7 @@
 		draggedOver = false;
 	};
 
-	const onDrop = async (e) => {
+	const onDrop = async (e: DragEvent) => {
 		e.preventDefault();
 		console.log(e); // Log the drop event
 
@@ -271,53 +306,57 @@
 		draggedOver = false; // Reset draggedOver status after drop
 	};
 
-	let touchstart;
-	let touchend;
+	let touchstart: Touch | undefined;
+	let touchend: Touch | undefined;
 
 	function checkDirection() {
 		const screenWidth = window.innerWidth;
-		const swipeDistance = Math.abs(touchend.screenX - touchstart.screenX);
-		if (touchstart.clientX < 40 && swipeDistance >= screenWidth / 8) {
-			if (touchend.screenX < touchstart.screenX) {
-				showSidebar.set(false);
-			}
-			if (touchend.screenX > touchstart.screenX) {
-				showSidebar.set(true);
+		// Add checks for touchstart and touchend being defined
+		if (touchstart && touchend) {
+			const swipeDistance = Math.abs(touchend.screenX - touchstart.screenX);
+			if (touchstart.clientX < 40 && swipeDistance >= screenWidth / 8) {
+				if (touchend.screenX < touchstart.screenX) {
+					showSidebar.set(false);
+				}
+				if (touchend.screenX > touchstart.screenX) {
+					showSidebar.set(true);
+				}
 			}
 		}
 	}
 
-	const onTouchStart = (e) => {
+	const onTouchStart = (e: TouchEvent) => {
 		touchstart = e.changedTouches[0];
 		console.log(touchstart.clientX);
 	};
 
-	const onTouchEnd = (e) => {
+	const onTouchEnd = (e: TouchEvent) => {
 		touchend = e.changedTouches[0];
 		checkDirection();
 	};
 
-	const onKeyDown = (e) => {
+	const onKeyDown = (e: KeyboardEvent) => {
 		if (e.key === 'Shift') {
 			shiftKey = true;
 		}
 	};
 
-	const onKeyUp = (e) => {
+	const onKeyUp = (e: KeyboardEvent) => {
 		if (e.key === 'Shift') {
 			shiftKey = false;
 		}
 	};
 
-	const onFocus = () => {};
+	const onFocus = (e: FocusEvent) => {};
 
-	const onBlur = () => {
+	const onBlur = (e: FocusEvent) => {
 		shiftKey = false;
 		selectedChatId = null;
 	};
 
 	onMount(async () => {
 		showPinnedChat = localStorage?.showPinnedChat ? localStorage.showPinnedChat === 'true' : true;
+		customBaseUrl = localStorage.getItem('custom_webui_base_url') || '';
 
 		mobile.subscribe((value) => {
 			if ($showSidebar && value) {
@@ -325,9 +364,9 @@
 			}
 
 			if ($showSidebar && !value) {
-				const navElement = document.getElementsByTagName('nav')[0];
+				const navElement: HTMLElement | undefined = document.getElementsByTagName('nav')[0];
 				if (navElement) {
-					navElement.style['-webkit-app-region'] = 'drag';
+					navElement.style['-webkit-app-region' as any] = 'drag';
 				}
 			}
 
@@ -341,17 +380,17 @@
 			localStorage.sidebar = value;
 
 			// nav element is not available on the first render
-			const navElement = document.getElementsByTagName('nav')[0];
+			const navElement: HTMLElement | undefined = document.getElementsByTagName('nav')[0];
 
 			if (navElement) {
 				if ($mobile) {
 					if (!value) {
-						navElement.style['-webkit-app-region'] = 'drag';
+						navElement.style['-webkit-app-region' as any] = 'drag';
 					} else {
-						navElement.style['-webkit-app-region'] = 'no-drag';
+						navElement.style['-webkit-app-region' as any] = 'no-drag';
 					}
 				} else {
-					navElement.style['-webkit-app-region'] = 'drag';
+					navElement.style['-webkit-app-region' as any] = 'drag';
 				}
 			}
 		});
@@ -366,7 +405,7 @@
 		window.addEventListener('touchend', onTouchEnd);
 
 		window.addEventListener('focus', onFocus);
-		window.addEventListener('blur-sm', onBlur);
+		window.addEventListener('blur', onBlur);
 
 		const dropZone = document.getElementById('sidebar');
 
@@ -383,7 +422,7 @@
 		window.removeEventListener('touchend', onTouchEnd);
 
 		window.removeEventListener('focus', onFocus);
-		window.removeEventListener('blur-sm', onBlur);
+		window.removeEventListener('blur', onBlur);
 
 		const dropZone = document.getElementById('sidebar');
 
@@ -391,6 +430,22 @@
 		dropZone?.removeEventListener('drop', onDrop);
 		dropZone?.removeEventListener('dragleave', onDragLeave);
 	});
+
+	const handleChannelSubmit = async ({ name, access_control }: { name: string; access_control: object | undefined }) => {
+		const res = await createNewChannel(localStorage.token, {
+			name: name,
+			access_control: access_control
+		}).catch((error) => {
+			toast.error(`${error}`);
+			return null;
+		});
+
+		if (res) {
+			$socket?.emit('join-channels', { auth: { token: $user?.token } }); // Add optional chaining
+			await initChannels();
+			showCreateChannel = false;
+		}
+	};
 </script>
 
 <ArchivedChatsModal
@@ -402,21 +457,7 @@
 
 <ChannelModal
 	bind:show={showCreateChannel}
-	onSubmit={async ({ name, access_control }) => {
-		const res = await createNewChannel(localStorage.token, {
-			name: name,
-			access_control: access_control
-		}).catch((error) => {
-			toast.error(`${error}`);
-			return null;
-		});
-
-		if (res) {
-			$socket.emit('join-channels', { auth: { token: $user?.token } });
-			await initChannels();
-			showCreateChannel = false;
-		}
-	}}
+	onSubmit={handleChannelSubmit}
 />
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -509,7 +550,7 @@
 						/>
 					</div>
 					<div class=" self-center font-medium text-sm text-gray-850 dark:text-white font-primary">
-						{$i18n.t('New Chat')}
+						{i18n.t('New Chat')}
 					</div>
 				</div>
 
@@ -539,7 +580,7 @@
 					</div>
 
 					<div class="flex self-center translate-y-[0.5px]">
-						<div class=" self-center font-medium text-sm font-primary">{$i18n.t('Home')}</div>
+						<div class=" self-center font-medium text-sm font-primary">{i18n.t('Home')}</div>
 					</div>
 				</a>
 			</div>
@@ -581,7 +622,7 @@
 					</div>
 
 					<div class="flex self-center translate-y-[0.5px]">
-						<div class=" self-center font-medium text-sm font-primary">{$i18n.t('Notes')}</div>
+						<div class=" self-center font-medium text-sm font-primary">{i18n.t('Notes')}</div>
 					</div>
 				</a>
 			</div>
@@ -620,7 +661,7 @@
 					</div>
 
 					<div class="flex self-center translate-y-[0.5px]">
-						<div class=" self-center font-medium text-sm font-primary">{$i18n.t('Workspace')}</div>
+						<div class=" self-center font-medium text-sm font-primary">{i18n.t('Workspace')}</div>
 					</div>
 				</a>
 			</div>
@@ -639,8 +680,25 @@
 				</div>
 
 				<div class="flex self-center translate-y-[0.5px]">
-					<div class=" self-center font-medium text-sm font-primary">{$i18n.t('Search')}</div>
+					<div class=" self-center font-medium text-sm font-primary">{i18n.t('Search')}</div>
 				</div>
+			</button>
+		</div>
+
+		<!-- Custom WEBUI_BASE_URL Setting -->
+		<div class="px-1.5 flex flex-col text-gray-800 dark:text-gray-200 mt-2">
+			<div class="text-xs font-medium mb-1">{i18n.t('Custom WEBUI Base URL')}</div>
+			<input
+				type="text"
+				bind:value={customBaseUrl}
+				placeholder="{i18n.t('Enter custom URL')}"
+				class="w-full px-2 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
+			/>
+			<button
+				class="mt-1 px-2 py-1 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition"
+				on:click={saveCustomBaseUrl}
+			>
+				{i18n.t('Save')}
 			</button>
 		</div>
 
@@ -652,7 +710,7 @@
 			{#if $config?.features?.enable_channels && ($user?.role === 'admin' || $channels.length > 0)}
 				<Folder
 					className="px-2 mt-0.5"
-					name={$i18n.t('Channels')}
+					name={i18n.t('Channels')}
 					dragAndDrop={false}
 					onAdd={async () => {
 						if ($user?.role === 'admin') {
@@ -663,7 +721,7 @@
 							}, 0);
 						}
 					}}
-					onAddLabel={$i18n.t('Create Channel')}
+					onAddLabel={i18n.t('Create Channel')}
 				>
 					{#each $channels as channel}
 						<ChannelItem
@@ -678,11 +736,11 @@
 
 			<Folder
 				className="px-2 mt-0.5"
-				name={$i18n.t('Chats')}
+				name={i18n.t('Chats')}
 				onAdd={() => {
 					createFolder();
 				}}
-				onAddLabel={$i18n.t('New Folder')}
+				onAddLabel={i18n.t('New Folder')}
 				on:import={(e) => {
 					importChatHandler(e.detail);
 				}}
@@ -700,7 +758,7 @@
 						if (chat) {
 							console.log(chat);
 							if (chat.folder_id) {
-								const res = await updateChatFolderIdById(localStorage.token, chat.id, null).catch(
+								const res = await updateChatFolderIdById(localStorage.token, chat.id, undefined).catch(
 									(error) => {
 										toast.error(`${error}`);
 										return null;
@@ -719,7 +777,7 @@
 							return;
 						}
 
-						const res = await updateFolderParentIdById(localStorage.token, id, null).catch(
+						const res = await updateFolderParentIdById(localStorage.token, id, undefined).catch(
 							(error) => {
 								toast.error(`${error}`);
 								return null;
@@ -765,7 +823,7 @@
 											const res = await updateChatFolderIdById(
 												localStorage.token,
 												chat.id,
-												null
+												undefined
 											).catch((error) => {
 												toast.error(`${error}`);
 												return null;
@@ -775,12 +833,11 @@
 										if (!chat.pinned) {
 											const res = await toggleChatPinnedStatusById(localStorage.token, chat.id);
 										}
-
 										initChatList();
 									}
 								}
 							}}
-							name={$i18n.t('Pinned')}
+							name={i18n.t('Pinned')}
 						>
 							<div
 								class="ml-3 pl-1 mt-[1px] flex flex-col overflow-y-auto scrollbar-hidden border-s border-gray-100 dark:border-gray-900"
@@ -832,31 +889,31 @@
 					<div class="pt-1.5">
 						{#if $chats}
 							{#each $chats as chat, idx}
-								{#if idx === 0 || (idx > 0 && chat.time_range !== $chats[idx - 1].time_range)}
+								{#if idx === 0 || (idx > 0 && chat.time_range !== $chats[idx - 1]?.time_range)}
 									<div
 										class="w-full pl-2.5 text-xs text-gray-500 dark:text-gray-500 font-medium {idx ===
 										0
 											? ''
 											: 'pt-5'} pb-1.5"
 									>
-										{$i18n.t(chat.time_range)}
+										{i18n.t(chat.time_range)}
 										<!-- localisation keys for time_range to be recognized from the i18next parser (so they don't get automatically removed):
-							{$i18n.t('Today')}
-							{$i18n.t('Yesterday')}
-							{$i18n.t('Previous 7 days')}
-							{$i18n.t('Previous 30 days')}
-							{$i18n.t('January')}
-							{$i18n.t('February')}
-							{$i18n.t('March')}
-							{$i18n.t('April')}
-							{$i18n.t('May')}
-							{$i18n.t('June')}
-							{$i18n.t('July')}
-							{$i18n.t('August')}
-							{$i18n.t('September')}
-							{$i18n.t('October')}
-							{$i18n.t('November')}
-							{$i18n.t('December')}
+							{i18n.t('Today')}
+							{i18n.t('Yesterday')}
+							{i18n.t('Previous 7 days')}
+							{i18n.t('Previous 30 days')}
+							{i18n.t('January')}
+							{i18n.t('February')}
+							{i18n.t('March')}
+							{i18n.t('April')}
+							{i18n.t('May')}
+							{i18n.t('June')}
+							{i18n.t('July')}
+							{i18n.t('August')}
+							{i18n.t('September')}
+							{i18n.t('October')}
+							{i18n.t('November')}
+							{i18n.t('December')}
 							-->
 									</div>
 								{/if}

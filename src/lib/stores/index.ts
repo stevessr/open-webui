@@ -28,7 +28,7 @@ export const USAGE_POOL: Writable<null | string[]> = writable(null);
 export const theme = writable('system');
 
 export const shortCodesToEmojis = writable(
-	Object.entries(emojiShortCodes).reduce((acc, [key, value]) => {
+	Object.entries(emojiShortCodes).reduce((acc: { [key: string]: string }, [key, value]) => { // Add type annotation for acc
 		if (typeof value === 'string') {
 			acc[value] = key;
 		} else {
@@ -62,7 +62,7 @@ export const toolServers = writable([]);
 
 export const banners: Writable<Banner[]> = writable([]);
 
-export const settings: Writable<Settings> = writable({});
+export const settings: Writable<Settings> = writable({ chatDirection: 'auto' }); // Provide a default value for chatDirection
 
 export const showSidebar = writable(false);
 export const showSearch = writable(false);
@@ -217,6 +217,8 @@ type Config = {
 		enable_community_sharing: boolean;
 		enable_autocomplete_generation: boolean;
 		enable_direct_connections: boolean;
+		enable_notes?: boolean; // Added enable_notes
+		enable_channels?: boolean; // Added enable_channels
 	};
 	oauth: {
 		providers: {
@@ -240,4 +242,15 @@ type SessionUser = {
 	name: string;
 	role: string;
 	profile_image_url: string;
+	permissions?: { // Added permissions
+		features?: {
+			notes?: boolean;
+		};
+		workspace?: {
+			models?: boolean;
+			knowledge?: boolean;
+			prompts?: boolean;
+			tools?: boolean;
+		};
+	};
 };

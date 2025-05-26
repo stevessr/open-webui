@@ -7,13 +7,27 @@
 
 	let loaded = false;
 
+	let newBaseUrl = '';
+
 	onMount(async () => {
 		if ($config) {
 			await goto('/');
 		}
 
 		loaded = true;
+
+		// Read initial value from local storage
+		if (typeof window !== 'undefined') {
+			newBaseUrl = localStorage.getItem('custom_webui_base_url') || '';
+		}
 	});
+
+	const saveBaseUrl = () => {
+		if (typeof window !== 'undefined') {
+			localStorage.setItem('custom_webui_base_url', newBaseUrl);
+			location.reload(); // Reload the page to apply the new base URL
+		}
+	};
 </script>
 
 {#if loaded}
@@ -51,6 +65,22 @@
 							}}
 						>
 							{$i18n.t('Check Again')}
+						</button>
+					</div>
+
+					<!-- Add input for WEBUI_BASE_URL and save button -->
+					<div class="mt-6 mx-auto relative group w-fit flex flex-col items-center">
+						<input
+							type="text"
+							bind:value={newBaseUrl}
+							placeholder="Enter new WEBUI_BASE_URL"
+							class="px-3 py-2 border rounded-md mb-4 w-full max-w-xs text-center"
+						/>
+						<button
+							class="relative z-20 flex px-5 py-2 rounded-full bg-blue-500 hover:bg-blue-600 transition font-medium text-sm text-white"
+							on:click={saveBaseUrl}
+						>
+							Save and Reconnect
 						</button>
 					</div>
 				</div>
