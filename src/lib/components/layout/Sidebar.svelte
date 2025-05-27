@@ -419,7 +419,7 @@
 	}}
 />
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+
 
 {#if $showSidebar}
 	<div

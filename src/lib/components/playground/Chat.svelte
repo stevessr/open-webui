@@ -323,8 +323,8 @@
 				</div>
 				<div class="border border-gray-100 dark:border-gray-850 w-full px-3 py-2.5 rounded-xl">
 					<div class="py-0.5">
-						<!-- $i18n.t('a user') -->
-						<!-- $i18n.t('an assistant') -->
+						
+						
 						<textarea
 							bind:value={message}
 							class=" w-full h-full bg-transparent resize-none outline-hidden text-sm"

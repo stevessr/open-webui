@@ -149,7 +149,7 @@
 						/>
 					</ProfilePreview>
 				{:else}
-					<!-- <div class="w-7 h-7 rounded-full bg-transparent" /> -->
+					
 
 					{#if message.created_at}
 						<div
@@ -332,7 +332,7 @@
 								<span class="ml-1">
 									<ChevronRight className="size-2.5" strokeWidth="3" />
 								</span>
-								<!-- {$i18n.t('View Replies')} -->
+								
 							</button>
 						</div>
 					{/if}

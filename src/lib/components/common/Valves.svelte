@@ -48,7 +48,7 @@
 			</div>
 
 			{#if (valves[property] ?? null) !== null}
-				<!-- {valves[property]} -->
+				
 				<div class="flex mt-0.5 mb-1.5 space-x-2">
 					<div class=" flex-1">
 						{#if valvesSpec.properties[property]?.enum ?? null}

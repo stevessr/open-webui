@@ -58,6 +58,6 @@
 				>
 			</Selector>
 		</div>
-		<!-- {knowledge} -->
+		
 	</div>
 </div>

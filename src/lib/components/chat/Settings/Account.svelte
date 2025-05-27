@@ -151,7 +151,7 @@
 		/>
 
 		<div class="space-y-1">
-			<!-- <div class=" text-sm font-medium">{$i18n.t('Account')}</div> -->
+			
 
 			<div class="flex space-x-5">
 				<div class="flex flex-col">

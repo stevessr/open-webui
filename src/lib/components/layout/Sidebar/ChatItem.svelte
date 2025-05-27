@@ -382,7 +382,7 @@
 		</a>
 	{/if}
 
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	
 	<div
 		class="
         {id === $chatId || confirmEdit
@@ -496,7 +496,7 @@
 				</ChatMenu>
 
 				{#if id === $chatId}
-					<!-- Shortcut support using "delete-chat-button" id -->
+					
 					<button
 						id="delete-chat-button"
 						class="hidden"

@@ -538,7 +538,7 @@
 									</div>
 								</div>
 
-								<!-- {JSON.stringify(item.info)} -->
+								
 
 								{#if item.model?.direct}
 									<Tooltip content={`${'Direct'}`}>

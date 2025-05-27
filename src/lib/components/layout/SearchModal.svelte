@@ -92,7 +92,7 @@
 			/>
 		</div>
 
-		<!-- <hr class="border-gray-100 dark:border-gray-850 my-1" /> -->
+		
 
 		<div class="flex flex-col overflow-y-auto h-80 scrollbar-hidden px-5 pb-1">
 			{#if chatList}
