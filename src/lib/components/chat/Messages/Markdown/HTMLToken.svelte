@@ -25,7 +25,7 @@
 		{@const video = html.match(/<video[^>]*>([\s\S]*?)<\/video>/)}
 		{@const videoSrc = video && video[1]}
 		{#if videoSrc}
-			<!-- svelte-ignore a11y-media-has-caption -->
+			
 			<video
 				class="w-full my-2"
 				src={videoSrc}

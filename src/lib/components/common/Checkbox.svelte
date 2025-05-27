@@ -73,5 +73,5 @@
 		{/if}
 	</div>
 
-	<!-- {checked} -->
+	
 </button>

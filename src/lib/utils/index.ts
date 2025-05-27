@@ -339,7 +339,7 @@ export const generateInitialsImage = (name) => {
 		console.log(
 			'generateInitialsImage: failed pixel test, fingerprint evasion is likely. Using default image.'
 		);
-		return '/user.png';
+		return '/user.gif';
 	}
 
 	ctx.fillStyle = '#F39C12';

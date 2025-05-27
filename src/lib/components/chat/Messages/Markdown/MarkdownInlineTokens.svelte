@@ -40,8 +40,8 @@
 	{:else if token.type === 'em'}
 		<em><svelte:self id={`${id}-em`} tokens={token.tokens} {onSourceClick} /></em>
 	{:else if token.type === 'codespan'}
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+		
+		
 		<code
 			class="codespan cursor-pointer"
 			on:click={() => {

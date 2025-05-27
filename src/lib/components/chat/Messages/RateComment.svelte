@@ -116,7 +116,7 @@
 	<div class="flex justify-between items-center">
 		<div class="text-sm font-medium">{$i18n.t('How would you rate this response?')}</div>
 
-		<!-- <div class=" text-sm">{$i18n.t('Tell us more:')}</div> -->
+		
 
 		<button
 			on:click={() => {
@@ -139,7 +139,7 @@
 	<div class="w-full flex justify-center">
 		<div class=" relative w-fit">
 			<div class="mt-1.5 w-fit flex gap-1 pb-5">
-				<!-- 1-10 scale -->
+				
 				{#each Array.from({ length: 10 }).map((_, i) => i + 1) as rating}
 					<button
 						class="size-7 text-sm border border-gray-100 dark:border-gray-850 hover:bg-gray-50 dark:hover:bg-gray-850 {detailedRating ===

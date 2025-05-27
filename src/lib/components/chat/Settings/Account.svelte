@@ -151,7 +151,7 @@
 		/>
 
 		<div class="space-y-1">
-			<!-- <div class=" text-sm font-medium">{$i18n.t('Account')}</div> -->
+			
 
 			<div class="flex space-x-5">
 				<div class="flex flex-col">
@@ -223,7 +223,7 @@
 						<button
 							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-lg px-2 py-1"
 							on:click={async () => {
-								profileImageUrl = '/user.png';
+								profileImageUrl = '/user.gif';
 							}}>{$i18n.t('Remove')}</button
 						>
 					</div>

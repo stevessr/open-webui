@@ -221,7 +221,7 @@
 									</select>
 								</div>
 
-								<!-- <hr class=" border-gray-100 dark:border-gray-700/10 my-2.5 w-full" /> -->
+								
 
 								{#if defaultModelIds.length > 0}
 									<div class="flex flex-col">
@@ -262,7 +262,7 @@
 										showResetModal = true;
 									}}
 								>
-									<!-- {$i18n.t('Delete All Models')} -->
+									
 									{$i18n.t('Reset All Models')}
 								</button>
 							</Tooltip>

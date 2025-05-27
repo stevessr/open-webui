@@ -544,7 +544,7 @@
 										</div>
 									</div>
 								</div>
-
+                
 								{#if item.model.owned_by === 'ollama'}
 									{#if (item.model.ollama?.details?.parameter_size ?? '') !== ''}
 										<div class="flex items-center translate-y-[0.5px]">
@@ -587,8 +587,6 @@
 										</div>
 									{/if}
 								{/if}
-
-								<!-- {JSON.stringify(item.info)} -->
 
 								{#if item.model?.direct}
 									<Tooltip content={`${$i18n.t('Direct')}`}>

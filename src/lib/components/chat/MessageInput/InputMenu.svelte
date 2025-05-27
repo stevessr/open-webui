@@ -76,7 +76,7 @@
 	}
 </script>
 
-<!-- Hidden file input used to open the camera on mobile -->
+
 <input
 	id="camera-input"
 	type="file"
