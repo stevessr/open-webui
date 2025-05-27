@@ -1,0 +1,19 @@
+@font-face {
+    font-family: 'Dank Mono';
+    src: url('/assets/fonts/DankMono-Regular.woff2') format('woff2');
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Dank Mono';
+    src: url('/assets/fonts/DankMono-Italic.woff2') format('woff2');
+    font-display: swap;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'JinBuTi';
+    src: url('/assets/fonts/DingTalk-JinBuTi.woff2') format('woff2');
+    font-display: swap;
+}
