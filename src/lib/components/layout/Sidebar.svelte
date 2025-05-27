@@ -47,14 +47,6 @@
 
 	const i18n: { t: (key: string) => string } = getContext('i18n');
 
-	let customBaseUrl = ''; // Variable to hold the custom base URL input
-
-	// Function to save the custom base URL to localStorage
-	const saveCustomBaseUrl = () => {
-		localStorage.setItem('custom_webui_base_url', customBaseUrl);
-		toast.success(i18n.t('Custom WEBUI Base URL saved.'));
-	};
-
 	import {
 		deleteChatById,
 		getChatList,
@@ -389,7 +381,6 @@
 
 	onMount(async () => {
 		showPinnedChat = localStorage?.showPinnedChat ? localStorage.showPinnedChat === 'true' : true;
-		customBaseUrl = localStorage.getItem('custom_webui_base_url') || '';
 
 		mobile.subscribe((value) => {
 			if ($showSidebar && value) {
@@ -558,7 +549,7 @@
 						/>
 					</div>
 					<div class=" self-center font-medium text-sm text-gray-850 dark:text-white font-primary">
-						{i18n.t('New Chat')}
+						{i18n && i18n.t ? i18n.t('New Chat') : 'New Chat'}
 					</div>
 				</div>
 
@@ -607,7 +598,7 @@
 				</div>
 
 				<div class="flex self-center translate-y-[0.5px]">
-					<div class=" self-center font-medium text-sm font-primary">{$i18n.t('Search')}</div>
+					<div class=" self-center font-medium text-sm font-primary">{i18n && i18n.t ? i18n.t('Search') : 'Search'}</div>
 				</div>
 			</button>
 		</div>
@@ -648,7 +639,7 @@
 					</div>
 
 					<div class="flex self-center translate-y-[0.5px]">
-						<div class=" self-center font-medium text-sm font-primary">{i18n.t('Notes')}</div>
+						<div class=" self-center font-medium text-sm font-primary">{i18n && i18n.t ? i18n.t('Notes') : 'Notes'}</div>
 					</div>
 				</a>
 			</div>
@@ -687,7 +678,7 @@
 					</div>
 
 					<div class="flex self-center translate-y-[0.5px]">
-						<div class=" self-center font-medium text-sm font-primary">{i18n.t('Workspace')}</div>
+						<div class=" self-center font-medium text-sm font-primary">{i18n && i18n.t ? i18n.t('Workspace') : 'Workspace'}</div>
 					</div>
 				</a>
 			</div>
@@ -706,25 +697,8 @@
 				</div>
 
 				<div class="flex self-center translate-y-[0.5px]">
-					<div class=" self-center font-medium text-sm font-primary">{i18n.t('Search')}</div>
+					<div class=" self-center font-medium text-sm font-primary">{i18n && i18n.t ? i18n.t('Search') : 'Search'}</div>
 				</div>
-			</button>
-		</div>
-
-		<!-- Custom WEBUI_BASE_URL Setting -->
-		<div class="px-1.5 flex flex-col text-gray-800 dark:text-gray-200 mt-2">
-			<div class="text-xs font-medium mb-1">{i18n.t('Custom WEBUI Base URL')}</div>
-			<input
-				type="text"
-				bind:value={customBaseUrl}
-				placeholder={i18n.t('Enter custom URL')}
-				class="w-full px-2 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
-			/>
-			<button
-				class="mt-1 px-2 py-1 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition"
-				on:click={saveCustomBaseUrl}
-			>
-				{i18n.t('Save')}
 			</button>
 		</div>
 
@@ -736,7 +710,7 @@
 			{#if $config?.features?.enable_channels && ($user?.role === 'admin' || $channels.length > 0)}
 				<Folder
 					className="px-2 mt-0.5"
-					name={i18n.t('Channels')}
+					name={i18n && i18n.t ? i18n.t('Channels') : 'Channels'}
 					dragAndDrop={false}
 					onAdd={async () => {
 						if ($user?.role === 'admin') {
@@ -747,7 +721,7 @@
 							}, 0);
 						}
 					}}
-					onAddLabel={i18n.t('Create Channel')}
+					onAddLabel={i18n && i18n.t ? i18n.t('Create Channel') : 'Create Channel'}
 				>
 					{#each $channels as channel}
 						<ChannelItem
@@ -762,11 +736,11 @@
 
 			<Folder
 				className="px-2 mt-0.5"
-				name={i18n.t('Chats')}
+				name={i18n && i18n.t ? i18n.t('Chats') : 'Chats'}
 				onAdd={() => {
 					createFolder();
 				}}
-				onAddLabel={i18n.t('New Folder')}
+				onAddLabel={i18n && i18n.t ? i18n.t('New Folder') : 'New Folder'}
 				on:import={(e) => {
 					importChatHandler(e.detail);
 				}}
@@ -865,7 +839,7 @@
 									}
 								}
 							}}
-							name={i18n.t('Pinned')}
+							name={i18n && i18n.t ? i18n.t('Pinned') : 'Pinned'}
 						>
 							<div
 								class="ml-3 pl-1 mt-[1px] flex flex-col overflow-y-auto scrollbar-hidden border-s border-gray-100 dark:border-gray-900"
@@ -924,7 +898,7 @@
 											? ''
 											: 'pt-5'} pb-1.5"
 									>
-										{i18n.t(chat.time_range)}
+										{i18n && i18n.t ? i18n.t(chat.time_range) : chat.time_range}
 										<!-- localisation keys for time_range to be recognized from the i18next parser (so they don't get automatically removed):
 							{i18n.t('Today')}
 							{i18n.t('Yesterday')}

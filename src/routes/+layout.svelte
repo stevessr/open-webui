@@ -275,10 +275,12 @@
 						playingNotificationSound.set(true);
 
 						const audio = new Audio(`/audio/notification.mp3`);
-						audio.play().finally(() => {
-							// Ensure the global state is reset after the sound finishes
-							playingNotificationSound.set(false);
-						});
+						setTimeout(() => {
+							audio.play().finally(() => {
+								// Ensure the global state is reset after the sound finishes
+								playingNotificationSound.set(false);
+							});
+						}, 100); // Add a small delay
 					}
 
 					if ($isLastActiveTab) {

@@ -13,14 +13,14 @@
 			</div>
 		{/if}
 
-		<Tooltip content="Home" placement="right">
+		<!-- <Tooltip content="Home" placement="right">
 			<button
 				class=" cursor-pointer {selected === 'home' ? 'rounded-2xl' : 'rounded-full'}"
 				on:click={() => {
 					selected = 'home';
 
 					if (window.electronAPI) {
-						window.electronAPI.load('home');
+						// window.electronAPI.load('home'); // Commented out for HMR debugging
 					}
 				}}
 			>
@@ -31,12 +31,12 @@
 					draggable="false"
 				/>
 			</button>
-		</Tooltip>
+		</Tooltip> -->
 	</div>
 
 	<div class=" -mt-1 border-[1.5px] border-gray-100 dark:border-gray-900 mx-4"></div>
 
-	<div class="flex justify-center relative group">
+	<!-- <div class="flex justify-center relative group">
 		{#if selected === ''}
 			<div class="absolute top-0 left-0 flex h-full">
 				<div class="my-auto rounded-r-lg w-1 h-8 bg-black dark:bg-white"></div>
@@ -55,7 +55,7 @@
 				draggable="false"
 			/>
 		</button>
-	</div>
+	</div> -->
 
 	<!-- <div class="flex justify-center relative group text-gray-400">
 		<button class=" cursor-pointer p-2" on:click={() => {}}>

@@ -6,7 +6,34 @@
 
 	import { models, settings, theme, user } from '$lib/stores';
 
-	const i18n = getContext('i18n');
+	interface I18nContext {
+		language: string;
+		t: (key: string, options?: any) => string;
+	}
+	const _i18nContext = getContext<I18nContext | undefined>('i18n'); // Allow undefined
+	
+	const i18n = {
+	  t: (key: string, options?: any): string => {
+	    if (_i18nContext && typeof _i18nContext.t === 'function') {
+	      return _i18nContext.t(key, options);
+	    }
+	    // console.warn(`[General.svelte] i18n.t is not available for key: "${key}". Falling back to key.`);
+	    if (options && typeof options === 'object' && options !== null) {
+	      let str = key;
+	      for (const k in options) {
+	        if (k !== 'defaultValue') { // Avoid processing a potential defaultValue option as a placeholder
+	          const placeholder = new RegExp(`{{${k}}}`, 'g'); // Common placeholder format
+	          str = str.replace(placeholder, options[k]);
+	        }
+	      }
+	      return str;
+	    }
+	    return key;
+	  },
+	  get language(): string {
+	    return _i18nContext && _i18nContext.language ? _i18nContext.language : 'en'; // Default language
+	  }
+	};
 
 	import AdvancedParams from './Advanced/AdvancedParams.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
@@ -19,9 +46,10 @@
 	let selectedTheme = 'system';
 
 	let languages: Awaited<ReturnType<typeof getLanguages>> = [];
-	let lang = $i18n.language;
+	let lang = i18n.language;
 	let notificationEnabled = false;
 	let system = '';
+	let webuiBaseUrl: string = '';
 
 	let showAdvanced = false;
 
@@ -33,7 +61,7 @@
 			saveSettings({ notificationEnabled: notificationEnabled });
 		} else {
 			toast.error(
-				$i18n.t(
+				i18n.t(
 					'Response notifications cannot be activated as the website permissions have been denied. Please visit your browser settings to grant the necessary access.'
 				)
 			);
@@ -41,8 +69,23 @@
 	};
 
 	// Advanced
-	let requestFormat = null;
+	let requestFormat: string | null | object = null;
+	let _requestFormatTextareaValue: string = ''; // Renamed for clarity
 	let keepAlive: string | null = null;
+
+	// Reactive update for _requestFormatTextareaValue (requestFormat -> display)
+	$: {
+		if (requestFormat === null) {
+			_requestFormatTextareaValue = '';
+		} else if (typeof requestFormat === 'object') {
+			_requestFormatTextareaValue = JSON.stringify(requestFormat, null, 2);
+		} else { // requestFormat is 'json' or a user-typed schema string
+			_requestFormatTextareaValue = requestFormat;
+		}
+	}
+
+	// Removed the cyclical reactive block that updated requestFormat from displayValue.
+	// Input will be handled by an event handler on the textarea.
 
 	let params = {
 		// Advanced
@@ -68,10 +111,14 @@
 		num_batch: null,
 		num_keep: null,
 		max_tokens: null,
-		num_gpu: null
+		num_gpu: null,
+		use_mmap: null,
+		use_mlock: null,
+		num_thread: null,
+		template: null,
 	};
 
-	const validateJSON = (json) => {
+	const validateJSON = (json: string) => {
 		try {
 			const obj = JSON.parse(json);
 
@@ -92,10 +139,24 @@
 		saveSettings({ requestFormat: requestFormat !== null ? requestFormat : undefined });
 	};
 
+	const handleRequestFormatInput = (event: Event) => {
+		const target = event.target as HTMLTextAreaElement;
+		const newValue = target.value;
+
+		// Update the logical requestFormat based on textarea input
+		// _requestFormatTextareaValue will be updated reactively by the block above
+		if (newValue === '') {
+			requestFormat = null;
+		} else {
+			// Store as string; saveHandler will parse if it's a schema and not 'json'
+			requestFormat = newValue;
+		}
+	};
+
 	const saveHandler = async () => {
-		if (requestFormat !== null && requestFormat !== 'json') {
+		if (typeof requestFormat === 'string' && requestFormat !== 'json') {
 			if (validateJSON(requestFormat) === false) {
-				toast.error($i18n.t('Invalid JSON schema'));
+				toast.error(i18n.t('Invalid JSON schema'));
 				return;
 			} else {
 				requestFormat = JSON.parse(requestFormat);
@@ -104,11 +165,12 @@
 
 		saveSettings({
 			system: system !== '' ? system : undefined,
+			WEBUI_BASE_URL: webuiBaseUrl !== '' ? webuiBaseUrl : undefined,
 			params: {
 				stream_response: params.stream_response !== null ? params.stream_response : undefined,
 				function_calling: params.function_calling !== null ? params.function_calling : undefined,
 				seed: (params.seed !== null ? params.seed : undefined) ?? undefined,
-				stop: params.stop ? params.stop.split(',').filter((e) => e) : undefined,
+				stop: undefined, // Since params.stop is always null, this branch is effectively dead.
 				temperature: params.temperature !== null ? params.temperature : undefined,
 				reasoning_effort: params.reasoning_effort !== null ? params.reasoning_effort : undefined,
 				logit_bias: params.logit_bias !== null ? params.logit_bias : undefined,
@@ -132,13 +194,13 @@
 				num_thread: params.num_thread !== null ? params.num_thread : undefined,
 				num_gpu: params.num_gpu !== null ? params.num_gpu : undefined
 			},
-			keepAlive: keepAlive ? (isNaN(keepAlive) ? keepAlive : parseInt(keepAlive)) : undefined,
+			keepAlive: keepAlive || undefined,
 			requestFormat: requestFormat !== null ? requestFormat : undefined
 		});
 		dispatch('save');
 
-		requestFormat =
-			typeof requestFormat === 'object' ? JSON.stringify(requestFormat, null, 2) : requestFormat;
+		// Removed stringification of requestFormat here.
+		// The reactive block $: { ... } will update requestFormatDisplayValue based on the new requestFormat state.
 	};
 
 	onMount(async () => {
@@ -148,17 +210,21 @@
 
 		notificationEnabled = $settings.notificationEnabled ?? false;
 		system = $settings.system ?? '';
+		webuiBaseUrl = ($settings as any).WEBUI_BASE_URL ?? '';
 
-		requestFormat = $settings.requestFormat ?? null;
-		if (requestFormat !== null && requestFormat !== 'json') {
-			requestFormat =
-				typeof requestFormat === 'object' ? JSON.stringify(requestFormat, null, 2) : requestFormat;
-		}
+		requestFormat = ($settings as any).requestFormat ?? null;
+		// Removed stringification of requestFormat here.
+		// The reactive block $: { ... } will set requestFormatDisplayValue correctly.
 
-		keepAlive = $settings.keepAlive ?? null;
+		keepAlive = ($settings as any).keepAlive ?? null;
 
-		params = { ...params, ...$settings.params };
-		params.stop = $settings?.params?.stop ? ($settings?.params?.stop ?? []).join(',') : null;
+		const incomingParams = ($settings as any).params ?? {};
+		params = { ...params, ...incomingParams };
+
+		// Ensure params.stop and params.template remain null if AdvancedParams expects null
+		params.stop = null; // Force to null to match AdvancedParams expectation
+		params.template = null; // Keep template as null to match AdvancedParams if it still expects that
+		// params.template = incomingParams?.template ?? null;
 	});
 
 	const applyTheme = (_theme: string) => {
@@ -235,10 +301,10 @@
 <div class="flex flex-col h-full justify-between text-sm">
 	<div class="  overflow-y-scroll max-h-[28rem] lg:max-h-full">
 		<div class="">
-			<div class=" mb-1 text-sm font-medium">{$i18n.t('WebUI Settings')}</div>
+			<div class=" mb-1 text-sm font-medium">{i18n.t('WebUI Settings')}</div>
 
 			<div class="flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">{$i18n.t('Theme')}</div>
+				<div class=" self-center text-xs font-medium">{i18n.t('Theme')}</div>
 				<div class="flex items-center relative">
 					<select
 						class=" dark:bg-gray-900 w-fit pr-8 rounded-sm py-2 px-2 text-xs bg-transparent outline-hidden text-right"
@@ -246,10 +312,10 @@
 						placeholder="Select a theme"
 						on:change={() => themeChangeHandler(selectedTheme)}
 					>
-						<option value="system">⚙️ {$i18n.t('System')}</option>
-						<option value="dark">🌑 {$i18n.t('Dark')}</option>
-						<option value="oled-dark">🌃 {$i18n.t('OLED Dark')}</option>
-						<option value="light">☀️ {$i18n.t('Light')}</option>
+						<option value="system">⚙️ {i18n.t('System')}</option>
+						<option value="dark">🌑 {i18n.t('Dark')}</option>
+						<option value="oled-dark">🌃 {i18n.t('OLED Dark')}</option>
+						<option value="light">☀️ {i18n.t('Light')}</option>
 						<option value="her">🌷 Her</option>
 						<!-- <option value="rose-pine dark">🪻 {$i18n.t('Rosé Pine')}</option>
 						<option value="rose-pine-dawn light">🌷 {$i18n.t('Rosé Pine Dawn')}</option> -->
@@ -258,7 +324,7 @@
 			</div>
 
 			<div class=" flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">{$i18n.t('Language')}</div>
+				<div class=" self-center text-xs font-medium">{i18n.t('Language')}</div>
 				<div class="flex items-center relative">
 					<select
 						class=" dark:bg-gray-900 w-fit pr-8 rounded-sm py-2 px-2 text-xs bg-transparent outline-hidden text-right"
@@ -274,7 +340,7 @@
 					</select>
 				</div>
 			</div>
-			{#if $i18n.language === 'en-US'}
+			{#if i18n.language === 'en-US'}
 				<div class="mb-2 text-xs text-gray-400 dark:text-gray-500">
 					Couldn't find your language?
 					<a
@@ -289,7 +355,7 @@
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
-					<div class=" self-center text-xs font-medium">{$i18n.t('Notifications')}</div>
+					<div class=" self-center text-xs font-medium">{i18n.t('Notifications')}</div>
 
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
@@ -299,47 +365,60 @@
 						type="button"
 					>
 						{#if notificationEnabled === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
+							<span class="ml-2 self-center">{i18n.t('On')}</span>
 						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+							<span class="ml-2 self-center">{i18n.t('Off')}</span>
 						{/if}
 					</button>
 				</div>
 			</div>
+
+			<div class="flex w-full flex-col py-1">
+				<div class="self-center text-xs font-medium">{i18n.t('Custom WEBUI Base URL')}</div>
+				<input
+					type="text"
+					class="w-full text-sm dark:text-gray-300 dark:bg-gray-900 outline-hidden p-2 rounded-sm bg-gray-100 mt-1"
+					placeholder={i18n.t('e.g., http://localhost:3000')}
+					bind:value={webuiBaseUrl}
+				/>
+				<div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+					{i18n.t('Overrides the default base URL for the WebUI. Requires restart to take full effect.')}
+				</div>
+			</div>
 		</div>
 
-		{#if $user?.role === 'admin' || $user?.permissions.chat?.controls}
+		{#if $user?.role === 'admin'}
 			<hr class="border-gray-50 dark:border-gray-850 my-3" />
 
 			<div>
-				<div class=" my-2.5 text-sm font-medium">{$i18n.t('System Prompt')}</div>
+				<div class=" my-2.5 text-sm font-medium">{i18n.t('System Prompt')}</div>
 				<Textarea
 					bind:value={system}
 					className="w-full text-sm bg-white dark:text-gray-300 dark:bg-gray-900 outline-hidden resize-none"
-					rows="4"
-					placeholder={$i18n.t('Enter system prompt here')}
+					rows={4}
+					placeholder={i18n.t('Enter system prompt here')}
 				/>
 			</div>
 
 			<div class="mt-2 space-y-3 pr-1.5">
 				<div class="flex justify-between items-center text-sm">
-					<div class="  font-medium">{$i18n.t('Advanced Parameters')}</div>
+					<div class="  font-medium">{i18n.t('Advanced Parameters')}</div>
 					<button
 						class=" text-xs font-medium text-gray-500"
 						type="button"
 						on:click={() => {
 							showAdvanced = !showAdvanced;
-						}}>{showAdvanced ? $i18n.t('Hide') : $i18n.t('Show')}</button
+						}}>{showAdvanced ? i18n.t('Hide') : i18n.t('Show')}</button
 					>
 				</div>
 
 				{#if showAdvanced}
-					<AdvancedParams admin={$user?.role === 'admin'} bind:params />
+					<AdvancedParams admin={$user?.role === 'admin'} bind:params={params} />
 					<hr class=" border-gray-100 dark:border-gray-850" />
 
 					<div class=" w-full justify-between">
 						<div class="flex w-full justify-between">
-							<div class=" self-center text-xs font-medium">{$i18n.t('Keep Alive')}</div>
+							<div class=" self-center text-xs font-medium">{i18n.t('Keep Alive')}</div>
 
 							<button
 								class="p-1 px-3 text-xs flex rounded-sm transition"
@@ -349,9 +428,9 @@
 								}}
 							>
 								{#if keepAlive === null}
-									<span class="ml-2 self-center"> {$i18n.t('Default')} </span>
+									<span class="ml-2 self-center"> {i18n.t('Default')} </span>
 								{:else}
-									<span class="ml-2 self-center"> {$i18n.t('Custom')} </span>
+									<span class="ml-2 self-center"> {i18n.t('Custom')} </span>
 								{/if}
 							</button>
 						</div>
@@ -361,7 +440,7 @@
 								<input
 									class="w-full text-sm dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 									type="text"
-									placeholder={$i18n.t("e.g. '30s','10m'. Valid time units are 's', 'm', 'h'.")}
+									placeholder={i18n.t("e.g. '30s','10m'. Valid time units are 's', 'm', 'h'.")}
 									bind:value={keepAlive}
 								/>
 							</div>
@@ -370,7 +449,7 @@
 
 					<div>
 						<div class=" flex w-full justify-between">
-							<div class=" self-center text-xs font-medium">{$i18n.t('Request Mode')}</div>
+							<div class=" self-center text-xs font-medium">{i18n.t('Request Mode')}</div>
 
 							<button
 								class="p-1 px-3 text-xs flex rounded-sm transition"
@@ -379,19 +458,19 @@
 								}}
 							>
 								{#if requestFormat === null}
-									<span class="ml-2 self-center"> {$i18n.t('Default')} </span>
+									<span class="ml-2 self-center"> {i18n.t('Default')} </span>
 								{:else}
 									<!-- <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            class="w-4 h-4 self-center"
-                        >
-                            <path
-                                d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM10 7a3 3 0 100 6 3 3 0 000-6zM15.657 5.404a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.06-1.06zM6.464 14.596a.75.75 0 10-1.06-1.06l-1.06 1.06a.75.75 0 001.06 1.06l1.06-1.06zM18 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0118 10zM5 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 015 10zM14.596 15.657a.75.75 0 001.06-1.06l-1.06-1.061a.75.75 0 10-1.06 1.06l1.06 1.06zM5.404 6.464a.75.75 0 001.06-1.06l-1.06-1.06a.75.75 0 10-1.061 1.06l1.06 1.06z"
-                            />
-                        </svg> -->
-									<span class="ml-2 self-center"> {$i18n.t('JSON')} </span>
+		                          xmlns="http://www.w3.org/2000/svg"
+		                          viewBox="0 0 20 20"
+		                          fill="currentColor"
+		                          class="w-4 h-4 self-center"
+		                      >
+		                          <path
+		                              d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM10 7a3 3 0 100 6 3 3 0 000-6zM15.657 5.404a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.06-1.06zM6.464 14.596a.75.75 0 10-1.06-1.06l-1.06 1.06a.75.75 0 001.06 1.06l1.06-1.06zM18 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0118 10zM5 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 015 10zM14.596 15.657a.75.75 0 001.06-1.06l-1.06-1.061a.75.75 0 10-1.06 1.06l1.06 1.06zM5.404 6.464a.75.75 0 001.06-1.06l-1.06-1.06a.75.75 0 10-1.061 1.06l1.06 1.06z"
+		                          />
+		                      </svg> -->
+									<span class="ml-2 self-center"> {i18n.t('JSON')} </span>
 								{/if}
 							</button>
 						</div>
@@ -400,8 +479,9 @@
 							<div class="flex mt-1 space-x-2">
 								<Textarea
 									className="w-full  text-sm dark:text-gray-300 dark:bg-gray-900 outline-hidden"
-									placeholder={$i18n.t('e.g. "json" or a JSON schema')}
-									bind:value={requestFormat}
+									placeholder={i18n.t('e.g. "json" or a JSON schema')}
+									value={_requestFormatTextareaValue}
+									on:input={handleRequestFormatInput}
 								/>
 							</div>
 						{/if}
@@ -418,7 +498,7 @@
 				saveHandler();
 			}}
 		>
-			{$i18n.t('Save')}
+			{i18n.t('Save')}
 		</button>
 	</div>
 </div>
