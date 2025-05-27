@@ -71,7 +71,7 @@
 	import { createNewFolder, getFolders, updateFolderParentIdById } from '$lib/apis/folders';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
-	import ArchivedChatsModal from './Sidebar/ArchivedChatsModal.svelte';
+	import ArchivedChatsModal from './ArchivedChatsModal.svelte';
 	import UserMenu from './Sidebar/UserMenu.svelte';
 	import ChatItem from './Sidebar/ChatItem.svelte';
 	import Spinner from '../common/Spinner.svelte';
@@ -430,6 +430,14 @@
 		dropZone?.removeEventListener('drop', onDrop);
 		dropZone?.removeEventListener('dragleave', onDragLeave);
 	});
+</script>
+
+<ArchivedChatsModal
+	bind:show={$showArchivedChats}
+	onUpdate={async () => {
+		await initChatList();
+	}}
+/>
 
 	const handleChannelSubmit = async ({ name, access_control }: { name: string; access_control: object | undefined }) => {
 		const res = await createNewChannel(localStorage.token, {
@@ -585,6 +593,24 @@
 				</a>
 			</div>
 		{/if} -->
+
+		<div class="px-1.5 flex justify-center text-gray-800 dark:text-gray-200">
+			<button
+				class="grow flex items-center space-x-3 rounded-lg px-2 py-[7px] hover:bg-gray-100 dark:hover:bg-gray-900 transition outline-none"
+				on:click={() => {
+					showSearch.set(true);
+				}}
+				draggable="false"
+			>
+				<div class="self-center">
+					<MagnifyingGlass strokeWidth="2" className="size-[1.1rem]" />
+				</div>
+
+				<div class="flex self-center translate-y-[0.5px]">
+					<div class=" self-center font-medium text-sm font-primary">{$i18n.t('Search')}</div>
+				</div>
+			</button>
+		</div>
 
 		{#if ($config?.features?.enable_notes ?? false) && ($user?.role === 'admin' || ($user?.permissions?.features?.notes ?? true))}
 			<div class="px-1.5 flex justify-center text-gray-800 dark:text-gray-200">
