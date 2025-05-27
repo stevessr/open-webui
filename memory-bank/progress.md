@@ -12,7 +12,8 @@ Completed Tasks
 [2025-05-26 23:08:39] - Created memory-bank/activeContext.md.
 [2025-05-26 23:08:04] - Created memory-bank/productContext.md.
 [2025-05-26 23:52:46] - Implemented frontend functionality to allow users to customize WEBUI_BASE_URL.
-* [2025-05-27 04:40:05] - Added WEBUI_BASE_URL input and save functionality to error page.
+
+- [2025-05-27 04:40:05] - Added WEBUI_BASE_URL input and save functionality to error page.
 
 Future Tasks
 

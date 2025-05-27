@@ -28,7 +28,8 @@ export const USAGE_POOL: Writable<null | string[]> = writable(null);
 export const theme = writable('system');
 
 export const shortCodesToEmojis = writable(
-	Object.entries(emojiShortCodes).reduce((acc: { [key: string]: string }, [key, value]) => { // Add type annotation for acc
+	Object.entries(emojiShortCodes).reduce((acc: { [key: string]: string }, [key, value]) => {
+		// Add type annotation for acc
 		if (typeof value === 'string') {
 			acc[value] = key;
 		} else {
@@ -242,7 +243,8 @@ type SessionUser = {
 	name: string;
 	role: string;
 	profile_image_url: string;
-	permissions?: { // Added permissions
+	permissions?: {
+		// Added permissions
 		features?: {
 			notes?: boolean;
 		};

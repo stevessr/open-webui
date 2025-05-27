@@ -164,8 +164,7 @@
 	};
 
 	const dragImage = new Image();
-	dragImage.src =
-		'/user.gif';
+	dragImage.src = '/user.gif';
 
 	let x;
 	let y;

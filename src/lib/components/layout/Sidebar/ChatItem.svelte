@@ -144,8 +144,7 @@
 	let y = 0;
 
 	const dragImage = new Image();
-	dragImage.src =
-		'/user.gif';
+	dragImage.src = '/user.gif';
 
 	const onDragStart = (event) => {
 		event.stopPropagation();

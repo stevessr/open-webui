@@ -118,7 +118,7 @@
 		// First pass: Initialize all folder entries
 		for (const folder of folderList) {
 			// Ensure folder is added to folders with its data
-			folders[folder.id] = { ...(folders[folder.id] as Folder || {} as Folder), ...folder };
+			folders[folder.id] = { ...((folders[folder.id] as Folder) || ({} as Folder)), ...folder };
 
 			if (newFolderId && folder.id === newFolderId) {
 				folders[folder.id].new = true;
@@ -132,7 +132,14 @@
 				// Ensure the parent folder is initialized if it doesn't exist
 				if (!folders[folder.parent_id]) {
 					// Create a placeholder with required properties
-					folders[folder.parent_id] = { id: folder.parent_id, name: '', created_at: 0, updated_at: 0, parent_id: null, childrenIds: [] };
+					folders[folder.parent_id] = {
+						id: folder.parent_id,
+						name: '',
+						created_at: 0,
+						updated_at: 0,
+						parent_id: null,
+						childrenIds: []
+					};
 				}
 
 				// Initialize childrenIds array if it doesn't exist and add the current folder id
@@ -140,7 +147,6 @@
 					folders[folder.parent_id].childrenIds = [];
 				}
 				folders[folder.parent_id].childrenIds!.push(folder.id);
-
 
 				// Sort the children by updated_at field
 				folders[folder.parent_id].childrenIds!.sort((a: string, b: string) => {
@@ -173,7 +179,8 @@
 		const tempId = uuidv4();
 		folders = {
 			...folders,
-			[tempId]: { // Use bracket notation for dynamic key
+			[tempId]: {
+				// Use bracket notation for dynamic key
 				id: tempId,
 				name: name,
 				created_at: Date.now(),
@@ -228,7 +235,11 @@
 		chatListLoading = false;
 	};
 
-	const importChatHandler = async (items: Array<{ chat?: any; meta?: any }>, pinned = false, folderId: string | null = null) => {
+	const importChatHandler = async (
+		items: Array<{ chat?: any; meta?: any }>,
+		pinned = false,
+		folderId: string | null = null
+	) => {
 		console.log('importChatHandler', items, pinned, folderId);
 		for (const item of items) {
 			console.log(item);
@@ -354,6 +365,28 @@
 		selectedChatId = null;
 	};
 
+	const handleChannelSubmit = async ({
+		name,
+		access_control
+	}: {
+		name: string;
+		access_control: object | undefined;
+	}) => {
+		const res = await createNewChannel(localStorage.token, {
+			name: name,
+			access_control: access_control
+		}).catch((error) => {
+			toast.error(`${error}`);
+			return null;
+		});
+
+		if (res) {
+			$socket?.emit('join-channels', { auth: { token: $user?.token } }); // Add optional chaining
+			await initChannels();
+			showCreateChannel = false;
+		}
+	};
+
 	onMount(async () => {
 		showPinnedChat = localStorage?.showPinnedChat ? localStorage.showPinnedChat === 'true' : true;
 		customBaseUrl = localStorage.getItem('custom_webui_base_url') || '';
@@ -423,37 +456,7 @@
 
 		window.removeEventListener('focus', onFocus);
 		window.removeEventListener('blur', onBlur);
-
-		const dropZone = document.getElementById('sidebar');
-
-		dropZone?.removeEventListener('dragover', onDragOver);
-		dropZone?.removeEventListener('drop', onDrop);
-		dropZone?.removeEventListener('dragleave', onDragLeave);
 	});
-</script>
-
-<ArchivedChatsModal
-	bind:show={$showArchivedChats}
-	onUpdate={async () => {
-		await initChatList();
-	}}
-/>
-
-	const handleChannelSubmit = async ({ name, access_control }: { name: string; access_control: object | undefined }) => {
-		const res = await createNewChannel(localStorage.token, {
-			name: name,
-			access_control: access_control
-		}).catch((error) => {
-			toast.error(`${error}`);
-			return null;
-		});
-
-		if (res) {
-			$socket?.emit('join-channels', { auth: { token: $user?.token } }); // Add optional chaining
-			await initChannels();
-			showCreateChannel = false;
-		}
-	};
 </script>
 
 <ArchivedChatsModal
@@ -463,10 +466,7 @@
 	}}
 />
 
-<ChannelModal
-	bind:show={showCreateChannel}
-	onSubmit={handleChannelSubmit}
-/>
+<ChannelModal bind:show={showCreateChannel} onSubmit={handleChannelSubmit} />
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 
@@ -717,7 +717,7 @@
 			<input
 				type="text"
 				bind:value={customBaseUrl}
-				placeholder="{i18n.t('Enter custom URL')}"
+				placeholder={i18n.t('Enter custom URL')}
 				class="w-full px-2 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
 			/>
 			<button
@@ -784,12 +784,14 @@
 						if (chat) {
 							console.log(chat);
 							if (chat.folder_id) {
-								const res = await updateChatFolderIdById(localStorage.token, chat.id, undefined).catch(
-									(error) => {
-										toast.error(`${error}`);
-										return null;
-									}
-								);
+								const res = await updateChatFolderIdById(
+									localStorage.token,
+									chat.id,
+									undefined
+								).catch((error) => {
+									toast.error(`${error}`);
+									return null;
+								});
 							}
 
 							if (chat.pinned) {

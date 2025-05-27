@@ -15,7 +15,8 @@ Recent Changes
 
 [2025-05-26 23:08:04] - Created memory-bank/productContext.md.
 [2025-05-26 23:52:56] - Added frontend UI for custom WEBUI_BASE_URL in Sidebar.svelte.
-* [2025-05-27 04:40:13] - Added WEBUI_BASE_URL input and save functionality to error page.
+
+- [2025-05-27 04:40:13] - Added WEBUI_BASE_URL input and save functionality to error page.
 
 Open Questions/Issues
 
