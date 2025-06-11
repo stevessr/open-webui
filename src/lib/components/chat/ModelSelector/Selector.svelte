@@ -3,12 +3,13 @@
 	import { marked } from 'marked';
 	import Fuse from 'fuse.js';
 
+	import dayjs from '$lib/dayjs';
+	import relativeTime from 'dayjs/plugin/relativeTime';
+	dayjs.extend(relativeTime);
+
 	import { flyAndScale } from '$lib/utils/transitions';
 	import { createEventDispatcher, onMount, getContext, tick } from 'svelte';
-
-	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
-	import Check from '$lib/components/icons/Check.svelte';
-	import Search from '$lib/components/icons/Search.svelte';
+	import { goto } from '$app/navigation';
 
 	import { deleteModel, getOllamaVersion, pullModel, unloadModel } from '$lib/apis/ollama';
 
@@ -25,14 +26,14 @@
 	import { capitalizeFirstLetter, sanitizeResponseContent, splitStream } from '$lib/utils';
 	import { getModels } from '$lib/apis';
 
+	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
+	import Check from '$lib/components/icons/Check.svelte';
+	import Search from '$lib/components/icons/Search.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
 	import ChatBubbleOval from '$lib/components/icons/ChatBubbleOval.svelte';
-	import { goto } from '$app/navigation';
-	import dayjs from '$lib/dayjs';
-	import relativeTime from 'dayjs/plugin/relativeTime';
-	import ArrowUpTray from '$lib/components/icons/ArrowUpTray.svelte';
-	dayjs.extend(relativeTime);
+
+	import ModelItem from './ModelItem.svelte';
 
 	const i18n = getContext('i18n');
 	const dispatch = createEventDispatcher();
@@ -55,6 +56,8 @@
 
 	export let className = 'w-[32rem]';
 	export let triggerClassName = 'text-lg';
+
+	export let pinModelHandler: (modelId: string) => void = () => {};
 
 	let tagsContainerElement;
 
@@ -407,10 +410,10 @@
 				</div>
 			{/if}
 
-			<div class="px-3 max-h-64 overflow-y-auto scrollbar-hidden group relative">
+			<div class="px-3">
 				{#if tags && items.filter((item) => !(item.model?.info?.meta?.hidden ?? false)).length > 0}
 					<div
-						class=" flex w-full sticky top-0 z-10 bg-white dark:bg-gray-850 overflow-x-auto scrollbar-none"
+						class=" flex w-full bg-white dark:bg-gray-850 overflow-x-auto scrollbar-none"
 						on:wheel={(e) => {
 							if (e.deltaY !== 0) {
 								e.preventDefault();
@@ -492,23 +495,24 @@
 						</div>
 					</div>
 				{/if}
+			</div>
 
+			<div class="px-3 max-h-64 overflow-y-auto group relative">
 				{#each filteredItems as item, index}
-					<button
-						aria-label="model-item"
-						class="flex w-full text-left font-medium line-clamp-1 select-none items-center rounded-button py-2 pl-3 pr-1.5 text-sm text-gray-700 dark:text-gray-100 outline-hidden transition-all duration-75 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer data-highlighted:bg-muted {index ===
-						selectedModelIdx
-							? 'bg-gray-100 dark:bg-gray-800 group-hover:bg-transparent'
-							: ''}"
-						data-arrow-selected={index === selectedModelIdx}
-						data-value={item.value}
-						on:click={() => {
+					<ModelItem
+						{selectedModelIdx}
+						{item}
+						{index}
+						{value}
+						{pinModelHandler}
+						{unloadModelHandler}
+						onClick={() => {
 							value = item.value;
 							selectedModelIdx = index;
 
 							show = false;
 						}}
-					>
+					/>
 						<div class="flex flex-col">
 							{#if $mobile && (item?.model?.tags ?? []).length > 0}
 								<div class="flex gap-0.5 self-start h-full mb-1.5 -translate-x-1">

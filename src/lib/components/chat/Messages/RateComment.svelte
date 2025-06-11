@@ -139,7 +139,6 @@
 	<div class="w-full flex justify-center">
 		<div class=" relative w-fit">
 			<div class="mt-1.5 w-fit flex gap-1 pb-5">
-				
 				{#each Array.from({ length: 10 }).map((_, i) => i + 1) as rating}
 					<button
 						class="size-7 text-sm border border-gray-100 dark:border-gray-850 hover:bg-gray-50 dark:hover:bg-gray-850 {detailedRating ===
@@ -156,7 +155,7 @@
 				{/each}
 			</div>
 
-			<div class="absolute bottom-0 left-0 right-0 flex justify-between text-xs">
+			<div class="sticky top-0 bottom-0 left-0 right-0 flex justify-between text-xs">
 				<div>
 					1 - {$i18n.t('Awful')}
 				</div>
