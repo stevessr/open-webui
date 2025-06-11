@@ -121,7 +121,7 @@
 				bind:value={search}
 			/>
 		</div>
-		<!-- Virtualized Emoji List -->
+		
 		<div class="w-full flex justify-start h-96 overflow-y-auto px-3 pb-3 text-sm">
 			{#if emojiRows.length === 0}
 				<div class="text-center text-xs text-gray-500 dark:text-gray-400">No results</div>
@@ -130,12 +130,12 @@
 					<VirtualList rowHeight={ROW_HEIGHT} items={emojiRows} height={384} let:item>
 						<div class="w-full">
 							{#if item.length === 1 && item[0].type === 'group'}
-								<!-- Render group header -->
+								
 								<div class="text-xs font-medium mb-2 text-gray-500 dark:text-gray-400">
 									{item[0].label}
 								</div>
 							{:else}
-								<!-- Render emojis in a row -->
+								
 								<div class="flex items-center gap-1.5 w-full">
 									{#each item as emojiItem}
 										<Tooltip

@@ -69,7 +69,7 @@
 		<Bolt />
 		{$i18n.t('Suggested')}
 	{:else}
-		<!-- Keine Vorschläge -->
+		
 
 		<div
 			class="flex w-full {$settings?.landingPageMode === 'chat'

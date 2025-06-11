@@ -14,8 +14,8 @@
 			  src.startsWith('data:') ||
 			  src.startsWith('/')
 			? src
-			: `/user.png`}
-	class=" {className} object-cover rounded-full"
+			: `/user.gif`}
+	class=" {className} object-cover rounded-full -translate-y-[1px]"
 	alt="profile"
 	draggable="false"
 />

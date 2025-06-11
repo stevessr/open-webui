@@ -145,7 +145,7 @@
 
 	const dragImage = new Image();
 	dragImage.src =
-		'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+		'/user.gif';
 
 	const onDragStart = (event) => {
 		event.stopPropagation();
@@ -383,7 +383,7 @@
 		</a>
 	{/if}
 
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	
 	<div
 		class="
         {id === $chatId || confirmEdit
@@ -497,7 +497,7 @@
 				</ChatMenu>
 
 				{#if id === $chatId}
-					<!-- Shortcut support using "delete-chat-button" id -->
+					
 					<button
 						id="delete-chat-button"
 						class="hidden"
