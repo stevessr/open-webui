@@ -25,6 +25,7 @@ input:focus {
   position: relative;
   z-index: 1;
   border: 2px solid transparent; /* 增加边框宽度以容纳渐变 */
+  border-radius: 5%;
   box-shadow: none;
   animation: rainbow 2.5s linear infinite;
   background-image: linear-gradient(white, white),
