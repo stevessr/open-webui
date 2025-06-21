@@ -14,6 +14,8 @@
 	let backgroundImageUrl = null;
 	let inputFiles = null;
 	let filesInputElement;
+	let backgroundImageUrlInput = '';
+	let showUrlInput = false;
 
 	// Addons
 	let titleAutoGenerate = true;
@@ -290,6 +292,22 @@
 		saveSettings({ iframeSandboxAllowForms });
 	};
 
+	const setBackgroundImageFromUrl = () => {
+		if (backgroundImageUrlInput.trim()) {
+			backgroundImageUrl = backgroundImageUrlInput.trim();
+			saveSettings({ backgroundImageUrl });
+			backgroundImageUrlInput = '';
+			showUrlInput = false;
+		}
+	};
+
+	const toggleUrlInput = () => {
+		showUrlInput = !showUrlInput;
+		if (!showUrlInput) {
+			backgroundImageUrlInput = '';
+		}
+	};
+
 	onMount(async () => {
 		titleAutoGenerate = $settings?.title?.auto ?? true;
 		autoTags = $settings?.autoTags ?? true;
@@ -360,7 +378,7 @@
 		bind:files={inputFiles}
 		type="file"
 		hidden
-		accept="image/*"
+		accept="image/*,video/mp4"
 		on:change={() => {
 			let reader = new FileReader();
 			reader.onload = (event) => {
@@ -373,7 +391,7 @@
 			if (
 				inputFiles &&
 				inputFiles.length > 0 &&
-				['image/gif', 'image/webp', 'image/jpeg', 'image/png'].includes(inputFiles[0]['type'])
+				['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'video/mp4'].includes(inputFiles[0]['type'])
 			) {
 				reader.readAsDataURL(inputFiles[0]);
 			} else {
@@ -884,26 +902,71 @@
 						{$i18n.t('Chat Background Image')}
 					</div>
 
-					<button
-						aria-labelledby="chat-background-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
-							if (backgroundImageUrl !== null) {
-								backgroundImageUrl = null;
-								saveSettings({ backgroundImageUrl });
-							} else {
-								filesInputElement.click();
-							}
-						}}
-						type="button"
-					>
+					<div class="flex gap-2">
 						{#if backgroundImageUrl !== null}
-							<span class="ml-2 self-center">{$i18n.t('Reset')}</span>
+							<button
+								aria-labelledby="chat-background-label"
+								class="p-1 px-3 text-xs flex rounded-sm transition"
+								on:click={() => {
+									backgroundImageUrl = null;
+									saveSettings({ backgroundImageUrl });
+								}}
+								type="button"
+							>
+								<span class="ml-2 self-center">{$i18n.t('Reset')}</span>
+							</button>
 						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Upload')}</span>
+							<button
+								aria-labelledby="chat-background-label"
+								class="p-1 px-3 text-xs flex rounded-sm transition"
+								on:click={() => {
+									filesInputElement.click();
+								}}
+								type="button"
+							>
+								<span class="ml-2 self-center">{$i18n.t('Upload')}</span>
+							</button>
+							<button
+								aria-labelledby="chat-background-label"
+								class="p-1 px-3 text-xs flex rounded-sm transition"
+								on:click={toggleUrlInput}
+								type="button"
+							>
+								<span class="ml-2 self-center">{$i18n.t('URL')}</span>
+							</button>
 						{/if}
-					</button>
+					</div>
 				</div>
+
+				{#if showUrlInput}
+					<div class="mt-2 flex gap-2">
+						<input
+							bind:value={backgroundImageUrlInput}
+							type="url"
+							placeholder={$i18n.t('Enter image/video URL')}
+							class="flex-1 px-3 py-2 text-xs bg-transparent border border-gray-300 dark:border-gray-600 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+							on:keydown={(e) => {
+								if (e.key === 'Enter') {
+									setBackgroundImageFromUrl();
+								}
+							}}
+						/>
+						<button
+							class="px-3 py-2 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-sm transition"
+							on:click={setBackgroundImageFromUrl}
+							type="button"
+						>
+							{$i18n.t('Set')}
+						</button>
+						<button
+							class="px-3 py-2 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded-sm transition"
+							on:click={toggleUrlInput}
+							type="button"
+						>
+							{$i18n.t('Cancel')}
+						</button>
+					</div>
+				{/if}
 			</div>
 
 			<div>

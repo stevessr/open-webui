@@ -32,6 +32,8 @@
 
 	let filesInputElement;
 	let inputFiles;
+	let profileImageUrlInput = '';
+	let showUrlInput = false;
 
 	let showAdvanced = false;
 	let showPreview = false;
@@ -102,6 +104,21 @@
 				delete capabilities.usage;
 			}
 			capabilities = capabilities;
+		}
+	};
+
+	const setProfileImageFromUrl = () => {
+		if (profileImageUrlInput.trim()) {
+			info.meta.profile_image_url = profileImageUrlInput.trim();
+			profileImageUrlInput = '';
+			showUrlInput = false;
+		}
+	};
+
+	const toggleUrlInput = () => {
+		showUrlInput = !showUrlInput;
+		if (!showUrlInput) {
+			profileImageUrlInput = '';
 		}
 	};
 
@@ -373,7 +390,7 @@
 					submitHandler();
 				}}
 			>
-				<div class="self-center md:self-start flex justify-center my-2 shrink-0">
+				<div class="self-center md:self-start flex flex-col justify-center my-2 shrink-0">
 					<div class="self-center">
 						<button
 							class="rounded-xl flex shrink-0 items-center {info.meta.profile_image_url !==
@@ -386,11 +403,22 @@
 							}}
 						>
 							{#if info.meta.profile_image_url}
-								<img
-									src={info.meta.profile_image_url}
-									alt="model profile"
-									class="rounded-xl size-72 md:size-60 object-cover shrink-0"
-								/>
+								{#if info.meta.profile_image_url.toLowerCase().endsWith('.mp4')}
+									<video
+										src={info.meta.profile_image_url}
+										class="rounded-xl size-72 md:size-60 object-cover shrink-0"
+										autoplay
+										muted
+										loop
+										playsinline
+									></video>
+								{:else}
+									<img
+										src={info.meta.profile_image_url}
+										alt="model profile"
+										class="rounded-xl size-72 md:size-60 object-cover shrink-0"
+									/>
+								{/if}
 							{:else}
 								<img
 									src="/static/favicon.png"
@@ -425,18 +453,66 @@
 							></div>
 						</button>
 
-						<div class="flex w-full mt-1 justify-end">
+						<div class="flex w-full mt-1 justify-center gap-2">
 							<button
-								class="px-2 py-1 text-gray-500 rounded-lg text-xs"
+								class="px-2 py-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg text-xs transition"
+								on:click={() => {
+									filesInputElement.click();
+								}}
+								type="button"
+							>
+								{$i18n.t('Upload')}
+							</button>
+							<button
+								class="px-2 py-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg text-xs transition"
+								on:click={toggleUrlInput}
+								type="button"
+							>
+								{$i18n.t('URL')}
+							</button>
+							<button
+								class="px-2 py-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg text-xs transition"
 								on:click={() => {
 									info.meta.profile_image_url = '/static/favicon.png';
 								}}
 								type="button"
 							>
-								Reset Image</button
-							>
+								{$i18n.t('Reset')}
+							</button>
 						</div>
 					</div>
+
+					{#if showUrlInput}
+						<div class="mt-3 flex flex-col gap-2 w-72 md:w-60">
+							<input
+								bind:value={profileImageUrlInput}
+								type="url"
+								placeholder={$i18n.t('Enter image URL')}
+								class="px-3 py-2 text-xs bg-transparent border border-gray-300 dark:border-gray-600 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+								on:keydown={(e) => {
+									if (e.key === 'Enter') {
+										setProfileImageFromUrl();
+									}
+								}}
+							/>
+							<div class="flex gap-2">
+								<button
+									class="flex-1 px-3 py-2 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-sm transition"
+									on:click={setProfileImageFromUrl}
+									type="button"
+								>
+									{$i18n.t('Set')}
+								</button>
+								<button
+									class="flex-1 px-3 py-2 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded-sm transition"
+									on:click={toggleUrlInput}
+									type="button"
+								>
+									{$i18n.t('Cancel')}
+								</button>
+							</div>
+						</div>
+					{/if}
 				</div>
 
 				<div class="w-full">

@@ -29,6 +29,8 @@
 	let APIKey = '';
 	let APIKeyCopied = false;
 	let profileImageInputElement: HTMLInputElement;
+	let profileImageUrlInput = '';
+	let showUrlInput = false;
 
 	const submitHandler = async () => {
 		if (name !== $user?.name) {
@@ -74,6 +76,21 @@
 		}
 	};
 
+	const setProfileImageFromUrl = () => {
+		if (profileImageUrlInput.trim()) {
+			profileImageUrl = profileImageUrlInput.trim();
+			profileImageUrlInput = '';
+			showUrlInput = false;
+		}
+	};
+
+	const toggleUrlInput = () => {
+		showUrlInput = !showUrlInput;
+		if (!showUrlInput) {
+			profileImageUrlInput = '';
+		}
+	};
+
 	onMount(async () => {
 		name = $user?.name;
 		profileImageUrl = $user?.profile_image_url;
@@ -93,7 +110,7 @@
 			bind:this={profileImageInputElement}
 			type="file"
 			hidden
-			accept="image/*"
+			accept="image/*,video/mp4"
 			on:change={(e) => {
 				const files = profileImageInputElement.files ?? [];
 				let reader = new FileReader();
@@ -143,7 +160,7 @@
 
 				if (
 					files.length > 0 &&
-					['image/gif', 'image/webp', 'image/jpeg', 'image/png'].includes(files[0]['type'])
+					['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'video/mp4'].includes(files[0]['type'])
 				) {
 					reader.readAsDataURL(files[0]);
 				}
@@ -163,11 +180,22 @@
 								profileImageInputElement.click();
 							}}
 						>
-							<img
-								src={profileImageUrl !== '' ? profileImageUrl : generateInitialsImage(name)}
-								alt="profile"
-								class=" rounded-full size-16 object-cover"
-							/>
+							{#if profileImageUrl !== '' && profileImageUrl.toLowerCase().endsWith('.mp4')}
+								<video
+									src={profileImageUrl}
+									class="rounded-full size-16 object-cover"
+									autoplay
+									muted
+									loop
+									playsinline
+								></video>
+							{:else}
+								<img
+									src={profileImageUrl !== '' ? profileImageUrl : generateInitialsImage(name)}
+									alt="profile"
+									class=" rounded-full size-16 object-cover"
+								/>
+							{/if}
 
 							<div
 								class="absolute flex justify-center rounded-full bottom-0 left-0 right-0 top-0 h-full w-full overflow-hidden bg-gray-700 bg-fixed opacity-0 transition duration-300 ease-in-out hover:opacity-50"
@@ -192,9 +220,21 @@
 				<div class="flex-1 flex flex-col self-center gap-0.5">
 					<div class=" mb-0.5 text-sm font-medium">{$i18n.t('Profile Image')}</div>
 
-					<div>
+					<div class="flex flex-wrap gap-1">
 						<button
-							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-full px-4 py-0.5 bg-gray-100 dark:bg-gray-850"
+							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-full px-4 py-0.5 bg-gray-100 dark:bg-gray-850 hover:bg-gray-200 dark:hover:bg-gray-800 transition"
+							on:click={() => {
+								profileImageInputElement.click();
+							}}>{$i18n.t('Upload')}</button
+						>
+
+						<button
+							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-full px-4 py-0.5 bg-gray-100 dark:bg-gray-850 hover:bg-gray-200 dark:hover:bg-gray-800 transition"
+							on:click={toggleUrlInput}>{$i18n.t('URL')}</button
+						>
+
+						<button
+							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-full px-4 py-0.5 bg-gray-100 dark:bg-gray-850 hover:bg-gray-200 dark:hover:bg-gray-800 transition"
 							on:click={async () => {
 								if (canvasPixelTest()) {
 									profileImageUrl = generateInitialsImage(name);
@@ -212,7 +252,7 @@
 						>
 
 						<button
-							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-full px-4 py-0.5 bg-gray-100 dark:bg-gray-850"
+							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-full px-4 py-0.5 bg-gray-100 dark:bg-gray-850 hover:bg-gray-200 dark:hover:bg-gray-800 transition"
 							on:click={async () => {
 								const url = await getGravatarUrl(localStorage.token, $user?.email);
 
@@ -221,12 +261,44 @@
 						>
 
 						<button
-							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-lg px-2 py-1"
+							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-lg px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-800 transition"
 							on:click={async () => {
 								profileImageUrl = '/user.gif';
 							}}>{$i18n.t('Remove')}</button
 						>
 					</div>
+
+					{#if showUrlInput}
+						<div class="mt-2 flex flex-col gap-2">
+							<input
+								bind:value={profileImageUrlInput}
+								type="url"
+								placeholder={$i18n.t('Enter image/video URL')}
+								class="w-full px-3 py-2 text-xs bg-transparent border border-gray-300 dark:border-gray-600 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+								on:keydown={(e) => {
+									if (e.key === 'Enter') {
+										setProfileImageFromUrl();
+									}
+								}}
+							/>
+							<div class="flex gap-2">
+								<button
+									class="flex-1 px-3 py-2 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-sm transition"
+									on:click={setProfileImageFromUrl}
+									type="button"
+								>
+									{$i18n.t('Set')}
+								</button>
+								<button
+									class="flex-1 px-3 py-2 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded-sm transition"
+									on:click={toggleUrlInput}
+									type="button"
+								>
+									{$i18n.t('Cancel')}
+								</button>
+							</div>
+						</div>
+					{/if}
 				</div>
 			</div>
 

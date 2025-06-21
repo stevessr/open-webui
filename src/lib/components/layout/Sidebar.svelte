@@ -960,11 +960,22 @@
 							}}
 						>
 							<div class=" self-center mr-3">
+								{#if $user?.profile_image_url.endsWith('.mp4')}
+								<video
+									src={$user?.profile_image_url}
+									class=" max-w-[30px] object-cover rounded-full"
+									autoplay
+									muted
+									loop
+									playsinline
+								/>
+								{:else}
 								<img
 									src={$user?.profile_image_url}
 									class=" max-w-[30px] object-cover rounded-full"
 									alt="User profile"
 								/>
+								{/if}
 							</div>
 							<div class=" self-center font-medium">{$user?.name}</div>
 						</button>
