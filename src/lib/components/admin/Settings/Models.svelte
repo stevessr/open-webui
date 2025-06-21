@@ -325,11 +325,22 @@
 										? ''
 										: 'opacity-50 dark:opacity-50'} "
 								>
-									<img
-										src={model?.meta?.profile_image_url ?? '/static/favicon.png'}
-										alt="modelfile profile"
-										class=" rounded-full w-full h-auto object-cover"
-									/>
+									{#if model?.meta?.profile_image_url?.endsWith('.mp4')}
+										<video
+											src={model?.meta?.profile_image_url}
+											class=" rounded-full w-full h-auto object-cover"
+											autoplay
+											muted
+											loop
+											playsinline
+										/>
+									{:else}
+										<img
+											src={model?.meta?.profile_image_url ?? '/static/favicon.png'}
+											alt="modelfile profile"
+											class=" rounded-full w-full h-auto object-cover"
+										/>
+									{/if}
 								</div>
 							</div>
 
