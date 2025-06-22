@@ -52,7 +52,7 @@
 				};
 			});
 		} else {
-			if ($config.audio.tts.engine === '') {
+			if ($config?.audio?.tts.engine === '') {
 				const getVoicesLoop = setInterval(async () => {
 					voices = await speechSynthesis.getVoices();
 
@@ -96,10 +96,10 @@
 		TTSEngine = $settings?.audio?.tts?.engine ?? '';
 		TTSEngineConfig = $settings?.audio?.tts?.engineConfig ?? {};
 
-		if ($settings?.audio?.tts?.defaultVoice === $config.audio.tts.voice) {
-			voice = $settings?.audio?.tts?.voice ?? $config.audio.tts.voice ?? '';
+		if ($settings?.audio?.tts?.defaultVoice === $config?.audio.tts.voice) {
+			voice = $settings?.audio?.tts?.voice ?? $config?.audio.tts.voice ?? '';
 		} else {
-			voice = $config.audio.tts.voice ?? '';
+			voice = $config?.audio.tts.voice ?? '';
 		}
 
 		nonLocalVoices = $settings.audio?.tts?.nonLocalVoices ?? false;
@@ -180,7 +180,7 @@
 		<div>
 			<div class=" mb-1 text-sm font-medium">{$i18n.t('STT Settings')}</div>
 
-			{#if $config.audio.stt.engine !== 'web'}
+			{#if $config?.audio?.stt?.engine !== 'web'}
 				<div class=" py-0.5 flex w-full justify-between">
 					<div class=" self-center text-xs font-medium">{$i18n.t('Speech-to-Text Engine')}</div>
 					<div class="flex items-center relative">
@@ -348,7 +348,7 @@
 					</div>
 				</div>
 			{/if}
-		{:else if $config.audio.tts.engine === ''}
+		{:else if $config?.audio?.tts.engine === ''}
 			<div>
 				<div class=" mb-2.5 text-sm font-medium">{$i18n.t('Set Voice')}</div>
 				<div class="flex w-full">
@@ -378,7 +378,7 @@
 					</div>
 				</div>
 			</div>
-		{:else if $config.audio.tts.engine !== ''}
+		{:else if $config?.audio?.tts.engine !== ''}
 			<div>
 				<div class=" mb-2.5 text-sm font-medium">{$i18n.t('Set Voice')}</div>
 				<div class="flex w-full">
