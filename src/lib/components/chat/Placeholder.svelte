@@ -122,7 +122,7 @@
 										selectedModelIdx = modelIdx;
 									}}
 								>
-									{#if model?.info?.meta?.profile_image_url && model.info.meta.profile_image_url.toLowerCase().endsWith('.mp4')}
+									{#if model?.info?.meta?.profile_image_url?.toLowerCase().endsWith('.mp4')}
 										<video
 											src={model.info.meta.profile_image_url}
 											class=" size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
