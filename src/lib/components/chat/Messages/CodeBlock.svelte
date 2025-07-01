@@ -4,6 +4,8 @@
 	import { v4 as uuidv4 } from 'uuid';
 
 	import { getContext, onMount, tick, onDestroy } from 'svelte';
+	import { slide } from 'svelte/transition';
+	import { quintOut, cubicOut } from 'svelte/easing';
 	import { copyToClipboard } from '$lib/utils';
 
 	import 'highlight.js/styles/github-dark.min.css';
@@ -18,6 +20,8 @@
 	import ChevronUpDown from '$lib/components/icons/ChevronUpDown.svelte';
 	import CommandLine from '$lib/components/icons/CommandLine.svelte';
 	import Cube from '$lib/components/icons/Cube.svelte';
+	import ArrowsPointingOut from '$lib/components/icons/ArrowsPointingOut.svelte';
+	import FloatingDocPreview from '$lib/components/common/FloatingDocPreview.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -66,6 +70,9 @@
 
 	let copied = false;
 	let saved = false;
+	let showFloatingPreview = false;
+	let previewUrl = '';
+	let previewTitle = 'Code Preview';
 
 	const collapseCodeBlock = () => {
 		collapsed = !collapsed;
@@ -93,6 +100,63 @@
 
 	const previewCode = () => {
 		onPreview(code);
+	};
+
+	const floatingPreviewCode = () => {
+		if (lang === 'html' || lang === 'svg') {
+			// Create HTML content for preview
+			let htmlContent;
+			if (lang === 'svg') {
+				htmlContent = `
+					<!DOCTYPE html>
+					<html lang="en">
+					<head>
+						<meta charset="UTF-8">
+						<meta name="viewport" content="width=device-width, initial-scale=1.0">
+						<title>SVG Preview</title>
+						<style>
+							body {
+								font-family: system-ui, -apple-system, sans-serif;
+								margin: 0;
+								padding: 20px;
+								display: flex;
+								justify-content: center;
+								align-items: center;
+								min-height: 100vh;
+								background: #f5f5f5;
+							}
+							svg { max-width: 100%; max-height: 100%; }
+						</style>
+					</head>
+					<body>
+						${code}
+					</body>
+					</html>
+				`;
+			} else {
+				htmlContent = `
+					<!DOCTYPE html>
+					<html lang="en">
+					<head>
+						<meta charset="UTF-8">
+						<meta name="viewport" content="width=device-width, initial-scale=1.0">
+						<title>HTML Preview</title>
+						<style>
+							body { font-family: system-ui, -apple-system, sans-serif; margin: 20px; }
+						</style>
+					</head>
+					<body>
+						${code}
+					</body>
+					</html>
+				`;
+			}
+
+			const blob = new Blob([htmlContent], { type: 'text/html' });
+			previewUrl = URL.createObjectURL(blob);
+			previewTitle = `${lang.toUpperCase()} Code Preview`;
+			showFloatingPreview = true;
+		}
 	};
 
 	const checkPythonCode = (str) => {
@@ -437,7 +501,7 @@
 						class="flex gap-1 items-center bg-none border-none bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 transition rounded-md px-1.5 py-0.5"
 						on:click={collapseCodeBlock}
 					>
-						<div class=" -translate-y-[0.5px]">
+						<div class=" -translate-y-[0.5px] transition-transform duration-300 ease-out {collapsed ? 'rotate-180' : ''}">
 							<ChevronUpDown className="size-3" />
 						</div>
 
@@ -457,6 +521,21 @@
 
 							<div>
 								{$i18n.t('Preview')}
+							</div>
+						</button>
+
+						<!-- Floating Preview Button -->
+						<button
+							class="flex gap-1 items-center run-code-button bg-none border-none bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 transition rounded-md px-1.5 py-0.5"
+							on:click={floatingPreviewCode}
+							title="Open in floating preview"
+						>
+							<div class=" -translate-y-[0.5px]">
+								<ArrowsPointingOut className="size-3" />
+							</div>
+
+							<div>
+								{$i18n.t('Float')}
 							</div>
 						</button>
 					{/if}
@@ -512,20 +591,23 @@
 				<div class=" pt-7 bg-gray-50 dark:bg-gray-850"></div>
 
 				{#if !collapsed}
-					<CodeEditor
-						value={code}
-						{id}
-						{lang}
-						onSave={() => {
-							saveCode();
-						}}
-						onChange={(value) => {
-							_code = value;
-						}}
-					/>
+					<div transition:slide={{ duration: 400, easing: cubicOut, axis: 'y' }}>
+						<CodeEditor
+							value={code}
+							{id}
+							{lang}
+							onSave={() => {
+								saveCode();
+							}}
+							onChange={(value) => {
+								_code = value;
+							}}
+						/>
+					</div>
 				{:else}
 					<div
 						class="bg-gray-50 dark:bg-black dark:text-white rounded-b-lg! pt-2 pb-2 px-4 flex flex-col gap-2 text-xs"
+						transition:slide={{ duration: 250, easing: quintOut, axis: 'y' }}
 					>
 						<span class="text-gray-500 italic">
 							{$i18n.t('{{COUNT}} hidden lines', {
@@ -540,11 +622,13 @@
 				<div
 					id="plt-canvas-{id}"
 					class="bg-gray-50 dark:bg-[#202123] dark:text-white max-w-full overflow-x-auto scrollbar-hidden"
+					transition:slide={{ duration: 400, easing: cubicOut, axis: 'y' }}
 				/>
 
 				{#if executing || stdout || stderr || result || files}
 					<div
 						class="bg-gray-50 dark:bg-[#202123] dark:text-white rounded-b-lg! py-4 px-4 flex flex-col gap-2"
+						transition:slide={{ duration: 400, easing: cubicOut, axis: 'y' }}
 					>
 						{#if executing}
 							<div class=" ">
@@ -588,3 +672,12 @@
 		{/if}
 	</div>
 </div>
+
+<!-- Floating Preview Modal -->
+{#if showFloatingPreview}
+	<FloatingDocPreview
+		bind:show={showFloatingPreview}
+		url={previewUrl}
+		title={previewTitle}
+	/>
+{/if}

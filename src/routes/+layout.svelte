@@ -1,4 +1,6 @@
 <script>
+	export let data;
+
 	import { io } from 'socket.io-client';
 	import { spring } from 'svelte/motion';
 	import PyodideWorker from '$lib/workers/pyodide.worker?worker';
@@ -29,6 +31,7 @@
 	} from '$lib/stores';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { browser } from '$app/environment';
 	import { Toaster, toast } from 'svelte-sonner';
 
 	import { executeToolServer, getBackendConfig } from '$lib/apis';
@@ -45,6 +48,7 @@
 	import { getAllTags, getChatList } from '$lib/apis/chats';
 	import NotificationToast from '$lib/components/NotificationToast.svelte';
 	import AppSidebar from '$lib/components/app/AppSidebar.svelte';
+	import CustomStyles from '$lib/components/common/CustomStyles.svelte';
 	import { chatCompletion } from '$lib/apis/openai';
 
 	import { beforeNavigate } from '$app/navigation';
@@ -62,6 +66,7 @@
 	const bc = new BroadcastChannel('active-tab-channel');
 
 	let loaded = false;
+	let mounted = false;
 	let tokenTimer = null;
 
 	const BREAKPOINT = 768;
@@ -509,7 +514,7 @@
 		// Call visibility change handler initially to set state on load
 		handleVisibilityChange();
 
-		theme.set(localStorage.theme);
+		theme.set(localStorage.theme ?? 'system');
 
 		mobile.set(window.innerWidth < BREAKPOINT);
 
@@ -637,6 +642,8 @@
 			loaded = true;
 		}
 
+		mounted = true;
+
 		return () => {
 			window.removeEventListener('resize', onResize);
 		};
@@ -654,6 +661,7 @@
 </svelte:head>
 
 {#if loaded}
+	<CustomStyles />
 	{#if $isApp}
 		<div class="flex flex-row h-screen">
 			<AppSidebar />
@@ -665,17 +673,8 @@
 	{:else}
 		<slot />
 	{/if}
-{/if}
 
-<Toaster
-	theme={$theme.includes('dark')
-		? 'dark'
-		: $theme === 'system'
-			? window.matchMedia('(prefers-color-scheme: dark)').matches
-				? 'dark'
-				: 'light'
-			: 'light'}
-	richColors
-	position="top-right"
-	closeButton
-/>
+	{#if browser}
+		<Toaster richColors position="top-right" closeButton />
+	{/if}
+{/if}

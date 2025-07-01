@@ -93,7 +93,9 @@
 									muted
 									loop
 									playsinline
-								/>
+								>
+									<track kind="captions" />
+								</video>
 							{:else}
 							<img
 								src={selectedUser.profile_image_url}

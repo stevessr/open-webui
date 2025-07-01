@@ -454,95 +454,55 @@
 
 		<div class="flex items-center">
 			{#if loading}
-				<div class=" text-gray-500 rounded-full cursor-not-allowed">
-					<svg
-						width="24"
-						height="24"
-						viewBox="0 0 24 24"
-						xmlns="http://www.w3.org/2000/svg"
-						fill="currentColor"
-						><style>
-							.spinner_OSmW {
-								transform-origin: center;
-								animation: spinner_T6mA 0.75s step-end infinite;
+				<div class="voice-breathing-light w-6 h-6 rounded-full cursor-not-allowed">
+					<style>
+						.voice-breathing-light {
+							background: linear-gradient(45deg, #6b7280, #9ca3af, #d1d5db, #f3f4f6);
+							background-size: 400% 400%;
+							animation: voice-breathe 2s ease-in-out infinite;
+							display: flex;
+							align-items: center;
+							justify-content: center;
+						}
+
+						@keyframes voice-breathe {
+							0% {
+								opacity: 0.4;
+								transform: scale(0.9);
+								background-position: 0% 50%;
+								box-shadow: 0 0 5px rgba(107, 114, 128, 0.3);
 							}
-							@keyframes spinner_T6mA {
-								8.3% {
-									transform: rotate(30deg);
-								}
-								16.6% {
-									transform: rotate(60deg);
-								}
-								25% {
-									transform: rotate(90deg);
-								}
-								33.3% {
-									transform: rotate(120deg);
-								}
-								41.6% {
-									transform: rotate(150deg);
-								}
-								50% {
-									transform: rotate(180deg);
-								}
-								58.3% {
-									transform: rotate(210deg);
-								}
-								66.6% {
-									transform: rotate(240deg);
-								}
-								75% {
-									transform: rotate(270deg);
-								}
-								83.3% {
-									transform: rotate(300deg);
-								}
-								91.6% {
-									transform: rotate(330deg);
-								}
-								100% {
-									transform: rotate(360deg);
-								}
+							25% {
+								opacity: 0.7;
+								transform: scale(1.0);
+								background-position: 100% 50%;
+								box-shadow: 0 0 10px rgba(156, 163, 175, 0.5);
 							}
-						</style><g class="spinner_OSmW"
-							><rect x="11" y="1" width="2" height="5" opacity=".14" /><rect
-								x="11"
-								y="1"
-								width="2"
-								height="5"
-								transform="rotate(30 12 12)"
-								opacity=".29"
-							/><rect
-								x="11"
-								y="1"
-								width="2"
-								height="5"
-								transform="rotate(60 12 12)"
-								opacity=".43"
-							/><rect
-								x="11"
-								y="1"
-								width="2"
-								height="5"
-								transform="rotate(90 12 12)"
-								opacity=".57"
-							/><rect
-								x="11"
-								y="1"
-								width="2"
-								height="5"
-								transform="rotate(120 12 12)"
-								opacity=".71"
-							/><rect
-								x="11"
-								y="1"
-								width="2"
-								height="5"
-								transform="rotate(150 12 12)"
-								opacity=".86"
-							/><rect x="11" y="1" width="2" height="5" transform="rotate(180 12 12)" /></g
-						></svg
-					>
+							50% {
+								opacity: 1.0;
+								transform: scale(1.1);
+								background-position: 50% 100%;
+								box-shadow: 0 0 15px rgba(209, 213, 219, 0.7);
+							}
+							75% {
+								opacity: 0.7;
+								transform: scale(1.0);
+								background-position: 0% 100%;
+								box-shadow: 0 0 10px rgba(156, 163, 175, 0.5);
+							}
+							100% {
+								opacity: 0.4;
+								transform: scale(0.9);
+								background-position: 0% 50%;
+								box-shadow: 0 0 5px rgba(107, 114, 128, 0.3);
+							}
+						}
+
+						/* Dark mode adjustments */
+						:global(.dark) .voice-breathing-light {
+							background: linear-gradient(45deg, #374151, #4b5563, #6b7280, #9ca3af);
+						}
+					</style>
 				</div>
 			{:else}
 				<button

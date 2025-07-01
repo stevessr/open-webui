@@ -9,12 +9,13 @@
 		models,
 		prompts,
 		knowledge,
-		tools
+		tools,
+		settings
 	} from '$lib/stores';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Sidebar from '$lib/components/icons/Sidebar.svelte';
+
+	import MenuLines from '$lib/components/icons/MenuLines.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -51,32 +52,46 @@
 
 {#if loaded}
 	<div
-		class=" relative flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out {$showSidebar
-			? 'md:max-w-[calc(100%-260px)]'
-			: ''} max-w-full"
+		class=" auto flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out max-w-full"
 	>
-		<nav class="   px-2.5 pt-1.5 backdrop-blur-xl drag-region">
+		<!-- Custom Background Support -->
+		{#if $settings?.backgroundImageUrl ?? null}
+			{#if $settings?.backgroundImageUrl?.endsWith('.mp4')}
+				<!-- Video background -->
+				<video
+					class="absolute top-0 left-0 w-full h-full object-cover z-[-1]"
+					src={$settings.backgroundImageUrl}
+					autoplay
+					muted
+					loop
+					playsinline
+				>
+					<track kind="captions" />
+				</video>
+			{:else}
+				<!-- Image background -->
+				<div
+					class="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat z-[-1]"
+					style="background-image: url({$settings.backgroundImageUrl})"
+				/>
+			{/if}
+		{/if}
+		<nav class="   px-2.5 pt-1 backdrop-blur-xl drag-region">
 			<div class=" flex items-center gap-1">
-				{#if $mobile}
-					<div class="{$showSidebar ? 'md:hidden' : ''} self-center flex flex-none items-center">
-						<Tooltip
-							content={$showSidebar ? $i18n.t('Close Sidebar') : $i18n.t('Open Sidebar')}
-							interactive={true}
-						>
-							<button
-								id="sidebar-toggle-button"
-								class=" cursor-pointer flex rounded-lg hover:bg-gray-100 dark:hover:bg-gray-850 transition cursor-"
-								on:click={() => {
-									showSidebar.set(!$showSidebar);
-								}}
-							>
-								<div class=" self-center p-1.5">
-									<Sidebar />
-								</div>
-							</button>
-						</Tooltip>
-					</div>
-				{/if}
+				<div class="{$showSidebar ? 'md:hidden' : ''} self-center flex flex-none items-center">
+					<button
+						id="sidebar-toggle-button"
+						class="cursor-pointer p-1.5 flex rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition"
+						on:click={() => {
+							showSidebar.set(!$showSidebar);
+						}}
+						aria-label="Toggle Sidebar"
+					>
+						<div class=" m-auto self-center">
+							<MenuLines />
+						</div>
+					</button>
+				</div>
 
 				<div class="">
 					<div

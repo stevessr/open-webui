@@ -1,5 +1,6 @@
 import typography from '@tailwindcss/typography';
 import containerQuries from '@tailwindcss/container-queries';
+import radix from 'tailwindcss-radix';
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -37,10 +38,10 @@ export default {
 			padding: {
 				'safe-bottom': 'env(safe-area-inset-bottom)'
 			},
-			transitionProperty: {
-				width: 'width'
+			translate: {
+				'radix-switch-thumb': '0.875rem'
 			}
 		}
 	},
-	plugins: [typography, containerQuries]
+	plugins: [typography, containerQuries, radix]
 };

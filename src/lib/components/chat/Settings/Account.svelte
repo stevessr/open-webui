@@ -188,7 +188,9 @@
 									muted
 									loop
 									playsinline
-								></video>
+								>
+									<track kind="captions" />
+								</video>
 							{:else}
 								<img
 									src={profileImageUrl !== '' ? profileImageUrl : generateInitialsImage(name)}
@@ -198,7 +200,7 @@
 							{/if}
 
 							<div
-								class="absolute flex justify-center rounded-full bottom-0 left-0 right-0 top-0 h-full w-full overflow-hidden bg-gray-700 bg-fixed opacity-0 transition duration-300 ease-in-out hover:opacity-50"
+								class="absolute flex justify-center rounded-full bottom-0 left-0 right-0 top-0 h-full w-full overflow-hidden bg-gray-700 bg-fixed opacity-0 transition duration-300 ease-in-out hover:opacity-50 trans"
 							>
 								<div class="my-auto text-gray-100">
 									<svg
@@ -283,14 +285,14 @@
 							/>
 							<div class="flex gap-2">
 								<button
-									class="flex-1 px-3 py-2 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-sm transition"
+									class="flex-1 px-3 py-2 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-sm transition little-color"
 									on:click={setProfileImageFromUrl}
 									type="button"
 								>
 									{$i18n.t('Set')}
 								</button>
 								<button
-									class="flex-1 px-3 py-2 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded-sm transition"
+									class="flex-1 px-3 py-2 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded-sm transition little-color"
 									on:click={toggleUrlInput}
 									type="button"
 								>

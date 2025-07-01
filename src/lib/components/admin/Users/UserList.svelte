@@ -1,6 +1,6 @@
 <script>
 	import { WEBUI_BASE_URL } from '$lib/constants';
-	import { WEBUI_NAME, config, user, showSidebar } from '$lib/stores';
+	import { WEBUI_NAME, config, user, showSidebar, settings } from '$lib/stores';
 	import { goto } from '$app/navigation';
 	import { onMount, getContext } from 'svelte';
 
@@ -139,11 +139,13 @@
 		<Banner
 			className="mx-0"
 			banner={{
+				id: 'license-error',
 				type: 'error',
 				title: 'License Error',
 				content:
 					'Exceeded the number of seats in your license. Please contact support to increase the number of seats.',
-				dismissable: true
+				dismissible: true,
+				timestamp: 0
 			}}
 		/>
 	</div>
@@ -398,12 +400,15 @@
 										muted
 										loop
 										playsinline
-									/>
+									>
+										<track kind="captions" />
+									</video>
 								{:else}
 									<img
 										class=" rounded-full w-6 h-6 object-cover mr-2.5"
-										src={user.profile_image_url.startsWith(WEBUI_BASE_URL) ||
-										user.profile_image_url.startsWith('https://www.gravatar.com/avatar/') ||
+										src={user?.profile_image_url?.startsWith(WEBUI_BASE_URL) ||
+										(user.profile_image_url.startsWith('https://www.gravatar.com/avatar/') &&
+											$settings.showUserGravatar) ||
 										user.profile_image_url.startsWith('data:')
 											? user.profile_image_url
 											: `/user.gif`}

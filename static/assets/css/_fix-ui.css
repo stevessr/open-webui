@@ -47,7 +47,7 @@
 /* 当元素被键盘聚焦时 */
 .ProseMirror:focus-visible,
 .ProseMirror-focused,
-input:focus {
+input:focus,textarea:focus {
   outline: none;
   /* 禁用默认的 outline */
   position: relative;
@@ -55,16 +55,11 @@ input:focus {
   border: 2px solid transparent;
   /* 增加边框宽度以容纳渐变 */
   border-radius: 5%;
-  box-shadow: none;
-  animation: rainbow 2.5s linear infinite;
-  background-image: linear-gradient(white, white),
-    conic-gradient(from var(--angle), red, yellow, lime, aqua, blue, magenta, red);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
+  background-color: transparent; /* 确保背景透明 */
+  border-image: conic-gradient(from var(--angle), red, yellow, lime, aqua, blue, magenta, red) 1; /* 将渐变应用于边框 */
 }
 
 img#logo {
-  position: absolute;
   width: auto;
   height: 6rem;
   top: 44%;
@@ -152,4 +147,110 @@ html.her #progress-bar {
 
 .animate-pulse-fast {
   animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.tippy-box {
+  background-color:transparent;
+}
+
+/* 设置 textarea 背景为主题背景 */
+textarea, .theme-textarea {
+  background-color: var(--background-color, #f9fafb) !important;
+  color: var(--text-color, #374151) !important;
+  border: 1px solid var(--border-color, #d1d5db) !important;
+}
+
+/* 深色主题下的 textarea 背景 */
+html.dark textarea, html.dark .theme-textarea {
+  background-color: var(--background-color, #1f2937) !important;
+  color: var(--text-color, #d1d5db) !important;
+  border: 1px solid var(--border-color, #374151) !important;
+}
+
+/* Rose Pine 主题下的 textarea 背景 */
+.rose-pine textarea, .rose-pine .theme-textarea {
+  background-color: #1f1d2e !important;
+  color: #e0def4 !important;
+  border: 1px solid #403d52 !important;
+}
+
+/* Rose Pine Dawn 主题下的 textarea 背景 */
+.rose-pine-dawn textarea, .rose-pine-dawn .theme-textarea {
+  background-color: #faf4ed !important;
+  color: #575279 !important;
+  border: 1px solid #dfdad9 !important;
+}
+
+/* Pink 主题下的 textarea 背景 */
+.pink-theme textarea, .pink-theme .theme-textarea {
+  background-color: #f8bbd0 !important;
+  color: #c2185b !important;
+  border: 1px solid #f06292 !important;
+}
+
+.trans {
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+}
+
+.little-color {
+  background: rgb(255 255 255 / 25%);
+}
+
+/* Rainbow text effect for API keys */
+.rainbow-text {
+  background: linear-gradient(
+    45deg,
+    #ff0000,
+    #ff7f00,
+    #ffff00,
+    #00ff00,
+    #0000ff,
+    #4b0082,
+    #9400d3,
+    #ff0000
+  );
+  background-size: 400% 400%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbow-shift 3s ease-in-out infinite;
+}
+
+@keyframes rainbow-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Fallback for browsers that don't support background-clip: text */
+@supports not (-webkit-background-clip: text) {
+  .rainbow-text {
+    background: none;
+    -webkit-text-fill-color: initial;
+    color: #ff6b6b;
+    text-shadow:
+      0 0 5px #ff6b6b,
+      0 0 10px #ff6b6b,
+      0 0 15px #ff6b6b;
+    animation: glow-pulse 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow-pulse {
+    from {
+      text-shadow:
+        0 0 5px #ff6b6b,
+        0 0 10px #ff6b6b,
+        0 0 15px #ff6b6b;
+    }
+    to {
+      text-shadow:
+        0 0 10px #ff6b6b,
+        0 0 20px #ff6b6b,
+        0 0 30px #ff6b6b;
+    }
+  }
 }

@@ -1,25 +1,52 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { createEventDispatcher, onMount, getContext } from 'svelte';
+	import { get, type Readable } from 'svelte/store';
+	import { slide, fade } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
+	import type { i18n as i18nType } from 'i18next';
+
+	// Custom transition that combines slide and fade
+	function slideAndFade(node: Element, params: { delay?: number; duration?: number } = {}) {
+		const slideTransition = slide(node, { duration: 300, easing: quintOut, ...params });
+		const fadeTransition = fade(node, { duration: 200, delay: params.delay || 0 });
+
+		return {
+			duration: Math.max(slideTransition.duration || 300, fadeTransition.duration || 200),
+			css: (t: number, u: number) => {
+				const slideCSS = slideTransition.css ? slideTransition.css(t, u) : '';
+				const fadeCSS = fadeTransition.css ? fadeTransition.css(t, u) : '';
+				return `${slideCSS} ${fadeCSS}`;
+			}
+		};
+	}
 	import { getLanguages, changeLanguage } from '$lib/i18n';
 	const dispatch = createEventDispatcher();
 
-	import { config, models, settings, theme, user } from '$lib/stores';
+	import { models, settings, theme, user } from '$lib/stores';
+	import {
+		generateThemeFromBackground,
+		applyMaterialTheme,
+		removeMaterialTheme
+	} from '$lib/utils/materialThemeGenerator';
 
-	const i18n = getContext('i18n');
+	const i18n = getContext('i18n') as Readable<i18nType>;
 
-	import AdvancedParams from './Advanced/AdvancedParams.svelte';
+	import AdvancedParams, {
+		defaultParams
+	} from '$lib/components/chat/Settings/Advanced/AdvancedParams.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	export let saveSettings: Function;
 	export let getModels: Function;
 
 	// General
-	let themes = ['dark', 'light', 'oled-dark'];
+	let themes = ['dark', 'light', 'oled-dark', 'material-design'];
 	let selectedTheme = 'system';
 
 	let languages: Awaited<ReturnType<typeof getLanguages>> = [];
-	let lang = $i18n.language;
+	let lang = get(i18n).language;
 	let notificationEnabled = false;
+let showUserGravatar = false;
 	let system = '';
 
 	let showAdvanced = false;
@@ -32,77 +59,32 @@
 			saveSettings({ notificationEnabled: notificationEnabled });
 		} else {
 			toast.error(
-				$i18n.t(
+				get(i18n).t(
 					'Response notifications cannot be activated as the website permissions have been denied. Please visit your browser settings to grant the necessary access.'
 				)
 			);
 		}
 	};
 
-	let params = {
-		// Advanced
-		stream_response: null,
-		stream_delta_chunk_size: null,
-		function_calling: null,
-		seed: null,
-		temperature: null,
-		reasoning_effort: null,
-		logit_bias: null,
-		frequency_penalty: null,
-		presence_penalty: null,
-		repeat_penalty: null,
-		repeat_last_n: null,
-		mirostat: null,
-		mirostat_eta: null,
-		mirostat_tau: null,
-		top_k: null,
-		top_p: null,
-		min_p: null,
-		stop: null,
-		tfs_z: null,
-		num_ctx: null,
-		num_batch: null,
-		num_keep: null,
-		max_tokens: null,
-		num_gpu: null
-	};
+	let advancedParams = JSON.parse(JSON.stringify(defaultParams));
 
 	const saveHandler = async () => {
-		saveSettings({
-			system: system !== '' ? system : undefined,
-			params: {
-				stream_response: params.stream_response !== null ? params.stream_response : undefined,
-				stream_delta_chunk_size:
-					params.stream_delta_chunk_size !== null ? params.stream_delta_chunk_size : undefined,
-				function_calling: params.function_calling !== null ? params.function_calling : undefined,
-				seed: (params.seed !== null ? params.seed : undefined) ?? undefined,
-				stop: params.stop ? params.stop.split(',').filter((e) => e) : undefined,
-				temperature: params.temperature !== null ? params.temperature : undefined,
-				reasoning_effort: params.reasoning_effort !== null ? params.reasoning_effort : undefined,
-				logit_bias: params.logit_bias !== null ? params.logit_bias : undefined,
-				frequency_penalty: params.frequency_penalty !== null ? params.frequency_penalty : undefined,
-				presence_penalty: params.frequency_penalty !== null ? params.frequency_penalty : undefined,
-				repeat_penalty: params.frequency_penalty !== null ? params.frequency_penalty : undefined,
-				repeat_last_n: params.repeat_last_n !== null ? params.repeat_last_n : undefined,
-				mirostat: params.mirostat !== null ? params.mirostat : undefined,
-				mirostat_eta: params.mirostat_eta !== null ? params.mirostat_eta : undefined,
-				mirostat_tau: params.mirostat_tau !== null ? params.mirostat_tau : undefined,
-				top_k: params.top_k !== null ? params.top_k : undefined,
-				top_p: params.top_p !== null ? params.top_p : undefined,
-				min_p: params.min_p !== null ? params.min_p : undefined,
-				tfs_z: params.tfs_z !== null ? params.tfs_z : undefined,
-				num_ctx: params.num_ctx !== null ? params.num_ctx : undefined,
-				num_batch: params.num_batch !== null ? params.num_batch : undefined,
-				num_keep: params.num_keep !== null ? params.num_keep : undefined,
-				max_tokens: params.max_tokens !== null ? params.max_tokens : undefined,
-				use_mmap: params.use_mmap !== null ? params.use_mmap : undefined,
-				use_mlock: params.use_mlock !== null ? params.use_mlock : undefined,
-				num_thread: params.num_thread !== null ? params.num_thread : undefined,
-				num_gpu: params.num_gpu !== null ? params.num_gpu : undefined,
-				think: params.think !== null ? params.think : undefined,
-				keep_alive: params.keep_alive !== null ? params.keep_alive : undefined,
-				format: params.format !== null ? params.format : undefined
+		const paramsToSave: Record<string, any> = {};
+		for (const key in advancedParams) {
+			if (advancedParams[key] !== null) {
+				paramsToSave[key] = advancedParams[key];
 			}
+		}
+
+		if (typeof paramsToSave['stop'] === 'string') {
+			paramsToSave['stop'] = paramsToSave['stop'].split(',').filter((e) => e.trim() !== '');
+		} else {
+			delete paramsToSave['stop'];
+		}
+
+		await saveSettings({
+			system: system !== '' ? system : undefined,
+			params: paramsToSave
 		});
 		dispatch('save');
 	};
@@ -113,14 +95,15 @@
 		languages = await getLanguages();
 
 		notificationEnabled = $settings.notificationEnabled ?? false;
+	showUserGravatar = $settings.showUserGravatar ?? false;
 		system = $settings.system ?? '';
 
-		params = { ...params, ...$settings.params };
-		params.stop = $settings?.params?.stop ? ($settings?.params?.stop ?? []).join(',') : null;
+		advancedParams = { ...advancedParams, ...$settings.params };
+		advancedParams.stop = $settings?.params?.stop ? ($settings?.params?.stop ?? []).join(',') : null;
 	});
 
 	const applyTheme = (_theme: string) => {
-		let themeToApply = _theme === 'oled-dark' ? 'dark' : _theme === 'her' ? 'light' : _theme;
+		let themeToApply = _theme === 'oled-dark' ? 'dark' : _theme;
 
 		if (_theme === 'system') {
 			themeToApply = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -163,7 +146,9 @@
 							? '#000000'
 							: _theme === 'her'
 								? '#983724'
-								: '#ffffff'
+								: _theme === 'material-design'
+									? '#6200EE'
+									: '#ffffff'
 				);
 			}
 		}
@@ -183,10 +168,57 @@
 		console.log(_theme);
 	};
 
-	const themeChangeHandler = (_theme: string) => {
+	const themeChangeHandler = async (_theme: string) => {
 		theme.set(_theme);
 		localStorage.setItem('theme', _theme);
 		applyTheme(_theme);
+
+		// Handle Material Design theme
+		if (_theme === 'material-design') {
+			const backgroundImageUrl = $settings?.backgroundImageUrl;
+			if (backgroundImageUrl) {
+				try {
+					const palette = await generateThemeFromBackground(backgroundImageUrl);
+					applyMaterialTheme(palette);
+				} catch (error) {
+					console.error('Failed to generate Material Design theme:', error);
+					// Apply default Material Design theme
+					applyMaterialTheme({
+						primary: '#6200EE',
+						primaryVariant: '#3700B3',
+						secondary: '#03DAC6',
+						secondaryVariant: '#018786',
+						background: '#FFFFFF',
+						surface: '#FFFFFF',
+						error: '#B00020',
+						onPrimary: '#FFFFFF',
+						onSecondary: '#000000',
+						onBackground: '#000000',
+						onSurface: '#000000',
+						onError: '#FFFFFF'
+					});
+				}
+			} else {
+				// Apply default Material Design theme when no background image
+				applyMaterialTheme({
+					primary: '#6200EE',
+					primaryVariant: '#3700B3',
+					secondary: '#03DAC6',
+					secondaryVariant: '#018786',
+					background: '#FFFFFF',
+					surface: '#FFFFFF',
+					error: '#B00020',
+					onPrimary: '#FFFFFF',
+					onSecondary: '#000000',
+					onBackground: '#000000',
+					onSurface: '#000000',
+					onError: '#FFFFFF'
+				});
+			}
+		} else {
+			// Remove Material Design theme when switching to other themes
+			removeMaterialTheme();
+		}
 	};
 </script>
 
@@ -203,7 +235,7 @@
 							? ''
 							: 'outline-hidden'}"
 						bind:value={selectedTheme}
-						placeholder={$i18n.t('Select a theme')}
+						placeholder="Select a theme"
 						on:change={() => themeChangeHandler(selectedTheme)}
 					>
 						<option value="system">⚙️ {$i18n.t('System')}</option>
@@ -211,6 +243,7 @@
 						<option value="oled-dark">🌃 {$i18n.t('OLED Dark')}</option>
 						<option value="light">☀️ {$i18n.t('Light')}</option>
 						<option value="her">🌷 Her</option>
+						<option value="material-design">🎨 {$i18n.t('Material Design')}</option>
 						<!-- <option value="rose-pine dark">🪻 {$i18n.t('Rosé Pine')}</option>
 						<option value="rose-pine-dawn light">🌷 {$i18n.t('Rosé Pine Dawn')}</option> -->
 					</select>
@@ -225,7 +258,7 @@
 							? ''
 							: 'outline-hidden'}"
 						bind:value={lang}
-						placeholder={$i18n.t('Select a language')}
+						placeholder="Select a language"
 						on:change={(e) => {
 							changeLanguage(lang);
 						}}
@@ -236,17 +269,11 @@
 					</select>
 				</div>
 			</div>
-			{#if $i18n.language === 'en-US' && !($config?.license_metadata ?? false)}
-				<div
-					class="mb-2 text-xs {($settings?.highContrastMode ?? false)
-						? 'text-gray-800 dark:text-gray-100'
-						: 'text-gray-400 dark:text-gray-500'}"
-				>
+			{#if $i18n.language === 'en-US'}
+				<div class="mb-2 text-xs text-gray-400 dark:text-gray-500">
 					Couldn't find your language?
 					<a
-						class="font-medium underline {($settings?.highContrastMode ?? false)
-							? 'text-gray-700 dark:text-gray-200'
-							: 'text-gray-300'}"
+						class=" text-gray-300 font-medium underline"
 						href="https://github.com/open-webui/open-webui/blob/main/docs/CONTRIBUTING.md#-translations-and-internationalization"
 						target="_blank"
 					>
@@ -274,9 +301,26 @@
 					</button>
 				</div>
 			</div>
+			
+			<div class=" py-0.5 flex w-full justify-between">
+				<div class=" self-center text-xs font-medium">{$i18n.t('Show User Gravatar')}</div>
+				<label class="relative inline-flex items-center cursor-pointer">
+					<input
+						type="checkbox"
+						bind:checked={showUserGravatar}
+						class="sr-only peer"
+						on:change={() => {
+							saveSettings({ showUserGravatar: showUserGravatar });
+						}}
+					/>
+					<div
+						class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+					></div>
+				</label>
+			</div>
 		</div>
 
-		{#if $user?.role === 'admin' || ($user?.permissions.chat?.system_prompt ?? true)}
+		{#if $user?.role === 'admin' || ($user?.permissions?.chat?.system_prompt ?? true)}
 			<hr class="border-gray-50 dark:border-gray-850 my-3" />
 
 			<div>
@@ -287,20 +331,18 @@
 						($settings.highContrastMode
 							? ' p-2.5 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-850 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 overflow-y-hidden'
 							: ' bg-white dark:text-gray-300 dark:bg-gray-900')}
-					rows="4"
+					rows={4}
 					placeholder={$i18n.t('Enter system prompt here')}
 				/>
 			</div>
 		{/if}
 
-		{#if $user?.role === 'admin' || ($user?.permissions.chat?.controls ?? true)}
+		{#if $user?.role === 'admin' || ($user?.permissions?.chat?.controls ?? true)}
 			<div class="mt-2 space-y-3 pr-1.5">
 				<div class="flex justify-between items-center text-sm">
 					<div class="  font-medium">{$i18n.t('Advanced Parameters')}</div>
 					<button
-						class=" text-xs font-medium {($settings?.highContrastMode ?? false)
-							? 'text-gray-800 dark:text-gray-100'
-							: 'text-gray-400 dark:text-gray-500'}"
+						class=" text-xs font-medium text-gray-500"
 						type="button"
 						on:click={() => {
 							showAdvanced = !showAdvanced;
@@ -309,7 +351,18 @@
 				</div>
 
 				{#if showAdvanced}
-					<AdvancedParams admin={$user?.role === 'admin'} bind:params />
+					<div
+						in:slideAndFade={{ delay: 100 }}
+						out:slideAndFade
+					>
+						<AdvancedParams
+							admin={$user?.role === 'admin'}
+							params={advancedParams}
+							on:change={(e) => {
+								advancedParams = e.detail;
+							}}
+						/>
+					</div>
 				{/if}
 			</div>
 		{/if}

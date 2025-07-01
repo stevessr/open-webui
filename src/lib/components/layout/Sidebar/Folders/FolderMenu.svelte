@@ -1,16 +1,23 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
 	import { flyAndScale } from '$lib/utils/transitions';
-	import { getContext, createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, getContext } from 'svelte';
+	import type { Writable } from 'svelte/store';
+	import type { i18n as i18nType } from 'i18next';
+	const i18n = getContext<Writable<i18nType>>('i18n');
 
-	const i18n = getContext('i18n');
 	const dispatch = createEventDispatcher();
 
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import GarbageBin from '$lib/components/icons/GarbageBin.svelte';
 	import Pencil from '$lib/components/icons/Pencil.svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Download from '$lib/components/icons/ArrowDownTray.svelte';
+	import Download from '$lib/components/icons/Download.svelte';
+	import PencilSquare from '$lib/components/icons/PencilSquare.svelte';
+
+	export let align: 'start' | 'end' = 'start';
+	export let onEdit = () => {};
+	export let onExport = () => {};
+	export let onDelete = () => {};
 
 	export let align: 'start' | 'end' = 'start';
 	export let onEdit = () => {};
@@ -28,10 +35,9 @@
 		}
 	}}
 >
-	<Tooltip content={$i18n.t('More')}>
-		<slot />
-	</Tooltip>
-
+	<DropdownMenu.Trigger asChild let:builder>
+		<slot {builder} />
+	</DropdownMenu.Trigger>
 	<div slot="content">
 		<DropdownMenu.Content
 			class="w-full max-w-[170px] rounded-lg px-1 py-1.5  z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg"

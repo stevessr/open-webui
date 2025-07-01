@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	const i18n = getContext('i18n');
+	import type { Writable } from 'svelte/store';
+	import type { i18n as i18nType } from 'i18next';
+	const i18n = getContext<Writable<i18nType>>('i18n');
 
 	import DOMPurify from 'dompurify';
 
@@ -22,44 +24,52 @@
 	import EllipsisHorizontal from '$lib/components/icons/EllipsisHorizontal.svelte';
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 
-	export let folder = null;
+	export let folder: any | null = null;
 
-	export let onUpdate: Function = (folderId) => {};
-	export let onDelete: Function = (folderId) => {};
+	export let onUpdate: (folder: any) => void = (folder) => {};
+	export let onDelete: (folder: any) => void = (folder) => {};
 
 	let showFolderModal = false;
 	let showDeleteConfirm = false;
 
-	const updateHandler = async ({ name, data }) => {
-		if (name === '') {
-			toast.error($i18n.t('Folder name cannot be empty.'));
-			return;
-		}
-
-		const currentName = folder.name;
-
-		name = name.trim();
-		folder.name = name;
-
-		const res = await updateFolderById(localStorage.token, folder.id, {
-			name,
-			...(data ? { data } : {})
-		}).catch((error) => {
-			toast.error(`${error}`);
-
-			folder.name = currentName;
-			return null;
-		});
-
-		if (res) {
-			folder.name = name;
-			if (data) {
-				folder.data = data;
+	const updateHandler = async ({
+		name,
+		data
+	}: {
+		name: string;
+		data?: Record<string, any>;
+	}) => {
+		if (folder) {
+			if (name === '') {
+				toast.error($i18n.t('Folder name cannot be empty.'));
+				return;
 			}
 
-			toast.success($i18n.t('Folder updated successfully'));
-			selectedFolder.set(folder);
-			onUpdate(folder);
+			const currentName = folder.name;
+
+			name = name.trim();
+			folder.name = name;
+
+			const res = await updateFolderById(localStorage.token, folder.id, {
+				name,
+				...(data ? { data } : {})
+			}).catch((error) => {
+				toast.error(`${error}`);
+
+				folder.name = currentName;
+				return null;
+			});
+
+			if (res) {
+				folder.name = name;
+				if (data) {
+					folder.data = data;
+				}
+
+				toast.success($i18n.t('Folder updated successfully'));
+				selectedFolder.set(folder);
+				onUpdate(folder);
+			}
 		}
 	};
 
