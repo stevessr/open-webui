@@ -5,6 +5,11 @@
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import Source from './Source.svelte';
 	import { settings } from '$lib/stores';
+	import FloatingDocPreview from '$lib/components/common/FloatingDocPreview.svelte';
+	import ArrowsPointingOut from '$lib/components/icons/ArrowsPointingOut.svelte';
+	import { getContext } from 'svelte';
+
+	const i18n = getContext('i18n');
 
 	export let id: string;
 	export let token: Token;
@@ -12,6 +17,9 @@
 	export let onSourceClick: Function = () => {};
 
 	let html: string | null = null;
+	let showFloatingPreview = false;
+	let previewUrl = '';
+	let previewTitle = 'HTML Content Preview';
 
 	$: if (token.type === 'html' && token?.text) {
 		html = DOMPurify.sanitize(token.text);
@@ -34,7 +42,9 @@
 				referrerpolicy="strict-origin-when-cross-origin"
 				controls
 				allowfullscreen
-			></video>
+			>
+				<track kind="captions" />
+			</video>
 		{:else}
 			{token.text}
 		{/if}
@@ -105,28 +115,85 @@
 		{@const match = token.text.match(/<file type="html" id="([^"]+)"/)}
 		{@const fileId = match && match[1]}
 		{#if fileId}
-			<iframe
-				class="w-full my-2"
-				src={`${WEBUI_BASE_URL}/api/v1/files/${fileId}/content/html`}
-				title="Content"
-				frameborder="0"
-				sandbox="allow-scripts allow-downloads{($settings?.iframeSandboxAllowForms ?? false)
-					? ' allow-forms'
-					: ''}{($settings?.iframeSandboxAllowSameOrigin ?? false) ? ' allow-same-origin' : ''}"
-				referrerpolicy="strict-origin-when-cross-origin"
-				allowfullscreen
-				width="100%"
-				onload="this.style.height=(this.contentWindow.document.body.scrollHeight+20)+'px';"
-			></iframe>
+			<div class="relative group">
+				<iframe
+					class="w-full my-2"
+					src={`${WEBUI_BASE_URL}/api/v1/files/${fileId}/content/html`}
+					title="Content"
+					frameborder="0"
+					sandbox="allow-scripts allow-downloads{($settings?.iframeSandboxAllowForms ?? false)
+						? ' allow-forms'
+						: ''}{($settings?.iframeSandboxAllowSameOrigin ?? false) ? ' allow-same-origin' : ''}"
+					referrerpolicy="strict-origin-when-cross-origin"
+					allowfullscreen
+					width="100%"
+					onload="this.style.height=(this.contentWindow.document.body.scrollHeight+20)+'px';"
+				></iframe>
+
+				<!-- Floating Preview Button -->
+				<button
+					class="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+					on:click={() => {
+						previewUrl = `${WEBUI_BASE_URL}/api/v1/files/${fileId}/content/html`;
+						previewTitle = 'HTML File Preview';
+						showFloatingPreview = true;
+					}}
+					title="Open in floating preview"
+					aria-label="Open in floating preview"
+				>
+					<ArrowsPointingOut className="size-4" />
+				</button>
+			</div>
 		{/if}
 	{:else if token.text.includes(`<source_id`)}
 		<Source {id} {token} onClick={onSourceClick} />
+	{:else if html && (html.includes('<div') || html.includes('<span') || html.includes('<p') || html.includes('<h1') || html.includes('<h2') || html.includes('<h3') || html.includes('<table') || html.includes('<form'))}
+		<!-- General HTML content with floating preview option -->
+		<div class="relative group">
+			{@html html}
+
+			<!-- Floating Preview Button for HTML content -->
+			<button
+				class="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+				on:click={() => {
+					// Create a data URL for the HTML content
+					const htmlContent = `
+						<!DOCTYPE html>
+						<html lang="en">
+						<head>
+							<meta charset="UTF-8">
+							<meta name="viewport" content="width=device-width, initial-scale=1.0">
+							<title>HTML Preview</title>
+							<style>
+								body { font-family: system-ui, -apple-system, sans-serif; margin: 20px; }
+							</style>
+						</head>
+						<body>
+							${html}
+						</body>
+						</html>
+					`;
+					const blob = new Blob([htmlContent], { type: 'text/html' });
+					previewUrl = URL.createObjectURL(blob);
+					previewTitle = 'HTML Content Preview';
+					showFloatingPreview = true;
+				}}
+				title="Open in floating preview"
+				aria-label="Open in floating preview"
+			>
+				<ArrowsPointingOut className="size-4" />
+			</button>
+		</div>
 	{:else}
-		{@const br = token.text.match(/<br\s*\/?>/)}
-		{#if br}
-			<br />
-		{:else}
-			{token.text}
-		{/if}
+		{@html html || token.text}
 	{/if}
+{/if}
+
+<!-- Global Floating Preview Modal -->
+{#if showFloatingPreview}
+	<FloatingDocPreview
+		bind:show={showFloatingPreview}
+		url={previewUrl}
+		title={previewTitle}
+	/>
 {/if}

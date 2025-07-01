@@ -12,6 +12,7 @@
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import VideoInputMenu from './CallOverlay/VideoInputMenu.svelte';
+	import Spinner from '$lib/components/common/Spinner.svelte';
 	import { KokoroWorker } from '$lib/workers/KokoroWorker';
 
 	const i18n = getContext('i18n');
@@ -715,42 +716,7 @@
 						{emoji}
 					</div>
 				{:else if loading || assistantSpeaking}
-					<svg
-						class="size-12 text-gray-900 dark:text-gray-400"
-						viewBox="0 0 24 24"
-						fill="currentColor"
-						xmlns="http://www.w3.org/2000/svg"
-						><style>
-							.spinner_qM83 {
-								animation: spinner_8HQG 1.05s infinite;
-							}
-							.spinner_oXPr {
-								animation-delay: 0.1s;
-							}
-							.spinner_ZTLf {
-								animation-delay: 0.2s;
-							}
-							@keyframes spinner_8HQG {
-								0%,
-								57.14% {
-									animation-timing-function: cubic-bezier(0.33, 0.66, 0.66, 1);
-									transform: translate(0);
-								}
-								28.57% {
-									animation-timing-function: cubic-bezier(0.33, 0, 0.66, 0.33);
-									transform: translateY(-6px);
-								}
-								100% {
-									transform: translate(0);
-								}
-							}
-						</style><circle class="spinner_qM83" cx="4" cy="12" r="3" /><circle
-							class="spinner_qM83 spinner_oXPr"
-							cx="12"
-							cy="12"
-							r="3"
-						/><circle class="spinner_qM83 spinner_ZTLf" cx="20" cy="12" r="3" /></svg
-					>
+					<Spinner className="size-12" colorful={true} />
 				{:else}
 					<div
 						class=" {rmsLevel * 100 > 4
@@ -797,42 +763,7 @@
 							{emoji}
 						</div>
 					{:else if loading || assistantSpeaking}
-						<svg
-							class="size-44 text-gray-900 dark:text-gray-400"
-							viewBox="0 0 24 24"
-							fill="currentColor"
-							xmlns="http://www.w3.org/2000/svg"
-							><style>
-								.spinner_qM83 {
-									animation: spinner_8HQG 1.05s infinite;
-								}
-								.spinner_oXPr {
-									animation-delay: 0.1s;
-								}
-								.spinner_ZTLf {
-									animation-delay: 0.2s;
-								}
-								@keyframes spinner_8HQG {
-									0%,
-									57.14% {
-										animation-timing-function: cubic-bezier(0.33, 0.66, 0.66, 1);
-										transform: translate(0);
-									}
-									28.57% {
-										animation-timing-function: cubic-bezier(0.33, 0, 0.66, 0.33);
-										transform: translateY(-6px);
-									}
-									100% {
-										transform: translate(0);
-									}
-								}
-							</style><circle class="spinner_qM83" cx="4" cy="12" r="3" /><circle
-								class="spinner_qM83 spinner_oXPr"
-								cx="12"
-								cy="12"
-								r="3"
-							/><circle class="spinner_qM83 spinner_ZTLf" cx="20" cy="12" r="3" /></svg
-						>
+						<Spinner className="size-44" colorful={true} />
 					{:else}
 						<div
 							class=" {rmsLevel * 100 > 4
@@ -860,7 +791,9 @@
 						autoplay
 						class="rounded-2xl h-full min-w-full object-cover object-center"
 						playsinline
-					/>
+					>
+						<track kind="captions" />
+					</video>
 
 					<canvas id="camera-canvas" style="display:none;" />
 

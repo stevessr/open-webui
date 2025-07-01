@@ -5,5 +5,8 @@
 @import "/assets/css/_syntax-highlighting.css";
 @import "/assets/css/_themes.css";
 @import "/assets/css/_pink-theme.css";
+@import "/assets/css/_material-theme.css";
 @import "/assets/css/_fix-ui.css";
 @import "/assets/css/_fluent.css";
+@import "/assets/css/_global.css";
+@import "/assets/css/_editor.css";

@@ -1,18 +1,5 @@
-<script lang="ts">
-	import Switch from '$lib/components/common/Switch.svelte';
-	import Textarea from '$lib/components/common/Textarea.svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Plus from '$lib/components/icons/Plus.svelte';
-	import { getContext } from 'svelte';
-
-	const i18n = getContext('i18n');
-
-	export let onChange: (params: any) => void = () => {};
-
-	export let admin = false;
-	export let custom = false;
-
-	const defaultParams = {
+<script context="module" lang="ts">
+	export const defaultParams = {
 		// Advanced
 		stream_response: null, // Set stream responses for this model individually
 		stream_delta_chunk_size: null, // Set the chunk size for streaming responses
@@ -46,10 +33,27 @@
 		num_thread: null,
 		num_gpu: null
 	};
+</script>
+
+<script lang="ts">
+	import Switch from '$lib/components/common/Switch.svelte';
+	import Textarea from '$lib/components/common/Textarea.svelte';
+	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import Plus from '$lib/components/icons/Plus.svelte';
+	import { createEventDispatcher, getContext } from 'svelte';
+
+	const i18n = getContext('i18n');
+
+	export let onChange: (params: any) => void = () => {};
+
+	export let admin = false;
+	export let custom = false;
 
 	export let params = defaultParams;
+	const dispatch = createEventDispatcher();
+
 	$: if (params) {
-		onChange(params);
+		dispatch('change', params);
 	}
 </script>
 

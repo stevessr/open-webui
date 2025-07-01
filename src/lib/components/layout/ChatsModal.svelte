@@ -26,6 +26,7 @@
 	export let title = 'Chats';
 	export let emptyPlaceholder = '';
 	export let shareUrl = false;
+	export let draggable = true;
 
 	export let query = '';
 
@@ -73,7 +74,7 @@
 	}}
 />
 
-<Modal size="lg" bind:show>
+<Modal size="lg" bind:show {draggable}>
 	<div>
 		<div class=" flex justify-between dark:text-gray-300 px-5 pt-4 pb-1">
 			<div class=" text-lg font-medium self-center">{title}</div>

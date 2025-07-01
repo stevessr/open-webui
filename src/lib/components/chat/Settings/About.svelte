@@ -7,10 +7,12 @@
 	import { onMount, getContext } from 'svelte';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import FloatingDocPreview from '$lib/components/common/FloatingDocPreview.svelte';
 
 	const i18n = getContext('i18n');
 
 	let ollamaVersion = '';
+	let showReleasesPreview = false;
 
 	let updateAvailable = null;
 	let version = {
@@ -61,16 +63,18 @@
 						</Tooltip>
 
 						{#if $config?.features?.enable_version_update_check}
-							<a
-								href="https://github.com/open-webui/open-webui/releases/tag/v{version.latest}"
-								target="_blank"
+							<button
+								class="underline hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+								on:click={() => {
+									showReleasesPreview = true;
+								}}
 							>
 								{updateAvailable === null
 									? $i18n.t('Checking for updates...')
 									: updateAvailable
 										? `(v${version.latest} ${$i18n.t('available!')})`
 										: $i18n.t('(latest)')}
-							</a>
+							</button>
 						{/if}
 					</div>
 
@@ -203,4 +207,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			>
 		</div>
 	</div>
+
+	<FloatingDocPreview
+		bind:show={showReleasesPreview}
+		url="https://github.com/open-webui/open-webui/releases"
+		title="Open WebUI Releases"
+	/>
 </div>

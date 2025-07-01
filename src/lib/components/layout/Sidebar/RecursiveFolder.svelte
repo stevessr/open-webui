@@ -490,14 +490,11 @@
 					{/if}
 				</div>
 
-				<button
-					class="absolute z-10 right-2 invisible group-hover:visible self-center flex items-center dark:text-gray-300"
-					on:pointerup={(e) => {
-						e.stopPropagation();
-					}}
-					on:click={(e) => e.stopPropagation()}
+				<div
+					class="absolute z-10 right-2 invisible group-hover:visible self-center flex items-center"
 				>
 					<FolderMenu
+						{i18n}
 						onEdit={() => {
 							showFolderModal = true;
 						}}
@@ -508,11 +505,14 @@
 							exportHandler();
 						}}
 					>
-						<button class="p-0.5 dark:hover:bg-gray-850 rounded-lg touch-auto" on:click={(e) => {}}>
+						<div
+							class="p-0.5 dark:text-gray-300 dark:hover:bg-gray-850 rounded-lg touch-auto"
+							on:click|stopPropagation
+						>
 							<EllipsisHorizontal className="size-4" strokeWidth="2.5" />
-						</button>
+						</div>
 					</FolderMenu>
-				</button>
+				</div>
 			</button>
 		</div>
 

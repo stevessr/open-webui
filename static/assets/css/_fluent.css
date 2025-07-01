@@ -122,6 +122,7 @@ html.her #progress-bar {
 
 .animate-pulse-fast {
   animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
 @keyframes fade-in {
     0% {
         opacity: 0;
@@ -143,6 +144,28 @@ html.her #progress-bar {
     --tw-ease: cubic-bezier(0.3, 0.3, 0.2, 1);
 }
 
-#sidebar[data-state='true'] {
-    animation: 0.4s ease-in forwards fade-in !important;
+#sidebar,#user-menu{
+    background: transparent;
+    backdrop-filter: blur(8px);
+}
+
+#sidebar[data-state='true'],.parameter-panel,div {
+    animation: 0.1s ease-in forwards fade-in !important;
+}
+
+.overscroll-contain , .menu-cover,.chat-interface,.model-menu,.parameter-panel,.tools-menu,.trans{
+    background: transparent;
+    backdrop-filter: blur(8px);
+}
+.none-border{
+    border: none;
+}
+
+.tag-selcetor,.clean{
+    background: transparent;
+}
+
+tr,tbody,thead,table{
+    background: transparent;
+    backdrop-filter: blur(8px);
 }

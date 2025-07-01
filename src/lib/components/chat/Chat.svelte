@@ -2037,21 +2037,20 @@
 				{#if $settings?.backgroundImageUrl.endsWith('.mp4')}
 					<!-- Video background -->
 					<video
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full object-cover"
+						class="absolute top-0 left-0 w-full h-full object-cover"
 						src={$settings.backgroundImageUrl}
 						autoplay
 						muted
 						loop
 						playsinline
-					></video>
+					>
+						<track kind="captions" />
+					</video>
 				{:else}
 					<div
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
-						style="background-image: url({$settings.backgroundImageUrl})  "
+						class="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
+						style="background-image: url({$settings?.backgroundImageUrl ??
+						$config?.license_metadata?.background_image_url})  "
 					/>
 				{/if}
 
