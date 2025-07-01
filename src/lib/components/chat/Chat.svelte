@@ -2045,7 +2045,6 @@
 						playsinline
 					></video>
 				{:else}
-					<!-- Image background -->
 					<div
 						class="absolute {$showSidebar
 							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
