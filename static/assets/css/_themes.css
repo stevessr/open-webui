@@ -1,3 +1,11 @@
+:root {
+  --background-color: white; /* 默认浅色主题背景 */
+}
+
+html.dark {
+  --background-color: black; /* 深色主题背景 */
+}
+
 /* Styles from static/themes/rosepine.css */
 .rose-pine * {
 	color: #e0def4 !important;
