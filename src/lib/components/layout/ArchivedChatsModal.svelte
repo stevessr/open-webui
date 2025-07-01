@@ -135,6 +135,7 @@
 	bind:direction
 	title={$i18n.t('Archived Chats')}
 	emptyPlaceholder={$i18n.t('You have no archived conversations.')}
+	draggable={false}
 	{chatList}
 	{allChatsLoaded}
 	{chatListLoading}

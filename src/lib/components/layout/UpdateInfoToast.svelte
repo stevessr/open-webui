@@ -6,11 +6,14 @@
 
 	import { WEBUI_VERSION } from '$lib/constants';
 	import XMark from '../icons/XMark.svelte';
+	import FloatingDocPreview from '../common/FloatingDocPreview.svelte';
 
 	export let version = {
 		current: WEBUI_VERSION,
 		latest: WEBUI_VERSION
 	};
+
+	let showReleasesPreview = false;
 </script>
 
 <div
@@ -21,9 +24,14 @@
 			LATEST_VERSION: version.latest
 		})}
 
-		<a href="https://github.com/open-webui/open-webui/releases" target="_blank" class="underline">
-			{$i18n.t('Update for the latest features and improvements.')}</a
+		<button
+			class="underline hover:text-blue-800 dark:hover:text-blue-200 transition-colors"
+			on:click={() => {
+				showReleasesPreview = true;
+			}}
 		>
+			{$i18n.t('Update for the latest features and improvements.')}
+		</button>
 	</div>
 
 	<div class=" shrink-0 pr-1">
@@ -36,4 +44,10 @@
 			<XMark />
 		</button>
 	</div>
+
+	<FloatingDocPreview
+		bind:show={showReleasesPreview}
+		url="https://github.com/open-webui/open-webui/releases"
+		title="Open WebUI Releases"
+	/>
 </div>

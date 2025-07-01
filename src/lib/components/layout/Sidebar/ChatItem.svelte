@@ -2,7 +2,7 @@
 	import { toast } from 'svelte-sonner';
 	import { goto, invalidate, invalidateAll } from '$app/navigation';
 	import { onMount, getContext, createEventDispatcher, tick, onDestroy } from 'svelte';
-	const i18n = getContext('i18n');
+	const i18n: any = getContext('i18n');
 
 	const dispatch = createEventDispatcher();
 
@@ -25,7 +25,8 @@
 		pinnedChats,
 		showSidebar,
 		currentChatPage,
-		tags
+		tags,
+		selectedFolder
 	} from '$lib/stores';
 
 	import ChatMenu from './ChatMenu.svelte';
@@ -40,6 +41,7 @@
 	import Document from '$lib/components/icons/Document.svelte';
 	import Sparkles from '$lib/components/icons/Sparkles.svelte';
 	import { generateTitle } from '$lib/apis';
+	import type { Chat } from '$lib/stores';
 
 	export let className = '';
 
@@ -49,7 +51,7 @@
 	export let selected = false;
 	export let shiftKey = false;
 
-	let chat = null;
+	let chat: Chat | null = null;
 
 	let mouseOver = false;
 	let draggable = false;
@@ -65,12 +67,16 @@
 		}
 	};
 
+	$: isChatInSelectedFolder =
+		$selectedFolder && ($selectedFolder as any).items && ($selectedFolder as any).items.chats
+			? ($selectedFolder as any).items.chats.map((chat: Chat) => chat.id).includes(id)
+			: false;
 	let showShareChatModal = false;
 	let confirmEdit = false;
 
 	let chatTitle = title;
 
-	const editChatTitle = async (id, title) => {
+	const editChatTitle = async (id: string, title: string) => {
 		if (title === '') {
 			toast.error($i18n.t('Title cannot be an empty string.'));
 		} else {
@@ -90,7 +96,7 @@
 		}
 	};
 
-	const cloneChatHandler = async (id) => {
+	const cloneChatHandler = async (id: string) => {
 		const res = await cloneChatById(
 			localStorage.token,
 			id,
@@ -111,7 +117,7 @@
 		}
 	};
 
-	const deleteChatHandler = async (id) => {
+	const deleteChatHandler = async (id: string) => {
 		const res = await deleteChatById(localStorage.token, id).catch((error) => {
 			toast.error(`${error}`);
 			return null;
@@ -130,12 +136,12 @@
 		}
 	};
 
-	const archiveChatHandler = async (id) => {
+	const archiveChatHandler = async (id: string) => {
 		await archiveChatById(localStorage.token, id);
 		dispatch('change');
 	};
 
-	let itemElement;
+	let itemElement: HTMLElement | null;
 
 	let generating = false;
 	let doubleClicked = false;
@@ -147,36 +153,44 @@
 	dragImage.src =
 		'/user.gif';
 
-	const onDragStart = (event) => {
+	const onDragStart = (event: DragEvent) => {
 		event.stopPropagation();
 
-		event.dataTransfer.setDragImage(dragImage, 0, 0);
+		if (event.dataTransfer) {
+			event.dataTransfer.setDragImage(dragImage, 0, 0);
+		}
 
 		// Set the data to be transferred
-		event.dataTransfer.setData(
+		if (event.dataTransfer) {
+			event.dataTransfer.setData(
 			'text/plain',
 			JSON.stringify({
 				type: 'chat',
 				id: id,
 				item: chat
 			})
-		);
+			);
+		}
 
 		dragged = true;
-		itemElement.style.opacity = '0.5'; // Optional: Visual cue to show it's being dragged
+		if (itemElement) {
+			itemElement.style.opacity = '0.5'; // Optional: Visual cue to show it's being dragged
+		}
 	};
 
-	const onDrag = (event) => {
+	const onDrag = (event: DragEvent) => {
 		event.stopPropagation();
 
 		x = event.clientX;
 		y = event.clientY;
 	};
 
-	const onDragEnd = (event) => {
+	const onDragEnd = (event: DragEvent) => {
 		event.stopPropagation();
 
-		itemElement.style.opacity = '1'; // Reset visual cue after drag
+		if (itemElement) {
+			itemElement.style.opacity = '1'; // Reset visual cue after drag
+		}
 		dragged = false;
 	};
 
@@ -201,7 +215,7 @@
 
 	let showDeleteConfirm = false;
 
-	const chatTitleInputKeydownHandler = (e) => {
+	const chatTitleInputKeydownHandler = (e: KeyboardEvent) => {
 		if (e.key === 'Enter') {
 			e.preventDefault();
 			setTimeout(() => {
@@ -233,14 +247,16 @@
 			chat = await getChatById(localStorage.token, id);
 		}
 
-		const messages = (chat.chat?.messages ?? []).map((message) => {
+		if (!chat) return;
+
+		const messages = (chat.chat?.messages ?? []).map((message: any) => {
 			return {
 				role: message.role,
 				content: message.content
 			};
 		});
 
-		const model = chat.chat.models.at(0) ?? chat.models.at(0) ?? '';
+		const model = chat.chat?.models?.at(0) ?? chat.models?.at(0) ?? '';
 
 		chatTitle = '';
 
@@ -301,7 +317,7 @@
 		<div
 			class=" w-full flex justify-between rounded-lg px-[11px] py-[6px] {id === $chatId ||
 			confirmEdit
-				? 'bg-gray-200 dark:bg-gray-900'
+				? 'bg-gray-100 dark:bg-gray-900'
 				: selected
 					? 'bg-gray-100 dark:bg-gray-950'
 					: 'group-hover:bg-gray-100 dark:group-hover:bg-gray-950'}  whitespace-nowrap text-ellipsis relative {generating
@@ -316,7 +332,7 @@
 				on:keydown={chatTitleInputKeydownHandler}
 				on:blur={async (e) => {
 					// check if target is generate button
-					if (e.relatedTarget?.id === 'generate-title-button') {
+					if (e.relatedTarget && 'id' in e.relatedTarget && e.relatedTarget.id === 'generate-title-button') {
 						return;
 					}
 
@@ -347,13 +363,20 @@
 		<a
 			class=" w-full flex justify-between rounded-lg px-[11px] py-[6px] {id === $chatId ||
 			confirmEdit
-				? 'bg-gray-200 dark:bg-gray-900'
+				? 'bg-gray-100 dark:bg-gray-900'
 				: selected
 					? 'bg-gray-100 dark:bg-gray-950'
 					: ' group-hover:bg-gray-100 dark:group-hover:bg-gray-950'}  whitespace-nowrap text-ellipsis"
 			href="/c/{id}"
 			on:click={() => {
 				dispatch('select');
+
+				if (
+					$selectedFolder &&
+					!isChatInSelectedFolder
+				) {
+					selectedFolder.set(null); // Reset selected folder if the chat is not in it
+				}
 
 				if ($mobile) {
 					showSidebar.set(false);
@@ -387,7 +410,7 @@
 	<div
 		class="
         {id === $chatId || confirmEdit
-			? 'from-gray-200 dark:from-gray-900'
+			? 'from-gray-100 dark:from-gray-900'
 			: selected
 				? 'from-gray-100 dark:from-gray-950'
 				: 'invisible group-hover:visible from-gray-100 dark:from-gray-950'}
@@ -475,25 +498,21 @@
 					on:tag={(e) => {
 						dispatch('tag', e.detail);
 					}}
+					class=" self-center dark:hover:text-white transition m-0"
+					on:click={() => {
+						dispatch('select');
+					}}
 				>
-					<button
-						aria-label="Chat Menu"
-						class=" self-center dark:hover:text-white transition m-0"
-						on:click={() => {
-							dispatch('select');
-						}}
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 16 16"
+						fill="currentColor"
+						class="w-4 h-4"
 					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 16 16"
-							fill="currentColor"
-							class="w-4 h-4"
-						>
-							<path
-								d="M2 8a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM6.5 8a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM12.5 6.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"
-							/>
-						</svg>
-					</button>
+						<path
+							d="M2 8a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM6.5 8a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM12.5 6.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"
+						/>
+					</svg>
 				</ChatMenu>
 
 				{#if id === $chatId}

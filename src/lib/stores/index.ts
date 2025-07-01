@@ -1,7 +1,7 @@
 import { APP_NAME } from '$lib/constants';
 import { type Writable, writable } from 'svelte/store';
 import type { ModelConfig } from '$lib/apis';
-import type { Banner } from '$lib/types';
+import type { Banner, ToolServer } from '$lib/types';
 import type { Socket } from 'socket.io-client';
 
 import emojiShortCodes from '$lib/emoji-shortcodes.json';
@@ -28,7 +28,7 @@ export const USAGE_POOL: Writable<null | string[]> = writable(null);
 export const theme = writable('system');
 
 export const shortCodesToEmojis = writable(
-	Object.entries(emojiShortCodes).reduce((acc, [key, value]) => {
+	Object.entries(emojiShortCodes).reduce((acc: { [key: string]: string }, [key, value]) => {
 		if (typeof value === 'string') {
 			acc[value] = key;
 		} else {
@@ -47,9 +47,11 @@ export const chatId = writable('');
 export const chatTitle = writable('');
 
 export const channels = writable([]);
-export const chats = writable(null);
+export const chats: Writable<Chat[] | null> = writable(null);
 export const pinnedChats = writable([]);
 export const tags = writable([]);
+
+export const selectedFolder = writable(null);
 
 export const models: Writable<Model[]> = writable([]);
 
@@ -58,7 +60,7 @@ export const knowledge: Writable<null | Document[]> = writable(null);
 export const tools = writable(null);
 export const functions = writable(null);
 
-export const toolServers = writable([]);
+export const toolServers: Writable<ToolServer[]> = writable([]);
 
 export const banners: Writable<Banner[]> = writable([]);
 
@@ -67,6 +69,7 @@ export const settings: Writable<Settings> = writable({});
 export const showSidebar = writable(false);
 export const showSearch = writable(false);
 export const showSettings = writable(false);
+export const showShortcuts = writable(false);
 export const showArchivedChats = writable(false);
 export const showChangelog = writable(false);
 
@@ -134,7 +137,53 @@ type OllamaModelDetails = {
 	quantization_level: string;
 };
 
+export type Chat = {
+	id: string;
+	title: string;
+	chat: any;
+	timestamp?: number;
+	models?: string[];
+	tags?: string[];
+	user_id?: string;
+	time_range?: string;
+};
+
 type Settings = {
+	pinnedModels?: never[];
+	toolServers?: ToolServer[];
+	detectArtifacts?: boolean;
+	showUpdateToast?: boolean;
+	showChangelog?: boolean;
+	showEmojiInCall?: boolean;
+	voiceInterruption?: boolean;
+	collapseCodeBlocks?: boolean;
+	expandDetails?: boolean;
+	notificationSound?: boolean;
+	notificationSoundAlways?: boolean;
+	stylizedPdfExport?: boolean;
+	notifications?: any;
+	imageCompression?: boolean;
+	imageCompressionSize?: any;
+	widescreenMode?: null;
+	largeTextAsFile?: boolean;
+	promptAutocomplete?: boolean;
+	hapticFeedback?: boolean;
+	responseAutoCopy?: any;
+	richTextInput?: boolean;
+	params?: any;
+	userLocation?: any;
+	webSearch?: boolean;
+	memory?: boolean;
+	autoTags?: boolean;
+	autoFollowUps?: boolean;
+	splitLargeChunks?(body: any, splitLargeChunks: any): unknown;
+	landingPageMode?: string;
+	iframeSandboxAllowForms?: boolean;
+	iframeSandboxAllowSameOrigin?: boolean;
+	scrollOnBranchChange?: boolean;
+	directConnections?: null;
+	chatBubble?: boolean;
+	copyFormatted?: boolean;
 	models?: string[];
 	conversationMode?: boolean;
 	speechAutoSend?: boolean;
@@ -145,9 +194,11 @@ type Settings = {
 	highContrastMode?: boolean;
 	title?: TitleSettings;
 	splitLargeDeltas?: boolean;
-	chatDirection: 'LTR' | 'RTL' | 'auto';
+	chatDirection?: 'LTR' | 'RTL' | 'auto';
 	ctrlEnterToSend?: boolean;
-	backgroundImageUrl?: string;
+	backgroundImageUrl?: string | null;
+	materialThemeEnabled?: boolean;
+showUserGravatar?: boolean;
 
 	system?: string;
 	seed?: number;
@@ -166,6 +217,8 @@ type ModelOptions = {
 };
 
 type AudioSettings = {
+	stt: any;
+	tts: any;
 	STTEngine?: string;
 	TTSEngine?: string;
 	speaker?: string;
@@ -196,6 +249,7 @@ type Document = {
 };
 
 type Config = {
+	license_metadata: any;
 	status: boolean;
 	name: string;
 	version: string;
@@ -217,6 +271,7 @@ type Config = {
 		enable_community_sharing: boolean;
 		enable_autocomplete_generation: boolean;
 		enable_direct_connections: boolean;
+		enable_version_update_check: boolean;
 	};
 	oauth: {
 		providers: {
@@ -235,9 +290,12 @@ type PromptSuggestion = {
 };
 
 type SessionUser = {
+	permissions: any;
 	id: string;
 	email: string;
 	name: string;
 	role: string;
 	profile_image_url: string;
 };
+
+export { docs } from './docs';

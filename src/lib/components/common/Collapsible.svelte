@@ -153,7 +153,7 @@
 					{/if}
 				</div>
 
-				<div class="flex self-center translate-y-[1px]">
+				<div class="flex self-center translate-y-[1px] transition-transform duration-300 ease-out">
 					{#if open}
 						<ChevronUp strokeWidth="3.5" className="size-3.5" />
 					{:else}
@@ -178,7 +178,7 @@
 					<slot />
 
 					{#if chevron}
-						<div class="flex self-start translate-y-1">
+						<div class="flex self-start translate-y-1 transition-transform duration-300 ease-out">
 							{#if open}
 								<ChevronUp strokeWidth="3.5" className="size-3.5" />
 							{:else}

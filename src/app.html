@@ -54,6 +54,9 @@
 				} else if (localStorage.theme === 'light') {
 					document.documentElement.classList.add('light');
 					metaThemeColorTag.setAttribute('content', '#ffffff');
+				} else if (localStorage.theme === 'material-design') {
+					document.documentElement.classList.add('light');
+					metaThemeColorTag.setAttribute('content', '#FFF9F9');
 				} else if (localStorage.theme === 'her') {
 					document.documentElement.classList.add('dark');
 					document.documentElement.classList.add('her');
@@ -76,33 +79,96 @@
 						}
 					}
 				});
+				const isDarkMode = document.documentElement.classList.contains('dark');
 
-				function setSplashImage() {
-					const logo = document.getElementById('logo');
-					const isDarkMode = document.documentElement.classList.contains('dark');
+				const logo = document.createElement('img');
+				logo.id = 'logo';
+				logo.style =
+					'position: absolute; width: auto; height: 6rem; top: 44%; left: 50%; transform: translateX(-50%); display:block;';
+				logo.src = isDarkMode ? '/static/splash-dark.png' : '/static/splash.png';
 
-					if (isDarkMode) {
-						const darkImage = new Image();
-						darkImage.src = '/static/splash-dark.png';
-
-						darkImage.onload = () => {
-							logo.src = '/static/splash-dark.png';
-							logo.style.filter = ''; // Ensure no inversion is applied if splash-dark.png exists
-						};
-
-						darkImage.onerror = () => {
-							logo.style.filter = 'invert(1)'; // Invert image if splash-dark.png is missing
-						};
-					}
-				}
-
-				// Runs after classes are assigned
-				window.onload = setSplashImage;
+				document.addEventListener('DOMContentLoaded', function () {
+					const splash = document.getElementById('splash-screen');
+					if (splash) splash.prepend(logo);
+				});
 			})();
 		</script>
 
 		<title>加载中</title>
 		<link rel="stylesheet" type="text/css" href="/assets/inject.css" />
+
+		<style>
+			.breathing-light {
+				animation: breathe 2.5s ease-in-out infinite;
+				filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5));
+			}
+
+			@keyframes breathe {
+				0% {
+					opacity: 0.6;
+					transform: scale(0.95);
+					filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3)) brightness(0.9);
+				}
+				25% {
+					opacity: 0.8;
+					transform: scale(1.0);
+					filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.4)) brightness(1.0);
+				}
+				50% {
+					opacity: 1.0;
+					transform: scale(1.05);
+					filter: drop-shadow(0 0 25px rgba(6, 182, 212, 0.6)) brightness(1.1);
+				}
+				75% {
+					opacity: 0.8;
+					transform: scale(1.0);
+					filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.4)) brightness(1.0);
+				}
+				100% {
+					opacity: 0.6;
+					transform: scale(0.95);
+					filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3)) brightness(0.9);
+				}
+			}
+
+			/* Dark mode adjustments */
+			html.dark .breathing-light {
+				filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.6));
+			}
+
+			html.dark .breathing-light {
+				animation: breathe-dark 2.5s ease-in-out infinite;
+			}
+
+			@keyframes breathe-dark {
+				0% {
+					opacity: 0.7;
+					transform: scale(0.95);
+					filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.4)) brightness(0.9);
+				}
+				25% {
+					opacity: 0.85;
+					transform: scale(1.0);
+					filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)) brightness(1.0);
+				}
+				50% {
+					opacity: 1.0;
+					transform: scale(1.05);
+					filter: drop-shadow(0 0 30px rgba(6, 182, 212, 0.7)) brightness(1.2);
+				}
+				75% {
+					opacity: 0.85;
+					transform: scale(1.0);
+					filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.5)) brightness(1.0);
+				}
+				100% {
+					opacity: 0.7;
+					transform: scale(0.95);
+					filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.4)) brightness(0.9);
+				}
+			}
+		</style>
+
 		%sveltekit.head%
 	</head>
 
@@ -136,7 +202,7 @@
 				<img
 					id="logo-her"
 					src="/static/splash.png"
-					class="animate-pulse-fast"
+					class="breathing-light"
 				/>
 
 				<div style="position: relative; width: 24rem; margin-top: 0.5rem">

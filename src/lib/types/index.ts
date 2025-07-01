@@ -13,3 +13,27 @@ export enum TTS_RESPONSE_SPLIT {
 	PARAGRAPHS = 'paragraphs',
 	NONE = 'none'
 }
+
+export type ToolServer = {
+	url: string;
+	key?: string;
+	auth_type?: string;
+	openapi: any;
+	info: any;
+	specs: {
+		type: string;
+		name: any;
+		description: any;
+		parameters: {
+			type: string;
+			properties: object;
+			required: never[];
+		};
+	}[];
+};
+
+export interface DocInfo {
+	id: string;
+	url: string;
+	title: string;
+}

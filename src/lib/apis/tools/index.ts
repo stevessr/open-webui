@@ -65,10 +65,10 @@ export const loadToolByUrl = async (token: string = '', url: string) => {
 	return res;
 };
 
-export const getTools = async (token: string = '') => {
+export const getTools = async (token: string = '', fetcher: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/`, {
+	const res = await fetcher(`${WEBUI_API_BASE_URL}/tools/`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',

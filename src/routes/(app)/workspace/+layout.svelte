@@ -9,7 +9,8 @@
 		models,
 		prompts,
 		knowledge,
-		tools
+		tools,
+		settings
 	} from '$lib/stores';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
@@ -51,10 +52,30 @@
 
 {#if loaded}
 	<div
-		class=" relative flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out {$showSidebar
-			? 'md:max-w-[calc(100%-260px)]'
-			: ''} max-w-full"
+		class=" auto flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out max-w-full"
 	>
+		<!-- Custom Background Support -->
+		{#if $settings?.backgroundImageUrl ?? null}
+			{#if $settings?.backgroundImageUrl?.endsWith('.mp4')}
+				<!-- Video background -->
+				<video
+					class="absolute top-0 left-0 w-full h-full object-cover z-[-1]"
+					src={$settings.backgroundImageUrl}
+					autoplay
+					muted
+					loop
+					playsinline
+				>
+					<track kind="captions" />
+				</video>
+			{:else}
+				<!-- Image background -->
+				<div
+					class="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat z-[-1]"
+					style="background-image: url({$settings.backgroundImageUrl})"
+				/>
+			{/if}
+		{/if}
 		<nav class="   px-2.5 pt-1 backdrop-blur-xl drag-region">
 			<div class=" flex items-center gap-1">
 				<div class="{$showSidebar ? 'md:hidden' : ''} self-center flex flex-none items-center">
@@ -78,9 +99,7 @@
 					>
 						{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models}
 							<a
-								class="min-w-fit rounded-full p-1.5 {$page.url.pathname.includes(
-									'/workspace/models'
-								)
+								class="min-w-fit p-1.5 {$page.url.pathname.includes('/workspace/models')
 									? ''
 									: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition"
 								href="/workspace/models">{$i18n.t('Models')}</a
@@ -89,9 +108,7 @@
 
 						{#if $user?.role === 'admin' || $user?.permissions?.workspace?.knowledge}
 							<a
-								class="min-w-fit rounded-full p-1.5 {$page.url.pathname.includes(
-									'/workspace/knowledge'
-								)
+								class="min-w-fit p-1.5 {$page.url.pathname.includes('/workspace/knowledge')
 									? ''
 									: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition"
 								href="/workspace/knowledge"
@@ -102,9 +119,7 @@
 
 						{#if $user?.role === 'admin' || $user?.permissions?.workspace?.prompts}
 							<a
-								class="min-w-fit rounded-full p-1.5 {$page.url.pathname.includes(
-									'/workspace/prompts'
-								)
+								class="min-w-fit p-1.5 {$page.url.pathname.includes('/workspace/prompts')
 									? ''
 									: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition"
 								href="/workspace/prompts">{$i18n.t('Prompts')}</a
@@ -113,7 +128,7 @@
 
 						{#if $user?.role === 'admin' || $user?.permissions?.workspace?.tools}
 							<a
-								class="min-w-fit rounded-full p-1.5 {$page.url.pathname.includes('/workspace/tools')
+								class="min-w-fit p-1.5 {$page.url.pathname.includes('/workspace/tools')
 									? ''
 									: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition"
 								href="/workspace/tools"

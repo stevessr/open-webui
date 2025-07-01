@@ -209,44 +209,8 @@
 	});
 </script>
 
-<div class=" flex flex-col justify-between w-full overflow-y-auto h-full">
+<div class=" flex flex-col justify-between w-full overflow-y-auto h-full bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-cyan-50/30 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-cyan-950/20">
 	<div class="mx-auto w-full md:px-0 h-full relative">
-		<Sidebar bind:show={showSettings} className=" bg-white dark:bg-gray-900" width="300px">
-			<div class="flex flex-col px-5 py-3 text-sm">
-				<div class="flex justify-between items-center mb-2">
-					<div class=" font-medium text-base">Settings</div>
-
-					<div class=" translate-x-1.5">
-						<button
-							class="p-1.5 bg-transparent hover:bg-white/5 transition rounded-lg"
-							on:click={() => {
-								showSettings = !showSettings;
-							}}
-						>
-							<ArrowRight className="size-3" strokeWidth="2.5" />
-						</button>
-					</div>
-				</div>
-
-				<div class="mt-1">
-					<div>
-						<div class=" text-xs font-medium mb-1">Model</div>
-
-						<div class="w-full">
-							<select
-								class="w-full bg-transparent border border-gray-100 dark:border-gray-850 rounded-lg py-1 px-2 -mx-0.5 text-sm outline-hidden"
-								bind:value={selectedModelId}
-							>
-								{#each $models as model}
-									<option value={model.id} class="bg-gray-50 dark:bg-gray-700">{model.name}</option>
-								{/each}
-							</select>
-						</div>
-					</div>
-				</div>
-			</div>
-		</Sidebar>
-
 		<div class=" flex flex-col h-full px-3.5">
 			<div class="flex w-full items-start gap-1.5">
 				<Collapsible
@@ -281,7 +245,7 @@
 						<div class="pt-1 px-1.5">
 							<textarea
 								bind:this={systemTextareaElement}
-								class="w-full h-full bg-transparent resize-none outline-hidden text-sm"
+								class="w-full h-full bg-transparent resize-none outline-hidden text-sm trans"
 								bind:value={system}
 								placeholder={$i18n.t("You're a helpful assistant.")}
 								on:input={() => {
@@ -292,17 +256,6 @@
 						</div>
 					</div>
 				</Collapsible>
-
-				<div class="translate-y-1">
-					<button
-						class="p-1.5 bg-transparent hover:bg-white/5 transition rounded-lg"
-						on:click={() => {
-							showSettings = !showSettings;
-						}}
-					>
-						<Cog6 />
-					</button>
-				</div>
 			</div>
 
 			<div
@@ -318,16 +271,13 @@
 			</div>
 
 			<div class="pb-3">
-				<div class="text-xs font-medium text-gray-500 px-2 py-1">
-					{selectedModelId}
-				</div>
 				<div class="border border-gray-100 dark:border-gray-850 w-full px-3 py-2.5 rounded-xl">
 					<div class="py-0.5">
 						
 						
 						<textarea
 							bind:value={message}
-							class=" w-full h-full bg-transparent resize-none outline-hidden text-sm"
+							class=" w-full h-full bg-transparent resize-none outline-hidden text-sm trans"
 							placeholder={$i18n.t(`Enter {{role}} message here`, {
 								role: role === 'user' ? $i18n.t('a user') : $i18n.t('an assistant')
 							})}
@@ -359,7 +309,20 @@
 							</button>
 						</div>
 
-						<div>
+						<div class="flex items-center gap-2">
+							<div class="">
+								<select
+									class=" bg-transparent border border-gray-100 dark:border-gray-850 rounded-lg py-1 px-2 -mx-0.5 text-sm outline-hidden w-40"
+									bind:value={selectedModelId}
+								>
+									{#each $models as model}
+										<option value={model.id} class="bg-gray-50 dark:bg-gray-700"
+											>{model.name}</option
+										>
+									{/each}
+								</select>
+							</div>
+
 							{#if !loading}
 								<button
 									disabled={message === ''}

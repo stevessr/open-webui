@@ -34,7 +34,9 @@
 						muted
 						loop
 						playsinline
-					/>
+					>
+						<track kind="captions" />
+					</video>
 				{:else}
 					<img
 						src={model?.meta?.profile_image_url ?? '/static/favicon.png'}

@@ -7,10 +7,12 @@
 	import { onMount, getContext } from 'svelte';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import FloatingDocPreview from '$lib/components/common/FloatingDocPreview.svelte';
 
 	const i18n = getContext('i18n');
 
 	let ollamaVersion = '';
+	let showReleasesPreview = false;
 
 	let updateAvailable = null;
 	let version = {
@@ -38,7 +40,9 @@
 			return '';
 		});
 
-		checkForVersionUpdates();
+		if ($config?.features?.enable_version_update_check) {
+			checkForVersionUpdates();
+		}
 	});
 </script>
 
@@ -58,16 +62,20 @@
 							v{WEBUI_VERSION}
 						</Tooltip>
 
-						<a
-							href="https://github.com/open-webui/open-webui/releases/tag/v{version.latest}"
-							target="_blank"
-						>
-							{updateAvailable === null
-								? $i18n.t('Checking for updates...')
-								: updateAvailable
-									? `(v${version.latest} ${$i18n.t('available!')})`
-									: $i18n.t('(latest)')}
-						</a>
+						{#if $config?.features?.enable_version_update_check}
+							<button
+								class="underline hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+								on:click={() => {
+									showReleasesPreview = true;
+								}}
+							>
+								{updateAvailable === null
+									? $i18n.t('Checking for updates...')
+									: updateAvailable
+										? `(v${version.latest} ${$i18n.t('available!')})`
+										: $i18n.t('(latest)')}
+							</button>
+						{/if}
 					</div>
 
 					<button
@@ -80,14 +88,16 @@
 					</button>
 				</div>
 
-				<button
-					class=" text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800 transition rounded-lg font-medium"
-					on:click={() => {
-						checkForVersionUpdates();
-					}}
-				>
-					{$i18n.t('Check for updates')}
-				</button>
+				{#if $config?.features?.enable_version_update_check}
+					<button
+						class=" text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800 transition rounded-lg font-medium"
+						on:click={() => {
+							checkForVersionUpdates();
+						}}
+					>
+						{$i18n.t('Check for updates')}
+					</button>
+				{/if}
 			</div>
 		</div>
 
@@ -197,4 +207,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			>
 		</div>
 	</div>
+
+	<FloatingDocPreview
+		bind:show={showReleasesPreview}
+		url="https://github.com/open-webui/open-webui/releases"
+		title="Open WebUI Releases"
+	/>
 </div>

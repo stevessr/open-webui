@@ -31,7 +31,7 @@
 	import { downloadChatAsPDF } from '$lib/apis/utils';
 	import Download from '$lib/components/icons/Download.svelte';
 
-	const i18n = getContext('i18n');
+	const i18n: any = getContext('i18n');
 
 	export let shareHandler: Function;
 	export let cloneChatHandler: Function;
@@ -54,10 +54,10 @@
 		pinned = await getChatPinnedStatusById(localStorage.token, chatId);
 	};
 
-	const getChatAsText = async (chat) => {
+	const getChatAsText = async (chat: any) => {
 		const history = chat.chat.history;
 		const messages = createMessagesList(history, history.currentId);
-		const chatText = messages.reduce((a, message, i, arr) => {
+		const chatText = messages.reduce((a: string, message: any, i: number, arr: any[]) => {
 			return `${a}### ${message.role.toUpperCase()}\n${message.content}\n\n`;
 		}, '');
 
@@ -91,7 +91,7 @@
 					const pagePixelHeight = 1200; // Each slice height (adjust to avoid canvas bugs; generally 2–4k is safe)
 
 					// Clone & style once
-					const clonedElement = containerElement.cloneNode(true);
+					const clonedElement = containerElement.cloneNode(true) as HTMLElement;
 					clonedElement.classList.add('text-black');
 					clonedElement.classList.add('dark:text-white');
 					clonedElement.style.width = `${virtualWidth}px`;
@@ -227,12 +227,14 @@
 	}}
 >
 	<Tooltip content={$i18n.t('More')}>
-		<slot />
+		<button type="button" {...$$restProps} class={$$props.class}>
+			<slot />
+		</button>
 	</Tooltip>
 
 	<div slot="content">
 		<DropdownMenu.Content
-			class="w-full max-w-[200px] rounded-xl px-1 py-1.5 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg"
+			class="w-full max-w-[200px] rounded-xl px-1 py-1.5 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg trans"
 			sideOffset={-2}
 			side="bottom"
 			align="start"
@@ -283,7 +285,7 @@
 				<div class="flex items-center">{$i18n.t('Archive')}</div>
 			</DropdownMenu.Item>
 
-			{#if $user?.role === 'admin' || ($user.permissions?.chat?.share ?? true)}
+			{#if $user && ($user.role === 'admin' || ($user.permissions?.chat?.share ?? true))}
 				<DropdownMenu.Item
 					class="flex gap-2 items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800  rounded-md"
 					on:click={() => {
@@ -308,7 +310,7 @@
 					transition={flyAndScale}
 					sideOffset={8}
 				>
-					{#if $user?.role === 'admin' || ($user.permissions?.chat?.export ?? true)}
+					{#if $user && ($user.role === 'admin' || ($user.permissions?.chat?.export ?? true))}
 						<DropdownMenu.Item
 							class="flex gap-2 items-center px-3 py-2 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
 							on:click={() => {

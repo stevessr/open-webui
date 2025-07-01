@@ -59,7 +59,9 @@
 								muted
 								loop
 								playsinline
-							></video>
+							>
+								<track kind="captions" />
+							</video>
 						{:else}
 							<img
 								crossorigin="anonymous"

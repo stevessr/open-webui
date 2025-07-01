@@ -40,6 +40,9 @@
 	export let history;
 	export let selectedModels;
 	export let showModelSelector = true;
+	export let showBanners = true;
+
+	let closedBannerIds = [];
 
 	let showShareChatModal = false;
 	let showDownloadChatModal = false;
@@ -59,7 +62,10 @@
 <nav class="sticky top-0 z-30 w-full py-1 -mb-8 flex flex-col items-center drag-region">
 	<div class="flex items-center w-full pl-1.5 pr-1">
 		<div
-			class="bg-linear-to-b from-white to-transparent dark:from-gray-900 dark:to-transparent pointer-events-none absolute inset-0 -bottom-7 z-[-1]"
+			class="pointer-events-none absolute inset-0 -bottom-7 z-[-1]
+         [mask-image:linear-gradient(to_bottom,white_0%,white_100%)]
+         dark:[mask-image:linear-gradient(to_bottom,theme(colors.gray.900)_0%,theme(colors.gray.900)_100%)]
+         [mask-image:linear-gradient(to_bottom,transparent_0%,currentColor_100%)]"
 		></div>
 
 		<div class=" flex max-w-full w-full mx-auto px-1 pt-0.5 bg-transparent">
@@ -161,6 +167,24 @@
 						</button>
 					</Tooltip>
 
+					{#if $mobile}
+						<Tooltip content={$i18n.t('New Chat')}>
+							<button
+								class=" flex {$showSidebar
+									? 'md:hidden'
+									: ''} cursor-pointer px-2 py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-850 transition"
+								on:click={() => {
+									initNewChat();
+								}}
+								aria-label="New Chat"
+							>
+								<div class=" m-auto self-center">
+									<PencilSquare className=" size-5" strokeWidth="2" />
+								</div>
+							</button>
+						</Tooltip>
+					{/if}
+
 					{#if $user !== undefined && $user !== null}
 						<UserMenu
 							className="max-w-[240px]"
@@ -172,9 +196,8 @@
 								}
 							}}
 						>
-							<button
+							<div
 								class="select-none flex rounded-xl p-1.5 w-full hover:bg-gray-50 dark:hover:bg-gray-850 transition"
-								aria-label="User Menu"
 							>
 								<div class=" self-center">
 									{#if $user.profile_image_url.toLowerCase().endsWith('.mp4')}
@@ -195,7 +218,7 @@
 										/>
 									{/if}
 								</div>
-							</button>
+							</div>
 						</UserMenu>
 					{/if}
 				</div>
@@ -209,52 +232,60 @@
 		</div>
 	{/if}
 
-	{#if !history.currentId && !$chatId && ($banners.length > 0 || ($config?.license_metadata?.type ?? null) === 'trial' || (($config?.license_metadata?.seats ?? null) !== null && $config?.user_count > $config?.license_metadata?.seats))}
-		<div class=" w-full z-30 mt-5">
-			<div class=" flex flex-col gap-1 w-full">
-				{#if ($config?.license_metadata?.type ?? null) === 'trial'}
-					<Banner
-						banner={{
-							type: 'info',
-							title: 'Trial License',
-							content: $i18n.t(
-								'You are currently using a trial license. Please contact support to upgrade your license.'
-							)
-						}}
-					/>
-				{/if}
-
-				{#if ($config?.license_metadata?.seats ?? null) !== null && $config?.user_count > $config?.license_metadata?.seats}
-					<Banner
-						banner={{
-							type: 'error',
-							title: 'License Error',
-							content: $i18n.t(
-								'Exceeded the number of seats in your license. Please contact support to increase the number of seats.'
-							)
-						}}
-					/>
-				{/if}
-
-				{#each $banners.filter( (b) => (b.dismissible ? !JSON.parse(localStorage.getItem('dismissedBannerIds') ?? '[]').includes(b.id) : true) ) as banner}
-					<Banner
-						{banner}
-						on:dismiss={(e) => {
-							const bannerId = e.detail;
-
-							localStorage.setItem(
-								'dismissedBannerIds',
-								JSON.stringify(
-									[
-										bannerId,
-										...JSON.parse(localStorage.getItem('dismissedBannerIds') ?? '[]')
-									].filter((id) => $banners.find((b) => b.id === id))
+	<div class="absolute top-[100%] left-0 right-0 h-fit">
+		{#if !history.currentId && !$chatId && ($banners.length > 0 || ($config?.license_metadata?.type ?? null) === 'trial' || (($config?.license_metadata?.seats ?? null) !== null && $config?.user_count > $config?.license_metadata?.seats))}
+			<div class=" w-full z-30 mt-5">
+				<div class=" flex flex-col gap-1 w-full">
+					{#if ($config?.license_metadata?.type ?? null) === 'trial'}
+						<Banner
+							banner={{
+								type: 'info',
+								title: 'Trial License',
+								content: $i18n.t(
+									'You are currently using a trial license. Please contact support to upgrade your license.'
 								)
-							);
-						}}
-					/>
-				{/each}
+							}}
+						/>
+					{/if}
+
+					{#if ($config?.license_metadata?.seats ?? null) !== null && $config?.user_count > $config?.license_metadata?.seats}
+						<Banner
+							banner={{
+								type: 'error',
+								title: 'License Error',
+								content: $i18n.t(
+									'Exceeded the number of seats in your license. Please contact support to increase the number of seats.'
+								)
+							}}
+						/>
+					{/if}
+
+					{#if showBanners}
+						{#each $banners.filter((b) => ![...JSON.parse(localStorage.getItem('dismissedBannerIds') ?? '[]'), ...closedBannerIds].includes(b.id)) as banner}
+							<Banner
+								{banner}
+								on:dismiss={(e) => {
+									const bannerId = e.detail;
+
+									if (banner.dismissible) {
+										localStorage.setItem(
+											'dismissedBannerIds',
+											JSON.stringify(
+												[
+													bannerId,
+													...JSON.parse(localStorage.getItem('dismissedBannerIds') ?? '[]')
+												].filter((id) => $banners.find((b) => b.id === id))
+											)
+										);
+									} else {
+										closedBannerIds = [...closedBannerIds, bannerId];
+									}
+								}}
+							/>
+						{/each}
+					{/if}
+				</div>
 			</div>
-		</div>
-	{/if}
+		{/if}
+	</div>
 </nav>

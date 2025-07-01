@@ -3,7 +3,7 @@
 	import { createEventDispatcher, getContext, onMount } from 'svelte';
 
 	import { showSettings, mobile, showSidebar, user } from '$lib/stores';
-	import { fade, slide } from 'svelte/transition';
+	import { flyAndScale } from '$lib/utils/transitions';
 
 	import Mic from '../icons/Mic.svelte';
 	import CursorArrowRays from '../icons/CursorArrowRays.svelte';
@@ -38,7 +38,7 @@
 			sideOffset={8}
 			side="bottom"
 			align="start"
-			transition={(e) => fade(e, { duration: 100 })}
+			transition={flyAndScale}
 		>
 			<button
 				class="flex rounded-md py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
@@ -48,7 +48,7 @@
 				}}
 			>
 				<div class=" self-center mr-2">
-					<Mic className="size-5" strokeWidth="1.5" />
+					<Mic className="size-4" strokeWidth="2" />
 				</div>
 				<div class=" self-center truncate">{$i18n.t('Record')}</div>
 			</button>
@@ -61,7 +61,7 @@
 				}}
 			>
 				<div class=" self-center mr-2">
-					<CursorArrowRays className="size-5" strokeWidth="1.5" />
+					<CursorArrowRays className="size-4" strokeWidth="2" />
 				</div>
 				<div class=" self-center truncate">{$i18n.t('Capture Audio')}</div>
 			</button>
@@ -74,7 +74,7 @@
 				}}
 			>
 				<div class=" self-center mr-2">
-					<CloudArrowUp className="size-5" strokeWidth="1.5" />
+					<CloudArrowUp className="size-4" strokeWidth="2" />
 				</div>
 				<div class=" self-center truncate">{$i18n.t('Upload Audio')}</div>
 			</button>

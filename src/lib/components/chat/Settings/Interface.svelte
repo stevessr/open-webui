@@ -5,6 +5,7 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { updateUserInfo } from '$lib/apis/users';
 	import { getUserPosition } from '$lib/utils';
+	import { generateThemeFromBackground, applyMaterialTheme, removeMaterialTheme } from '$lib/utils/materialThemeGenerator';
 	const dispatch = createEventDispatcher();
 
 	const i18n = getContext('i18n');
@@ -16,6 +17,10 @@
 	let filesInputElement;
 	let backgroundImageUrlInput = '';
 	let showUrlInput = false;
+
+	// Material Design theme
+	let materialThemeEnabled = false;
+	let isGeneratingTheme = false;
 
 	// Addons
 	let titleAutoGenerate = true;
@@ -40,9 +45,13 @@
 	let detectArtifacts = true;
 
 	let richTextInput = true;
+	let insertPromptAsRichText = false;
 	let promptAutocomplete = false;
 
 	let largeTextAsFile = false;
+
+	let keepFollowUpPrompts = false;
+	let insertFollowUpPrompt = false;
 
 	let landingPageMode = '';
 	let chatBubble = true;
@@ -50,6 +59,7 @@
 	let ctrlEnterToSend = false;
 	let copyFormatted = false;
 
+	let chatFadeStreamingText = true;
 	let collapseCodeBlocks = false;
 	let expandDetails = false;
 
@@ -160,6 +170,11 @@
 		saveSettings({ imageCompression });
 	};
 
+	const toggleChatFadeStreamingText = async () => {
+		chatFadeStreamingText = !chatFadeStreamingText;
+		saveSettings({ chatFadeStreamingText: chatFadeStreamingText });
+	};
+
 	const toggleHapticFeedback = async () => {
 		hapticFeedback = !hapticFeedback;
 		saveSettings({ hapticFeedback: hapticFeedback });
@@ -218,6 +233,21 @@
 	const toggleRichTextInput = async () => {
 		richTextInput = !richTextInput;
 		saveSettings({ richTextInput });
+	};
+
+	const toggleInsertPromptAsRichText = async () => {
+		insertPromptAsRichText = !insertPromptAsRichText;
+		saveSettings({ insertPromptAsRichText });
+	};
+
+	const toggleKeepFollowUpPrompts = async () => {
+		keepFollowUpPrompts = !keepFollowUpPrompts;
+		saveSettings({ keepFollowUpPrompts });
+	};
+
+	const toggleInsertFollowUpPrompt = async () => {
+		insertFollowUpPrompt = !insertFollowUpPrompt;
+		saveSettings({ insertFollowUpPrompt });
 	};
 
 	const toggleLargeTextAsFile = async () => {
@@ -298,6 +328,41 @@
 			saveSettings({ backgroundImageUrl });
 			backgroundImageUrlInput = '';
 			showUrlInput = false;
+
+			// Auto-generate Material Design theme if enabled
+			if (materialThemeEnabled) {
+				generateMaterialTheme();
+			}
+		}
+	};
+
+	const toggleMaterialTheme = async () => {
+		materialThemeEnabled = !materialThemeEnabled;
+		saveSettings({ materialThemeEnabled });
+
+		if (materialThemeEnabled && backgroundImageUrl) {
+			await generateMaterialTheme();
+		} else if (!materialThemeEnabled) {
+			removeMaterialTheme();
+		}
+	};
+
+	const generateMaterialTheme = async () => {
+		if (!backgroundImageUrl) {
+			toast.error('Please set a background image first');
+			return;
+		}
+
+		isGeneratingTheme = true;
+		try {
+			const palette = await generateThemeFromBackground(backgroundImageUrl);
+			applyMaterialTheme(palette);
+			toast.success('Material Design theme generated successfully!');
+		} catch (error) {
+			console.error('Failed to generate theme:', error);
+			toast.error('Failed to generate theme from background');
+		} finally {
+			isGeneratingTheme = false;
 		}
 	};
 
@@ -325,8 +390,15 @@
 		showEmojiInCall = $settings?.showEmojiInCall ?? false;
 		voiceInterruption = $settings?.voiceInterruption ?? false;
 
+		chatFadeStreamingText = $settings?.chatFadeStreamingText ?? true;
+
 		richTextInput = $settings?.richTextInput ?? true;
+		insertPromptAsRichText = $settings?.insertPromptAsRichText ?? false;
 		promptAutocomplete = $settings?.promptAutocomplete ?? false;
+
+		keepFollowUpPrompts = $settings?.keepFollowUpPrompts ?? false;
+		insertFollowUpPrompt = $settings?.insertFollowUpPrompt ?? false;
+
 		largeTextAsFile = $settings?.largeTextAsFile ?? false;
 		copyFormatted = $settings?.copyFormatted ?? false;
 
@@ -362,6 +434,12 @@
 
 		backgroundImageUrl = $settings?.backgroundImageUrl ?? null;
 		webSearch = $settings?.webSearch ?? null;
+		materialThemeEnabled = $settings?.materialThemeEnabled ?? false;
+
+		// Apply Material Design theme if enabled and background exists
+		if (materialThemeEnabled && backgroundImageUrl) {
+			generateMaterialTheme();
+		}
 	});
 </script>
 
@@ -386,6 +464,11 @@
 
 				backgroundImageUrl = originalImageUrl;
 				saveSettings({ backgroundImageUrl });
+
+				// Auto-generate Material Design theme if enabled
+				if (materialThemeEnabled) {
+					generateMaterialTheme();
+				}
 			};
 
 			if (
@@ -758,6 +841,75 @@
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
+					<div id="fade-streaming-label" class=" self-center text-xs">
+						{$i18n.t('Fade Effect for Streaming Text')}
+					</div>
+
+					<button
+						aria-labelledby="fade-streaming-label"
+						class="p-1 px-3 text-xs flex rounded-sm transition"
+						on:click={() => {
+							toggleChatFadeStreamingText();
+						}}
+						type="button"
+					>
+						{#if chatFadeStreamingText === true}
+							<span class="ml-2 self-center">{$i18n.t('On')}</span>
+						{:else}
+							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+						{/if}
+					</button>
+				</div>
+			</div>
+
+			<div>
+				<div class=" py-0.5 flex w-full justify-between">
+					<div id="keep-followup-prompts-label" class=" self-center text-xs">
+						{$i18n.t('Keep Follow-Up Prompts in Chat')}
+					</div>
+
+					<button
+						aria-labelledby="keep-followup-prompts-label"
+						class="p-1 px-3 text-xs flex rounded-sm transition"
+						on:click={() => {
+							toggleKeepFollowUpPrompts();
+						}}
+						type="button"
+					>
+						{#if keepFollowUpPrompts === true}
+							<span class="ml-2 self-center">{$i18n.t('On')}</span>
+						{:else}
+							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+						{/if}
+					</button>
+				</div>
+			</div>
+
+			<div>
+				<div class=" py-0.5 flex w-full justify-between">
+					<div id="insert-followup-prompt-label" class=" self-center text-xs">
+						{$i18n.t('Insert Follow-Up Prompt to Input')}
+					</div>
+
+					<button
+						aria-labelledby="insert-followup-prompt-label"
+						class="p-1 px-3 text-xs flex rounded-sm transition"
+						on:click={() => {
+							toggleInsertFollowUpPrompt();
+						}}
+						type="button"
+					>
+						{#if insertFollowUpPrompt === true}
+							<span class="ml-2 self-center">{$i18n.t('On')}</span>
+						{:else}
+							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+						{/if}
+					</button>
+				</div>
+			</div>
+
+			<div>
+				<div class=" py-0.5 flex w-full justify-between">
 					<div id="rich-input-label" class=" self-center text-xs">
 						{$i18n.t('Rich Text Input for Chat')}
 					</div>
@@ -779,22 +931,22 @@
 				</div>
 			</div>
 
-			{#if $config?.features?.enable_autocomplete_generation && richTextInput}
+			{#if richTextInput}
 				<div>
 					<div class=" py-0.5 flex w-full justify-between">
-						<div id="prompt-autocompletion-label" class=" self-center text-xs">
-							{$i18n.t('Prompt Autocompletion')}
+						<div id="rich-input-label" class=" self-center text-xs">
+							{$i18n.t('Insert Prompt as Rich Text')}
 						</div>
 
 						<button
-							aria-labelledby="prompt-autocompletion-label"
+							aria-labelledby="rich-input-label"
 							class="p-1 px-3 text-xs flex rounded-sm transition"
 							on:click={() => {
-								togglePromptAutocomplete();
+								toggleInsertPromptAsRichText();
 							}}
 							type="button"
 						>
-							{#if promptAutocomplete === true}
+							{#if insertPromptAsRichText === true}
 								<span class="ml-2 self-center">{$i18n.t('On')}</span>
 							{:else}
 								<span class="ml-2 self-center">{$i18n.t('Off')}</span>
@@ -802,6 +954,31 @@
 						</button>
 					</div>
 				</div>
+
+				{#if $config?.features?.enable_autocomplete_generation}
+					<div>
+						<div class=" py-0.5 flex w-full justify-between">
+							<div id="prompt-autocompletion-label" class=" self-center text-xs">
+								{$i18n.t('Prompt Autocompletion')}
+							</div>
+
+							<button
+								aria-labelledby="prompt-autocompletion-label"
+								class="p-1 px-3 text-xs flex rounded-sm transition"
+								on:click={() => {
+									togglePromptAutocomplete();
+								}}
+								type="button"
+							>
+								{#if promptAutocomplete === true}
+									<span class="ml-2 self-center">{$i18n.t('On')}</span>
+								{:else}
+									<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+								{/if}
+							</button>
+						</div>
+					</div>
+				{/if}
 			{/if}
 
 			<div>
@@ -933,6 +1110,79 @@
 								type="button"
 							>
 								<span class="ml-2 self-center">{$i18n.t('URL')}</span>
+							</button>
+						{/if}
+					</div>
+				</div>
+
+				{#if showUrlInput}
+					<div class="mt-2 flex gap-2">
+						<input
+							bind:value={backgroundImageUrlInput}
+							type="url"
+							placeholder={$i18n.t('Enter image/video URL')}
+							class="flex-1 px-3 py-2 text-xs bg-transparent border border-gray-300 dark:border-gray-600 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+							on:keydown={(e) => {
+								if (e.key === 'Enter') {
+									setBackgroundImageFromUrl();
+								}
+							}}
+						/>
+						<button
+							class="px-3 py-2 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-sm transition"
+							on:click={setBackgroundImageFromUrl}
+							type="button"
+						>
+							{$i18n.t('Set')}
+						</button>
+						<button
+							class="px-3 py-2 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded-sm transition"
+							on:click={toggleUrlInput}
+							type="button"
+						>
+							{$i18n.t('Cancel')}
+						</button>
+					</div>
+				{/if}
+			</div>
+
+			<!-- Material Design Theme -->
+			<div>
+				<div id="material-design-theme-label" class="py-0.5 flex w-full justify-between">
+					<div class="self-center text-xs">
+						{$i18n.t('Material Design Theme')}
+					</div>
+
+					<div class="flex gap-2">
+						<button
+							aria-labelledby="material-design-theme-label"
+							class="p-1 px-3 text-xs flex rounded-sm transition"
+							on:click={toggleMaterialTheme}
+							type="button"
+							disabled={isGeneratingTheme}
+						>
+							<span class="ml-2 self-center">
+								{#if isGeneratingTheme}
+									{$i18n.t('Generating...')}
+								{:else if materialThemeEnabled}
+									{$i18n.t('Disable')}
+								{:else}
+									{$i18n.t('Enable')}
+								{/if}
+							</span>
+						</button>
+
+						{#if backgroundImageUrl && !materialThemeEnabled}
+							<button
+								aria-labelledby="material-design-theme-label"
+								class="p-1 px-3 text-xs flex rounded-sm transition"
+								on:click={generateMaterialTheme}
+								type="button"
+								disabled={isGeneratingTheme}
+							>
+								<span class="ml-2 self-center">
+									{$i18n.t('Generate Theme')}
+								</span>
 							</button>
 						{/if}
 					</div>
