@@ -25,15 +25,12 @@ input:focus {
   /* 禁用默认的 outline */
   position: relative;
   z-index: 1;
-  border: 2px solid transparent;
-  /* 增加边框宽度以容纳渐变 */
-  border-radius: 5%;
+  border-width: 2px; /* 增加边框宽度以容纳渐变 */
+  border-radius: 0;
   box-shadow: none;
   animation: rainbow 2.5s linear infinite;
-  background-image: linear-gradient(white, white),
-    conic-gradient(from var(--angle), red, yellow, lime, aqua, blue, magenta, red);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
+  background-color: transparent; /* 确保背景透明 */
+  border-image: conic-gradient(from var(--angle), red, yellow, lime, aqua, blue, magenta, red) 1; /* 将渐变应用于边框 */
 }
 
 img#logo {

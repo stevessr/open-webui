@@ -2032,7 +2032,7 @@
 	{#if !loading}
 		<div in:fade={{ duration: 50 }} class="w-full h-full flex flex-col">
 			{#if $settings?.backgroundImageUrl ?? null}
-				{#if $settings?.backgroundImageUrl.endsWith('.mp4')}
+				{#if $settings?.backgroundImageUrl?.endsWith('.mp4')}
 					<!-- Video background -->
 					<video
 						class="absolute {$showSidebar
@@ -2055,7 +2055,7 @@
 				{/if}
 
 				<div
-					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90 z-0"
+					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/0 dark:from-gray-900 dark:to-gray-900/0 z-0"
 				/>
 			{/if}
 
