@@ -190,7 +190,7 @@
 			</Drawer>
 		{/if}
 	{:else}
-		<!-- if $showControls -->
+		
 
 		{#if $showControls}
 			<PaneResizer

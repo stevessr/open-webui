@@ -85,11 +85,22 @@
 				>
 					<div class=" flex items-center rounded-md px-5 py-2 w-full">
 						<div class=" self-center mr-5">
+							{#if selectedUser.profile_image_url.toLowerCase().endsWith('.mp4')}
+								<video
+									src={selectedUser.profile_image_url}
+									class=" max-w-[55px] object-cover rounded-full"
+									autoplay
+									muted
+									loop
+									playsinline
+								/>
+							{:else}
 							<img
 								src={selectedUser.profile_image_url}
 								class=" max-w-[55px] object-cover rounded-full"
 								alt="User profile"
 							/>
+							{/if}
 						</div>
 
 						<div>

@@ -366,7 +366,6 @@
 								/>
 
 								<div class="mt-2 text-xs text-gray-400 dark:text-gray-500">
-									<!-- https://docs.openwebui.com/getting-started/advanced-topics/api-endpoints -->
 									<a
 										href="https://docs.openwebui.com/getting-started/api-endpoints"
 										target="_blank"

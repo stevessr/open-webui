@@ -194,7 +194,7 @@
 
 	const dragImage = new Image();
 	dragImage.src =
-		'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+		'/user.gif';
 
 	let x;
 	let y;
@@ -422,7 +422,7 @@
 			dispatch('open', state);
 		}}
 	>
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		
 		<div class="w-full group">
 			<button
 				id="folder-{folderId}-button"

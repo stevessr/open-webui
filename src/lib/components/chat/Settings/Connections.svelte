@@ -78,69 +78,69 @@
 >
 	<div class=" overflow-y-scroll scrollbar-hidden h-full">
 		{#if config !== null}
-			<div class="">
-				<div class="pr-1.5">
-					<div class="">
-						<div class="flex justify-between items-center mb-0.5">
-							<div class="font-medium">{$i18n.t('Manage Direct Connections')}</div>
+		<div class="">
+			<div class="pr-1.5">
+				<div class="">
+					<div class="flex justify-between items-center mb-0.5">
+						<div class="font-medium">{$i18n.t('Manage Direct Connections')}</div>
 
-							<Tooltip content={$i18n.t(`Add Connection`)}>
-								<button
-									class="px-1"
-									on:click={() => {
-										showConnectionModal = true;
-									}}
-									type="button"
-								>
-									<Plus />
-								</button>
-							</Tooltip>
-						</div>
-
-						<div class="flex flex-col gap-1.5">
-							{#each config?.OPENAI_API_BASE_URLS ?? [] as url, idx}
-								<Connection
-									bind:url
-									bind:key={config.OPENAI_API_KEYS[idx]}
-									bind:config={config.OPENAI_API_CONFIGS[idx]}
-									onSubmit={() => {
-										updateHandler();
-									}}
-									onDelete={() => {
-										config.OPENAI_API_BASE_URLS = config.OPENAI_API_BASE_URLS.filter(
-											(url, urlIdx) => idx !== urlIdx
-										);
-										config.OPENAI_API_KEYS = config.OPENAI_API_KEYS.filter(
-											(key, keyIdx) => idx !== keyIdx
-										);
-
-										let newConfig = {};
-										config.OPENAI_API_BASE_URLS.forEach((url, newIdx) => {
-											newConfig[newIdx] =
-												config.OPENAI_API_CONFIGS[newIdx < idx ? newIdx : newIdx + 1];
-										});
-										config.OPENAI_API_CONFIGS = newConfig;
-									}}
-								/>
-							{/each}
-						</div>
+						<Tooltip content={$i18n.t(`Add Connection`)}>
+							<button
+								class="px-1"
+								on:click={() => {
+									showConnectionModal = true;
+								}}
+								type="button"
+							>
+								<Plus />
+							</button>
+						</Tooltip>
 					</div>
 
-					<div class="my-1.5">
-						<div
-							class="text-xs {($settings?.highContrastMode ?? false)
-								? 'text-gray-800 dark:text-gray-100'
-								: 'text-gray-500'}"
-						>
-							{$i18n.t('Connect to your own OpenAI compatible API endpoints.')}
-							<br />
-							{$i18n.t(
-								'CORS must be properly configured by the provider to allow requests from Open WebUI.'
-							)}
-						</div>
+					<div class="flex flex-col gap-1.5">
+						{#each config?.OPENAI_API_BASE_URLS ?? [] as url, idx}
+							<Connection
+								bind:url
+								bind:key={config.OPENAI_API_KEYS[idx]}
+								bind:config={config.OPENAI_API_CONFIGS[idx]}
+								onSubmit={() => {
+									updateHandler();
+								}}
+								onDelete={() => {
+									config.OPENAI_API_BASE_URLS = config.OPENAI_API_BASE_URLS.filter(
+										(url, urlIdx) => idx !== urlIdx
+									);
+									config.OPENAI_API_KEYS = config.OPENAI_API_KEYS.filter(
+										(key, keyIdx) => idx !== keyIdx
+									);
+
+									let newConfig = {};
+									config.OPENAI_API_BASE_URLS.forEach((url, newIdx) => {
+										newConfig[newIdx] =
+											config.OPENAI_API_CONFIGS[newIdx < idx ? newIdx : newIdx + 1];
+									});
+									config.OPENAI_API_CONFIGS = newConfig;
+								}}
+							/>
+						{/each}
+					</div>
+				</div>
+
+				<div class="my-1.5">
+					<div
+						class="text-xs {($settings?.highContrastMode ?? false)
+							? 'text-gray-800 dark:text-gray-100'
+							: 'text-gray-500'}"
+					>
+						{$i18n.t('Connect to your own OpenAI compatible API endpoints.')}
+						<br />
+						{$i18n.t(
+							'CORS must be properly configured by the provider to allow requests from Open WebUI.'
+						)}
 					</div>
 				</div>
 			</div>
+		</div>
 		{:else}
 			<div class="flex h-full justify-center">
 				<div class="my-auto">
