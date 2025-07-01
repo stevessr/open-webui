@@ -2057,7 +2057,7 @@
 				{/if}
 
 				<div
-					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90 z-0"
+					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/0 dark:from-gray-900 dark:to-gray-900/0 z-0"
 				/>
 			{/if}
 

@@ -1,128 +1,28 @@
-.ProseMirror {
-  white-space: pre-wrap;
-  height: 100%;
-  min-height: fit-content;
-  max-height: 100%;
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+    }
+
+    30% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
-@property --angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
+#sidebar {
+    transition-timing-function: cubic-bezier(0.3, 0.3, 0.2, 1);
+    transition-duration: 0.5s;
+    --tw-duration: 0.5;
+    --tw-ease: cubic-bezier(0.3, 0.3, 0.2, 1);
 }
 
-@keyframes rainbow {
-  to {
-    --angle: 360deg;
-  }
+#sidebar,#user-menu{
+    background: transparent;
 }
 
-/* 当元素被键盘聚焦时 */
-.ProseMirror:focus-visible,
-.ProseMirror-focused,
-input:focus {
-  outline: none;
-  /* 禁用默认的 outline */
-  position: relative;
-  z-index: 1;
-  border: 2px solid transparent;
-  /* 增加边框宽度以容纳渐变 */
-  border-radius: 5%;
-  box-shadow: none;
-  animation: rainbow 2.5s linear infinite;
-  background-image: linear-gradient(white, white),
-    conic-gradient(from var(--angle), red, yellow, lime, aqua, blue, magenta, red);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-}
-
-img#logo {
-  position: absolute;
-  width: auto;
-  height: 6rem;
-  top: 44%;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-img#logo-her {
-  width: auto;
-  height: 13rem;
-}
-
-html {
-  overflow-y: scroll !important;
-}
-
-div#progress-background {
-  position: absolute;
-  width: 100%;
-  height: 0.75rem;
-  border-radius: 9999px;
-  background-color: #fafafa9a;
-}
-
-html {
-  overflow-y: hidden !important;
-}
-
-#splash-screen {
-  background: #fff;
-}
-
-html.dark #splash-screen {
-  background: #000;
-}
-
-html.her #splash-screen {
-  background: #983724;
-}
-
-#logo-her {
-  display: none;
-}
-
-#progress-background {
-  display: none;
-}
-
-#progress-bar {
-  display: none;
-}
-
-html.her #logo {
-  display: none;
-}
-
-html.her #logo-her {
-  display: block;
-  filter: invert(1);
-}
-
-html.her #progress-background {
-  display: block;
-}
-
-html.her #progress-bar {
-  display: block;
-}
-
-@media (max-width: 24rem) {
-  html.her #progress-background {
-    display: none;
-  }
-
-  html.her #progress-bar {
-    display: none;
-  }
-}
-
-@keyframes pulse {
-  50% {
-    opacity: 0.65;
-  }
-}
-
-.animate-pulse-fast {
-  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+#sidebar[data-state='true'] {
+    animation: 0.4s ease-in forwards fade-in !important;
 }
