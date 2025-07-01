@@ -191,7 +191,7 @@
 			</Drawer>
 		{/if}
 	{:else}
-		<!-- if $showControls -->
+		
 
 		{#if $showControls}
 			<PaneResizer class="relative flex w-2 items-center justify-center bg-background group">

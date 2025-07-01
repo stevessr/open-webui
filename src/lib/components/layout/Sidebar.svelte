@@ -420,8 +420,6 @@
 	}}
 />
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-
 {#if $showSidebar}
 	<div
 		class=" {$isApp
@@ -665,12 +663,23 @@
 									draggable="false"
 								>
 									<div class="self-center shrink-0">
-										<img
-											crossorigin="anonymous"
-											src={model?.info?.meta?.profile_image_url ?? '/static/favicon.png'}
-											class=" size-5 rounded-full -translate-x-[0.5px]"
-											alt="logo"
-										/>
+										{#if model?.info?.meta?.profile_image_url?.endsWith('.mp4')}
+											<video
+												src={model?.info?.meta?.profile_image_url}
+												class=" size-5 rounded-full -translate-x-[0.5px]"
+												autoplay
+												muted
+												loop
+												playsinline
+											/>
+										{:else}
+											<img
+												crossorigin="anonymous"
+												src={model?.info?.meta?.profile_image_url ?? '/static/favicon.png'}
+												class=" size-5 rounded-full -translate-x-[0.5px]"
+												alt="logo"
+											/>
+										{/if}
 									</div>
 
 									<div class="flex self-center translate-y-[0.5px]">
@@ -960,11 +969,22 @@
 							}}
 						>
 							<div class=" self-center mr-3">
-								<img
-									src={$user?.profile_image_url}
-									class=" max-w-[30px] object-cover rounded-full"
-									alt="User profile"
-								/>
+								{#if $user?.profile_image_url.endsWith('.mp4')}
+									<video
+										src={$user?.profile_image_url}
+										class=" max-w-[30px] object-cover rounded-full"
+										autoplay
+										muted
+										loop
+										playsinline
+									/>
+								{:else}
+									<img
+										src={$user?.profile_image_url}
+										class=" max-w-[30px] object-cover rounded-full"
+										alt="User profile"
+									/>
+								{/if}
 							</div>
 							<div class=" self-center font-medium">{$user?.name}</div>
 						</button>

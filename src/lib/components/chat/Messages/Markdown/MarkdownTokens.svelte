@@ -79,7 +79,7 @@
 	};
 </script>
 
-<!-- {JSON.stringify(tokens)} -->
+
 {#each tokens as token, tokenIdx (tokenIdx)}
 	{#if token.type === 'hr'}
 		<hr class=" border-gray-100 dark:border-gray-850" />

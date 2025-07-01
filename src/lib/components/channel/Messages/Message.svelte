@@ -148,18 +148,14 @@
 							className={'size-8 translate-y-1 ml-0.5'}
 						/>
 					</ProfilePreview>
-				{:else}
-					<!-- <div class="w-7 h-7 rounded-full bg-transparent" /> -->
-
-					{#if message.created_at}
-						<div
-							class="mt-1.5 flex shrink-0 items-center text-xs self-center invisible group-hover:visible text-gray-500 font-medium first-letter:capitalize"
-						>
-							<Tooltip content={dayjs(message.created_at / 1000000).format('LLLL')}>
-								{dayjs(message.created_at / 1000000).format('HH:mm')}
-							</Tooltip>
-						</div>
-					{/if}
+				{:else if message.created_at}
+					<div
+						class="mt-1.5 flex shrink-0 items-center text-xs self-center invisible group-hover:visible text-gray-500 font-medium first-letter:capitalize"
+					>
+						<Tooltip content={dayjs(message.created_at / 1000000).format('LLLL')}>
+							{dayjs(message.created_at / 1000000).format('HH:mm')}
+						</Tooltip>
+					</div>
 				{/if}
 			</div>
 
@@ -332,7 +328,6 @@
 								<span class="ml-1">
 									<ChevronRight className="size-2.5" strokeWidth="3" />
 								</span>
-								<!-- {$i18n.t('View Replies')} -->
 							</button>
 						</div>
 					{/if}

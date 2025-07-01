@@ -117,8 +117,8 @@
 			<ProfileImage
 				src={message.user
 					? ($models.find((m) => m.id === message.user)?.info?.meta?.profile_image_url ??
-						'/user.png')
-					: (user?.profile_image_url ?? '/user.png')}
+						'/user.gif')
+					: (user?.profile_image_url ?? '/user.gif')}
 				className={'size-8 user-message-profile-image'}
 			/>
 		</div>
@@ -378,7 +378,7 @@
 												/>/{siblings.length}
 											</div>
 										{:else}
-											<!-- svelte-ignore a11y-no-static-element-interactions -->
+											
 											<div
 												class="text-sm tracking-widest font-semibold self-center dark:text-gray-100 min-w-fit"
 												on:dblclick={async () => {
@@ -550,7 +550,7 @@
 												/>/{siblings.length}
 											</div>
 										{:else}
-											<!-- svelte-ignore a11y-no-static-element-interactions -->
+											
 											<div
 												class="text-sm tracking-widest font-semibold self-center dark:text-gray-100 min-w-fit"
 												on:dblclick={async () => {

@@ -147,6 +147,7 @@ type Settings = {
 	splitLargeDeltas?: boolean;
 	chatDirection: 'LTR' | 'RTL' | 'auto';
 	ctrlEnterToSend?: boolean;
+	backgroundImageUrl?: string;
 
 	system?: string;
 	seed?: number;

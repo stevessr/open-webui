@@ -313,7 +313,7 @@
 								<Tooltip content={feedback?.user?.name}>
 									<div class="shrink-0">
 										<img
-											src={feedback?.user?.profile_image_url ?? '/user.png'}
+											src={feedback?.user?.profile_image_url ?? '/user.gif'}
 											alt={feedback?.user?.name}
 											class="size-5 rounded-full object-cover shrink-0"
 										/>
@@ -333,7 +333,6 @@
 										<Tooltip content={feedback.data.sibling_model_ids.join(', ')}>
 											<div class=" text-[0.65rem] text-gray-600 dark:text-gray-400 line-clamp-1">
 												{#if feedback.data.sibling_model_ids.length > 2}
-													<!-- {$i18n.t('and {{COUNT}} more')} -->
 													{feedback.data.sibling_model_ids.slice(0, 2).join(', ')}, {$i18n.t(
 														'and {{COUNT}} more',
 														{ COUNT: feedback.data.sibling_model_ids.length - 2 }

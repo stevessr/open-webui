@@ -390,15 +390,26 @@
 						</td>
 						<td class="px-3 py-1 font-medium text-gray-900 dark:text-white w-max">
 							<div class="flex flex-row w-max">
-								<img
-									class=" rounded-full w-6 h-6 object-cover mr-2.5"
-									src={user.profile_image_url.startsWith(WEBUI_BASE_URL) ||
-									user.profile_image_url.startsWith('https://www.gravatar.com/avatar/') ||
-									user.profile_image_url.startsWith('data:')
-										? user.profile_image_url
-										: `/user.png`}
-									alt="user"
-								/>
+								{#if user.profile_image_url.toLowerCase().endsWith('.mp4')}
+									<video
+										class=" rounded-full w-6 h-6 object-cover mr-2.5"
+										src={user.profile_image_url}
+										autoplay
+										muted
+										loop
+										playsinline
+									/>
+								{:else}
+									<img
+										class=" rounded-full w-6 h-6 object-cover mr-2.5"
+										src={user.profile_image_url.startsWith(WEBUI_BASE_URL) ||
+										user.profile_image_url.startsWith('https://www.gravatar.com/avatar/') ||
+										user.profile_image_url.startsWith('data:')
+											? user.profile_image_url
+											: `/user.gif`}
+										alt="user"
+									/>
+								{/if}
 
 								<div class=" font-medium self-center">{user.name}</div>
 							</div>
