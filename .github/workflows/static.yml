@@ -17,12 +17,29 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'pnpm'
 
       # Use pnpm/action-setup to install pnpm and set up caching
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
           version: latest # Or specify your pnpm version
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-pnpm-
 
       - name: Install Dependencies
         run: pnpm install
@@ -55,14 +72,43 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'pnpm'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
           version: latest
 
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-pnpm-
+
+      - name: Cache Vite build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .vite
+            node_modules/.vite
+          key: ${{ runner.os }}-vite-${{ hashFiles('vite.config.js', 'vite.config.ts', 'pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-vite-
+
       - name: Install Dependencies
         run: pnpm install
+        # The 'pnpm update' command is usually for updating your lockfile,
+        # typically done locally. 'pnpm install' is for CI.
 
       - name: Fix missing Dependencies
         run: |
