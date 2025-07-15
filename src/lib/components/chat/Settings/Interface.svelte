@@ -40,6 +40,7 @@
 	let detectArtifacts = true;
 
 	let richTextInput = true;
+	let insertPromptAsRichText = false;
 	let promptAutocomplete = false;
 
 	let largeTextAsFile = false;
@@ -220,6 +221,11 @@
 		saveSettings({ richTextInput });
 	};
 
+	const toggleInsertPromptAsRichText = async () => {
+		insertPromptAsRichText = !insertPromptAsRichText;
+		saveSettings({ insertPromptAsRichText });
+	};
+
 	const toggleLargeTextAsFile = async () => {
 		largeTextAsFile = !largeTextAsFile;
 		saveSettings({ largeTextAsFile });
@@ -326,7 +332,9 @@
 		voiceInterruption = $settings?.voiceInterruption ?? false;
 
 		richTextInput = $settings?.richTextInput ?? true;
+		insertPromptAsRichText = $settings?.insertPromptAsRichText ?? false;
 		promptAutocomplete = $settings?.promptAutocomplete ?? false;
+
 		largeTextAsFile = $settings?.largeTextAsFile ?? false;
 		copyFormatted = $settings?.copyFormatted ?? false;
 
@@ -779,22 +787,22 @@
 				</div>
 			</div>
 
-			{#if $config?.features?.enable_autocomplete_generation && richTextInput}
+			{#if richTextInput}
 				<div>
 					<div class=" py-0.5 flex w-full justify-between">
-						<div id="prompt-autocompletion-label" class=" self-center text-xs">
-							{$i18n.t('Prompt Autocompletion')}
+						<div id="rich-input-label" class=" self-center text-xs">
+							{$i18n.t('Insert Prompt as Rich Text')}
 						</div>
 
 						<button
-							aria-labelledby="prompt-autocompletion-label"
+							aria-labelledby="rich-input-label"
 							class="p-1 px-3 text-xs flex rounded-sm transition"
 							on:click={() => {
-								togglePromptAutocomplete();
+								toggleInsertPromptAsRichText();
 							}}
 							type="button"
 						>
-							{#if promptAutocomplete === true}
+							{#if insertPromptAsRichText === true}
 								<span class="ml-2 self-center">{$i18n.t('On')}</span>
 							{:else}
 								<span class="ml-2 self-center">{$i18n.t('Off')}</span>
@@ -802,6 +810,31 @@
 						</button>
 					</div>
 				</div>
+
+				{#if $config?.features?.enable_autocomplete_generation}
+					<div>
+						<div class=" py-0.5 flex w-full justify-between">
+							<div id="prompt-autocompletion-label" class=" self-center text-xs">
+								{$i18n.t('Prompt Autocompletion')}
+							</div>
+
+							<button
+								aria-labelledby="prompt-autocompletion-label"
+								class="p-1 px-3 text-xs flex rounded-sm transition"
+								on:click={() => {
+									togglePromptAutocomplete();
+								}}
+								type="button"
+							>
+								{#if promptAutocomplete === true}
+									<span class="ml-2 self-center">{$i18n.t('On')}</span>
+								{:else}
+									<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+								{/if}
+							</button>
+						</div>
+					</div>
+				{/if}
 			{/if}
 
 			<div>

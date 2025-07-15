@@ -14,6 +14,8 @@
 		toggleModelById,
 		updateModelById
 	} from '$lib/apis/models';
+	import { copyToClipboard } from '$lib/utils';
+	import { page } from '$app/stores';
 
 	import { getModels } from '$lib/apis';
 	import Search from '$lib/components/icons/Search.svelte';
@@ -34,7 +36,7 @@
 	import EllipsisHorizontal from '$lib/components/icons/EllipsisHorizontal.svelte';
 	import EyeSlash from '$lib/components/icons/EyeSlash.svelte';
 	import Eye from '$lib/components/icons/Eye.svelte';
-	import { copyToClipboard } from '$lib/utils';
+	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	let shiftKey = false;
 
@@ -205,6 +207,11 @@
 
 	onMount(async () => {
 		await init();
+		const id = $page.url.searchParams.get('id');
+
+		if (id) {
+			selectedModelId = id;
+		}
 
 		const onKeyDown = (event) => {
 			if (event.key === 'Shift') {
@@ -574,6 +581,6 @@
 	{/if}
 {:else}
 	<div class=" h-full w-full flex justify-center items-center">
-		<Spinner />
+		<Spinner className="size-5" />
 	</div>
 {/if}
