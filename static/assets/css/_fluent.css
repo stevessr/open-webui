@@ -21,8 +21,21 @@
 
 #sidebar,#user-menu{
     background: transparent;
+    backdrop-filter: blur(8px);
 }
 
-#sidebar[data-state='true'] {
-    animation: 0.4s ease-in forwards fade-in !important;
+#sidebar[data-state='true'],.parameter-panel,div {
+    animation: 0.1s ease-in forwards fade-in !important;
+}
+
+.overscroll-contain , .menu-cover,.chat-interface,.model-menu,.parameter-panel,.tools-menu{
+    background: transparent;
+    backdrop-filter: blur(8px);
+}
+.none-border{
+    border: none;
+}
+
+.tag-selcetor{
+    background: transparent;
 }
