@@ -45,6 +45,7 @@
 	import { getAllTags, getChatList } from '$lib/apis/chats';
 	import NotificationToast from '$lib/components/NotificationToast.svelte';
 	import AppSidebar from '$lib/components/app/AppSidebar.svelte';
+	import CustomStyles from '$lib/components/common/CustomStyles.svelte';
 	import { chatCompletion } from '$lib/apis/openai';
 
 	import { beforeNavigate } from '$app/navigation';
@@ -654,6 +655,7 @@
 </svelte:head>
 
 {#if loaded}
+	<CustomStyles />
 	{#if $isApp}
 		<div class="flex flex-row h-screen">
 			<AppSidebar />

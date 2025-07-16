@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
-	import { createEventDispatcher, getContext, onMount } from 'svelte';
+	import { createEventDispatcher, getContext, onMount, onDestroy } from 'svelte';
 
 	import { flyAndScale } from '$lib/utils/transitions';
 	import { goto } from '$app/navigation';
@@ -17,6 +17,7 @@
 	import Map from '$lib/components/icons/Map.svelte';
 	import Keyboard from '$lib/components/icons/Keyboard.svelte';
 	import ShortcutsModal from '$lib/components/chat/ShortcutsModal.svelte';
+	import CustomStylesModal from '$lib/components/chat/CustomStylesModal.svelte';
 	import Settings from '$lib/components/icons/Settings.svelte';
 	import Code from '$lib/components/icons/Code.svelte';
 	import UserGroup from '$lib/components/icons/UserGroup.svelte';
@@ -30,6 +31,7 @@
 	export let className = 'max-w-[240px]';
 
 	let showShortcuts = false;
+	let showCustomStyles = false;
 
 	const dispatch = createEventDispatcher();
 
@@ -49,9 +51,24 @@
 	$: if (show) {
 		getUsageInfo();
 	}
+
+	// Listen for keyboard shortcut to open custom styles
+	const handleOpenCustomStyles = () => {
+		showCustomStyles = true;
+	};
+
+	// Add event listener on mount
+	onMount(() => {
+		window.addEventListener('openCustomStyles', handleOpenCustomStyles);
+	});
+
+	onDestroy(() => {
+		window.removeEventListener('openCustomStyles', handleOpenCustomStyles);
+	});
 </script>
 
 <ShortcutsModal bind:show={showShortcuts} />
+<CustomStylesModal bind:show={showCustomStyles} />
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <DropdownMenu.Root
@@ -180,6 +197,17 @@
 				>
 					<Keyboard className="size-5" />
 					<div class="flex items-center">{$i18n.t('Keyboard shortcuts')}</div>
+				</DropdownMenu.Item>
+
+				<DropdownMenu.Item
+					class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition"
+					on:click={() => {
+						showCustomStyles = !showCustomStyles;
+						show = false;
+					}}
+				>
+					<Code className="size-5" />
+					<div class="flex items-center">{$i18n.t('Custom Styles')}</div>
 				</DropdownMenu.Item>
 			{/if}
 

@@ -47,12 +47,16 @@
 	let promptSuggestions = [];
 	let banners: Banner[] = [];
 
+
+
 	const updateInterfaceHandler = async () => {
 		taskConfig = await updateTaskConfig(localStorage.token, taskConfig);
 
 		promptSuggestions = promptSuggestions.filter((p) => p.content !== '');
 		promptSuggestions = await setDefaultPromptSuggestions(localStorage.token, promptSuggestions);
 		await updateBanners();
+
+
 
 		await config.set(await getBackendConfig());
 	};
@@ -63,6 +67,8 @@
 
 		promptSuggestions = $config?.default_prompt_suggestions ?? [];
 		banners = await getBanners(localStorage.token);
+
+
 	});
 
 	const updateBanners = async () => {
@@ -428,6 +434,8 @@
 
 					<Banners bind:banners />
 				</div>
+
+
 
 				{#if $user?.role === 'admin'}
 					<div class=" space-y-3">

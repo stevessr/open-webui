@@ -4,6 +4,8 @@
 	import { v4 as uuidv4 } from 'uuid';
 
 	import { getContext, onMount, tick, onDestroy } from 'svelte';
+	import { slide } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
 	import { copyToClipboard } from '$lib/utils';
 
 	import 'highlight.js/styles/github-dark.min.css';
@@ -437,7 +439,7 @@
 						class="flex gap-1 items-center bg-none border-none bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 transition rounded-md px-1.5 py-0.5"
 						on:click={collapseCodeBlock}
 					>
-						<div class=" -translate-y-[0.5px]">
+						<div class=" -translate-y-[0.5px] transition-transform duration-300 ease-out {collapsed ? 'rotate-180' : ''}">
 							<ChevronUpDown className="size-3" />
 						</div>
 
@@ -512,20 +514,23 @@
 				<div class=" pt-7 bg-gray-50 dark:bg-gray-850"></div>
 
 				{#if !collapsed}
-					<CodeEditor
-						value={code}
-						{id}
-						{lang}
-						onSave={() => {
-							saveCode();
-						}}
-						onChange={(value) => {
-							_code = value;
-						}}
-					/>
+					<div transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}>
+						<CodeEditor
+							value={code}
+							{id}
+							{lang}
+							onSave={() => {
+								saveCode();
+							}}
+							onChange={(value) => {
+								_code = value;
+							}}
+						/>
+					</div>
 				{:else}
 					<div
 						class="bg-gray-50 dark:bg-black dark:text-white rounded-b-lg! pt-2 pb-2 px-4 flex flex-col gap-2 text-xs"
+						transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}
 					>
 						<span class="text-gray-500 italic">
 							{$i18n.t('{{COUNT}} hidden lines', {
@@ -540,11 +545,13 @@
 				<div
 					id="plt-canvas-{id}"
 					class="bg-gray-50 dark:bg-[#202123] dark:text-white max-w-full overflow-x-auto scrollbar-hidden"
+					transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}
 				/>
 
 				{#if executing || stdout || stderr || result || files}
 					<div
 						class="bg-gray-50 dark:bg-[#202123] dark:text-white rounded-b-lg! py-4 px-4 flex flex-col gap-2"
+						transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}
 					>
 						{#if executing}
 							<div class=" ">

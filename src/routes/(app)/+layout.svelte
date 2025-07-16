@@ -140,6 +140,13 @@
 					document.getElementById('chat-input')?.focus();
 				}
 
+				// Check if Ctrl + Shift + S is pressed (Custom Styles)
+				if (isCtrlPressed && isShiftPressed && event.key.toLowerCase() === 's') {
+					event.preventDefault();
+					console.log('customStyles');
+					window.dispatchEvent(new CustomEvent('openCustomStyles'));
+				}
+
 				// Check if Ctrl + Shift + ; is pressed
 				if (isCtrlPressed && isShiftPressed && event.key === ';') {
 					event.preventDefault();
