@@ -501,14 +501,14 @@
 							/>
 							<div class="flex gap-2">
 								<button
-									class="flex-1 px-3 py-2 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-sm transition"
+									class="flex-1 px-3 py-2 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-sm transition little-color"
 									on:click={setProfileImageFromUrl}
 									type="button"
 								>
 									{$i18n.t('Set')}
 								</button>
 								<button
-									class="flex-1 px-3 py-2 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded-sm transition"
+									class="flex-1 px-3 py-2 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded-sm transition little-color"
 									on:click={toggleUrlInput}
 									type="button"
 								>

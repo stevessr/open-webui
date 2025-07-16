@@ -20,7 +20,7 @@
 /* 当元素被键盘聚焦时 */
 .ProseMirror:focus-visible,
 .ProseMirror-focused,
-input:focus {
+input:focus,textarea:focus {
   outline: none;
   /* 禁用默认的 outline */
   position: relative;
@@ -122,4 +122,13 @@ html.her #progress-bar {
 
 .animate-pulse-fast {
   animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.trans {
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+}
+
+.little-color {
+  background: rgb(255 255 255 / 25%);
 }
