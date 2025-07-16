@@ -189,7 +189,9 @@
 									muted
 									loop
 									playsinline
-								></video>
+								>
+									<track kind="captions" />
+								</video>
 							{:else}
 								<img
 									src={profileImageUrl !== '' ? profileImageUrl : generateInitialsImage(name)}

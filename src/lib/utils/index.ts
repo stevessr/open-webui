@@ -37,7 +37,7 @@ export const replaceTokens = (content, sourceIds, char, user) => {
 		{
 			regex: /{{VIDEO_FILE_ID_([a-f0-9-]+)}}/gi,
 			replacement: (_, fileId) =>
-				`<video src="${WEBUI_BASE_URL}/api/v1/files/${fileId}/content" controls></video>`
+				`<video src="${WEBUI_BASE_URL}/api/v1/files/${fileId}/content" controls><track kind="captions"></video>`
 		},
 		{
 			regex: /{{HTML_FILE_ID_([a-f0-9-]+)}}/gi,

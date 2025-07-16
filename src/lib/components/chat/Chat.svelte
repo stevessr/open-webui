@@ -2081,7 +2081,9 @@
 						muted
 						loop
 						playsinline
-					></video>
+					>
+						<track kind="captions" />
+					</video>
 				{:else}
 					<!-- Image background -->
 					<div

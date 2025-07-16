@@ -860,7 +860,9 @@
 						autoplay
 						class="rounded-2xl h-full min-w-full object-cover object-center"
 						playsinline
-					/>
+					>
+						<track kind="captions" />
+					</video>
 
 					<canvas id="camera-canvas" style="display:none;" />
 

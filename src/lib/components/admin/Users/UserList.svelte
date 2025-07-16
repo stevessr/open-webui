@@ -398,7 +398,9 @@
 										muted
 										loop
 										playsinline
-									/>
+									>
+										<track kind="captions" />
+									</video>
 								{:else}
 									<img
 										class=" rounded-full w-6 h-6 object-cover mr-2.5"

@@ -96,10 +96,10 @@
 		TTSEngine = $settings?.audio?.tts?.engine ?? '';
 		TTSEngineConfig = $settings?.audio?.tts?.engineConfig ?? {};
 
-		if ($settings?.audio?.tts?.defaultVoice === $config?.audio.tts.voice) {
-			voice = $settings?.audio?.tts?.voice ?? $config?.audio.tts.voice ?? '';
+		if ($settings?.audio?.tts?.defaultVoice === $config?.audio?.tts?.voice) {
+			voice = $settings?.audio?.tts?.voice ?? $config?.audio?.tts?.voice ?? '';
 		} else {
-			voice = $config?.audio.tts.voice ?? '';
+			voice = $config?.audio?.tts?.voice ?? '';
 		}
 
 		nonLocalVoices = $settings.audio?.tts?.nonLocalVoices ?? false;
@@ -169,7 +169,7 @@
 					playbackRate: playbackRate,
 					voice: voice !== '' ? voice : undefined,
 					defaultVoice: $config?.audio?.tts?.voice ?? '',
-					nonLocalVoices: $config.audio.tts.engine === '' ? nonLocalVoices : undefined
+					nonLocalVoices: $config?.audio?.tts?.engine === '' ? nonLocalVoices : undefined
 				}
 			}
 		});

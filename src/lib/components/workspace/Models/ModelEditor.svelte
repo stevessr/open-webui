@@ -415,7 +415,9 @@
 										muted
 										loop
 										playsinline
-									></video>
+									>
+										<track kind="captions" />
+									</video>
 								{:else}
 									<img
 										src={info.meta.profile_image_url}
