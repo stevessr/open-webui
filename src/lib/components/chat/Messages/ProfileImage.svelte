@@ -25,7 +25,9 @@
 		loop
 		playsinline
 		draggable="false"
-	></video>
+	>
+		<track kind="captions" />
+	</video>
 {:else}
 	<img
 		crossorigin="anonymous"

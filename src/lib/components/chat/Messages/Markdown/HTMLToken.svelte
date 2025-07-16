@@ -34,7 +34,9 @@
 				referrerpolicy="strict-origin-when-cross-origin"
 				controls
 				allowfullscreen
-			></video>
+			>
+				<track kind="captions" />
+			</video>
 		{:else}
 			{token.text}
 		{/if}

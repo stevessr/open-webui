@@ -124,6 +124,35 @@ html.her #progress-bar {
   animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+.tippy-box {
+  background-color:transparent;
+}
+
+/* 设置 textarea 背景为主题背景 */
+textarea {
+  background-color: var(--background-color, #ffffff) !important;
+}
+
+/* 深色主题下的 textarea 背景 */
+html.dark textarea {
+  background-color: var(--background-color, #000000) !important;
+}
+
+/* Rose Pine 主题下的 textarea 背景 */
+.rose-pine textarea {
+  background-color: #1f1d2e !important;
+}
+
+/* Rose Pine Dawn 主题下的 textarea 背景 */
+.rose-pine-dawn textarea {
+  background-color: #faf4ed !important;
+}
+
+/* Pink 主题下的 textarea 背景 */
+.pink-theme textarea {
+  background-color: #f8bbd0 !important;
+}
+
 .trans {
   background-color: transparent !important;
   backdrop-filter: none !important;
