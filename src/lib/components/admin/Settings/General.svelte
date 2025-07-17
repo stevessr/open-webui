@@ -13,6 +13,7 @@
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import FloatingDocPreview from '$lib/components/common/FloatingDocPreview.svelte';
 	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
 	import { config, showChangelog } from '$lib/stores';
 	import { compareVersion } from '$lib/utils';
@@ -32,6 +33,8 @@
 
 	let adminConfig = null;
 	let webhookUrl = '';
+	let showDocPreview = false;
+	let showReleasesPreview = false;
 
 	// LDAP
 	let ENABLE_LDAP = false;
@@ -140,16 +143,18 @@
 									</Tooltip>
 
 									{#if $config?.features?.enable_version_update_check}
-										<a
-											href="https://github.com/open-webui/open-webui/releases/tag/v{version.latest}"
-											target="_blank"
+										<button
+											class="underline hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+											on:click={() => {
+												showReleasesPreview = true;
+											}}
 										>
 											{updateAvailable === null
 												? $i18n.t('Checking for updates...')
 												: updateAvailable
 													? `(v${version.latest} ${$i18n.t('available!')})`
 													: $i18n.t('(latest)')}
-										</a>
+										</button>
 									{/if}
 								</div>
 
@@ -189,13 +194,14 @@
 								</div>
 							</div>
 
-							<a
-								class="flex-shrink-0 text-xs font-medium underline"
-								href="https://docs.openwebui.com/"
-								target="_blank"
+							<button
+								class="flex-shrink-0 text-xs font-medium underline cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+								on:click={() => {
+									showDocPreview = true;
+								}}
 							>
 								{$i18n.t('Documentation')}
-							</a>
+							</button>
 						</div>
 
 						<div class="mt-1">
@@ -717,3 +723,14 @@
 		</button>
 	</div>
 </form>
+
+<FloatingDocPreview
+	bind:show={showDocPreview}
+	url="https://docs.openwebui.com"
+	title="Open WebUI Documentation"
+/>
+<FloatingDocPreview
+	bind:show={showReleasesPreview}
+	url="https://github.com/open-webui/open-webui/releases"
+	title="Open WebUI Releases"
+/>

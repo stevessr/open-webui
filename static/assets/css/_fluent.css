@@ -28,7 +28,7 @@
     animation: 0.1s ease-in forwards fade-in !important;
 }
 
-.overscroll-contain , .menu-cover,.chat-interface,.model-menu,.parameter-panel,.tools-menu{
+.overscroll-contain , .menu-cover,.chat-interface,.model-menu,.parameter-panel,.tools-menu,.trans{
     background: transparent;
     backdrop-filter: blur(8px);
 }

@@ -1,10 +1,28 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { createEventDispatcher, onMount, getContext } from 'svelte';
+	import { slide, fade } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
+
+	// Custom transition that combines slide and fade
+	function slideAndFade(node, params = {}) {
+		const slideTransition = slide(node, { duration: 300, easing: quintOut, ...params });
+		const fadeTransition = fade(node, { duration: 200, delay: params.delay || 0 });
+
+		return {
+			duration: Math.max(slideTransition.duration || 300, fadeTransition.duration || 200),
+			css: (t, u) => {
+				const slideCSS = slideTransition.css ? slideTransition.css(t, u) : '';
+				const fadeCSS = fadeTransition.css ? fadeTransition.css(t, u) : '';
+				return `${slideCSS} ${fadeCSS}`;
+			}
+		};
+	}
 	import { getLanguages, changeLanguage } from '$lib/i18n';
 	const dispatch = createEventDispatcher();
 
 	import { models, settings, theme, user } from '$lib/stores';
+	import { generateThemeFromBackground, applyMaterialTheme, removeMaterialTheme } from '$lib/utils/materialThemeGenerator';
 
 	const i18n = getContext('i18n');
 
@@ -14,7 +32,7 @@
 	export let getModels: Function;
 
 	// General
-	let themes = ['dark', 'light', 'oled-dark'];
+	let themes = ['dark', 'light', 'oled-dark', 'material-design'];
 	let selectedTheme = 'system';
 
 	let languages: Awaited<ReturnType<typeof getLanguages>> = [];
@@ -160,7 +178,9 @@
 							? '#000000'
 							: _theme === 'her'
 								? '#983724'
-								: '#ffffff'
+								: _theme === 'material-design'
+									? '#6200EE'
+									: '#ffffff'
 				);
 			}
 		}
@@ -180,10 +200,57 @@
 		console.log(_theme);
 	};
 
-	const themeChangeHandler = (_theme: string) => {
+	const themeChangeHandler = async (_theme: string) => {
 		theme.set(_theme);
 		localStorage.setItem('theme', _theme);
 		applyTheme(_theme);
+
+		// Handle Material Design theme
+		if (_theme === 'material-design') {
+			const backgroundImageUrl = $settings?.backgroundImageUrl;
+			if (backgroundImageUrl) {
+				try {
+					const palette = await generateThemeFromBackground(backgroundImageUrl);
+					applyMaterialTheme(palette);
+				} catch (error) {
+					console.error('Failed to generate Material Design theme:', error);
+					// Apply default Material Design theme
+					applyMaterialTheme({
+						primary: '#6200EE',
+						primaryVariant: '#3700B3',
+						secondary: '#03DAC6',
+						secondaryVariant: '#018786',
+						background: '#FFFFFF',
+						surface: '#FFFFFF',
+						error: '#B00020',
+						onPrimary: '#FFFFFF',
+						onSecondary: '#000000',
+						onBackground: '#000000',
+						onSurface: '#000000',
+						onError: '#FFFFFF'
+					});
+				}
+			} else {
+				// Apply default Material Design theme when no background image
+				applyMaterialTheme({
+					primary: '#6200EE',
+					primaryVariant: '#3700B3',
+					secondary: '#03DAC6',
+					secondaryVariant: '#018786',
+					background: '#FFFFFF',
+					surface: '#FFFFFF',
+					error: '#B00020',
+					onPrimary: '#FFFFFF',
+					onSecondary: '#000000',
+					onBackground: '#000000',
+					onSurface: '#000000',
+					onError: '#FFFFFF'
+				});
+			}
+		} else {
+			// Remove Material Design theme when switching to other themes
+			removeMaterialTheme();
+		}
 	};
 </script>
 
@@ -208,6 +275,7 @@
 						<option value="oled-dark">🌃 {$i18n.t('OLED Dark')}</option>
 						<option value="light">☀️ {$i18n.t('Light')}</option>
 						<option value="her">🌷 Her</option>
+						<option value="material-design">🎨 {$i18n.t('Material Design')}</option>
 						<!-- <option value="rose-pine dark">🪻 {$i18n.t('Rosé Pine')}</option>
 						<option value="rose-pine-dawn light">🌷 {$i18n.t('Rosé Pine Dawn')}</option> -->
 					</select>
@@ -298,7 +366,12 @@
 				</div>
 
 				{#if showAdvanced}
-					<AdvancedParams admin={$user?.role === 'admin'} bind:params />
+					<div
+						in:slideAndFade={{ delay: 100 }}
+						out:slideAndFade
+					>
+						<AdvancedParams admin={$user?.role === 'admin'} bind:params />
+					</div>
 				{/if}
 			</div>
 		{/if}

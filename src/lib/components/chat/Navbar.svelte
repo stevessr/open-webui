@@ -62,7 +62,10 @@
 <nav class="sticky top-0 z-30 w-full py-1 -mb-8 flex flex-col items-center drag-region">
 	<div class="flex items-center w-full pl-1.5 pr-1">
 		<div
-			class="bg-linear-to-b from-white to-transparent dark:from-gray-900 dark:to-transparent pointer-events-none absolute inset-0 -bottom-7 z-[-1]"
+			class="pointer-events-none absolute inset-0 -bottom-7 z-[-1]
+         [mask-image:linear-gradient(to_bottom,white_0%,white_100%)]
+         dark:[mask-image:linear-gradient(to_bottom,theme(colors.gray.900)_0%,theme(colors.gray.900)_100%)]
+         [mask-image:linear-gradient(to_bottom,transparent_0%,currentColor_100%)]"
 		></div>
 
 		<div class=" flex max-w-full w-full mx-auto px-1 pt-0.5 bg-transparent">

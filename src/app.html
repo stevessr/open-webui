@@ -94,6 +94,79 @@
 		<title>加载中</title>
 		<link rel="stylesheet" type="text/css" href="/assets/inject.css" />
 		<script src="/assets/inject.js" defer></script>
+
+		<style>
+			.breathing-light {
+				animation: breathe 2.5s ease-in-out infinite;
+				filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5));
+			}
+
+			@keyframes breathe {
+				0% {
+					opacity: 0.6;
+					transform: scale(0.95);
+					filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3)) brightness(0.9);
+				}
+				25% {
+					opacity: 0.8;
+					transform: scale(1.0);
+					filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.4)) brightness(1.0);
+				}
+				50% {
+					opacity: 1.0;
+					transform: scale(1.05);
+					filter: drop-shadow(0 0 25px rgba(6, 182, 212, 0.6)) brightness(1.1);
+				}
+				75% {
+					opacity: 0.8;
+					transform: scale(1.0);
+					filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.4)) brightness(1.0);
+				}
+				100% {
+					opacity: 0.6;
+					transform: scale(0.95);
+					filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3)) brightness(0.9);
+				}
+			}
+
+			/* Dark mode adjustments */
+			html.dark .breathing-light {
+				filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.6));
+			}
+
+			html.dark .breathing-light {
+				animation: breathe-dark 2.5s ease-in-out infinite;
+			}
+
+			@keyframes breathe-dark {
+				0% {
+					opacity: 0.7;
+					transform: scale(0.95);
+					filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.4)) brightness(0.9);
+				}
+				25% {
+					opacity: 0.85;
+					transform: scale(1.0);
+					filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)) brightness(1.0);
+				}
+				50% {
+					opacity: 1.0;
+					transform: scale(1.05);
+					filter: drop-shadow(0 0 30px rgba(6, 182, 212, 0.7)) brightness(1.2);
+				}
+				75% {
+					opacity: 0.85;
+					transform: scale(1.0);
+					filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.5)) brightness(1.0);
+				}
+				100% {
+					opacity: 0.7;
+					transform: scale(0.95);
+					filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.4)) brightness(0.9);
+				}
+			}
+		</style>
+
 		%sveltekit.head%
 	</head>
 
@@ -121,7 +194,7 @@
 				<img
 					id="logo-her"
 					src="/static/splash.png"
-					class="animate-pulse-fast"
+					class="breathing-light"
 				/>
 
 				<div style="position: relative; width: 24rem; margin-top: 0.5rem">

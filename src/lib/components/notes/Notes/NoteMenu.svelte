@@ -3,7 +3,6 @@
 	import { getContext, onMount } from 'svelte';
 
 	import { flyAndScale } from '$lib/utils/transitions';
-	import { fade, slide } from 'svelte/transition';
 
 	import { showSettings, mobile, showSidebar, user } from '$lib/stores';
 
@@ -45,7 +44,7 @@
 			sideOffset={6}
 			side="bottom"
 			align="start"
-			transition={(e) => fade(e, { duration: 100 })}
+			transition={flyAndScale}
 		>
 			<DropdownMenu.Sub>
 				<DropdownMenu.SubTrigger

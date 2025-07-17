@@ -5,6 +5,7 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { updateUserInfo } from '$lib/apis/users';
 	import { getUserPosition } from '$lib/utils';
+	import { generateThemeFromBackground, applyMaterialTheme, removeMaterialTheme } from '$lib/utils/materialThemeGenerator';
 	const dispatch = createEventDispatcher();
 
 	const i18n = getContext('i18n');
@@ -16,6 +17,10 @@
 	let filesInputElement;
 	let backgroundImageUrlInput = '';
 	let showUrlInput = false;
+
+	// Material Design theme
+	let materialThemeEnabled = false;
+	let isGeneratingTheme = false;
 
 	// Addons
 	let titleAutoGenerate = true;
@@ -304,6 +309,41 @@
 			saveSettings({ backgroundImageUrl });
 			backgroundImageUrlInput = '';
 			showUrlInput = false;
+
+			// Auto-generate Material Design theme if enabled
+			if (materialThemeEnabled) {
+				generateMaterialTheme();
+			}
+		}
+	};
+
+	const toggleMaterialTheme = async () => {
+		materialThemeEnabled = !materialThemeEnabled;
+		saveSettings({ materialThemeEnabled });
+
+		if (materialThemeEnabled && backgroundImageUrl) {
+			await generateMaterialTheme();
+		} else if (!materialThemeEnabled) {
+			removeMaterialTheme();
+		}
+	};
+
+	const generateMaterialTheme = async () => {
+		if (!backgroundImageUrl) {
+			toast.error('Please set a background image first');
+			return;
+		}
+
+		isGeneratingTheme = true;
+		try {
+			const palette = await generateThemeFromBackground(backgroundImageUrl);
+			applyMaterialTheme(palette);
+			toast.success('Material Design theme generated successfully!');
+		} catch (error) {
+			console.error('Failed to generate theme:', error);
+			toast.error('Failed to generate theme from background');
+		} finally {
+			isGeneratingTheme = false;
 		}
 	};
 
@@ -370,6 +410,12 @@
 
 		backgroundImageUrl = $settings?.backgroundImageUrl ?? null;
 		webSearch = $settings?.webSearch ?? null;
+		materialThemeEnabled = $settings?.materialThemeEnabled ?? false;
+
+		// Apply Material Design theme if enabled and background exists
+		if (materialThemeEnabled && backgroundImageUrl) {
+			generateMaterialTheme();
+		}
 	});
 </script>
 
@@ -394,6 +440,11 @@
 
 				backgroundImageUrl = originalImageUrl;
 				saveSettings({ backgroundImageUrl });
+
+				// Auto-generate Material Design theme if enabled
+				if (materialThemeEnabled) {
+					generateMaterialTheme();
+				}
 			};
 
 			if (
@@ -1000,6 +1051,49 @@
 						</button>
 					</div>
 				{/if}
+			</div>
+
+			<!-- Material Design Theme -->
+			<div>
+				<div id="material-design-theme-label" class="py-0.5 flex w-full justify-between">
+					<div class="self-center text-xs">
+						{$i18n.t('Material Design Theme')}
+					</div>
+
+					<div class="flex gap-2">
+						<button
+							aria-labelledby="material-design-theme-label"
+							class="p-1 px-3 text-xs flex rounded-sm transition"
+							on:click={toggleMaterialTheme}
+							type="button"
+							disabled={isGeneratingTheme}
+						>
+							<span class="ml-2 self-center">
+								{#if isGeneratingTheme}
+									{$i18n.t('Generating...')}
+								{:else if materialThemeEnabled}
+									{$i18n.t('Disable')}
+								{:else}
+									{$i18n.t('Enable')}
+								{/if}
+							</span>
+						</button>
+
+						{#if backgroundImageUrl && !materialThemeEnabled}
+							<button
+								aria-labelledby="material-design-theme-label"
+								class="p-1 px-3 text-xs flex rounded-sm transition"
+								on:click={generateMaterialTheme}
+								type="button"
+								disabled={isGeneratingTheme}
+							>
+								<span class="ml-2 self-center">
+									{$i18n.t('Generate Theme')}
+								</span>
+							</button>
+						{/if}
+					</div>
+				</div>
 			</div>
 
 			<div>

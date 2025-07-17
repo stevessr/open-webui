@@ -8,9 +8,16 @@
 	export let size = 'md';
 	export let containerClassName = 'p-3';
 	export let className = 'bg-white dark:bg-gray-900 rounded-2xl';
+	export let draggable = true;
 
 	let modalElement = null;
+	let contentElement = null;
 	let mounted = false;
+
+	// Dragging state
+	let isDragging = false;
+	let dragOffset = { x: 0, y: 0 };
+	let position = { x: 0, y: 0 };
 	// Create focus trap to trap user tabs inside modal
 	// https://www.w3.org/WAI/WCAG21/Understanding/focus-order.html
 	// https://www.w3.org/WAI/WCAG21/Understanding/keyboard.html
@@ -43,6 +50,46 @@
 		return modals.length && modals[modals.length - 1] === modalElement;
 	};
 
+	// Drag functionality
+	const handleMouseDown = (event: MouseEvent) => {
+		if (!draggable) return;
+
+		// Don't enable dragging if the target is an interactive element
+		const target = event.target as HTMLElement;
+		if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.tagName === 'INPUT' ||
+			target.tagName === 'SELECT' || target.tagName === 'TEXTAREA' ||
+			target.closest('button') || target.closest('a') || target.closest('[role="button"]') ||
+			target.closest('[role="tab"]') || target.closest('[role="menuitem"]')) {
+			return;
+		}
+
+		isDragging = true;
+		const rect = contentElement.getBoundingClientRect();
+		dragOffset = {
+			x: event.clientX - rect.left,
+			y: event.clientY - rect.top
+		};
+		document.addEventListener('mousemove', handleMouseMove);
+		document.addEventListener('mouseup', handleMouseUp);
+		event.preventDefault();
+		event.stopPropagation();
+	};
+
+	const handleMouseMove = (event: MouseEvent) => {
+		if (isDragging && draggable) {
+			position = {
+				x: event.clientX - dragOffset.x,
+				y: event.clientY - dragOffset.y
+			};
+		}
+	};
+
+	const handleMouseUp = () => {
+		isDragging = false;
+		document.removeEventListener('mousemove', handleMouseMove);
+		document.removeEventListener('mouseup', handleMouseUp);
+	};
+
 	onMount(() => {
 		mounted = true;
 	});
@@ -53,11 +100,17 @@
 		focusTrap.activate();
 		window.addEventListener('keydown', handleKeyDown);
 		document.body.style.overflow = 'hidden';
+		// Reset position when opening
+		position = { x: 0, y: 0 };
 	} else if (modalElement) {
 		focusTrap.deactivate();
 		window.removeEventListener('keydown', handleKeyDown);
 		document.body.removeChild(modalElement);
 		document.body.style.overflow = 'unset';
+		// Clean up drag listeners if modal is closed while dragging
+		if (isDragging) {
+			handleMouseUp();
+		}
 	}
 
 	onDestroy(() => {
@@ -72,26 +125,40 @@
 </script>
 
 {#if show}
-	
-	
+
+
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<!-- svelte-ignore a11y-mouse-events-have-key-events -->
 	<div
 		bind:this={modalElement}
 		aria-modal="true"
 		role="dialog"
-		class="modal fixed top-0 right-0 left-0 bottom-0 bg-black/60 w-full h-screen max-h-[100dvh] {containerClassName} flex justify-center z-9999 overflow-y-auto overscroll-contain"
+		class="modal fixed top-0 right-0 left-0 bottom-0 w-full h-screen max-h-[100dvh] {containerClassName} flex justify-center items-center z-[9997] overflow-y-auto overscroll-contain"
 		in:fade={{ duration: 10 }}
-		on:mousedown={() => {
-			show = false;
+		on:mousedown={(e) => {
+			// Only close if clicking the backdrop, not the modal content
+			if (e.target === e.currentTarget) {
+				show = false;
+			}
 		}}
 	>
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<!-- svelte-ignore a11y-mouse-events-have-key-events -->
 		<div
-			class="m-auto max-w-full {sizeToWidth(size)} {size !== 'full'
+			bind:this={contentElement}
+			class="max-w-full {sizeToWidth(size)} {size !== 'full'
 				? 'mx-2'
-				: ''} shadow-3xl min-h-fit scrollbar-hidden {className} menu-cover"
+				: ''} shadow-3xl min-h-fit scrollbar-hidden {className} menu-cover {draggable ? 'cursor-move' : ''}"
+			style="transform: translate({position.x}px, {position.y}px)"
 			in:flyAndScale
 			on:mousedown={(e) => {
 				e.stopPropagation();
+				if (draggable) {
+					handleMouseDown(e);
+				}
 			}}
+			role="dialog"
+			tabindex="-1"
 		>
 			<slot />
 		</div>

@@ -1043,38 +1043,61 @@
 											}}
 										>
 											{#if loadingSpeech}
-												<svg
-													class=" w-4 h-4"
-													fill="currentColor"
-													viewBox="0 0 24 24"
-													aria-hidden="true"
-													xmlns="http://www.w3.org/2000/svg"
-												>
+												<div class="speech-breathing-light w-4 h-4 flex items-center justify-center gap-1">
+													<div class="speech-dot speech-dot-1"></div>
+													<div class="speech-dot speech-dot-2"></div>
+													<div class="speech-dot speech-dot-3"></div>
 													<style>
-														.spinner_S1WN {
-															animation: spinner_MGfb 0.8s linear infinite;
-															animation-delay: -0.8s;
+														.speech-dot {
+															width: 3px;
+															height: 3px;
+															border-radius: 50%;
+															background: linear-gradient(45deg, #3b82f6, #10b981, #f59e0b, #ef4444);
+															background-size: 400% 400%;
+															animation: speech-breathe 1.5s ease-in-out infinite;
 														}
 
-														.spinner_Km9P {
-															animation-delay: -0.65s;
+														.speech-dot-1 {
+															animation-delay: 0s;
 														}
 
-														.spinner_JApP {
-															animation-delay: -0.5s;
+														.speech-dot-2 {
+															animation-delay: 0.25s;
 														}
 
-														@keyframes spinner_MGfb {
-															93.75%,
+														.speech-dot-3 {
+															animation-delay: 0.5s;
+														}
+
+														@keyframes speech-breathe {
+															0% {
+																opacity: 0.3;
+																transform: scale(0.8);
+																background-position: 0% 50%;
+															}
+															25% {
+																opacity: 0.7;
+																transform: scale(1.2);
+																background-position: 100% 50%;
+															}
+															50% {
+																opacity: 1.0;
+																transform: scale(1.5);
+																background-position: 50% 100%;
+															}
+															75% {
+																opacity: 0.7;
+																transform: scale(1.2);
+																background-position: 0% 100%;
+															}
 															100% {
-																opacity: 0.2;
+																opacity: 0.3;
+																transform: scale(0.8);
+																background-position: 0% 50%;
 															}
 														}
 													</style>
-													<circle class="spinner_S1WN" cx="4" cy="12" r="3" />
-													<circle class="spinner_S1WN spinner_Km9P" cx="12" cy="12" r="3" />
-													<circle class="spinner_S1WN spinner_JApP" cx="20" cy="12" r="3" />
-												</svg>
+												</div>
 											{:else if speaking}
 												<svg
 													xmlns="http://www.w3.org/2000/svg"
@@ -1135,7 +1158,7 @@
 												>
 													<style>
 														.spinner_S1WN {
-															animation: spinner_MGfb 0.8s linear infinite;
+															animation: spinner_MGfb 0.8s linear infinite, spinner_colorful_hue 3s infinite ease-in-out;
 															animation-delay: -0.8s;
 														}
 
@@ -1151,6 +1174,21 @@
 															93.75%,
 															100% {
 																opacity: 0.2;
+															}
+														}
+
+														@keyframes spinner_colorful_hue {
+															0%, 100% {
+																fill: #3b82f6;
+															}
+															25% {
+																fill: #10b981;
+															}
+															50% {
+																fill: #f59e0b;
+															}
+															75% {
+																fill: #ef4444;
 															}
 														}
 													</style>

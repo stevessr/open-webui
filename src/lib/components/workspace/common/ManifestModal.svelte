@@ -13,7 +13,7 @@
 	export let manifest = {};
 </script>
 
-<Modal size="sm" bind:show>
+<Modal size="sm" bind:show draggable={false}>
 	<div>
 		<div class=" flex justify-between dark:text-gray-300 px-5 pt-4 pb-2">
 			<div class=" text-lg font-medium self-center">{$i18n.t('Show your support!')}</div>

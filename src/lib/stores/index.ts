@@ -186,6 +186,7 @@ type Settings = {
 	chatDirection?: 'LTR' | 'RTL' | 'auto';
 	ctrlEnterToSend?: boolean;
 	backgroundImageUrl?: string;
+	materialThemeEnabled?: boolean;
 
 	system?: string;
 	seed?: number;

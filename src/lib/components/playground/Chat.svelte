@@ -209,7 +209,7 @@
 	});
 </script>
 
-<div class=" flex flex-col justify-between w-full overflow-y-auto h-full">
+<div class=" flex flex-col justify-between w-full overflow-y-auto h-full bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-cyan-50/30 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-cyan-950/20">
 	<div class="mx-auto w-full md:px-0 h-full relative">
 		<div class=" flex flex-col h-full px-3.5">
 			<div class="flex w-full items-start gap-1.5">
@@ -245,7 +245,7 @@
 						<div class="pt-1 px-1.5">
 							<textarea
 								bind:this={systemTextareaElement}
-								class="w-full h-full bg-transparent resize-none outline-hidden text-sm"
+								class="w-full h-full bg-transparent resize-none outline-hidden text-sm trans"
 								bind:value={system}
 								placeholder={$i18n.t("You're a helpful assistant.")}
 								on:input={() => {
@@ -277,7 +277,7 @@
 						
 						<textarea
 							bind:value={message}
-							class=" w-full h-full bg-transparent resize-none outline-hidden text-sm"
+							class=" w-full h-full bg-transparent resize-none outline-hidden text-sm trans"
 							placeholder={$i18n.t(`Enter {{role}} message here`, {
 								role: role === 'user' ? $i18n.t('a user') : $i18n.t('an assistant')
 							})}

@@ -34,3 +34,10 @@
 .pink-theme button:hover {
     background-color: #c2185b !important; /* Pink 800 */
 }
+
+/* Pink theme CSS variables */
+.pink-theme {
+    --background-color: #f8bbd0;
+    --text-color: #c2185b;
+    --border-color: #f06292;
+}

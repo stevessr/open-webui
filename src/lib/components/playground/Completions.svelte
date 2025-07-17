@@ -120,7 +120,7 @@
 	});
 </script>
 
-<div class=" flex flex-col justify-between w-full overflow-y-auto h-full">
+<div class=" flex flex-col justify-between w-full overflow-y-auto h-full bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-cyan-50/30 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-cyan-950/20">
 	<div class="mx-auto w-full md:px-0 h-full">
 		<div class=" flex flex-col h-full px-4">
 			<div class="flex flex-col justify-between mb-1 gap-1">
@@ -152,7 +152,7 @@
 						<textarea
 							id="text-completion-textarea"
 							bind:this={textCompletionAreaElement}
-							class="w-full h-full p-3 bg-transparent border border-gray-100 dark:border-gray-850 outline-hidden resize-none rounded-lg text-sm"
+							class="w-full h-full p-3 bg-transparent border border-gray-100 dark:border-gray-850 outline-hidden resize-none rounded-lg text-sm trans"
 							bind:value={text}
 							placeholder={$i18n.t("You're a helpful assistant.")}
 						/>

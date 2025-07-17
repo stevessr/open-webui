@@ -2,7 +2,7 @@
 	import { getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Modal from '../common/Modal.svelte';
-	import Textarea from '../common/Textarea.svelte';
+	import CodeEditor from '../common/CodeEditor.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import Code from '$lib/components/icons/Code.svelte';
@@ -57,7 +57,7 @@
 	};
 </script>
 
-<Modal bind:show size="lg">
+<Modal bind:show size="lg" draggable={false}>
 	<div class="text-gray-700 dark:text-gray-100">
 		<div class="flex justify-between dark:text-gray-300 px-5 pt-4 pb-2">
 			<div class="flex items-center gap-2">
@@ -91,12 +91,15 @@
 						</div>
 					</Tooltip>
 				</div>
-				<Textarea
-					bind:value={customCSS}
-					placeholder={$i18n.t('/* Enter your custom CSS here */\nbody {\n  /* Your styles */\n}')}
-					rows={8}
-					className="font-mono text-sm"
-				/>
+				<div class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden" style="height: 200px;">
+					<CodeEditor
+						id="custom-css-editor"
+						lang="css"
+						bind:value={customCSS}
+						boilerplate="/* Enter your custom CSS here */"
+
+					/>
+				</div>
 			</div>
 
 			<!-- Custom JavaScript Section -->
@@ -111,12 +114,16 @@
 						</div>
 					</Tooltip>
 				</div>
-				<Textarea
-					bind:value={customJS}
-					placeholder={$i18n.t('// Enter your custom JavaScript here\nconsole.log("Custom script loaded");')}
-					rows={8}
-					className="font-mono text-sm"
-				/>
+				<div class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden" style="height: 200px;">
+					<CodeEditor
+						id="custom-js-editor"
+						lang="javascript"
+						bind:value={customJS}
+						boilerplate={`// Enter your custom JavaScript here
+console.log("Custom script loaded");`}
+
+					/>
+				</div>
 			</div>
 
 			<!-- Action Buttons -->

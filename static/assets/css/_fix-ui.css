@@ -129,28 +129,38 @@ html.her #progress-bar {
 }
 
 /* 设置 textarea 背景为主题背景 */
-textarea {
-  background-color: var(--background-color, #ffffff) !important;
+textarea, .theme-textarea {
+  background-color: var(--background-color, #f9fafb) !important;
+  color: var(--text-color, #374151) !important;
+  border: 1px solid var(--border-color, #d1d5db) !important;
 }
 
 /* 深色主题下的 textarea 背景 */
-html.dark textarea {
-  background-color: var(--background-color, #000000) !important;
+html.dark textarea, html.dark .theme-textarea {
+  background-color: var(--background-color, #1f2937) !important;
+  color: var(--text-color, #d1d5db) !important;
+  border: 1px solid var(--border-color, #374151) !important;
 }
 
 /* Rose Pine 主题下的 textarea 背景 */
-.rose-pine textarea {
+.rose-pine textarea, .rose-pine .theme-textarea {
   background-color: #1f1d2e !important;
+  color: #e0def4 !important;
+  border: 1px solid #403d52 !important;
 }
 
 /* Rose Pine Dawn 主题下的 textarea 背景 */
-.rose-pine-dawn textarea {
+.rose-pine-dawn textarea, .rose-pine-dawn .theme-textarea {
   background-color: #faf4ed !important;
+  color: #575279 !important;
+  border: 1px solid #dfdad9 !important;
 }
 
 /* Pink 主题下的 textarea 背景 */
-.pink-theme textarea {
+.pink-theme textarea, .pink-theme .theme-textarea {
   background-color: #f8bbd0 !important;
+  color: #c2185b !important;
+  border: 1px solid #f06292 !important;
 }
 
 .trans {
@@ -160,4 +170,62 @@ html.dark textarea {
 
 .little-color {
   background: rgb(255 255 255 / 25%);
+}
+
+/* Rainbow text effect for API keys */
+.rainbow-text {
+  background: linear-gradient(
+    45deg,
+    #ff0000,
+    #ff7f00,
+    #ffff00,
+    #00ff00,
+    #0000ff,
+    #4b0082,
+    #9400d3,
+    #ff0000
+  );
+  background-size: 400% 400%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbow-shift 3s ease-in-out infinite;
+}
+
+@keyframes rainbow-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Fallback for browsers that don't support background-clip: text */
+@supports not (-webkit-background-clip: text) {
+  .rainbow-text {
+    background: none;
+    -webkit-text-fill-color: initial;
+    color: #ff6b6b;
+    text-shadow:
+      0 0 5px #ff6b6b,
+      0 0 10px #ff6b6b,
+      0 0 15px #ff6b6b;
+    animation: glow-pulse 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow-pulse {
+    from {
+      text-shadow:
+        0 0 5px #ff6b6b,
+        0 0 10px #ff6b6b,
+        0 0 15px #ff6b6b;
+    }
+    to {
+      text-shadow:
+        0 0 10px #ff6b6b,
+        0 0 20px #ff6b6b,
+        0 0 30px #ff6b6b;
+    }
+  }
 }
