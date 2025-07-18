@@ -1,7 +1,7 @@
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 import type { Banner } from '$lib/types';
 
-export const importConfig = async (token: string, config) => {
+export const importConfig = async (token: string, config: any) => {
 	let error = null;
 
 	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/import`, {

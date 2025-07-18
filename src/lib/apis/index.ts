@@ -45,12 +45,12 @@ export const getModels = async (
 	let models = res?.data ?? [];
 
 	if (connections && !base) {
-		let localModels = [];
+		let localModels: any[] = [];
 
 		if (connections) {
-			const OPENAI_API_BASE_URLS = connections.OPENAI_API_BASE_URLS;
-			const OPENAI_API_KEYS = connections.OPENAI_API_KEYS;
-			const OPENAI_API_CONFIGS = connections.OPENAI_API_CONFIGS;
+			const OPENAI_API_BASE_URLS = (connections as any).OPENAI_API_BASE_URLS;
+			const OPENAI_API_KEYS = (connections as any).OPENAI_API_KEYS;
+			const OPENAI_API_CONFIGS = (connections as any).OPENAI_API_CONFIGS;
 
 			const requests = [];
 			for (const idx in OPENAI_API_BASE_URLS) {
@@ -66,7 +66,7 @@ export const getModels = async (
 						if (modelIds.length > 0) {
 							const modelList = {
 								object: 'list',
-								data: modelIds.map((modelId) => ({
+								data: modelIds.map((modelId: any) => ({
 									id: modelId,
 									name: modelId,
 									owned_by: 'openai',
@@ -118,7 +118,7 @@ export const getModels = async (
 				const apiConfig = OPENAI_API_CONFIGS[idx.toString()] ?? {};
 
 				let models = Array.isArray(response) ? response : (response?.data ?? []);
-				models = models.map((model) => ({ ...model, openai: { id: model.id }, urlIdx: idx }));
+				models = models.map((model: any) => ({ ...model, openai: { id: model.id }, urlIdx: idx }));
 
 				const prefixId = apiConfig.prefix_id;
 				if (prefixId) {
@@ -149,7 +149,7 @@ export const getModels = async (
 		// Remove duplicates
 		const modelsMap = {};
 		for (const model of models) {
-			modelsMap[model.id] = model;
+			(modelsMap as any)[model.id] = model;
 		}
 
 		models = Object.values(modelsMap);
@@ -347,12 +347,12 @@ export const getToolServerData = async (token: string, url: string) => {
 	return data;
 };
 
-export const getToolServersData = async (i18n, servers: object[]) => {
+export const getToolServersData = async (i18n: any, servers: object[]) => {
 	return (
 		await Promise.all(
 			servers
-				.filter((server) => server?.config?.enable)
-				.map(async (server) => {
+				.filter((server: any) => server?.config?.enable)
+				.map(async (server: any) => {
 					const data = await getToolServerData(
 						(server?.auth_type ?? 'bearer') === 'bearer' ? server?.key : localStorage.token,
 						(server?.path ?? '').includes('://')
@@ -818,7 +818,7 @@ export const generateQueries = async (
 	model: string,
 	messages: object[],
 	prompt: string,
-	type?: string = 'web_search'
+	type: string = 'web_search'
 ) => {
 	let error = null;
 

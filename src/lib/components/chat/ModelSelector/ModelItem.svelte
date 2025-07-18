@@ -228,7 +228,7 @@
 					on:click={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
-						unloadModelHandler(item.value);
+											unloadModelHandler(item.model.ollama);
 					}}
 				>
 					<ArrowUpTray className="size-3" />

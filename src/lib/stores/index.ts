@@ -28,7 +28,7 @@ export const USAGE_POOL: Writable<null | string[]> = writable(null);
 export const theme = writable('system');
 
 export const shortCodesToEmojis = writable(
-	Object.entries(emojiShortCodes).reduce((acc, [key, value]) => {
+	Object.entries(emojiShortCodes).reduce((acc: Record<string, string>, [key, value]) => {
 		if (typeof value === 'string') {
 			acc[value] = key;
 		} else {
@@ -38,7 +38,7 @@ export const shortCodesToEmojis = writable(
 		}
 
 		return acc;
-	}, {})
+	}, {} as Record<string, string>)
 );
 
 export const TTSWorker = writable(null);
@@ -165,7 +165,6 @@ type Settings = {
 	autoTags?: boolean;
 	autoFollowUps?: boolean;
 	splitLargeChunks?(body: any, splitLargeChunks: any): unknown;
-	backgroundImageUrl?: null;
 	landingPageMode?: string;
 	iframeSandboxAllowForms?: boolean;
 	iframeSandboxAllowSameOrigin?: boolean;
@@ -185,7 +184,7 @@ type Settings = {
 	splitLargeDeltas?: boolean;
 	chatDirection?: 'LTR' | 'RTL' | 'auto';
 	ctrlEnterToSend?: boolean;
-	backgroundImageUrl?: string;
+	backgroundImageUrl?: string | null;
 	materialThemeEnabled?: boolean;
 
 	system?: string;
@@ -221,12 +220,13 @@ type TitleSettings = {
 	prompt?: string;
 };
 
-type Prompt = {
+export type Prompt = {
 	command: string;
 	user_id: string;
 	title: string;
 	content: string;
 	timestamp: number;
+	access_control: any | null;
 };
 
 type Document = {
@@ -244,6 +244,10 @@ type Config = {
 	default_locale: string;
 	default_models: string;
 	default_prompt_suggestions: PromptSuggestion[];
+	onboarding?: boolean;
+	metadata?: {
+		login_footer?: string;
+	};
 	features: {
 		auth: boolean;
 		auth_trusted_header: boolean;
@@ -260,6 +264,8 @@ type Config = {
 		enable_autocomplete_generation: boolean;
 		enable_direct_connections: boolean;
 		enable_version_update_check: boolean;
+		enable_ldap?: boolean;
+		enable_notes?: boolean;
 	};
 	oauth: {
 		providers: {

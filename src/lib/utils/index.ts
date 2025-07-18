@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import sha256 from 'js-sha256';
+import { sha256 } from 'js-sha256';
 import { WEBUI_BASE_URL } from '$lib/constants';
 
 import dayjs from 'dayjs';
@@ -30,26 +30,26 @@ function escapeRegExp(string: string): string {
 	return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export const replaceTokens = (content, sourceIds, char, user) => {
+export const replaceTokens = (content: string, sourceIds: any, char: string, user: string) => {
 	const tokens = [
 		{ regex: /{{char}}/gi, replacement: char },
 		{ regex: /{{user}}/gi, replacement: user },
 		{
 			regex: /{{VIDEO_FILE_ID_([a-f0-9-]+)}}/gi,
-			replacement: (_, fileId) =>
+			replacement: (_: string, fileId: string) =>
 				`<video src="${WEBUI_BASE_URL}/api/v1/files/${fileId}/content" controls><track kind="captions"></video>`
 		},
 		{
 			regex: /{{HTML_FILE_ID_([a-f0-9-]+)}}/gi,
-			replacement: (_, fileId) => `<file type="html" id="${fileId}" />`
+			replacement: (_: string, fileId: string) => `<file type="html" id="${fileId}" />`
 		}
 	];
 
 	// Replace tokens outside code blocks only
-	const processOutsideCodeBlocks = (text, replacementFn) => {
+	const processOutsideCodeBlocks = (text: string, replacementFn: (segment: string) => string) => {
 		return text
 			.split(/(```[\s\S]*?```|`[\s\S]*?`)/)
-			.map((segment) => {
+			.map((segment: string) => {
 				return segment.startsWith('```') || segment.startsWith('`')
 					? segment
 					: replacementFn(segment);
@@ -58,10 +58,10 @@ export const replaceTokens = (content, sourceIds, char, user) => {
 	};
 
 	// Apply replacements
-	content = processOutsideCodeBlocks(content, (segment) => {
+	content = processOutsideCodeBlocks(content, (segment: string) => {
 		tokens.forEach(({ regex, replacement }) => {
 			if (replacement !== undefined && replacement !== null) {
-				segment = segment.replace(regex, replacement);
+				segment = segment.replace(regex, replacement as any);
 			}
 		});
 
@@ -169,11 +169,11 @@ export function unescapeHtml(html: string) {
 	return doc.documentElement.textContent;
 }
 
-export const capitalizeFirstLetter = (string) => {
+export const capitalizeFirstLetter = (string: string) => {
 	return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
-export const splitStream = (splitOn) => {
+export const splitStream = (splitOn: string) => {
 	let buffer = '';
 	return new TransformStream({
 		transform(chunk, controller) {
@@ -188,8 +188,8 @@ export const splitStream = (splitOn) => {
 	});
 };
 
-export const convertMessagesToHistory = (messages) => {
-	const history = {
+export const convertMessagesToHistory = (messages: any[]) => {
+	const history: any = {
 		messages: {},
 		currentId: null
 	};
@@ -221,7 +221,7 @@ export const convertMessagesToHistory = (messages) => {
 	return history;
 };
 
-export const getGravatarURL = (email) => {
+export const getGravatarURL = (email: string) => {
 	// Trim leading and trailing whitespace from
 	// an email address and force all characters
 	// to lower case
@@ -239,6 +239,8 @@ export const canvasPixelTest = () => {
 	// Inspiration: https://github.com/kkapsner/CanvasBlocker/blob/master/test/detectionTest.js
 	const canvas = document.createElement('canvas');
 	const ctx = canvas.getContext('2d');
+	if (!ctx) return false;
+
 	canvas.height = 1;
 	canvas.width = 1;
 	const imageData = new ImageData(canvas.width, canvas.height);
@@ -275,7 +277,7 @@ export const canvasPixelTest = () => {
 	return true;
 };
 
-export const compressImage = async (imageUrl, maxWidth, maxHeight) => {
+export const compressImage = async (imageUrl: string, maxWidth: number, maxHeight: number) => {
 	return new Promise((resolve, reject) => {
 		const img = new Image();
 		img.onload = () => {
@@ -326,6 +328,10 @@ export const compressImage = async (imageUrl, maxWidth, maxHeight) => {
 			canvas.height = height;
 
 			const context = canvas.getContext('2d');
+			if (!context) {
+				reject(new Error('Failed to get canvas context'));
+				return;
+			}
 			context.drawImage(img, 0, 0, width, height);
 
 			// Get compressed image URL
@@ -336,9 +342,11 @@ export const compressImage = async (imageUrl, maxWidth, maxHeight) => {
 		img.src = imageUrl;
 	});
 };
-export const generateInitialsImage = (name) => {
+export const generateInitialsImage = (name: string) => {
 	const canvas = document.createElement('canvas');
 	const ctx = canvas.getContext('2d');
+	if (!ctx) return `${WEBUI_BASE_URL}/user.gif`;
+
 	canvas.width = 100;
 	canvas.height = 100;
 
@@ -371,7 +379,7 @@ export const generateInitialsImage = (name) => {
 	return canvas.toDataURL();
 };
 
-export const formatDate = (inputDate) => {
+export const formatDate = (inputDate: any) => {
 	const date = dayjs(inputDate);
 	const now = dayjs();
 
@@ -384,11 +392,11 @@ export const formatDate = (inputDate) => {
 	}
 };
 
-export const copyToClipboard = async (text, formatted = false) => {
+export const copyToClipboard = async (text: string, formatted = false): Promise<boolean> => {
 	if (formatted) {
 		const options = {
 			throwOnError: false,
-			highlight: function (code, lang) {
+			highlight: function (code: string, lang: string) {
 				const language = hljs.getLanguage(lang) ? lang : 'plaintext';
 				return hljs.highlight(code, { language }).value;
 			}
@@ -510,7 +518,7 @@ export const copyToClipboard = async (text, formatted = false) => {
 	}
 };
 
-export const compareVersion = (latest, current) => {
+export const compareVersion = (latest: string, current: string) => {
 	return current === '0.0.0'
 		? false
 		: current.localeCompare(latest, undefined, {
@@ -520,7 +528,7 @@ export const compareVersion = (latest, current) => {
 			}) < 0;
 };
 
-export const extractCurlyBraceWords = (text) => {
+export const extractCurlyBraceWords = (text: string) => {
 	const regex = /\{\{([^}]+)\}\}/g;
 	const matches = [];
 	let match;
@@ -536,13 +544,14 @@ export const extractCurlyBraceWords = (text) => {
 	return matches;
 };
 
-export const removeLastWordFromString = (inputString, wordString) => {
+export const removeLastWordFromString = (inputString: string, wordString: string) => {
 	console.log('inputString', inputString);
 	// Split the string by newline characters to handle lines separately
 	const lines = inputString.split('\n');
 
 	// Take the last line to operate only on it
 	const lastLine = lines.pop();
+	if (!lastLine) return inputString;
 
 	// Split the last line into an array of words
 	const words = lastLine.split(' ');
@@ -569,12 +578,12 @@ export const removeLastWordFromString = (inputString, wordString) => {
 	return resultString;
 };
 
-export const removeFirstHashWord = (inputString) => {
+export const removeFirstHashWord = (inputString: string) => {
 	// Split the string into an array of words
 	const words = inputString.split(' ');
 
 	// Find the index of the first word that starts with #
-	const index = words.findIndex((word) => word.startsWith('#'));
+	const index = words.findIndex((word: string) => word.startsWith('#'));
 
 	// Remove the first word with #
 	if (index !== -1) {
@@ -587,7 +596,7 @@ export const removeFirstHashWord = (inputString) => {
 	return resultString;
 };
 
-export const transformFileName = (fileName) => {
+export const transformFileName = (fileName: string) => {
 	// Convert to lowercase
 	const lowerCaseFileName = fileName.toLowerCase();
 
@@ -600,7 +609,7 @@ export const transformFileName = (fileName) => {
 	return finalFileName;
 };
 
-export const calculateSHA256 = async (file) => {
+export const calculateSHA256 = async (file: File) => {
 	// Create a FileReader to read the file asynchronously
 	const reader = new FileReader();
 
@@ -618,7 +627,7 @@ export const calculateSHA256 = async (file) => {
 		const buffer = await readFile;
 
 		// Convert the ArrayBuffer to a Uint8Array
-		const uint8Array = new Uint8Array(buffer);
+		const uint8Array = new Uint8Array(buffer as ArrayBuffer);
 
 		// Calculate the SHA-256 hash using Web Crypto API
 		const hashBuffer = await crypto.subtle.digest('SHA-256', uint8Array);
@@ -634,7 +643,7 @@ export const calculateSHA256 = async (file) => {
 	}
 };
 
-export const getImportOrigin = (_chats) => {
+export const getImportOrigin = (_chats: any[]) => {
 	// Check what external service chat imports are from
 	if ('mapping' in _chats[0]) {
 		return 'openai';
@@ -656,7 +665,7 @@ export const getUserPosition = async (raw = false) => {
 	}
 
 	// Extract the latitude and longitude from the position
-	const { latitude, longitude } = position.coords;
+	const { latitude, longitude } = (position as GeolocationPosition).coords;
 
 	if (raw) {
 		return { latitude, longitude };
@@ -665,7 +674,7 @@ export const getUserPosition = async (raw = false) => {
 	}
 };
 
-const convertOpenAIMessages = (convo) => {
+const convertOpenAIMessages = (convo: any) => {
 	// Parse OpenAI chat messages and create chat dictionary for creating new chats
 	const mapping = convo['mapping'];
 	const messages = [];
@@ -723,7 +732,7 @@ const convertOpenAIMessages = (convo) => {
 	return chat;
 };
 
-const validateChat = (chat) => {
+const validateChat = (chat: any) => {
 	// Because ChatGPT sometimes has features we can't use like DALL-E or might have corrupted messages, need to validate
 	const messages = chat.messages;
 
@@ -754,7 +763,7 @@ const validateChat = (chat) => {
 	return true;
 };
 
-export const convertOpenAIChats = (_chats) => {
+export const convertOpenAIChats = (_chats: any[]) => {
 	// Create a list of dictionaries with each conversation from import
 	const chats = [];
 	let failed = 0;
@@ -830,7 +839,7 @@ export const cleanText = (content: string) => {
 	return removeFormattings(removeEmojis(content.trim()));
 };
 
-export const removeDetails = (content, types) => {
+export const removeDetails = (content: string, types: string[]) => {
 	for (const type of types) {
 		content = content.replace(
 			new RegExp(`<details\\s+type="${type}"[^>]*>.*?<\\/details>`, 'gis'),
@@ -841,12 +850,12 @@ export const removeDetails = (content, types) => {
 	return content;
 };
 
-export const removeAllDetails = (content) => {
+export const removeAllDetails = (content: string) => {
 	content = content.replace(/<details[^>]*>.*?<\/details>/gis, '');
 	return content;
 };
 
-export const processDetails = (content) => {
+export const processDetails = (content: string) => {
 	content = removeDetails(content, ['reasoning', 'code_interpreter']);
 
 	// This regex matches <details> tags with type="tool_calls" and captures their attributes to convert them to a string
@@ -855,7 +864,7 @@ export const processDetails = (content) => {
 	if (matches) {
 		for (const match of matches) {
 			const attributesRegex = /(\w+)="([^"]*)"/g;
-			const attributes = {};
+			const attributes: any = {};
 			let attributeMatch;
 			while ((attributeMatch = attributesRegex.exec(match)) !== null) {
 				attributes[attributeMatch[1]] = attributeMatch[2];
@@ -955,13 +964,13 @@ export const getMessageContentParts = (content: string, splitOn: string = 'punct
 	return messageContentParts;
 };
 
-export const blobToFile = (blob, fileName) => {
+export const blobToFile = (blob: Blob, fileName: string) => {
 	// Create a new File object from the Blob
 	const file = new File([blob], fileName, { type: blob.type });
 	return file;
 };
 
-export const getPromptVariables = (user_name, user_location) => {
+export const getPromptVariables = (user_name: string, user_location: string) => {
 	return {
 		'{{USER_NAME}}': user_name,
 		'{{USER_LOCATION}}': user_location || 'Unknown',
@@ -1106,7 +1115,7 @@ export const approximateToHumanReadable = (nanoseconds: number) => {
 	return results.reverse().join(' ');
 };
 
-export const getTimeRange = (timestamp) => {
+export const getTimeRange = (timestamp: number) => {
 	const now = new Date();
 	const date = new Date(timestamp * 1000); // Convert Unix timestamp to milliseconds
 
@@ -1142,8 +1151,8 @@ export const getTimeRange = (timestamp) => {
  * @param content {string} - The content string with potential frontmatter.
  * @returns {Object} - The extracted frontmatter as a dictionary.
  */
-export const extractFrontmatter = (content) => {
-	const frontmatter = {};
+export const extractFrontmatter = (content: string) => {
+	const frontmatter: any = {};
 	let frontmatterStarted = false;
 	let frontmatterEnded = false;
 	const frontmatterPattern = /^\s*([a-z_]+):\s*(.*)\s*$/i;
@@ -1181,11 +1190,11 @@ export const extractFrontmatter = (content) => {
 };
 
 // Function to determine the best matching language
-export const bestMatchingLanguage = (supportedLanguages, preferredLanguages, defaultLocale) => {
-	const languages = supportedLanguages.map((lang) => lang.code);
+export const bestMatchingLanguage = (supportedLanguages: any[], preferredLanguages: string[], defaultLocale: string) => {
+	const languages = supportedLanguages.map((lang: any) => lang.code);
 
 	const match = preferredLanguages
-		.map((prefLang) => languages.find((lang) => lang.startsWith(prefLang)))
+		.map((prefLang: string) => languages.find((lang: string) => lang.startsWith(prefLang)))
 		.find(Boolean);
 
 	return match || defaultLocale;
@@ -1223,7 +1232,7 @@ export const getWeekday = () => {
 	return weekdays[date.getDay()];
 };
 
-export const createMessagesList = (history, messageId) => {
+export const createMessagesList = (history: any, messageId: string | null): any[] => {
 	if (messageId === null) {
 		return [];
 	}
@@ -1239,7 +1248,7 @@ export const createMessagesList = (history, messageId) => {
 	}
 };
 
-export const formatFileSize = (size) => {
+export const formatFileSize = (size: number | null) => {
 	if (size == null) return 'Unknown size';
 	if (typeof size !== 'number' || size < 0) return 'Invalid size';
 	if (size === 0) return '0 B';
@@ -1253,13 +1262,13 @@ export const formatFileSize = (size) => {
 	return `${size.toFixed(1)} ${units[unitIndex]}`;
 };
 
-export const getLineCount = (text) => {
+export const getLineCount = (text: string) => {
 	console.log(typeof text);
 	return text ? text.split('\n').length : 0;
 };
 
 // Helper function to recursively resolve OpenAPI schema into JSON schema format
-function resolveSchema(schemaRef, components, resolvedSchemas = new Set()) {
+function resolveSchema(schemaRef: any, components: any, resolvedSchemas = new Set()) {
 	if (!schemaRef) return {};
 
 	if (schemaRef['$ref']) {
@@ -1276,7 +1285,7 @@ function resolveSchema(schemaRef, components, resolvedSchemas = new Set()) {
 	}
 
 	if (schemaRef.type) {
-		const schemaObj = { type: schemaRef.type };
+		const schemaObj: any = { type: schemaRef.type };
 
 		if (schemaRef.description) {
 			schemaObj.description = schemaRef.description;
@@ -1307,16 +1316,16 @@ function resolveSchema(schemaRef, components, resolvedSchemas = new Set()) {
 }
 
 // Main conversion function
-export const convertOpenApiToToolPayload = (openApiSpec) => {
-	const toolPayload = [];
+export const convertOpenApiToToolPayload = (openApiSpec: any) => {
+	const toolPayload: any[] = [];
 
 	for (const [path, methods] of Object.entries(openApiSpec.paths)) {
-		for (const [method, operation] of Object.entries(methods)) {
-			if (operation?.operationId) {
-				const tool = {
+		for (const [method, operation] of Object.entries(methods as any)) {
+			if ((operation as any)?.operationId) {
+				const tool: any = {
 					type: 'function',
-					name: operation.operationId,
-					description: operation.description || operation.summary || 'No description available.',
+					name: (operation as any).operationId,
+					description: (operation as any).description || (operation as any).summary || 'No description available.',
 					parameters: {
 						type: 'object',
 						properties: {},
@@ -1325,8 +1334,8 @@ export const convertOpenApiToToolPayload = (openApiSpec) => {
 				};
 
 				// Extract path and query parameters
-				if (operation.parameters) {
-					operation.parameters.forEach((param) => {
+				if ((operation as any).parameters) {
+					(operation as any).parameters.forEach((param: any) => {
 						let description = param.schema.description || param.description || '';
 						if (param.schema.enum && Array.isArray(param.schema.enum)) {
 							description += `. Possible values: ${param.schema.enum.join(', ')}`;
@@ -1343,24 +1352,24 @@ export const convertOpenApiToToolPayload = (openApiSpec) => {
 				}
 
 				// Extract and recursively resolve requestBody if available
-				if (operation.requestBody) {
-					const content = operation.requestBody.content;
+				if ((operation as any).requestBody) {
+					const content = (operation as any).requestBody.content;
 					if (content && content['application/json']) {
 						const requestSchema = content['application/json'].schema;
 						const resolvedRequestSchema = resolveSchema(requestSchema, openApiSpec.components);
 
-						if (resolvedRequestSchema.properties) {
+						if ((resolvedRequestSchema as any).properties) {
 							tool.parameters.properties = {
 								...tool.parameters.properties,
-								...resolvedRequestSchema.properties
+								...(resolvedRequestSchema as any).properties
 							};
 
-							if (resolvedRequestSchema.required) {
+							if ((resolvedRequestSchema as any).required) {
 								tool.parameters.required = [
-									...new Set([...tool.parameters.required, ...resolvedRequestSchema.required])
+									...new Set([...tool.parameters.required, ...(resolvedRequestSchema as any).required])
 								];
 							}
-						} else if (resolvedRequestSchema.type === 'array') {
+						} else if ((resolvedRequestSchema as any).type === 'array') {
 							tool.parameters = resolvedRequestSchema; // special case when root schema is an array
 						}
 					}
@@ -1508,7 +1517,7 @@ export const parseJsonValue = (value: string): any => {
 	return value;
 };
 
-export const extractContentFromFile = async (file, pdfjsLib = null) => {
+export const extractContentFromFile = async (file: File, pdfjsLib: any = null) => {
 	// Known text file extensions for extra fallback
 	const textExtensions = [
 		'.txt',
@@ -1525,31 +1534,31 @@ export const extractContentFromFile = async (file, pdfjsLib = null) => {
 		'.rtf'
 	];
 
-	function getExtension(filename) {
+	function getExtension(filename: string) {
 		const dot = filename.lastIndexOf('.');
 		return dot === -1 ? '' : filename.substr(dot).toLowerCase();
 	}
 
 	// Uses pdfjs to extract text from PDF
-	async function extractPdfText(file) {
+	async function extractPdfText(file: File) {
 		if (!pdfjsLib) {
 			throw new Error('pdfjsLib is required for PDF extraction');
 		}
 
 		const arrayBuffer = await file.arrayBuffer();
-		const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+		const pdf = await (pdfjsLib as any).getDocument({ data: arrayBuffer }).promise;
 		let allText = '';
 		for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
 			const page = await pdf.getPage(pageNum);
 			const content = await page.getTextContent();
-			const strings = content.items.map((item) => item.str);
+			const strings = content.items.map((item: any) => item.str);
 			allText += strings.join(' ') + '\n';
 		}
 		return allText;
 	}
 
 	// Reads file as text using FileReader
-	function readAsText(file) {
+	function readAsText(file: File) {
 		return new Promise((resolve, reject) => {
 			const reader = new FileReader();
 			reader.onload = () => resolve(reader.result);

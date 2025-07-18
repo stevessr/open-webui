@@ -110,7 +110,7 @@ export const getChatList = async (token: string = '', page: number | null = null
 		throw error;
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: any) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));
@@ -164,7 +164,7 @@ export const getChatListByUserId = async (
 		throw error;
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: any) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));
@@ -213,7 +213,7 @@ export const getArchivedChatList = async (
 		throw error;
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: any) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));
@@ -282,7 +282,7 @@ export const getChatListBySearchText = async (token: string, text: string, page:
 		throw error;
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: any) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));
@@ -440,7 +440,7 @@ export const getPinnedChatList = async (token: string = '') => {
 		throw error;
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: any) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));
@@ -477,7 +477,7 @@ export const getChatListByTagName = async (token: string = '', tagName: string) 
 		throw error;
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: any) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));

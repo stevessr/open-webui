@@ -2,6 +2,11 @@
 let API_KEY = '';
 let CLIENT_ID = '';
 
+declare global {
+	var gapi: any;
+	var google: any;
+}
+
 // Function to fetch credentials from backend config
 async function getCredentials() {
 	const response = await fetch('/api/config');
