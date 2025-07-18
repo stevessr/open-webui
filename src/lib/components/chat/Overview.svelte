@@ -1,14 +1,7 @@
 <script lang="ts">
-	import { getContext, createEventDispatcher, onDestroy } from 'svelte';
-	import { useSvelteFlow, useNodesInitialized, useStore } from '@xyflow/svelte';
 
 	const dispatch = createEventDispatcher();
-	const i18n = getContext('i18n');
-
-	import { onMount, tick } from 'svelte';
-
-	import { writable } from 'svelte/store';
-	import { models, showOverview, theme, user } from '$lib/stores';
+	const i18n = getI18n();
 
 	import '@xyflow/svelte/dist/style.css';
 
@@ -16,6 +9,7 @@
 	import Flow from './Overview/Flow.svelte';
 	import XMark from '../icons/XMark.svelte';
 	import ArrowLeft from '../icons/ArrowLeft.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	const { width, height } = useStore();
 

@@ -1,17 +1,14 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { tick, getContext, onMount, onDestroy } from 'svelte';
-	import { config, settings } from '$lib/stores';
-	import { blobToFile, calculateSHA256, extractCurlyBraceWords } from '$lib/utils';
 
-	import { transcribeAudio } from '$lib/apis/audio';
 	import XMark from '$lib/components/icons/XMark.svelte';
 
 	import dayjs from 'dayjs';
 	import LocalizedFormat from 'dayjs/plugin/localizedFormat';
+	import { getI18n } from '$lib/i18n/helpers';
+
 	dayjs.extend(LocalizedFormat);
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let recording = false;
 	export let transcribe = true;
@@ -404,7 +401,6 @@
 				? ' bg-gray-200 dark:bg-gray-700/50'
 				: 'bg-indigo-400/20 text-indigo-600 dark:text-indigo-300 '} 
 
-
              rounded-full"
 			on:click={async () => {
 				stopRecording();
@@ -443,8 +439,7 @@
 		<div class="  mx-1.5 pr-1 flex justify-center items-center">
 			<div
 				class="text-sm
-        
-        
+
         {loading ? ' text-gray-500  dark:text-gray-400  ' : ' text-indigo-400 '} 
        font-medium flex-1 mx-auto text-center"
 			>
@@ -474,19 +469,19 @@
 							}
 							25% {
 								opacity: 0.7;
-								transform: scale(1.0);
+								transform: scale(1);
 								background-position: 100% 50%;
 								box-shadow: 0 0 10px rgba(156, 163, 175, 0.5);
 							}
 							50% {
-								opacity: 1.0;
+								opacity: 1;
 								transform: scale(1.1);
 								background-position: 50% 100%;
 								box-shadow: 0 0 15px rgba(209, 213, 219, 0.7);
 							}
 							75% {
 								opacity: 0.7;
-								transform: scale(1.0);
+								transform: scale(1);
 								background-position: 0% 100%;
 								box-shadow: 0 0 10px rgba(156, 163, 175, 0.5);
 							}

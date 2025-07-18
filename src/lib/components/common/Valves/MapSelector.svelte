@@ -1,7 +1,6 @@
 <script>
 	import L from 'leaflet';
 	import 'leaflet/dist/leaflet.css';
-	import { onMount, onDestroy } from 'svelte';
 
 	let map;
 	let mapElement;

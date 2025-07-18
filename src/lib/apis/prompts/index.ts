@@ -1,6 +1,6 @@
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 
-type PromptItem = {
+export type PromptItem = {
 	command: string;
 	title: string;
 	content: string;

@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+
 	import Checkbox from '$lib/components/common/Checkbox.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import { marked } from 'marked';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	const capabilityLabels = {
 		vision: {

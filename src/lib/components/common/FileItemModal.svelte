@@ -1,9 +1,6 @@
 <script lang="ts">
-	import { getContext, onMount } from 'svelte';
-	import { formatFileSize, getLineCount } from '$lib/utils';
-	import { WEBUI_API_BASE_URL } from '$lib/constants';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	import Modal from './Modal.svelte';
 	import XMark from '../icons/XMark.svelte';
@@ -11,6 +8,7 @@
 	import Switch from './Switch.svelte';
 	import Tooltip from './Tooltip.svelte';
 	import dayjs from 'dayjs';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let item;
 	export let show = false;

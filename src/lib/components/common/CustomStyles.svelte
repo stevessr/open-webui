@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
-	import { user } from '$lib/stores';
 
 	let customCSS = '';
 	let customJS = '';
@@ -25,7 +23,7 @@
 			if (styleElement) {
 				styleElement.remove();
 			}
-			
+
 			// Create new style element
 			styleElement = document.createElement('style');
 			styleElement.setAttribute('data-custom-css', 'true');
@@ -39,7 +37,7 @@
 			if (scriptElement) {
 				scriptElement.remove();
 			}
-			
+
 			// Create new script element
 			scriptElement = document.createElement('script');
 			scriptElement.setAttribute('data-custom-js', 'true');

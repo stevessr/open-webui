@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { getContext, onDestroy, onMount, tick } from 'svelte';
-	import { v4 as uuidv4 } from 'uuid';
+
 	import heic2any from 'heic2any';
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
@@ -8,12 +7,7 @@
 	import jsPDF from 'jspdf';
 	import html2canvas from 'html2canvas-pro';
 
-	const i18n = getContext('i18n');
-
-	import { marked } from 'marked';
-	import { toast } from 'svelte-sonner';
-
-	import { goto } from '$app/navigation';
+	const i18n = getI18n();
 
 	import dayjs from '$lib/dayjs';
 	import calendar from 'dayjs/plugin/calendar';
@@ -23,15 +17,6 @@
 	dayjs.extend(calendar);
 	dayjs.extend(duration);
 	dayjs.extend(relativeTime);
-
-	import { PaneGroup, Pane, PaneResizer } from 'paneforge';
-
-	import { compressImage, copyToClipboard, splitStream } from '$lib/utils';
-	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
-	import { uploadFile } from '$lib/apis/files';
-	import { chatCompletion, generateOpenAIChatCompletion } from '$lib/apis/openai';
-
-	import { config, models, settings, showSidebar, socket, user, WEBUI_NAME } from '$lib/stores';
 
 	import NotePanel from '$lib/components/notes/NotePanel.svelte';
 	import MenuLines from '../icons/MenuLines.svelte';
@@ -53,8 +38,6 @@
 
 	// Assuming $i18n.languages is an array of language codes
 	$: loadLocale($i18n.languages);
-
-	import { deleteNoteById, getNoteById, updateNoteById } from '$lib/apis/notes';
 
 	import RichTextInput from '../common/RichTextInput.svelte';
 	import Spinner from '../common/Spinner.svelte';
@@ -81,6 +64,7 @@
 	import ArrowRight from '../icons/ArrowRight.svelte';
 	import Cog6 from '../icons/Cog6.svelte';
 	import AiMenu from './AIMenu.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let id: null | string = null;
 

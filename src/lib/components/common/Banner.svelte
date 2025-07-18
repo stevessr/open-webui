@@ -1,10 +1,7 @@
 <script lang="ts">
 	import type { Banner } from '$lib/types';
-	import { onMount, createEventDispatcher } from 'svelte';
-	import { fade } from 'svelte/transition';
+
 	import DOMPurify from 'dompurify';
-	import { marked } from 'marked';
-	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	const dispatch = createEventDispatcher();
 
@@ -68,7 +65,6 @@
 							<div
 								class=" ml-1 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-white"
 							>
-								
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
 									viewBox="0 0 16 16"
@@ -99,7 +95,6 @@
 					>
 
 					<div class=" ml-1 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-white">
-						
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							viewBox="0 0 16 16"

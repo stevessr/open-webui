@@ -1,8 +1,6 @@
 <script lang="ts">
 	import DOMPurify from 'dompurify';
 
-	import { onDestroy } from 'svelte';
-
 	import tippy from 'tippy.js';
 
 	export let placement = 'top';
@@ -14,8 +12,8 @@
 	export let allowHTML = true;
 	export let tippyOptions = {};
 
-	let tooltipElement;
-	let tooltipInstance;
+	let tooltipElement: Element | undefined;
+	let tooltipInstance: import('tippy.js').Instance | undefined;
 
 	$: if (tooltipElement && content) {
 		if (tooltipInstance) {

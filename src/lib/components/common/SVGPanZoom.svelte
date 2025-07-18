@@ -2,21 +2,17 @@
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
 
-	import { toast } from 'svelte-sonner';
-
 	import panzoom, { type PanZoom } from 'panzoom';
 	import DOMPurify from 'dompurify';
 
-	import { onMount, getContext } from 'svelte';
-	const i18n = getContext('i18n');
-
-	import { copyToClipboard } from '$lib/utils';
+	const i18n = getI18n();
 
 	import DocumentDuplicate from '../icons/DocumentDuplicate.svelte';
 	import Tooltip from './Tooltip.svelte';
 	import Clipboard from '../icons/Clipboard.svelte';
 	import Reset from '../icons/Reset.svelte';
 	import ArrowDownTray from '../icons/ArrowDownTray.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let className = '';
 	export let svg = '';

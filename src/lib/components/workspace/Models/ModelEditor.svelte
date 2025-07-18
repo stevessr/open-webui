@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { onMount, getContext, tick } from 'svelte';
-	import { models, tools, functions, knowledge as knowledgeCollections, user } from '$lib/stores';
-	import { WEBUI_BASE_URL } from '$lib/constants';
+
+	import type { ModelConfig, ModelMeta, ModelParams, Prompt } from '$lib/apis';
 
 	import AdvancedParams from '$lib/components/chat/Settings/Advanced/AdvancedParams.svelte';
 	import Tags from '$lib/components/common/Tags.svelte';
@@ -11,22 +10,18 @@
 	import ActionsSelector from '$lib/components/workspace/Models/ActionsSelector.svelte';
 	import Capabilities from '$lib/components/workspace/Models/Capabilities.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
-	import { getTools } from '$lib/apis/tools';
-	import { getFunctions } from '$lib/apis/functions';
-	import { getKnowledgeBases } from '$lib/apis/knowledge';
+
 	import AccessControl from '../common/AccessControl.svelte';
-	import { stringify } from 'postcss';
-	import { toast } from 'svelte-sonner';
+
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
-	import { getNoteList } from '$lib/apis/notes';
 
-	const i18n = getContext('i18n');
+	const i18n = getContext<any>('i18n');
 
 	export let onSubmit: Function;
 	export let onBack: null | Function = null;
 
-	export let model = null;
+	export let model: ModelConfig | null = null;
 	export let edit = false;
 
 	export let preset = true;
@@ -34,8 +29,8 @@
 	let loading = false;
 	let success = false;
 
-	let filesInputElement;
-	let inputFiles;
+	let filesInputElement: HTMLInputElement;
+	let inputFiles: FileList;
 	let profileImageUrlInput = '';
 	let showUrlInput = false;
 
@@ -71,17 +66,31 @@
 			profile_image_url: `${WEBUI_BASE_URL}/static/favicon.png`,
 			description: '',
 			suggestion_prompts: null,
-			tags: []
+			tags: [] as { name: string }[],
+			capabilities: {
+				vision: true,
+				file_upload: true,
+				web_search: true,
+				image_generation: true,
+				code_interpreter: true,
+				citations: true,
+				usage: undefined
+			},
+			knowledge: [] as { id: string; name: string; legacy?: boolean; collection_names?: string[] }[],
+			toolIds: [] as string[],
+			filterIds: [] as string[],
+			actionIds: [] as string[]
 		},
 		params: {
 			system: ''
-		}
-	};
+		},
+		access_control: {}
+	} as ModelConfig;
 
-	let params = {
+	let params: ModelParams = {
 		system: ''
 	};
-	let capabilities = {
+	let capabilities: ModelMeta['capabilities'] = {
 		vision: true,
 		file_upload: true,
 		web_search: true,
@@ -91,19 +100,19 @@
 		usage: undefined
 	};
 
-	let knowledge = [];
-	let toolIds = [];
-	let filterIds = [];
-	let actionIds = [];
+	let knowledge: ModelMeta['knowledge'] = [];
+	let toolIds: ModelMeta['toolIds'] = [];
+	let filterIds: ModelMeta['filterIds'] = [];
+	let actionIds: ModelMeta['actionIds'] = [];
 
-	let accessControl = {};
+	let accessControl: ModelConfig['access_control'] = {};
 
-	const addUsage = (base_model_id) => {
+	const addUsage = (base_model_id: string) => {
 		const baseModel = $models.find((m) => m.id === base_model_id);
 
 		if (baseModel) {
 			if (baseModel.owned_by === 'openai') {
-				capabilities.usage = baseModel?.meta?.capabilities?.usage ?? false;
+				capabilities.usage = baseModel?.meta?.capabilities?.usage;
 			} else {
 				delete capabilities.usage;
 			}
@@ -183,10 +192,14 @@
 			}
 		}
 
-		info.params.system = system.trim() === '' ? null : system;
-		info.params.stop = params.stop ? params.stop.split(',').filter((s) => s.trim()) : null;
-		Object.keys(info.params).forEach((key) => {
-			if (info.params[key] === '' || info.params[key] === null) {
+		info.params.system = system.trim() === '' ? undefined : system;
+		info.params.stop = params.stop
+			? (typeof params.stop === 'string' ? params.stop.split(',') : params.stop).filter((s) =>
+					s.trim()
+				)
+			: undefined;
+		Object.keys(info.params).forEach((key: keyof ModelParams) => {
+			if (info.params[key] === '' || info.params[key] === null || info.params[key] === undefined) {
 				delete info.params[key];
 			}
 		});
@@ -234,32 +247,37 @@
 
 			params = { ...params, ...model?.params };
 			params.stop = params?.stop
-				? (typeof params.stop === 'string' ? params.stop.split(',') : (params?.stop ?? [])).join(
-						','
-					)
-				: null;
+				? (typeof params.stop === 'string' ? params.stop.split(',') : params?.stop ?? []).join(',')
+				: undefined;
 
 			toolIds = model?.meta?.toolIds ?? [];
 			filterIds = model?.meta?.filterIds ?? [];
 			actionIds = model?.meta?.actionIds ?? [];
-			knowledge = (model?.meta?.knowledge ?? []).map((item) => {
-				if (item?.collection_name) {
-					return {
-						id: item.collection_name,
-						name: item.name,
-						legacy: true
-					};
-				} else if (item?.collection_names) {
-					return {
-						name: item.name,
-						type: 'collection',
-						collection_names: item.collection_names,
-						legacy: true
-					};
-				} else {
-					return item;
+			knowledge = (model?.meta?.knowledge ?? []).map(
+				(item: {
+					collection_name?: string;
+					name?: string;
+					collection_names?: string[];
+					id?: string;
+				}) => {
+					if (item?.collection_name) {
+						return {
+							id: item.collection_name,
+							name: item.name,
+							legacy: true
+						};
+					} else if (item?.collection_names) {
+						return {
+							name: item.name,
+							type: 'collection',
+							collection_names: item.collection_names,
+							legacy: true
+						};
+					} else {
+						return item;
+					}
 				}
-			});
+			);
 			capabilities = { ...capabilities, ...(model?.meta?.capabilities ?? {}) };
 
 			if ('access_control' in model) {
@@ -328,7 +346,7 @@
 			on:change={() => {
 				let reader = new FileReader();
 				reader.onload = (event) => {
-					let originalImageUrl = `${event.target.result}`;
+					let originalImageUrl = `${(event.target as FileReader).result}`;
 
 					const img = new Image();
 					img.src = originalImageUrl;
@@ -359,7 +377,7 @@
 						const offsetY = (250 - newHeight) / 2;
 
 						// Draw the image on the canvas
-						ctx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
+						ctx?.drawImage(img, offsetX, offsetY, newWidth, newHeight);
 
 						// Get the base64 representation of the compressed image
 						const compressedSrc = canvas.toDataURL();
@@ -376,12 +394,12 @@
 					inputFiles &&
 					inputFiles.length > 0 &&
 					['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'image/svg+xml'].includes(
-						inputFiles[0]['type']
+						inputFiles[0].type
 					)
 				) {
 					reader.readAsDataURL(inputFiles[0]);
 				} else {
-					console.log(`Unsupported File Type '${inputFiles[0]['type']}'.`);
+					console.log(`Unsupported File Type '${inputFiles[0].type}'.`);
 					inputFiles = null;
 				}
 			}}
@@ -467,14 +485,14 @@
 								}}
 								type="button"
 							>
-								{$i18n.t('Upload')}
+								{i18n.t('Upload')}
 							</button>
 							<button
 								class="px-2 py-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg text-xs transition"
 								on:click={toggleUrlInput}
 								type="button"
 							>
-								{$i18n.t('URL')}
+								{i18n.t('URL')}
 							</button>
 							<button
 								class="px-2 py-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg text-xs transition"
@@ -483,7 +501,7 @@
 								}}
 								type="button"
 							>
-								{$i18n.t('Reset')}
+								{i18n.t('Reset')}
 							</button>
 						</div>
 					</div>
@@ -493,7 +511,7 @@
 							<input
 								bind:value={profileImageUrlInput}
 								type="url"
-								placeholder={$i18n.t('Enter image URL')}
+								placeholder={i18n.t('Enter image URL')}
 								class="px-3 py-2 text-xs bg-transparent border border-gray-300 dark:border-gray-600 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
 								on:keydown={(e) => {
 									if (e.key === 'Enter') {
@@ -507,14 +525,14 @@
 									on:click={setProfileImageFromUrl}
 									type="button"
 								>
-									{$i18n.t('Set')}
+									{i18n.t('Set')}
 								</button>
 								<button
 									class="flex-1 px-3 py-2 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded-sm transition little-color"
 									on:click={toggleUrlInput}
 									type="button"
 								>
-									{$i18n.t('Cancel')}
+									{i18n.t('Cancel')}
 								</button>
 							</div>
 						</div>
@@ -527,7 +545,7 @@
 							<div>
 								<input
 									class="text-3xl font-semibold w-full bg-transparent outline-hidden"
-									placeholder={$i18n.t('Model Name')}
+									placeholder={i18n.t('Model Name')}
 									bind:value={name}
 									required
 								/>
@@ -538,7 +556,7 @@
 							<div>
 								<input
 									class="text-xs w-full bg-transparent text-gray-500 outline-hidden"
-									placeholder={$i18n.t('Model ID')}
+									placeholder={i18n.t('Model ID')}
 									bind:value={id}
 									disabled={edit}
 									required
@@ -549,7 +567,7 @@
 
 					{#if preset}
 						<div class="my-1">
-							<div class=" text-sm font-semibold mb-1">{$i18n.t('Base Model (From)')}</div>
+							<div class=" text-sm font-semibold mb-1">{i18n.t('Base Model (From)')}</div>
 
 							<div>
 								<select
@@ -557,15 +575,15 @@
 									placeholder="Select a base model (e.g. llama3, gpt-4o)"
 									bind:value={info.base_model_id}
 									on:change={(e) => {
-										addUsage(e.target.value);
+										addUsage((e.target as HTMLSelectElement).value);
 									}}
 									required
 								>
 									<option value={null} class=" text-gray-900"
-										>{$i18n.t('Select a base model')}</option
+										>{i18n.t('Select a base model')}</option
 									>
-									{#each $models.filter((m) => (model ? m.id !== model.id : true) && !m?.preset && m?.owned_by !== 'arena') as model}
-										<option value={model.id} class=" text-gray-900">{model.name}</option>
+									{#each $models.filter((m) => (model ? m.id !== model.id : true) && !m?.preset && m?.owned_by !== 'arena') as modelItem}
+										<option value={modelItem.id} class=" text-gray-900">{modelItem.name}</option>
 									{/each}
 								</select>
 							</div>
@@ -574,23 +592,23 @@
 
 					<div class="my-1">
 						<div class="mb-1 flex w-full justify-between items-center">
-							<div class=" self-center text-sm font-semibold">{$i18n.t('Description')}</div>
+							<div class=" self-center text-sm font-semibold">{i18n.t('Description')}</div>
 
 							<button
 								class="p-1 text-xs flex rounded-sm transition"
 								type="button"
 								aria-pressed={enableDescription ? 'true' : 'false'}
 								aria-label={enableDescription
-									? $i18n.t('Custom description enabled')
-									: $i18n.t('Default description enabled')}
+									? i18n.t('Custom description enabled')
+									: i18n.t('Default description enabled')}
 								on:click={() => {
 									enableDescription = !enableDescription;
 								}}
 							>
 								{#if !enableDescription}
-									<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+									<span class="ml-2 self-center">{i18n.t('Default')}</span>
 								{:else}
-									<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
+									<span class="ml-2 self-center">{i18n.t('Custom')}</span>
 								{/if}
 							</button>
 						</div>
@@ -598,7 +616,7 @@
 						{#if enableDescription}
 							<Textarea
 								className=" text-sm w-full bg-transparent outline-hidden resize-none overflow-y-hidden "
-								placeholder={$i18n.t('Add a short description about what this model does')}
+								placeholder={i18n.t('Add a short description about what this model does')}
 								bind:value={info.meta.description}
 							/>
 						{/if}
@@ -638,12 +656,12 @@
 
 					<div class="my-2">
 						<div class="flex w-full justify-between">
-							<div class=" self-center text-sm font-semibold">{$i18n.t('Model Params')}</div>
+							<div class=" self-center text-sm font-semibold">{i18n.t('Model Params')}</div>
 						</div>
 
 						<div class="mt-2">
 							<div class="my-1">
-								<div class=" text-xs font-semibold mb-2">{$i18n.t('System Prompt')}</div>
+								<div class=" text-xs font-semibold mb-2">{i18n.t('System Prompt')}</div>
 								<div>
 									<Textarea
 										className=" text-sm w-full bg-transparent outline-hidden resize-none overflow-y-hidden "
@@ -656,7 +674,7 @@
 
 							<div class="flex w-full justify-between">
 								<div class=" self-center text-xs font-semibold">
-									{$i18n.t('Advanced Params')}
+									{i18n.t('Advanced Params')}
 								</div>
 
 								<button
@@ -667,16 +685,16 @@
 									}}
 								>
 									{#if showAdvanced}
-										<span class="ml-2 self-center">{$i18n.t('Hide')}</span>
+										<span class="ml-2 self-center">{i18n.t('Hide')}</span>
 									{:else}
-										<span class="ml-2 self-center">{$i18n.t('Show')}</span>
+										<span class="ml-2 self-center">{i18n.t('Show')}</span>
 									{/if}
 								</button>
 							</div>
 
 							{#if showAdvanced}
 								<div class="my-2">
-									<AdvancedParams admin={true} custom={true} bind:params />
+									<AdvancedParams admin={true} custom={true} bind:params={params} />
 								</div>
 							{/if}
 						</div>
@@ -688,7 +706,7 @@
 						<div class="flex w-full justify-between items-center">
 							<div class="flex w-full justify-between items-center">
 								<div class=" self-center text-sm font-semibold">
-									{$i18n.t('Prompt suggestions')}
+									{i18n.t('Prompt suggestions')}
 								</div>
 
 								<button
@@ -698,14 +716,14 @@
 										if ((info?.meta?.suggestion_prompts ?? null) === null) {
 											info.meta.suggestion_prompts = [{ content: '' }];
 										} else {
-											info.meta.suggestion_prompts = null;
+											info.meta.suggestion_prompts = undefined;
 										}
 									}}
 								>
 									{#if (info?.meta?.suggestion_prompts ?? null) === null}
-										<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+										<span class="ml-2 self-center">{i18n.t('Default')}</span>
 									{:else}
-										<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
+										<span class="ml-2 self-center">{i18n.t('Custom')}</span>
 									{/if}
 								</button>
 							</div>
@@ -717,10 +735,10 @@
 									on:click={() => {
 										if (
 											info.meta.suggestion_prompts.length === 0 ||
-											info.meta.suggestion_prompts.at(-1).content !== ''
+											info.meta.suggestion_prompts.at(-1)?.content !== ''
 										) {
 											info.meta.suggestion_prompts = [
-												...info.meta.suggestion_prompts,
+												...(info.meta.suggestion_prompts || []),
 												{ content: '' }
 											];
 										}
@@ -742,12 +760,12 @@
 
 						{#if info?.meta?.suggestion_prompts}
 							<div class="flex flex-col space-y-1 mt-1 mb-3">
-								{#if info.meta.suggestion_prompts.length > 0}
+								{#if info.meta.suggestion_prompts && info.meta.suggestion_prompts.length > 0}
 									{#each info.meta.suggestion_prompts as prompt, promptIdx}
 										<div class=" flex rounded-lg">
 											<input
 												class=" text-sm w-full bg-transparent outline-hidden border-r border-gray-100 dark:border-gray-850"
-												placeholder={$i18n.t('Write a prompt suggestion (e.g. Who are you?)')}
+												placeholder={i18n.t('Write a prompt suggestion (e.g. Who are you?)')}
 												bind:value={prompt.content}
 											/>
 
@@ -755,7 +773,7 @@
 												class="px-2"
 												type="button"
 												on:click={() => {
-													info.meta.suggestion_prompts.splice(promptIdx, 1);
+													info.meta.suggestion_prompts?.splice(promptIdx, 1);
 													info.meta.suggestion_prompts = info.meta.suggestion_prompts;
 												}}
 											>
@@ -777,20 +795,20 @@
 					</div>
 
 					<div class="my-2">
-						<ToolsSelector bind:selectedToolIds={toolIds} tools={$tools} />
+						<ToolsSelector bind:selectedToolIds={toolIds} tools={$tools ?? []} />
 					</div>
 
 					<div class="my-2">
 						<FiltersSelector
 							bind:selectedFilterIds={filterIds}
-							filters={$functions.filter((func) => func.type === 'filter')}
+							filters={($functions ?? []).filter((func) => func.type === 'filter')}
 						/>
 					</div>
 
 					<div class="my-2">
 						<ActionsSelector
 							bind:selectedActionIds={actionIds}
-							actions={$functions.filter((func) => func.type === 'action')}
+							actions={($functions ?? []).filter((func) => func.type === 'action')}
 						/>
 					</div>
 
@@ -800,7 +818,7 @@
 
 					<div class="my-2 text-gray-300 dark:text-gray-700">
 						<div class="flex w-full justify-between mb-2">
-							<div class=" self-center text-sm font-semibold">{$i18n.t('JSON Preview')}</div>
+							<div class=" self-center text-sm font-semibold">{i18n.t('JSON Preview')}</div>
 
 							<button
 								class="p-1 px-3 text-xs flex rounded-sm transition"
@@ -810,9 +828,9 @@
 								}}
 							>
 								{#if showPreview}
-									<span class="ml-2 self-center">{$i18n.t('Hide')}</span>
+									<span class="ml-2 self-center">{i18n.t('Hide')}</span>
 								{:else}
-									<span class="ml-2 self-center">{$i18n.t('Show')}</span>
+									<span class="ml-2 self-center">{i18n.t('Show')}</span>
 								{/if}
 							</button>
 						</div>
@@ -840,9 +858,9 @@
 						>
 							<div class=" self-center font-medium">
 								{#if edit}
-									{$i18n.t('Save & Update')}
+									{i18n.t('Save & Update')}
 								{:else}
-									{$i18n.t('Save & Create')}
+									{i18n.t('Save & Create')}
 								{/if}
 							</div>
 

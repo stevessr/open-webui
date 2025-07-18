@@ -1,26 +1,15 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
 
-	import { createEventDispatcher, onMount, getContext } from 'svelte';
-	import { config as backendConfig, user } from '$lib/stores';
-
-	import { getBackendConfig } from '$lib/apis';
-	import {
-		getImageGenerationModels,
-		getImageGenerationConfig,
-		updateImageGenerationConfig,
-		getConfig,
-		updateConfig,
-		verifyConfigUrl
-	} from '$lib/apis/images';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
+
 	const dispatch = createEventDispatcher();
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let loading = false;
 

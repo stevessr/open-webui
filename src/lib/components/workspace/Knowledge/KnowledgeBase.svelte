@@ -1,39 +1,14 @@
 <script lang="ts">
 	import Fuse from 'fuse.js';
-	import { toast } from 'svelte-sonner';
-	import { v4 as uuidv4 } from 'uuid';
-	import { PaneGroup, Pane, PaneResizer } from 'paneforge';
 
-	import { onMount, getContext, onDestroy, tick } from 'svelte';
-	const i18n = getContext('i18n');
+	import type { Writable } from 'svelte/store';
 
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import {
-		mobile,
-		showSidebar,
-		knowledge as _knowledge,
-		config,
-		user,
-		settings
-	} from '$lib/stores';
+	interface I18nStore {
+		t: (key: string, options?: any) => string;
+		changeLanguage: (lang: string) => void;
+	}
 
-	import {
-		updateFileDataContentById,
-		uploadFile,
-		deleteFileById,
-		getFileById
-	} from '$lib/apis/files';
-	import {
-		addFileToKnowledgeById,
-		getKnowledgeById,
-		getKnowledgeBases,
-		removeFileFromKnowledgeById,
-		resetKnowledgeById,
-		updateFileFromKnowledgeById,
-		updateKnowledgeById
-	} from '$lib/apis/knowledge';
-	import { blobToFile } from '$lib/utils';
+	const i18n: Writable<I18nStore> = getContext('i18n');
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Files from './KnowledgeBase/Files.svelte';
@@ -65,9 +40,10 @@
 			file_ids: string[];
 		};
 		files: any[];
+		access_control?: any;
 	};
 
-	let id = null;
+	let id: string | null = null;
 	let knowledge: Knowledge | null = null;
 	let query = '';
 
@@ -75,9 +51,9 @@
 	let showSyncConfirmModal = false;
 	let showAccessControlModal = false;
 
-	let inputFiles = null;
+	let inputFiles: FileList | null = null;
 
-	let filteredItems = [];
+	let filteredItems: any[] = [];
 	$: if (knowledge && knowledge.files) {
 		fuse = new Fuse(knowledge.files, {
 			keys: ['meta.name', 'meta.description']
@@ -86,18 +62,18 @@
 
 	$: if (fuse) {
 		filteredItems = query
-			? fuse.search(query).map((e) => {
+			? fuse.search(query).map((e: any) => {
 					return e.item;
 				})
 			: (knowledge?.files ?? []);
 	}
 
-	let selectedFile = null;
-	let selectedFileId = null;
+	let selectedFile: any = null;
+	let selectedFileId: string | null = null;
 	let selectedFileContent = '';
 
 	// Add cache object
-	let fileContentCache = new Map();
+	let fileContentCache = new Map<string, string>();
 
 	$: if (selectedFileId) {
 		const file = (knowledge?.files ?? []).find((file) => file.id === selectedFileId);
@@ -110,12 +86,12 @@
 		selectedFile = null;
 	}
 
-	let fuse = null;
-	let debounceTimeout = null;
-	let mediaQuery;
+	let fuse: Fuse<any> | null = null;
+	let debounceTimeout: NodeJS.Timeout | null = null;
+	let mediaQuery: MediaQueryList;
 	let dragged = false;
 
-	const createFileFromText = (name, content) => {
+	const createFileFromText = (name: string, content: string) => {
 		const blob = new Blob([content], { type: 'text/plain' });
 		const file = blobToFile(blob, `${name}.txt`);
 
@@ -123,7 +99,7 @@
 		return file;
 	};
 
-	const uploadFileHandler = async (file) => {
+	const uploadFileHandler = async (file: File) => {
 		console.log(file);
 
 		const tempItemId = uuidv4();
@@ -160,7 +136,9 @@
 			return;
 		}
 
-		knowledge.files = [...(knowledge.files ?? []), fileItem];
+		if (knowledge) {
+			knowledge.files = [...(knowledge.files ?? []), fileItem];
+		}
 
 		try {
 			// If the file is an audio file, provide the language for STT.
@@ -179,7 +157,7 @@
 				return null;
 			});
 
-			if (uploadedFile) {
+			if (uploadedFile && knowledge) {
 				console.log(uploadedFile);
 				knowledge.files = knowledge.files.map((item) => {
 					if (item.itemId === tempItemId) {
@@ -217,8 +195,8 @@
 	};
 
 	// Helper function to check if a path contains hidden folders
-	const hasHiddenFolder = (path) => {
-		return path.split('/').some((part) => part.startsWith('.'));
+	const hasHiddenFolder = (path: string) => {
+		return path.split('/').some((part: string) => part.startsWith('.'));
 	};
 
 	// Modern browsers implementation using File System Access API
@@ -234,7 +212,7 @@
 		};
 
 		// Recursive function to count all files excluding hidden ones
-		async function countFiles(dirHandle) {
+		async function countFiles(dirHandle: FileSystemDirectoryHandle) {
 			for await (const entry of dirHandle.values()) {
 				// Skip hidden files and directories
 				if (entry.name.startsWith('.')) continue;
@@ -251,7 +229,7 @@
 		}
 
 		// Recursive function to process directories excluding hidden files and folders
-		async function processDirectory(dirHandle, path = '') {
+		async function processDirectory(dirHandle: FileSystemDirectoryHandle, path = '') {
 			for await (const entry of dirHandle.values()) {
 				// Skip hidden files and directories
 				if (entry.name.startsWith('.')) continue;
@@ -289,9 +267,12 @@
 
 	// Firefox fallback implementation using traditional file input
 	const handleFirefoxUpload = async () => {
-		return new Promise((resolve, reject) => {
+		return new Promise<void>((resolve, reject) => {
 			// Create hidden file input
-			const input = document.createElement('input');
+			const input = document.createElement('input') as HTMLInputElement & {
+				webkitdirectory?: boolean;
+				directory?: boolean;
+			};
 			input.type = 'file';
 			input.webkitdirectory = true;
 			input.directory = true;
@@ -303,7 +284,7 @@
 
 			input.onchange = async () => {
 				try {
-					const files = Array.from(input.files)
+					const files = Array.from(input.files ?? [])
 						// Filter out files from hidden folders
 						.filter((file) => !hasHiddenFolder(file.webkitRelativePath));
 
@@ -352,8 +333,8 @@
 	};
 
 	// Error handler
-	const handleUploadError = (error) => {
-		if (error.name === 'AbortError') {
+	const handleUploadError = (error: unknown) => {
+		if (error instanceof Error && error.name === 'AbortError') {
 			toast.info('Directory selection was cancelled');
 		} else {
 			toast.error('Error accessing directory');
@@ -363,6 +344,8 @@
 
 	// Helper function to maintain file paths within zip
 	const syncDirectoryHandler = async () => {
+		if (!id) return;
+
 		if ((knowledge?.files ?? []).length > 0) {
 			const res = await resetKnowledgeById(localStorage.token, id).catch((e) => {
 				toast.error(`${e}`);
@@ -380,7 +363,9 @@
 		}
 	};
 
-	const addFileHandler = async (fileId) => {
+	const addFileHandler = async (fileId: string) => {
+		if (!id) return;
+
 		const updatedKnowledge = await addFileToKnowledgeById(localStorage.token, id, fileId).catch(
 			(e) => {
 				toast.error(`${e}`);
@@ -393,11 +378,15 @@
 			toast.success($i18n.t('File added successfully.'));
 		} else {
 			toast.error($i18n.t('Failed to add file.'));
-			knowledge.files = knowledge.files.filter((file) => file.id !== fileId);
+			if (knowledge) {
+				knowledge.files = knowledge.files.filter((file) => file.id !== fileId);
+			}
 		}
 	};
 
-	const deleteFileHandler = async (fileId) => {
+	const deleteFileHandler = async (fileId: string) => {
+		if (!id) return;
+
 		try {
 			console.log('Starting file deletion process for:', fileId);
 
@@ -417,14 +406,17 @@
 	};
 
 	const updateFileContentHandler = async () => {
+		if (!selectedFile || !id) return;
+
 		const fileId = selectedFile.id;
 		const content = selectedFileContent;
 
 		// Clear the cache for this file since we're updating it
 		fileContentCache.delete(fileId);
 
-		const res = updateFileDataContentById(localStorage.token, fileId, content).catch((e) => {
+		const res = await updateFileDataContentById(localStorage.token, fileId, content).catch((e) => {
 			toast.error(`${e}`);
+			return null;
 		});
 
 		const updatedKnowledge = await updateFileFromKnowledgeById(
@@ -433,6 +425,7 @@
 			fileId
 		).catch((e) => {
 			toast.error(`${e}`);
+			return null;
 		});
 
 		if (res && updatedKnowledge) {
@@ -448,6 +441,8 @@
 		}
 
 		debounceTimeout = setTimeout(async () => {
+			if (!knowledge || !id) return;
+
 			if (knowledge.name.trim() === '' || knowledge.description.trim() === '') {
 				toast.error($i18n.t('Please fill in all fields.'));
 				return;
@@ -469,7 +464,7 @@
 		}, 1000);
 	};
 
-	const handleMediaQuery = async (e) => {
+	const handleMediaQuery = (e: MediaQueryListEvent) => {
 		if (e.matches) {
 			largeScreen = true;
 		} else {
@@ -477,13 +472,21 @@
 		}
 	};
 
-	const fileSelectHandler = async (file) => {
+	const handleMediaQueryFromMediaQueryList = (mediaQueryList: MediaQueryList) => {
+		if (mediaQueryList.matches) {
+			largeScreen = true;
+		} else {
+			largeScreen = false;
+		}
+	};
+
+	const fileSelectHandler = async (file: any) => {
 		try {
 			selectedFile = file;
 
 			// Check cache first
 			if (fileContentCache.has(file.id)) {
-				selectedFileContent = fileContentCache.get(file.id);
+				selectedFileContent = fileContentCache.get(file.id) ?? '';
 				return;
 			}
 
@@ -500,7 +503,7 @@
 		}
 	};
 
-	const onDragOver = (e) => {
+	const onDragOver = (e: DragEvent) => {
 		e.preventDefault();
 
 		// Check if a file is being draggedOver.
@@ -515,7 +518,7 @@
 		dragged = false;
 	};
 
-	const onDrop = async (e) => {
+	const onDrop = async (e: DragEvent) => {
 		e.preventDefault();
 		dragged = false;
 
@@ -538,11 +541,12 @@
 		// listen to resize 1024px
 		mediaQuery = window.matchMedia('(min-width: 1024px)');
 
-		mediaQuery.addEventListener('change', handleMediaQuery);
-		handleMediaQuery(mediaQuery);
+		mediaQuery.addEventListener('change', (e) => handleMediaQuery(e));
+		handleMediaQueryFromMediaQueryList(mediaQuery);
 
 		// Select the container element you want to observe
 		const container = document.getElementById('collection-container');
+		if (!container) return;
 
 		// initialize the minSize based on the container width
 		minSize = !largeScreen ? 100 : Math.floor((300 / container.clientWidth) * 100);
@@ -557,8 +561,10 @@
 				minSize = !largeScreen ? 100 : Math.floor(percentage);
 
 				if (showSidepanel) {
-					if (pane && pane.isExpanded() && pane.getSize() < minSize) {
-						pane.resize(minSize);
+					if (pane && (pane as any).isExpanded && (pane as any).getSize && (pane as any).resize) {
+						if ((pane as any).isExpanded() && (pane as any).getSize() < minSize) {
+							(pane as any).resize(minSize);
+						}
 					}
 				}
 			}
@@ -567,8 +573,8 @@
 		// Start observing the container's size changes
 		resizeObserver.observe(container);
 
-		if (pane) {
-			pane.expand();
+		if (pane && (pane as any).expand) {
+			(pane as any).expand();
 		}
 
 		id = $page.params.id;
@@ -591,7 +597,7 @@
 	});
 
 	onDestroy(() => {
-		mediaQuery?.removeEventListener('change', handleMediaQuery);
+		mediaQuery?.removeEventListener('change', (e) => handleMediaQuery(e));
 		const dropZone = document.querySelector('body');
 		dropZone?.removeEventListener('dragover', onDragOver);
 		dropZone?.removeEventListener('drop', onDrop);
@@ -662,8 +668,7 @@
 
 			inputFiles = null;
 			const fileInputElement = document.getElementById('files-input');
-
-			if (fileInputElement) {
+			if (fileInputElement && 'value' in fileInputElement) {
 				fileInputElement.value = '';
 			}
 		} else {
@@ -881,7 +886,10 @@
 											} else if (e.detail.type === 'text') {
 												showAddTextContentModal = true;
 											} else {
-												document.getElementById('files-input').click();
+												const fileInput = document.getElementById('files-input');
+												if (fileInput && fileInput instanceof HTMLInputElement) {
+													fileInput.click();
+												}
 											}
 										}}
 										on:sync={(e) => {

@@ -1,14 +1,13 @@
 <script lang="ts">
-	import { getContext, onMount } from 'svelte';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
-	import { getGroups } from '$lib/apis/groups';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Plus from '$lib/components/icons/Plus.svelte';
 	import UserCircleSolid from '$lib/components/icons/UserCircleSolid.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import Badge from '$lib/components/common/Badge.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let onChange: Function = () => {};
 

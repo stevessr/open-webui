@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { DropdownMenu } from 'bits-ui';
-	import { flyAndScale } from '$lib/utils/transitions';
-	import { getContext } from 'svelte';
 
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import GarbageBin from '$lib/components/icons/GarbageBin.svelte';
@@ -17,7 +14,7 @@
 	import PencilSolid from '$lib/components/icons/PencilSolid.svelte';
 	import Link from '$lib/components/icons/Link.svelte';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let createHandler: Function;
 	export let importFromLinkHandler: Function;
@@ -64,6 +61,7 @@
 				class="flex rounded-md py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
 				on:click={async () => {
 					importFromLinkHandler();
+	import { getI18n } from '$lib/i18n/helpers';
 					show = false;
 				}}
 			>

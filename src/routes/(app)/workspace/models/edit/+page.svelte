@@ -1,17 +1,8 @@
-<script>
-	import { toast } from 'svelte-sonner';
-	import { goto } from '$app/navigation';
+<script lang="ts">
 
-	import { onMount, getContext } from 'svelte';
 	import type { Model } from '$lib/stores';
-	const i18n = getContext('i18n');
+	const i18n = getContext<any>('i18n');
 
-	import { page } from '$app/stores';
-	import { config, models, settings } from '$lib/stores';
-
-	import { getModelById, updateModelById } from '$lib/apis/models';
-
-	import { getModels } from '$lib/apis';
 	import ModelEditor from '$lib/components/workspace/Models/ModelEditor.svelte';
 
 	let model: Model | null = null;
@@ -38,7 +29,8 @@
 			await models.set(
 				await getModels(
 					localStorage.token,
-					($config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)) as object | null | undefined
+					($config?.features?.enable_direct_connections &&
+						($settings?.directConnections ?? null)) as object | null | undefined
 				)
 			);
 			toast.success($i18n.t('Model updated successfully'));

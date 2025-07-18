@@ -1,12 +1,11 @@
 <script>
-	import { getContext, onMount } from 'svelte';
-	const i18n = getContext('i18n');
 
-	import { WEBUI_BASE_URL } from '$lib/constants';
+	const i18n = getI18n();
 
 	import Marquee from './common/Marquee.svelte';
 	import SlideShow from './common/SlideShow.svelte';
 	import ArrowRightCircle from './icons/ArrowRightCircle.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let show = true;
 	export let getStartedHandler = () => {};

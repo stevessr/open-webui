@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { DropdownMenu } from 'bits-ui';
-	import { flyAndScale } from '$lib/utils/transitions';
-	import { getContext } from 'svelte';
 
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import GarbageBin from '$lib/components/icons/GarbageBin.svelte';
@@ -12,9 +9,9 @@
 	import ArchiveBox from '$lib/components/icons/ArchiveBox.svelte';
 	import DocumentDuplicate from '$lib/components/icons/DocumentDuplicate.svelte';
 	import ArrowDownTray from '$lib/components/icons/ArrowDownTray.svelte';
-	import { config } from '$lib/stores';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let editHandler: Function;
 	export let shareHandler: Function;

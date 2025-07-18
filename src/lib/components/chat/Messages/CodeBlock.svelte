@@ -1,29 +1,21 @@
 <script lang="ts">
 	import mermaid from 'mermaid';
 
-	import { v4 as uuidv4 } from 'uuid';
-
-	import { getContext, onMount, tick, onDestroy } from 'svelte';
-	import { slide } from 'svelte/transition';
-	import { quintOut, cubicOut } from 'svelte/easing';
-	import { copyToClipboard } from '$lib/utils';
-
 	import 'highlight.js/styles/github-dark.min.css';
 
 	import PyodideWorker from '$lib/workers/pyodide.worker?worker';
 	import CodeEditor from '$lib/components/common/CodeEditor.svelte';
 	import SvgPanZoom from '$lib/components/common/SVGPanZoom.svelte';
-	import { config } from '$lib/stores';
-	import { executeCode } from '$lib/apis/utils';
-	import { toast } from 'svelte-sonner';
+
 	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
 	import ChevronUpDown from '$lib/components/icons/ChevronUpDown.svelte';
 	import CommandLine from '$lib/components/icons/CommandLine.svelte';
 	import Cube from '$lib/components/icons/Cube.svelte';
 	import ArrowsPointingOut from '$lib/components/icons/ArrowsPointingOut.svelte';
 	import FloatingDocPreview from '$lib/components/common/FloatingDocPreview.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let id = '';
 
@@ -501,7 +493,11 @@
 						class="flex gap-1 items-center bg-none border-none bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 transition rounded-md px-1.5 py-0.5"
 						on:click={collapseCodeBlock}
 					>
-						<div class=" -translate-y-[0.5px] transition-transform duration-300 ease-out {collapsed ? 'rotate-180' : ''}">
+						<div
+							class=" -translate-y-[0.5px] transition-transform duration-300 ease-out {collapsed
+								? 'rotate-180'
+								: ''}"
+						>
 							<ChevronUpDown className="size-3" />
 						</div>
 
@@ -675,9 +671,5 @@
 
 <!-- Floating Preview Modal -->
 {#if showFloatingPreview}
-	<FloatingDocPreview
-		bind:show={showFloatingPreview}
-		url={previewUrl}
-		title={previewTitle}
-	/>
+	<FloatingDocPreview bind:show={showFloatingPreview} url={previewUrl} title={previewTitle} />
 {/if}

@@ -1,17 +1,12 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { createEventDispatcher } from 'svelte';
-	import { onMount, getContext } from 'svelte';
-	import { addUser } from '$lib/apis/auths';
-
-	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
-	import { generateInitialsImage } from '$lib/utils';
-	import XMark from '$lib/components/icons/XMark.svelte';
 
-	const i18n = getContext('i18n');
+	import XMark from '$lib/components/icons/XMark.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
+
+	const i18n = getI18n();
 	const dispatch = createEventDispatcher();
 
 	export let show = false;

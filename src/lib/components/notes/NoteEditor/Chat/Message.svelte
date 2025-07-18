@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { onMount, getContext } from 'svelte';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	import Skeleton from '$lib/components/chat/Messages/Skeleton.svelte';
 	import Markdown from '$lib/components/chat/Messages/Markdown.svelte';
@@ -9,6 +8,7 @@
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import ArrowUpLeft from '$lib/components/icons/ArrowUpLeft.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let message;
 	export let idx;

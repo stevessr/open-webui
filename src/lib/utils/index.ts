@@ -1190,7 +1190,11 @@ export const extractFrontmatter = (content: string) => {
 };
 
 // Function to determine the best matching language
-export const bestMatchingLanguage = (supportedLanguages: any[], preferredLanguages: string[], defaultLocale: string) => {
+export const bestMatchingLanguage = (
+	supportedLanguages: any[],
+	preferredLanguages: string[],
+	defaultLocale: string
+) => {
 	const languages = supportedLanguages.map((lang: any) => lang.code);
 
 	const match = preferredLanguages
@@ -1325,7 +1329,10 @@ export const convertOpenApiToToolPayload = (openApiSpec: any) => {
 				const tool: any = {
 					type: 'function',
 					name: (operation as any).operationId,
-					description: (operation as any).description || (operation as any).summary || 'No description available.',
+					description:
+						(operation as any).description ||
+						(operation as any).summary ||
+						'No description available.',
 					parameters: {
 						type: 'object',
 						properties: {},
@@ -1366,7 +1373,10 @@ export const convertOpenApiToToolPayload = (openApiSpec: any) => {
 
 							if ((resolvedRequestSchema as any).required) {
 								tool.parameters.required = [
-									...new Set([...tool.parameters.required, ...(resolvedRequestSchema as any).required])
+									...new Set([
+										...tool.parameters.required,
+										...(resolvedRequestSchema as any).required
+									])
 								];
 							}
 						} else if ((resolvedRequestSchema as any).type === 'array') {

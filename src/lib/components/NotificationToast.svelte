@@ -1,10 +1,6 @@
 <script lang="ts">
-	import { WEBUI_BASE_URL } from '$lib/constants';
-	import { settings, playingNotificationSound, isLastActiveTab } from '$lib/stores';
-	import DOMPurify from 'dompurify';
 
-	import { marked } from 'marked';
-	import { createEventDispatcher, onMount } from 'svelte';
+	import DOMPurify from 'dompurify';
 
 	const dispatch = createEventDispatcher();
 

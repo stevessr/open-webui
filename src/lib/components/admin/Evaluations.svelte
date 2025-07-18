@@ -1,14 +1,10 @@
 <script>
-	import { getContext, tick, onMount } from 'svelte';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
 
 	import Leaderboard from './Evaluations/Leaderboard.svelte';
 	import Feedbacks from './Evaluations/Feedbacks.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	import { getAllFeedbacks } from '$lib/apis/evaluations';
-
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let selectedTab;
 	$: {

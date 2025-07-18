@@ -1,13 +1,11 @@
 <script lang="ts">
-	import { getContext, onMount } from 'svelte';
-	import { knowledge } from '$lib/stores';
 
 	import Selector from './Knowledge/Selector.svelte';
 	import FileItem from '$lib/components/common/FileItem.svelte';
-	import { getKnowledgeBases } from '$lib/apis/knowledge';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let selectedItems = [];
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let loaded = false;
 

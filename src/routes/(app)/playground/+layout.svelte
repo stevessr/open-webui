@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { onMount, getContext } from 'svelte';
-	import { WEBUI_NAME, showSidebar, functions, settings } from '$lib/stores';
-	import MenuLines from '$lib/components/icons/MenuLines.svelte';
-	import { page } from '$app/stores';
 
-	const i18n = getContext('i18n');
+	import MenuLines from '$lib/components/icons/MenuLines.svelte';
+
+	import i18n from '$lib/i18n';
 
 	onMount(async () => {});
 </script>
@@ -16,7 +14,7 @@
 </svelte:head>
 
 <div
-	class=" flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out  max-w-full relative"
+	class=" flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out max-w-full relative"
 >
 	<!-- Custom Background Support -->
 	{#if $settings?.backgroundImageUrl ?? null}

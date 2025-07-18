@@ -1,13 +1,10 @@
 <script>
-	import { goto } from '$app/navigation';
-	import { getContext } from 'svelte';
-	const i18n = getContext('i18n');
 
-	import { createNewKnowledge, getKnowledgeBases } from '$lib/apis/knowledge';
-	import { toast } from 'svelte-sonner';
-	import { knowledge, user } from '$lib/stores';
+	const i18n = getI18n();
+
 	import AccessControl from '../common/AccessControl.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	let loading = false;
 

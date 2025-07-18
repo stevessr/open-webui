@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { getContext, onMount, tick } from 'svelte';
+
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import { WEBUI_API_BASE_URL } from '$lib/constants';
 
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let show = false;
 	export let citation;

@@ -1,9 +1,7 @@
 <script>
-	import { goto } from '$app/navigation';
-	import { WEBUI_NAME, config } from '$lib/stores';
-	import { onMount, getContext } from 'svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let loaded = false;
 
@@ -68,7 +66,6 @@
 						</button>
 					</div>
 
-					
 					<div class="mt-6 mx-auto relative group w-fit flex flex-col items-center">
 						<input
 							type="text"

@@ -1,12 +1,11 @@
 <script lang="ts">
-	import { getContext, createEventDispatcher } from 'svelte';
 
 	const dispatch = createEventDispatcher();
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
-	import { WEBUI_VERSION } from '$lib/constants';
 	import XMark from '../icons/XMark.svelte';
 	import FloatingDocPreview from '../common/FloatingDocPreview.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let version = {
 		current: WEBUI_VERSION,

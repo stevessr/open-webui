@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { getContext, onMount } from 'svelte';
-	const i18n = getContext('i18n');
+
+	const i18n = getI18n();
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
+
 	export let onSubmit: Function = () => {};
 	export let show = false;
 

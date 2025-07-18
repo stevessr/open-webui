@@ -1,9 +1,7 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { getContext, onMount } from 'svelte';
-	const i18n = getContext('i18n');
 
-	import { settings } from '$lib/stores';
+	const i18n = getI18n();
+
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Plus from '$lib/components/icons/Plus.svelte';
 	import Minus from '$lib/components/icons/Minus.svelte';
@@ -12,11 +10,11 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Tags from './common/Tags.svelte';
-	import { getToolServerData } from '$lib/apis';
-	import { verifyToolServerConnection } from '$lib/apis/configs';
+
 	import AccessControl from './workspace/common/AccessControl.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let onSubmit: Function = () => {};
 	export let onDelete: Function = () => {};

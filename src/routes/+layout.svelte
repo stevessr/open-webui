@@ -1,55 +1,21 @@
 <script>
-	import { io } from 'socket.io-client';
-	import { spring } from 'svelte/motion';
+
 	import PyodideWorker from '$lib/workers/pyodide.worker?worker';
 
 	let loadingProgress = spring(0, {
 		stiffness: 0.05
 	});
 
-	import { onMount, tick, setContext, onDestroy } from 'svelte';
-	import {
-		config,
-		user,
-		settings,
-		theme,
-		WEBUI_NAME,
-		mobile,
-		socket,
-		chatId,
-		chats,
-		currentChatPage,
-		tags,
-		temporaryChatEnabled,
-		isLastActiveTab,
-		isApp,
-		appInfo,
-		toolServers,
-		playingNotificationSound
-	} from '$lib/stores';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import { Toaster, toast } from 'svelte-sonner';
-
-	import { executeToolServer, getBackendConfig } from '$lib/apis';
-	import { getSessionUser, userSignOut } from '$lib/apis/auths';
-
 	import '../tailwind.css';
 	import '../app.css';
 
 	import 'tippy.js/dist/tippy.css';
 
-	import { WEBUI_BASE_URL, WEBUI_HOSTNAME } from '$lib/constants';
 	import i18n, { initI18n, getLanguages, changeLanguage } from '$lib/i18n';
-	import { bestMatchingLanguage } from '$lib/utils';
-	import { getAllTags, getChatList } from '$lib/apis/chats';
+
 	import NotificationToast from '$lib/components/NotificationToast.svelte';
 	import AppSidebar from '$lib/components/app/AppSidebar.svelte';
 	import CustomStyles from '$lib/components/common/CustomStyles.svelte';
-	import { chatCompletion } from '$lib/apis/openai';
-
-	import { beforeNavigate } from '$app/navigation';
-	import { updated } from '$app/state';
 
 	// handle frontend updates (https://svelte.dev/docs/kit/configuration#version)
 	beforeNavigate(({ willUnload, to }) => {
@@ -648,8 +614,6 @@
 	<title>{$WEBUI_NAME}</title>
 	<link crossorigin="anonymous" rel="icon" href="{WEBUI_BASE_URL}/static/favicon.png" />
 
-	
-	
 	<!-- <link rel="stylesheet" type="text/css" href="/themes/rosepine.css" />
 	<link rel="stylesheet" type="text/css" href="/themes/rosepine-dawn.css" /> -->
 </svelte:head>

@@ -1,12 +1,4 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
-
-	import { onDestroy, onMount, tick } from 'svelte';
-	import { goto } from '$app/navigation';
-
-	import { chatId, showSidebar, socket, user } from '$lib/stores';
-	import { getChannelById, getChannelMessages, sendMessage } from '$lib/apis/channels';
 
 	import Messages from './Messages.svelte';
 	import MessageInput from './MessageInput.svelte';
@@ -199,7 +191,7 @@
 </svelte:head>
 
 <div
-	class="h-screen max-h-[100dvh] transition-width duration-200 ease-in-out  w-full max-w-full flex flex-col"
+	class="h-screen max-h-[100dvh] transition-width duration-200 ease-in-out w-full max-w-full flex flex-col"
 	id="channel-container"
 >
 	<PaneGroup direction="horizontal" class="w-full h-full">

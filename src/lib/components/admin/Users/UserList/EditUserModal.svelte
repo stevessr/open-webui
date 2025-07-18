@@ -1,16 +1,13 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import dayjs from 'dayjs';
-	import { createEventDispatcher } from 'svelte';
-	import { onMount, getContext } from 'svelte';
 
-	import { updateUserById } from '$lib/apis/users';
+	import dayjs from 'dayjs';
 
 	import Modal from '$lib/components/common/Modal.svelte';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 	const dispatch = createEventDispatcher();
 	dayjs.extend(localizedFormat);
 
@@ -81,11 +78,11 @@
 									<track kind="captions" />
 								</video>
 							{:else}
-							<img
-								src={selectedUser.profile_image_url}
-								class=" max-w-[55px] object-cover rounded-full"
-								alt="User profile"
-							/>
+								<img
+									src={selectedUser.profile_image_url}
+									class=" max-w-[55px] object-cover rounded-full"
+									alt="User profile"
+								/>
 							{/if}
 						</div>
 

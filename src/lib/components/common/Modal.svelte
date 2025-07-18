@@ -1,8 +1,5 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
-	import { fade } from 'svelte/transition';
 
-	import { flyAndScale } from '$lib/utils/transitions';
 	import * as FocusTrap from 'focus-trap';
 	export let show = true;
 	export let size = 'md';
@@ -56,10 +53,18 @@
 
 		// Don't enable dragging if the target is an interactive element
 		const target = event.target as HTMLElement;
-		if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.tagName === 'INPUT' ||
-			target.tagName === 'SELECT' || target.tagName === 'TEXTAREA' ||
-			target.closest('button') || target.closest('a') || target.closest('[role="button"]') ||
-			target.closest('[role="tab"]') || target.closest('[role="menuitem"]')) {
+		if (
+			target.tagName === 'BUTTON' ||
+			target.tagName === 'A' ||
+			target.tagName === 'INPUT' ||
+			target.tagName === 'SELECT' ||
+			target.tagName === 'TEXTAREA' ||
+			target.closest('button') ||
+			target.closest('a') ||
+			target.closest('[role="button"]') ||
+			target.closest('[role="tab"]') ||
+			target.closest('[role="menuitem"]')
+		) {
 			return;
 		}
 
@@ -129,8 +134,6 @@
 </script>
 
 {#if show}
-
-
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<!-- svelte-ignore a11y-mouse-events-have-key-events -->
 	<div
@@ -152,7 +155,9 @@
 			bind:this={contentElement}
 			class="max-w-full {sizeToWidth(size)} {size !== 'full'
 				? 'mx-2'
-				: ''} shadow-3xl min-h-fit scrollbar-hidden {className} menu-cover {draggable ? 'cursor-move' : ''}"
+				: ''} shadow-3xl min-h-fit scrollbar-hidden {className} menu-cover {draggable
+				? 'cursor-move'
+				: ''}"
 			style="transform: translate({position.x}px, {position.y}px)"
 			in:flyAndScale
 			on:mousedown={(e) => {

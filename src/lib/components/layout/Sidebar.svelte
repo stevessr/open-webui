@@ -1,45 +1,6 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { v4 as uuidv4 } from 'uuid';
 
-	import { goto } from '$app/navigation';
-	import {
-		user,
-		chats,
-		settings,
-		showSettings,
-		chatId,
-		tags,
-		showSidebar,
-		showSearch,
-		mobile,
-		showArchivedChats,
-		pinnedChats,
-		scrollPaginationEnabled,
-		currentChatPage,
-		temporaryChatEnabled,
-		channels,
-		socket,
-		config,
-		isApp,
-		models,
-		selectedFolder
-	} from '$lib/stores';
-	import { onMount, getContext, tick, onDestroy } from 'svelte';
-
-	const i18n = getContext('i18n');
-
-	import {
-		getChatList,
-		getAllTags,
-		getPinnedChatList,
-		toggleChatPinnedStatusById,
-		getChatById,
-		updateChatFolderIdById,
-		importChat
-	} from '$lib/apis/chats';
-	import { createNewFolder, getFolders, updateFolderParentIdById } from '$lib/apis/folders';
-	import { WEBUI_BASE_URL } from '$lib/constants';
+	const i18n = getI18n();
 
 	import ArchivedChatsModal from './ArchivedChatsModal.svelte';
 	import UserMenu from './Sidebar/UserMenu.svelte';
@@ -51,7 +12,7 @@
 	import Plus from '../icons/Plus.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import Folders from './Sidebar/Folders.svelte';
-	import { getChannels, createNewChannel } from '$lib/apis/channels';
+
 	import ChannelModal from './Sidebar/ChannelModal.svelte';
 	import ChannelItem from './Sidebar/ChannelItem.svelte';
 	import PencilSquare from '../icons/PencilSquare.svelte';
@@ -905,6 +866,8 @@
 						on:import={(e) => {
 							const { folderId, items } = e.detail;
 							importChatHandler(items, false, folderId);
+	import { getI18n } from '$lib/i18n/helpers';
+
 						}}
 						on:change={async () => {
 							initChatList();

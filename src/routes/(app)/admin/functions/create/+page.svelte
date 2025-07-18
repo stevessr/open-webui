@@ -1,16 +1,9 @@
 <script>
-	import { toast } from 'svelte-sonner';
-	import { onMount, getContext } from 'svelte';
-	import { goto } from '$app/navigation';
 
-	import { config, functions, models, settings } from '$lib/stores';
-	import { createNewFunction, getFunctions } from '$lib/apis/functions';
 	import FunctionEditor from '$lib/components/admin/Functions/FunctionEditor.svelte';
-	import { getModels } from '$lib/apis';
-	import { compareVersion, extractFrontmatter } from '$lib/utils';
-	import { WEBUI_VERSION } from '$lib/constants';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let mounted = false;
 	let clone = false;

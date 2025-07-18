@@ -1,19 +1,36 @@
-<script>
-	import { getContext, onMount, tick } from 'svelte';
+<script lang="ts">
 
-	const i18n = getContext('i18n');
+	interface I18nStore {
+		t: (key: string) => string;
+		subscribe: (run: (value: any) => void) => () => void;
+	}
+
+	const i18n = getContext<I18nStore>('i18n');
 
 	import CodeEditor from '$lib/components/common/CodeEditor.svelte';
-	import { goto } from '$app/navigation';
+
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 	import Badge from '$lib/components/common/Badge.svelte';
 	import ChevronLeft from '$lib/components/icons/ChevronLeft.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import LockClosed from '$lib/components/icons/LockClosed.svelte';
 	import AccessControlModal from '../common/AccessControlModal.svelte';
-	import { user } from '$lib/stores';
 
-	let formElement = null;
+	interface ToolData {
+		id: string;
+		name: string;
+		meta: {
+			description: string;
+		};
+		content: string;
+		access_control: Record<string, any>;
+	}
+
+	interface CodeEditorInstance {
+		formatPythonCodeHandler: () => Promise<boolean>;
+	}
+
+	let formElement: HTMLFormElement | null = null;
 	let loading = false;
 
 	let showConfirm = false;
@@ -22,7 +39,7 @@
 	export let edit = false;
 	export let clone = false;
 
-	export let onSave = () => {};
+	export let onSave: (data: ToolData) => void = () => {};
 
 	export let id = '';
 	export let name = '';
@@ -30,7 +47,7 @@
 		description: ''
 	};
 	export let content = '';
-	export let accessControl = {};
+	export let accessControl: Record<string, any> = {};
 
 	let _content = '';
 
@@ -46,7 +63,7 @@
 		id = name.replace(/\s+/g, '_').toLowerCase();
 	}
 
-	let codeEditor;
+	let codeEditor: CodeEditorInstance;
 	let boilerplate = `import os
 import requests
 from datetime import datetime
@@ -291,8 +308,8 @@ class Tools:
 						value={content}
 						lang="python"
 						{boilerplate}
-						onChange={(e) => {
-							_content = e;
+						onChange={(value) => {
+							_content = value;
 						}}
 						onSave={async () => {
 							if (formElement) {

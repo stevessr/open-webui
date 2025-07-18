@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+
 	const dispatch = createEventDispatcher();
 
 	import FileItem from '$lib/components/common/FileItem.svelte';

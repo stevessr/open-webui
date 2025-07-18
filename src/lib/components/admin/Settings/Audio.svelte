@@ -1,21 +1,9 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { createEventDispatcher, onMount, getContext } from 'svelte';
-	const dispatch = createEventDispatcher();
 
-	import { getBackendConfig } from '$lib/apis';
-	import {
-		getAudioConfig,
-		updateAudioConfig,
-		getModels as _getModels,
-		getVoices as _getVoices
-	} from '$lib/apis/audio';
-	import { config, settings } from '$lib/stores';
+	const dispatch = createEventDispatcher();
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
-
-	import { TTS_RESPONSE_SPLIT } from '$lib/types';
 
 	import type { Writable } from 'svelte/store';
 	import type { i18n as i18nType } from 'i18next';

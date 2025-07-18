@@ -1,16 +1,13 @@
 <script lang="ts">
 	import Fuse from 'fuse.js';
 
-	import { DropdownMenu } from 'bits-ui';
-	import { onMount, getContext, createEventDispatcher } from 'svelte';
-	import { flyAndScale } from '$lib/utils/transitions';
-	import { knowledge } from '$lib/stores';
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import Search from '$lib/components/icons/Search.svelte';
-	import { getNoteList } from '$lib/apis/notes';
-	import dayjs from 'dayjs';
 
-	const i18n = getContext('i18n');
+	import dayjs from 'dayjs';
+	import { getI18n } from '$lib/i18n/helpers';
+
+	const i18n = getI18n();
 	const dispatch = createEventDispatcher();
 
 	export let onClose: Function = () => {};

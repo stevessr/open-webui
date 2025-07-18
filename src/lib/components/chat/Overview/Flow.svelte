@@ -1,10 +1,6 @@
 <script>
-	import { createEventDispatcher } from 'svelte';
 
 	const dispatch = createEventDispatcher();
-
-	import { theme } from '$lib/stores';
-	import { Background, Controls, SvelteFlow, BackgroundVariant } from '@xyflow/svelte';
 
 	export let nodes;
 	export let nodeTypes;

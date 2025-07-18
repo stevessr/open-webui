@@ -1,29 +1,13 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-
-	import { config, functions, models, settings, tools, user } from '$lib/stores';
-	import { createEventDispatcher, onMount, getContext, tick } from 'svelte';
-
-	import {
-		getUserValvesSpecById as getToolUserValvesSpecById,
-		getUserValvesById as getToolUserValvesById,
-		updateUserValvesById as updateToolUserValvesById,
-		getTools
-	} from '$lib/apis/tools';
-	import {
-		getUserValvesSpecById as getFunctionUserValvesSpecById,
-		getUserValvesById as getFunctionUserValvesById,
-		updateUserValvesById as updateFunctionUserValvesById,
-		getFunctions
-	} from '$lib/apis/functions';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Valves from '$lib/components/common/Valves.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	const dispatch = createEventDispatcher();
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let show = false;
 

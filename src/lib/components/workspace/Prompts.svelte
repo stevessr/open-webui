@@ -1,18 +1,7 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
+
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
-
-	import { goto } from '$app/navigation';
-	import { onMount, getContext } from 'svelte';
-	import { WEBUI_NAME, config, prompts as _prompts, user } from '$lib/stores';
-
-	import {
-		createNewPrompt,
-		deletePromptByCommand,
-		getPrompts,
-		getPromptList
-	} from '$lib/apis/prompts';
 
 	import PromptMenu from './Prompts/PromptMenu.svelte';
 	import EllipsisHorizontal from '../icons/EllipsisHorizontal.svelte';
@@ -22,10 +11,10 @@
 	import ChevronRight from '../icons/ChevronRight.svelte';
 	import Spinner from '../common/Spinner.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
-	import { capitalizeFirstLetter, slugify } from '$lib/utils';
+
 	import XMark from '../icons/XMark.svelte';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 	let promptsImportInputElement: HTMLInputElement;
 	let loaded = false;
 
@@ -285,6 +274,7 @@
 							await _prompts.set(await getPrompts(localStorage.token));
 
 							importFiles = [];
+	import { getI18n } from '$lib/i18n/helpers';
 							promptsImportInputElement.value = '';
 						};
 

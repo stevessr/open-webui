@@ -1,17 +1,13 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
+
 	import Fuse from 'fuse.js';
 
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
+	import { getI18n } from '$lib/i18n/helpers';
 	dayjs.extend(relativeTime);
 
-	import { tick, getContext, onMount, onDestroy } from 'svelte';
-	import { removeLastWordFromString, isValidHttpUrl } from '$lib/utils';
-	import { knowledge } from '$lib/stores';
-	import { getNoteList, getNotes } from '$lib/apis/notes';
-
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let command = '';
 	export let onSelect = (e) => {};

@@ -1,20 +1,15 @@
 <script lang="ts">
-	import { getContext, onMount } from 'svelte';
-	import { models, config } from '$lib/stores';
-
-	import { toast } from 'svelte-sonner';
-	import { deleteSharedChatById, getChatById, shareChatById } from '$lib/apis/chats';
-	import { copyToClipboard } from '$lib/utils';
 
 	import Modal from '../common/Modal.svelte';
 	import Link from '../icons/Link.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let chatId;
 
 	let chat = null;
 	let shareUrl = null;
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	const shareLocalChat = async () => {
 		const _chat = chat;

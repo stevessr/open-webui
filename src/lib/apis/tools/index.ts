@@ -1,6 +1,16 @@
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 
-export const createNewTool = async (token: string, tool: object) => {
+export interface Tool {
+	id: string;
+	name: string;
+	meta: {
+		description: string;
+	};
+	content: string;
+	access_control: object;
+}
+
+export const createNewTool = async (token: string, tool: Tool) => {
 	let error = null;
 
 	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/create`, {
@@ -190,7 +200,7 @@ export const getToolById = async (token: string, id: string) => {
 	return res;
 };
 
-export const updateToolById = async (token: string, id: string, tool: object) => {
+export const updateToolById = async (token: string, id: string, tool: Tool) => {
 	let error = null;
 
 	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/id/${id}/update`, {

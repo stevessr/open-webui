@@ -1,20 +1,13 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { onMount, getContext } from 'svelte';
-
-	import { user, config, settings } from '$lib/stores';
-	import { updateUserProfile, createAPIKey, getAPIKey, getSessionUser } from '$lib/apis/auths';
-	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import UpdatePassword from './Account/UpdatePassword.svelte';
-	import { getGravatarUrl } from '$lib/apis/utils';
-	import { generateInitialsImage, canvasPixelTest } from '$lib/utils';
-	import { copyToClipboard } from '$lib/utils';
+
 	import Plus from '$lib/components/icons/Plus.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let saveHandler: Function;
 	export let saveSettings: Function;
@@ -161,7 +154,9 @@
 
 				if (
 					files.length > 0 &&
-					['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'video/mp4'].includes(files[0]['type'])
+					['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'video/mp4'].includes(
+						files[0]['type']
+					)
 				) {
 					reader.readAsDataURL(files[0]);
 				}
@@ -169,8 +164,6 @@
 		/>
 
 		<div class="space-y-1">
-			
-
 			<div class="flex space-x-5">
 				<div class="flex flex-col">
 					<div class="self-center mt-2">

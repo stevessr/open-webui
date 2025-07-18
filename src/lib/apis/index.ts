@@ -4,6 +4,7 @@ import { getOpenAIModelsDirect } from './openai';
 
 import { parse } from 'yaml';
 import { toast } from 'svelte-sonner';
+import type { PromptItem } from '$lib/apis/prompts';
 
 export const getModels = async (
 	token: string = '',
@@ -465,7 +466,7 @@ export const executeToolServer = async (
 			...(token && { authorization: `Bearer ${token}` })
 		};
 
-		let requestOptions: RequestInit = {
+		const requestOptions: RequestInit = {
 			method: httpMethod.toUpperCase(),
 			headers
 		};
@@ -1014,7 +1015,7 @@ export const getPipelinesList = async (token: string = '') => {
 		throw error;
 	}
 
-	let pipelines = res?.data ?? [];
+	const pipelines = res?.data ?? [];
 	return pipelines;
 };
 
@@ -1157,7 +1158,7 @@ export const getPipelines = async (token: string, urlIdx?: string) => {
 		throw error;
 	}
 
-	let pipelines = res?.data ?? [];
+	const pipelines = res?.data ?? [];
 	return pipelines;
 };
 
@@ -1600,6 +1601,7 @@ export interface ModelMeta {
 	description?: string;
 	capabilities?: object;
 	profile_image_url?: string;
+	suggestion_prompts?: PromptItem[];
 }
 
 export interface ModelParams {}

@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { getContext, onMount } from 'svelte';
-	const i18n = getContext('i18n');
+
+	const i18n = getI18n();
 
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	// Default values for permissions
 	const defaultPermissions = {

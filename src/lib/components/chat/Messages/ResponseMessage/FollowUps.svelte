@@ -1,8 +1,8 @@
 <script lang="ts">
 	import ArrowTurnDownRight from '$lib/components/icons/ArrowTurnDownRight.svelte';
-	import { onMount, tick, getContext } from 'svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let followUps: string[] = [];
 	export let onClick: (followUp: string) => void = () => {};

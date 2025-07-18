@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { fade, fly } from 'svelte/transition';
-	import { onMount } from 'svelte';
 
 	let idx = 0;
 

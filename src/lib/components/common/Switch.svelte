@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher, tick } from 'svelte';
-	import { Switch } from 'bits-ui';
-	import { settings } from '$lib/stores';
+
 	export let state = true;
 	export let id = '';
 

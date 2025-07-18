@@ -1,34 +1,13 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
+
 	import dayjs from 'dayjs';
 
-	import { createEventDispatcher } from 'svelte';
-	import { onMount, tick, getContext } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import type { i18n as i18nType, t } from 'i18next';
 
 	const i18n = getContext<Writable<i18nType>>('i18n');
 
 	const dispatch = createEventDispatcher();
-
-	import { createNewFeedback, getFeedbackById, updateFeedbackById } from '$lib/apis/evaluations';
-	import { getChatById } from '$lib/apis/chats';
-	import { generateTags } from '$lib/apis';
-
-	import { config, models, settings, temporaryChatEnabled, TTSWorker, user } from '$lib/stores';
-	import { synthesizeOpenAISpeech } from '$lib/apis/audio';
-	import { imageGenerations } from '$lib/apis/images';
-	import {
-		copyToClipboard as _copyToClipboard,
-		approximateToHumanReadable,
-		getMessageContentParts,
-		sanitizeResponseContent,
-		createMessagesList,
-		formatDate,
-		removeDetails,
-		removeAllDetails
-	} from '$lib/utils';
-	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import Name from './Name.svelte';
 	import ProfileImage from './ProfileImage.svelte';
@@ -46,11 +25,9 @@
 	import Citations from './Citations.svelte';
 	import CodeExecutions from './CodeExecutions.svelte';
 	import ContentRenderer from './ContentRenderer.svelte';
-	import { KokoroWorker } from '$lib/workers/KokoroWorker';
+
 	import FileItem from '$lib/components/common/FileItem.svelte';
 	import FollowUps from './ResponseMessage/FollowUps.svelte';
-	import { fade } from 'svelte/transition';
-	import { flyAndScale } from '$lib/utils/transitions';
 
 	interface MessageType {
 		id: string;
@@ -648,10 +625,6 @@
 														? 'shimmer'
 														: ''} text-base line-clamp-1 text-wrap"
 												>
-													
-													
-
-													
 													{#if status?.description.includes('{{count}}')}
 														{$i18n.t(status?.description, {
 															count: status?.urls.length
@@ -685,7 +658,6 @@
 													? 'shimmer'
 													: ''} text-gray-500 dark:text-gray-500 text-base line-clamp-1 text-wrap"
 											>
-												
 												{#if status?.description.includes('{{searchQuery}}')}
 													{$i18n.t(status?.description, {
 														searchQuery: status?.query
@@ -793,8 +765,6 @@
 								{#if message.content === '' && !message.error && (message?.statusHistory ?? [...(message?.status ? [message?.status] : [])]).length === 0}
 									<Skeleton />
 								{:else if message.content && message.error !== true}
-									
-									
 									<ContentRenderer
 										id={message.id}
 										{history}
@@ -923,7 +893,6 @@
 											/>/{siblings.length}
 										</div>
 									{:else}
-										
 										<div
 											class="text-sm tracking-widest font-semibold self-center dark:text-gray-100 min-w-fit"
 											on:dblclick={async () => {

@@ -2,14 +2,13 @@
 	import DOMPurify from 'dompurify';
 	import type { Token } from 'marked';
 
-	import { WEBUI_BASE_URL } from '$lib/constants';
 	import Source from './Source.svelte';
-	import { settings } from '$lib/stores';
+
 	import FloatingDocPreview from '$lib/components/common/FloatingDocPreview.svelte';
 	import ArrowsPointingOut from '$lib/components/icons/ArrowsPointingOut.svelte';
-	import { getContext } from 'svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let id: string;
 	export let token: Token;
@@ -33,7 +32,6 @@
 		{@const video = html.match(/<video[^>]*>([\s\S]*?)<\/video>/)}
 		{@const videoSrc = video && video[1]}
 		{#if videoSrc}
-			
 			<video
 				class="w-full my-2"
 				src={videoSrc.replaceAll('&amp;', '&')}
@@ -191,9 +189,5 @@
 
 <!-- Global Floating Preview Modal -->
 {#if showFloatingPreview}
-	<FloatingDocPreview
-		bind:show={showFloatingPreview}
-		url={previewUrl}
-		title={previewTitle}
-	/>
+	<FloatingDocPreview bind:show={showFloatingPreview} url={previewUrl} title={previewTitle} />
 {/if}

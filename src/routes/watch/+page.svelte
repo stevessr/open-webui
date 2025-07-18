@@ -1,6 +1,4 @@
-<script>
-	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
+<script lang="ts">
 
 	onMount(() => {
 		// Get the current URL search parameters

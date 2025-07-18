@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
+
 	import dayjs from 'dayjs';
 
-	import { onMount, getContext, createEventDispatcher } from 'svelte';
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 	const dispatch = createEventDispatcher();
 
 	import Modal from '$lib/components/common/Modal.svelte';
@@ -12,6 +11,8 @@
 	import MicSolid from '$lib/components/icons/MicSolid.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import VoiceRecording from '$lib/components/chat/MessageInput/VoiceRecording.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
+
 	export let show = false;
 
 	let name = 'Untitled';

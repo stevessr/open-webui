@@ -1,12 +1,10 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
 
-	import { createEventDispatcher, onMount, getContext } from 'svelte';
-	import { config, models } from '$lib/stores';
 	import Tags from '$lib/components/common/Tags.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	const dispatch = createEventDispatcher();
 
@@ -116,8 +114,6 @@
 >
 	<div class="flex justify-between items-center">
 		<div class="text-sm font-medium">{$i18n.t('How would you rate this response?')}</div>
-
-		
 
 		<button
 			on:click={() => {

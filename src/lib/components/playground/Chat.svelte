@@ -1,20 +1,5 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
 
-	import { goto } from '$app/navigation';
-	import { onMount, tick, getContext } from 'svelte';
-
-	import {
-		OLLAMA_API_BASE_URL,
-		OPENAI_API_BASE_URL,
-		WEBUI_API_BASE_URL,
-		WEBUI_BASE_URL
-	} from '$lib/constants';
-	import { WEBUI_NAME, config, user, models, settings } from '$lib/stores';
-
-	import { chatCompletion, generateOpenAIChatCompletion } from '$lib/apis/openai';
-
-	import { splitStream } from '$lib/utils';
 	import Collapsible from '../common/Collapsible.svelte';
 
 	import Messages from '$lib/components/playground/Chat/Messages.svelte';
@@ -24,8 +9,9 @@
 	import Cog6 from '../icons/Cog6.svelte';
 	import Sidebar from '../common/Sidebar.svelte';
 	import ArrowRight from '../icons/ArrowRight.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let loaded = false;
 
@@ -209,7 +195,9 @@
 	});
 </script>
 
-<div class=" flex flex-col justify-between w-full overflow-y-auto h-full bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-cyan-50/30 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-cyan-950/20">
+<div
+	class=" flex flex-col justify-between w-full overflow-y-auto h-full bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-cyan-50/30 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-cyan-950/20"
+>
 	<div class="mx-auto w-full md:px-0 h-full relative">
 		<div class=" flex flex-col h-full px-3.5">
 			<div class="flex w-full items-start gap-1.5">
@@ -273,8 +261,6 @@
 			<div class="pb-3">
 				<div class="border border-gray-100 dark:border-gray-850 w-full px-3 py-2.5 rounded-xl">
 					<div class="py-0.5">
-						
-						
 						<textarea
 							bind:value={message}
 							class=" w-full h-full bg-transparent resize-none outline-hidden text-sm trans"

@@ -1,9 +1,4 @@
 <script lang="ts">
-	import { DropdownMenu } from 'bits-ui';
-
-	import { flyAndScale } from '$lib/utils/transitions';
-	import { WEBUI_BASE_URL } from '$lib/constants';
-	import { getUserActiveStatusById } from '$lib/apis/users';
 
 	export let side = 'right';
 	export let align = 'top';

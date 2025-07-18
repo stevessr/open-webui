@@ -1,44 +1,6 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { onMount, tick, getContext } from 'svelte';
-	import { openDB, deleteDB } from 'idb';
-	import fileSaver from 'file-saver';
-	const { saveAs } = fileSaver;
+
 	import mermaid from 'mermaid';
-
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import { fade } from 'svelte/transition';
-
-	import { getKnowledgeBases } from '$lib/apis/knowledge';
-	import { getFunctions } from '$lib/apis/functions';
-	import { getModels, getToolServersData, getVersionUpdates } from '$lib/apis';
-	import { getAllTags } from '$lib/apis/chats';
-	import { getPrompts } from '$lib/apis/prompts';
-	import { getTools } from '$lib/apis/tools';
-	import { getBanners } from '$lib/apis/configs';
-	import { getUserSettings } from '$lib/apis/users';
-
-	import { WEBUI_VERSION } from '$lib/constants';
-	import { compareVersion } from '$lib/utils';
-
-	import {
-		config,
-		user,
-		settings,
-		models,
-		prompts,
-		knowledge,
-		tools,
-		functions,
-		tags,
-		banners,
-		showSettings,
-		showChangelog,
-		temporaryChatEnabled,
-		toolServers,
-		showSearch
-	} from '$lib/stores';
 
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import SettingsModal from '$lib/components/chat/SettingsModal.svelte';
@@ -47,13 +9,32 @@
 	import UpdateInfoToast from '$lib/components/layout/UpdateInfoToast.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
-	const i18n = getContext('i18n');
+	interface ChatMessage {
+		id: string;
+		title: string;
+		messages: any[];
+		timestamp: number;
+		share?: boolean;
+	}
+
+	interface VersionInfo {
+		current: string;
+		latest: string;
+	}
+
+	interface I18nStore {
+		subscribe: (run: (value: any) => void) => () => void;
+		t: (key: string) => string;
+		changeLanguage: (lang: string) => void;
+	}
+
+	const i18n = getContext<I18nStore>('i18n');
 
 	let loaded = false;
-	let DB = null;
-	let localDBChats = [];
+	let DB: IDBPDatabase | null = null;
+	let localDBChats: ChatMessage[] = [];
 
-	let version;
+	let version: VersionInfo | null = null;
 
 	onMount(async () => {
 		if ($user === undefined || $user === null) {
@@ -106,13 +87,15 @@
 			models.set(
 				await getModels(
 					localStorage.token,
-					$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
+					$config?.features?.enable_direct_connections
+						? ($settings?.directConnections ?? null)
+						: null
 				)
 			);
 
 			banners.set(await getBanners(localStorage.token));
 			tools.set(await getTools(localStorage.token));
-			toolServers.set(await getToolServersData($i18n, $settings?.toolServers ?? []));
+			toolServers.set(await getToolServersData($i18n, ($settings?.toolServers as any) ?? []));
 
 			document.addEventListener('keydown', async function (event) {
 				const isCtrlPressed = event.ctrlKey || event.metaKey; // metaKey is for Cmd key on Mac
@@ -130,14 +113,18 @@
 				if (isCtrlPressed && isShiftPressed && event.key.toLowerCase() === 'o') {
 					event.preventDefault();
 					console.log('newChat');
-					document.getElementById('sidebar-new-chat-button')?.click();
+					const button = document.getElementById(
+						'sidebar-new-chat-button'
+					) as HTMLButtonElement | null;
+					button?.click();
 				}
 
 				// Check if Shift + Esc is pressed
 				if (isShiftPressed && event.key === 'Escape') {
 					event.preventDefault();
 					console.log('focusInput');
-					document.getElementById('chat-input')?.focus();
+					const input = document.getElementById('chat-input') as HTMLInputElement | null;
+					input?.focus();
 				}
 
 				// Check if Ctrl + Shift + S is pressed (Custom Styles)
@@ -151,7 +138,8 @@
 				if (isCtrlPressed && isShiftPressed && event.key === ';') {
 					event.preventDefault();
 					console.log('copyLastCodeBlock');
-					const button = [...document.getElementsByClassName('copy-code-button')]?.at(-1);
+					const buttons = document.getElementsByClassName('copy-code-button');
+					const button = buttons[buttons.length - 1] as HTMLButtonElement | undefined;
 					button?.click();
 				}
 
@@ -159,7 +147,8 @@
 				if (isCtrlPressed && isShiftPressed && event.key.toLowerCase() === 'c') {
 					event.preventDefault();
 					console.log('copyLastResponse');
-					const button = [...document.getElementsByClassName('copy-response-button')]?.at(-1);
+					const buttons = document.getElementsByClassName('copy-response-button');
+					const button = buttons[buttons.length - 1] as HTMLButtonElement | undefined;
 					console.log(button);
 					button?.click();
 				}
@@ -168,7 +157,10 @@
 				if (isCtrlPressed && isShiftPressed && event.key.toLowerCase() === 's') {
 					event.preventDefault();
 					console.log('toggleSidebar');
-					document.getElementById('sidebar-toggle-button')?.click();
+					const button = document.getElementById(
+						'sidebar-toggle-button'
+					) as HTMLButtonElement | null;
+					button?.click();
 				}
 
 				// Check if Ctrl + Shift + Backspace is pressed
@@ -179,7 +171,8 @@
 				) {
 					event.preventDefault();
 					console.log('deleteChat');
-					document.getElementById('delete-chat-button')?.click();
+					const button = document.getElementById('delete-chat-button') as HTMLButtonElement | null;
+					button?.click();
 				}
 
 				// Check if Ctrl + . is pressed
@@ -193,7 +186,10 @@
 				if (isCtrlPressed && event.key === '/') {
 					event.preventDefault();
 					console.log('showShortcuts');
-					document.getElementById('show-shortcuts-button')?.click();
+					const button = document.getElementById(
+						'show-shortcuts-button'
+					) as HTMLButtonElement | null;
+					button?.click();
 				}
 
 				// Check if Ctrl + Shift + ' is pressed
@@ -212,7 +208,9 @@
 					}
 
 					await goto('/');
-					const newChatButton = document.getElementById('new-chat-button');
+					const newChatButton = document.getElementById(
+						'new-chat-button'
+					) as HTMLButtonElement | null;
 					setTimeout(() => {
 						newChatButton?.click();
 					}, 0);
@@ -220,7 +218,7 @@
 			});
 
 			if ($user?.role === 'admin' && ($settings?.showChangelog ?? true)) {
-				showChangelog.set($settings?.version !== $config.version);
+				showChangelog.set($config?.version !== WEBUI_VERSION);
 			}
 
 			if ($user?.role === 'admin' || ($user?.permissions?.chat?.temporary ?? true)) {
@@ -240,7 +238,7 @@
 					const dismissedUpdateToast = new Date(Number(localStorage.dismissedUpdateToast));
 					const now = new Date();
 
-					if (now - dismissedUpdateToast > 24 * 60 * 60 * 1000) {
+					if (now.getTime() - dismissedUpdateToast.getTime() > 24 * 60 * 60 * 1000) {
 						checkForVersionUpdates();
 					}
 				} else {

@@ -1,21 +1,16 @@
 <script lang="ts">
-	import { marked } from 'marked';
 
-	import { getContext, tick } from 'svelte';
 	import dayjs from '$lib/dayjs';
 
-	import { mobile, settings, user } from '$lib/stores';
-	import { WEBUI_BASE_URL } from '$lib/constants';
-
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import { copyToClipboard, sanitizeResponseContent } from '$lib/utils';
+
 	import ArrowUpTray from '$lib/components/icons/ArrowUpTray.svelte';
 	import Check from '$lib/components/icons/Check.svelte';
 	import ModelItemMenu from './ModelItemMenu.svelte';
 	import EllipsisHorizontal from '$lib/components/icons/EllipsisHorizontal.svelte';
-	import { toast } from 'svelte-sonner';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let selectedModelIdx: number = -1;
 	export let item: any = {};
@@ -228,7 +223,7 @@
 					on:click={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
-											unloadModelHandler(item.model.ollama);
+						unloadModelHandler(item.model.ollama);
 					}}
 				>
 					<ArrowUpTray className="size-3" />

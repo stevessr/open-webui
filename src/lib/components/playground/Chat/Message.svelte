@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { onMount, getContext } from 'svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let message;
 	export let idx;
@@ -26,8 +26,6 @@
 	</div>
 
 	<div class="flex-1">
-		
-		
 		<textarea
 			id="{message.role}-{idx}-textarea"
 			bind:this={textAreaElement}

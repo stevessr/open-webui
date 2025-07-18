@@ -2,7 +2,6 @@
 	export let show = false;
 	export let selectedModelId = '';
 
-	import { marked } from 'marked';
 	// Configure marked with extensions
 	marked.use({
 		breaks: true,
@@ -30,31 +29,15 @@
 		}
 	});
 
-	import { toast } from 'svelte-sonner';
-
-	import { goto } from '$app/navigation';
-	import { onMount, tick, getContext } from 'svelte';
-
-	import {
-		OLLAMA_API_BASE_URL,
-		OPENAI_API_BASE_URL,
-		WEBUI_API_BASE_URL,
-		WEBUI_BASE_URL
-	} from '$lib/constants';
-	import { WEBUI_NAME, config, user, models, settings } from '$lib/stores';
-
-	import { chatCompletion, generateOpenAIChatCompletion } from '$lib/apis/openai';
-
-	import { splitStream } from '$lib/utils';
-
 	import Messages from '$lib/components/notes/NoteEditor/Chat/Messages.svelte';
 	import MessageInput from '$lib/components/channel/MessageInput.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Pencil from '$lib/components/icons/Pencil.svelte';
 	import PencilSquare from '$lib/components/icons/PencilSquare.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let editing = false;
 	export let streaming = false;

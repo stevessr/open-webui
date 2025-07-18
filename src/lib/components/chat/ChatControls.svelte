@@ -1,10 +1,4 @@
 <script lang="ts">
-	import { SvelteFlowProvider } from '@xyflow/svelte';
-	import { slide } from 'svelte/transition';
-	import { Pane, PaneResizer } from 'paneforge';
-
-	import { onDestroy, onMount, tick } from 'svelte';
-	import { mobile, showControls, showCallOverlay, showOverview, showArtifacts } from '$lib/stores';
 
 	import Modal from '../common/Modal.svelte';
 	import Controls from './Controls/Controls.svelte';
@@ -190,10 +184,10 @@
 			</Drawer>
 		{/if}
 	{:else}
-		
-
 		{#if $showControls}
-			<PaneResizer class="relative flex w-2 items-center justify-center bg-background group parameter-panel ease-in-out">
+			<PaneResizer
+				class="relative flex w-2 items-center justify-center bg-background group parameter-panel ease-in-out"
+			>
 				<div class="z-10 flex h-7 w-5 items-center justify-center rounded-xs ease-in-out">
 					<EllipsisVertical className="size-4 invisible group-hover:visible ease-in-out" />
 				</div>

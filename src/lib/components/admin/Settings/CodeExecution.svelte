@@ -1,15 +1,13 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { onMount, getContext } from 'svelte';
-	import { getCodeExecutionConfig, setCodeExecutionConfig } from '$lib/apis/configs';
 
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let saveHandler: Function;
 

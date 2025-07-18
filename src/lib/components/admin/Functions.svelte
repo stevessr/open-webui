@@ -1,27 +1,12 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
+
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
-
-	import { WEBUI_NAME, config, functions, models, settings } from '$lib/stores';
-	import { onMount, getContext, tick } from 'svelte';
-
-	import { goto } from '$app/navigation';
-	import {
-		createNewFunction,
-		deleteFunctionById,
-		exportFunctions,
-		getFunctionById,
-		getFunctions,
-		loadFunctionByUrl,
-		toggleFunctionById,
-		toggleGlobalById
-	} from '$lib/apis/functions';
 
 	import ArrowDownTray from '../icons/ArrowDownTray.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import ConfirmDialog from '../common/ConfirmDialog.svelte';
-	import { getModels } from '$lib/apis';
+
 	import FunctionMenu from './Functions/FunctionMenu.svelte';
 	import EllipsisHorizontal from '../icons/EllipsisHorizontal.svelte';
 	import Switch from '../common/Switch.svelte';
@@ -37,7 +22,7 @@
 	import AddFunctionMenu from './Functions/AddFunctionMenu.svelte';
 	import ImportModal from '../ImportModal.svelte';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let shiftKey = false;
 

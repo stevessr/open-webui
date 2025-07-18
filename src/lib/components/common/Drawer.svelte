@@ -1,8 +1,4 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
-	import { flyAndScale } from '$lib/utils/transitions';
-	import { fade, fly, slide } from 'svelte/transition';
-	import { isApp } from '$lib/stores';
 
 	export let show = false;
 	export let className = '';
@@ -51,9 +47,6 @@
 		}
 	});
 </script>
-
-
-
 
 <div
 	bind:this={modalElement}

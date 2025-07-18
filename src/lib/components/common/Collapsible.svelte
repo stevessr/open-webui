@@ -1,9 +1,6 @@
 <script lang="ts">
-	import { decode } from 'html-entities';
-	import { v4 as uuidv4 } from 'uuid';
 
-	import { getContext } from 'svelte';
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	import dayjs from '$lib/dayjs';
 	import duration from 'dayjs/plugin/duration';
@@ -29,15 +26,13 @@
 	// Assuming $i18n.languages is an array of language codes
 	$: loadLocale($i18n.languages);
 
-	import { slide } from 'svelte/transition';
-	import { quintOut } from 'svelte/easing';
-
 	import ChevronUp from '../icons/ChevronUp.svelte';
 	import ChevronDown from '../icons/ChevronDown.svelte';
 	import Spinner from './Spinner.svelte';
 	import CodeBlock from '../chat/Messages/CodeBlock.svelte';
 	import Markdown from '../chat/Messages/Markdown.svelte';
 	import Image from './Image.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let open = false;
 
@@ -88,8 +83,6 @@
 
 <div {id} class={className}>
 	{#if title !== null}
-		
-		
 		<div
 			class="{buttonClassName} cursor-pointer"
 			on:pointerup={() => {
@@ -163,8 +156,6 @@
 			</div>
 		</div>
 	{:else}
-		
-		
 		<div
 			class="{buttonClassName} cursor-pointer"
 			on:pointerup={() => {

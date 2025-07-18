@@ -1,18 +1,7 @@
 <script lang="ts">
-	import { prompts, settings, user } from '$lib/stores';
-	import {
-		extractCurlyBraceWords,
-		getUserPosition,
-		getFormattedDate,
-		getFormattedTime,
-		getCurrentDateTime,
-		getUserTimezone,
-		getWeekday
-	} from '$lib/utils';
-	import { tick, getContext, onMount, onDestroy } from 'svelte';
-	import { toast } from 'svelte-sonner';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let command = '';
 	export let onSelect = (e) => {};

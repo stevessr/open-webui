@@ -1,9 +1,4 @@
 <script>
-	import { knowledge, prompts } from '$lib/stores';
-
-	import { removeLastWordFromString } from '$lib/utils';
-	import { getPrompts } from '$lib/apis/prompts';
-	import { getKnowledgeBases } from '$lib/apis/knowledge';
 
 	import Prompts from './Commands/Prompts.svelte';
 	import Knowledge from './Commands/Knowledge.svelte';

@@ -1,22 +1,7 @@
 <script lang="ts">
-	import { v4 as uuidv4 } from 'uuid';
 
-	import { toast } from 'svelte-sonner';
-	import { config, models, settings } from '$lib/stores';
-	import { getContext, onMount, tick } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import type { i18n as i18nType } from 'i18next';
-	import {
-		getPipelineValves,
-		getPipelineValvesSpec,
-		updatePipelineValves,
-		getPipelines,
-		getModels,
-		getPipelinesList,
-		downloadPipeline,
-		deletePipeline,
-		uploadPipeline
-	} from '$lib/apis';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
@@ -497,7 +482,6 @@
 												</div>
 
 												{#if (valves[property] ?? null) !== null}
-													
 													<div class="flex mt-0.5 mb-1.5 space-x-2">
 														<div class=" flex-1">
 															{#if valves_spec.properties[property]?.enum ?? null}

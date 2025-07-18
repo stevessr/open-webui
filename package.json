@@ -24,7 +24,7 @@
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "3.2.2",
 		"@sveltejs/adapter-static": "^3.0.8",
-		"@sveltejs/kit": "^2.23.0",
+		"@sveltejs/kit": "^2.25.0",
 		"@sveltejs/vite-plugin-svelte": "^3.1.2",
 		"@tailwindcss/container-queries": "^0.1.1",
 		"@tailwindcss/postcss": "^4.1.11",
@@ -118,7 +118,7 @@
 		"leaflet": "^1.9.4",
 		"lowlight": "^3.3.0",
 		"marked": "^9.1.6",
-		"mermaid": "^11.8.1",
+		"mermaid": "^11.9.0",
 		"onnxruntime-web": "^1.22.0",
 		"paneforge": "^0.0.6",
 		"panzoom": "^9.4.3",

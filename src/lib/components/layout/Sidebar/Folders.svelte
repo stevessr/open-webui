@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
 
 	const dispatch = createEventDispatcher();
 	import RecursiveFolder from './RecursiveFolder.svelte';

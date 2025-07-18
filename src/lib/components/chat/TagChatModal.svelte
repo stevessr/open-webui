@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+
 	import Modal from '../common/Modal.svelte';
 
 	import Tags from '../common/Tags.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let tags;
 	export let deleteTag: Function;

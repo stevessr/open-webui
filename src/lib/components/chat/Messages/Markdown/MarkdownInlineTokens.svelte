@@ -1,19 +1,15 @@
 <script lang="ts">
 	import DOMPurify from 'dompurify';
-	import { toast } from 'svelte-sonner';
 
 	import type { Token } from 'marked';
-	import { getContext } from 'svelte';
 
-	const i18n = getContext('i18n');
-
-	import { WEBUI_BASE_URL } from '$lib/constants';
-	import { copyToClipboard, unescapeHtml } from '$lib/utils';
+	const i18n = getI18n();
 
 	import Image from '$lib/components/common/Image.svelte';
 	import KatexRenderer from './KatexRenderer.svelte';
 	import Source from './Source.svelte';
 	import HtmlToken from './HTMLToken.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let id: string;
 	export let tokens: Token[];
@@ -40,8 +36,6 @@
 	{:else if token.type === 'em'}
 		<em><svelte:self id={`${id}-em`} tokens={token.tokens} {onSourceClick} /></em>
 	{:else if token.type === 'codespan'}
-		
-		
 		<code
 			class="codespan cursor-pointer"
 			on:click={() => {

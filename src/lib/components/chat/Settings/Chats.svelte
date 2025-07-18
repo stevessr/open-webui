@@ -2,22 +2,9 @@
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
 
-	import { chats, user, settings, scrollPaginationEnabled, currentChatPage } from '$lib/stores';
-
-	import {
-		archiveAllChats,
-		deleteAllChats,
-		getAllChats,
-		getChatList,
-		importChat
-	} from '$lib/apis/chats';
-	import { getImportOrigin, convertOpenAIChats } from '$lib/utils';
-	import { onMount, getContext } from 'svelte';
-	import { goto } from '$app/navigation';
-	import { toast } from 'svelte-sonner';
 	import ArchivedChatsModal from '$lib/components/layout/ArchivedChatsModal.svelte';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let saveSettings: Function;
 
@@ -45,7 +32,8 @@
 				}
 			}
 			importChats(chats);
-		};
+	import { getI18n } from '$lib/i18n/helpers';
+			};
 
 		if (importFiles.length > 0) {
 			reader.readAsText(importFiles[0]);

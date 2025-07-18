@@ -1,28 +1,11 @@
 <script lang="ts">
-	import { marked } from 'marked';
 
-	import { toast } from 'svelte-sonner';
 	import Sortable from 'sortablejs';
 
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
 
-	import { onMount, getContext, tick } from 'svelte';
-	import { goto } from '$app/navigation';
-	const i18n = getContext('i18n');
-
-	import { WEBUI_NAME, config, mobile, models as _models, settings, user } from '$lib/stores';
-	import { WEBUI_BASE_URL } from '$lib/constants';
-	import {
-		createNewModel,
-		deleteModelById,
-		getModels as getWorkspaceModels,
-		toggleModelById,
-		updateModelById
-	} from '$lib/apis/models';
-
-	import { getModels } from '$lib/apis';
-	import { getGroups } from '$lib/apis/groups';
+	const i18n = getI18n();
 
 	import EllipsisHorizontal from '../icons/EllipsisHorizontal.svelte';
 	import ModelMenu from './Models/ModelMenu.svelte';
@@ -34,10 +17,11 @@
 	import ChevronRight from '../icons/ChevronRight.svelte';
 	import Switch from '../common/Switch.svelte';
 	import Spinner from '../common/Spinner.svelte';
-	import { capitalizeFirstLetter, copyToClipboard } from '$lib/utils';
+
 	import XMark from '../icons/XMark.svelte';
 	import EyeSlash from '../icons/EyeSlash.svelte';
 	import Eye from '../icons/Eye.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	let shiftKey = false;
 

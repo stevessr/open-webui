@@ -1,22 +1,29 @@
 <script lang="ts">
-	import { onMount, tick, getContext } from 'svelte';
 
 	import Textarea from '$lib/components/common/Textarea.svelte';
-	import { toast } from 'svelte-sonner';
+
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import AccessControl from '../common/AccessControl.svelte';
 	import LockClosed from '$lib/components/icons/LockClosed.svelte';
 	import AccessControlModal from '../common/AccessControlModal.svelte';
-	import { user } from '$lib/stores';
-	import { slugify } from '$lib/utils';
+
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
 	export let onSubmit: Function;
 	export let edit = false;
-	export let prompt = null;
+	export let prompt: {
+		title: string;
+		command: string;
+		content: string;
+		access_control?: any;
+	} | null = null;
 	export let clone = false;
 
-	const i18n = getContext('i18n');
+	interface I18n {
+		t: (key: string, options?: any) => string;
+	}
+
+	const i18n: I18n = getContext('i18n');
 
 	let loading = false;
 
@@ -51,14 +58,14 @@
 			});
 		} else {
 			toast.error(
-				$i18n.t('Only alphanumeric characters and hyphens are allowed in the command string.')
+				i18n.t('Only alphanumeric characters and hyphens are allowed in the command string.')
 			);
 		}
 
 		loading = false;
 	};
 
-	const validateCommandString = (inputString) => {
+	const validateCommandString = (inputString: string): boolean => {
 		// Regular expression to match only alphanumeric characters and hyphen
 		const regex = /^[a-zA-Z0-9-]+$/;
 
@@ -95,7 +102,7 @@
 	>
 		<div class="my-2">
 			<Tooltip
-				content={`${$i18n.t('Only alphanumeric characters and hyphens are allowed')} - ${$i18n.t(
+				content={`${i18n.t('Only alphanumeric characters and hyphens are allowed')} - ${i18n.t(
 					'Activate this command by typing "/{{COMMAND}}" to chat input.',
 					{
 						COMMAND: command
@@ -107,7 +114,7 @@
 					<div class="flex items-center">
 						<input
 							class="text-2xl font-semibold w-full bg-transparent outline-hidden"
-							placeholder={$i18n.t('Title')}
+							placeholder={i18n.t('Title')}
 							bind:value={title}
 							required
 						/>
@@ -123,7 +130,7 @@
 								<LockClosed strokeWidth="2.5" className="size-3.5" />
 
 								<div class="text-sm font-medium shrink-0">
-									{$i18n.t('Access')}
+									{i18n.t('Access')}
 								</div>
 							</button>
 						</div>
@@ -133,7 +140,7 @@
 						<div class="">/</div>
 						<input
 							class=" w-full bg-transparent outline-hidden"
-							placeholder={$i18n.t('Command')}
+							placeholder={i18n.t('Command')}
 							bind:value={command}
 							on:input={handleCommandInput}
 							required
@@ -146,14 +153,14 @@
 
 		<div class="my-2">
 			<div class="flex w-full justify-between">
-				<div class=" self-center text-sm font-semibold">{$i18n.t('Prompt Content')}</div>
+				<div class=" self-center text-sm font-semibold">{i18n.t('Prompt Content')}</div>
 			</div>
 
 			<div class="mt-2">
 				<div>
 					<Textarea
 						className="text-sm w-full bg-transparent outline-hidden overflow-y-hidden resize-none"
-						placeholder={$i18n.t('Write a summary in 50 words that summarizes [topic or keyword].')}
+						placeholder={i18n.t('Write a summary in 50 words that summarizes [topic or keyword].')}
 						bind:value={content}
 						rows={6}
 						required
@@ -161,21 +168,21 @@
 				</div>
 
 				<div class="text-xs text-gray-400 dark:text-gray-500">
-					ⓘ {$i18n.t('Format your variables using brackets like this:')}&nbsp;<span
+					ⓘ {i18n.t('Format your variables using brackets like this:')}&nbsp;<span
 						class=" text-gray-600 dark:text-gray-300 font-medium"
-						>{'{{'}{$i18n.t('variable')}{'}}'}</span
+						>{'{{'}{i18n.t('variable')}{'}}'}</span
 					>.
-					{$i18n.t('Make sure to enclose them with')}
+					{i18n.t('Make sure to enclose them with')}
 					<span class=" text-gray-600 dark:text-gray-300 font-medium">{'{{'}</span>
-					{$i18n.t('and')}
+					{i18n.t('and')}
 					<span class=" text-gray-600 dark:text-gray-300 font-medium">{'}}'}</span>.
 				</div>
 
 				<div class="text-xs text-gray-400 dark:text-gray-500">
-					{$i18n.t('Utilize')}<span class=" text-gray-600 dark:text-gray-300 font-medium">
+					{i18n.t('Utilize')}<span class=" text-gray-600 dark:text-gray-300 font-medium">
 						{` {{CLIPBOARD}}`}</span
 					>
-					{$i18n.t('variable to have them replaced with clipboard content.')}
+					{i18n.t('variable to have them replaced with clipboard content.')}
 				</div>
 			</div>
 		</div>
@@ -188,7 +195,7 @@
 				type="submit"
 				disabled={loading}
 			>
-				<div class=" self-center font-medium">{$i18n.t('Save & Create')}</div>
+				<div class=" self-center font-medium">{i18n.t('Save & Create')}</div>
 
 				{#if loading}
 					<div class="ml-1.5 self-center">

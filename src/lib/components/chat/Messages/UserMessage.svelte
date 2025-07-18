@@ -1,12 +1,5 @@
 <script lang="ts">
 	import dayjs from 'dayjs';
-	import { toast } from 'svelte-sonner';
-	import { tick, getContext, onMount } from 'svelte';
-
-	import { models, settings } from '$lib/stores';
-	import { user as _user } from '$lib/stores';
-	import { copyToClipboard as _copyToClipboard, formatDate } from '$lib/utils';
-	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import Name from './Name.svelte';
 	import ProfileImage from './ProfileImage.svelte';
@@ -17,8 +10,9 @@
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 	dayjs.extend(localizedFormat);
 
 	export let user;
@@ -379,7 +373,6 @@
 												/>/{siblings.length}
 											</div>
 										{:else}
-											
 											<div
 												class="text-sm tracking-widest font-semibold self-center dark:text-gray-100 min-w-fit"
 												on:dblclick={async () => {
@@ -551,7 +544,6 @@
 												/>/{siblings.length}
 											</div>
 										{:else}
-											
 											<div
 												class="text-sm tracking-widest font-semibold self-center dark:text-gray-100 min-w-fit"
 												on:dblclick={async () => {

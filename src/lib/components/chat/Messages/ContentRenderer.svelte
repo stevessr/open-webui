@@ -1,19 +1,11 @@
 <script>
-	import { onDestroy, onMount, tick, getContext } from 'svelte';
-	const i18n = getContext('i18n');
+
+	const i18n = getI18n();
 
 	import Markdown from './Markdown.svelte';
-	import {
-		artifactCode,
-		chatId,
-		mobile,
-		settings,
-		showArtifacts,
-		showControls,
-		showOverview
-	} from '$lib/stores';
+
 	import FloatingButtons from '../ContentRenderer/FloatingButtons.svelte';
-	import { createMessagesList } from '$lib/utils';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let id;
 	export let content;

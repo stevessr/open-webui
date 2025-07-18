@@ -1,15 +1,10 @@
 <script lang="ts">
 	import DOMPurify from 'dompurify';
-	import { onMount, getContext } from 'svelte';
-	const i18n = getContext('i18n');
+
+	const i18n = getI18n();
 
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
-
-	import { marked, type Token } from 'marked';
-	import { unescapeHtml } from '$lib/utils';
-
-	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import CodeBlock from '$lib/components/chat/Messages/CodeBlock.svelte';
 	import MarkdownInlineTokens from '$lib/components/chat/Messages/Markdown/MarkdownInlineTokens.svelte';
@@ -20,8 +15,9 @@
 	import ArrowDownTray from '$lib/components/icons/ArrowDownTray.svelte';
 
 	import Source from './Source.svelte';
-	import { settings } from '$lib/stores';
+
 	import HtmlToken from './HTMLToken.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let id: string;
 	export let tokens: Token[];
@@ -78,7 +74,6 @@
 		saveAs(blob, `table-${id}-${tokenIdx}.csv`);
 	};
 </script>
-
 
 {#each tokens as token, tokenIdx (tokenIdx)}
 	{#if token.type === 'hr'}

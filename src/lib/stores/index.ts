@@ -1,7 +1,7 @@
 import { APP_NAME } from '$lib/constants';
 import { type Writable, writable } from 'svelte/store';
 import type { ModelConfig } from '$lib/apis';
-import type { Banner } from '$lib/types';
+import type { Banner, Tag } from '$lib/types';
 import type { Socket } from 'socket.io-client';
 
 import emojiShortCodes from '$lib/emoji-shortcodes.json';
@@ -28,17 +28,20 @@ export const USAGE_POOL: Writable<null | string[]> = writable(null);
 export const theme = writable('system');
 
 export const shortCodesToEmojis = writable(
-	Object.entries(emojiShortCodes).reduce((acc: Record<string, string>, [key, value]) => {
-		if (typeof value === 'string') {
-			acc[value] = key;
-		} else {
-			for (const v of value) {
-				acc[v] = key;
+	Object.entries(emojiShortCodes).reduce(
+		(acc: Record<string, string>, [key, value]) => {
+			if (typeof value === 'string') {
+				acc[value] = key;
+			} else {
+				for (const v of value) {
+					acc[v] = key;
+				}
 			}
-		}
 
-		return acc;
-	}, {} as Record<string, string>)
+			return acc;
+		},
+		{} as Record<string, string>
+	)
 );
 
 export const TTSWorker = writable(null);
@@ -49,7 +52,7 @@ export const chatTitle = writable('');
 export const channels = writable([]);
 export const chats = writable(null);
 export const pinnedChats = writable([]);
-export const tags = writable([]);
+export const tags: Writable<Tag[]> = writable([]);
 
 export const selectedFolder = writable(null);
 
@@ -266,6 +269,7 @@ type Config = {
 		enable_version_update_check: boolean;
 		enable_ldap?: boolean;
 		enable_notes?: boolean;
+		enable_websocket?: boolean;
 	};
 	oauth: {
 		providers: {
@@ -275,6 +279,9 @@ type Config = {
 	ui?: {
 		pending_user_overlay_title?: string;
 		pending_user_overlay_description?: string;
+	};
+	file?: {
+		max_size?: number;
 	};
 };
 
@@ -290,4 +297,6 @@ type SessionUser = {
 	name: string;
 	role: string;
 	profile_image_url: string;
+	token?: string;
+	expires_at?: number;
 };

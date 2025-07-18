@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { DropdownMenu } from 'bits-ui';
-	import { flyAndScale } from '$lib/utils/transitions';
-	import { getContext, createEventDispatcher } from 'svelte';
 
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
@@ -21,17 +18,11 @@
 	import DocumentDuplicate from '$lib/components/icons/DocumentDuplicate.svelte';
 	import Bookmark from '$lib/components/icons/Bookmark.svelte';
 	import BookmarkSlash from '$lib/components/icons/BookmarkSlash.svelte';
-	import {
-		getChatById,
-		getChatPinnedStatusById,
-		toggleChatPinnedStatusById
-	} from '$lib/apis/chats';
-	import { chats, settings, theme, user } from '$lib/stores';
-	import { createMessagesList } from '$lib/utils';
-	import { downloadChatAsPDF } from '$lib/apis/utils';
-	import Download from '$lib/components/icons/Download.svelte';
 
-	const i18n = getContext('i18n');
+	import Download from '$lib/components/icons/Download.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
+
+	const i18n = getI18n();
 
 	export let shareHandler: Function;
 	export let cloneChatHandler: Function;

@@ -1,13 +1,8 @@
 <script lang="ts">
 	import Fuse from 'fuse.js';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-	import { tick, getContext } from 'svelte';
-
-	import { models } from '$lib/stores';
-	import { WEBUI_BASE_URL } from '$lib/constants';
-
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let command = '';
 	export let onSelect = (e) => {};

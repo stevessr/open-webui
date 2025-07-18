@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { DropdownMenu } from 'bits-ui';
-	import { marked } from 'marked';
+
 	import Fuse from 'fuse.js';
 
 	import dayjs from '$lib/dayjs';
@@ -8,24 +7,6 @@
 	dayjs.extend(relativeTime);
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
-	import { flyAndScale } from '$lib/utils/transitions';
-	import { createEventDispatcher, onMount, getContext, tick } from 'svelte';
-	import { goto } from '$app/navigation';
-
-	import { deleteModel, getOllamaVersion, pullModel, unloadModel } from '$lib/apis/ollama';
-
-	import {
-		user,
-		MODEL_DOWNLOAD_POOL,
-		models,
-		mobile,
-		temporaryChatEnabled,
-		settings,
-		config
-	} from '$lib/stores';
-	import { toast } from 'svelte-sonner';
-	import { capitalizeFirstLetter, sanitizeResponseContent, splitStream } from '$lib/utils';
-	import { getModels } from '$lib/apis';
 
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
 	import Check from '$lib/components/icons/Check.svelte';
@@ -35,8 +16,9 @@
 	import ChatBubbleOval from '$lib/components/icons/ChatBubbleOval.svelte';
 
 	import ModelItem from './ModelItem.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 	const dispatch = createEventDispatcher();
 
 	export let id = '';

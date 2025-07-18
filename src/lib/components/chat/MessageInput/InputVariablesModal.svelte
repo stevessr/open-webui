@@ -1,16 +1,12 @@
 <script lang="ts">
-	import { getContext, onMount, tick } from 'svelte';
-	import { models, config } from '$lib/stores';
-
-	import { toast } from 'svelte-sonner';
-	import { copyToClipboard } from '$lib/utils';
 
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import MapSelector from '$lib/components/common/Valves/MapSelector.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let show = false;
 	export let variables = {};

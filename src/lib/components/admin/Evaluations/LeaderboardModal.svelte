@@ -1,12 +1,13 @@
 <script lang="ts">
 	import Modal from '$lib/components/common/Modal.svelte';
-	import { getContext } from 'svelte';
+
 	export let show = false;
 	export let model = null;
 	export let feedbacks = [];
 	export let onClose: () => void = () => {};
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	const close = () => {
 		show = false;

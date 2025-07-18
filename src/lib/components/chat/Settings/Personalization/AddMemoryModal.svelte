@@ -1,16 +1,15 @@
 <script>
-	import { createEventDispatcher, getContext } from 'svelte';
 
 	import Modal from '$lib/components/common/Modal.svelte';
-	import { addNewMemory, updateMemoryById } from '$lib/apis/memories';
-	import { toast } from 'svelte-sonner';
+
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	const dispatch = createEventDispatcher();
 
 	export let show;
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let loading = false;
 	let content = '';

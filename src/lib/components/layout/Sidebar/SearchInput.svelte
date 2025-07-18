@@ -1,13 +1,11 @@
 <script lang="ts">
-	import { getAllTags } from '$lib/apis/chats';
-	import { tags } from '$lib/stores';
-	import { getContext, createEventDispatcher, onMount, onDestroy, tick } from 'svelte';
-	import { fade } from 'svelte/transition';
+
 	import Search from '$lib/components/icons/Search.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	const dispatch = createEventDispatcher();
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let placeholder = '';
 	export let value = '';
@@ -156,7 +154,6 @@
 	</div>
 
 	{#if focused && (filteredOptions.length > 0 || filteredTags.length > 0)}
-		
 		<div
 			class="absolute top-0 mt-8 left-0 right-1 border border-gray-100 dark:border-gray-900 bg-gray-50 dark:bg-gray-950 rounded-lg z-10 shadow-lg"
 			id="search-options-container"

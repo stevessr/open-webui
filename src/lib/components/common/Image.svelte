@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { WEBUI_BASE_URL } from '$lib/constants';
 
-	import { settings } from '$lib/stores';
 	import ImagePreview from './ImagePreview.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
-	import { getContext, onMount } from 'svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let src = '';
 	export let alt = '';
@@ -17,7 +15,7 @@
 	export let dismissible = false;
 	export let onDismiss = () => {};
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let _src = '';
 	$: _src = src.startsWith('/') ? `${WEBUI_BASE_URL}${src}` : src;
@@ -72,20 +70,18 @@
 		type="button"
 	>
 		{#if actualSrc}
-			<img
-				src={actualSrc}
-				{alt}
-				class={imageClassName}
-				draggable="false"
-				data-cy="image"
-			/>
+			<img src={actualSrc} {alt} class={imageClassName} draggable="false" data-cy="image" />
 		{:else}
 			<!-- Placeholder while lazy loading -->
 			<div
 				class="{imageClassName} bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center min-h-[100px]"
 			>
 				<svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-					<path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+					<path
+						fill-rule="evenodd"
+						d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+						clip-rule="evenodd"
+					/>
 				</svg>
 			</div>
 		{/if}

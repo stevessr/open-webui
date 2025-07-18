@@ -1,14 +1,11 @@
 <script lang="ts">
-	import { config, models, settings, user } from '$lib/stores';
-	import { createEventDispatcher, onMount, getContext } from 'svelte';
-	import { toast } from 'svelte-sonner';
+
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import { updateUserInfo } from '$lib/apis/users';
-	import { getUserPosition } from '$lib/utils';
-	import { generateThemeFromBackground, applyMaterialTheme, removeMaterialTheme } from '$lib/utils/materialThemeGenerator';
+	import { getI18n } from '$lib/i18n/helpers';
+
 	const dispatch = createEventDispatcher();
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let saveSettings: Function;
 
@@ -450,7 +447,9 @@
 			if (
 				inputFiles &&
 				inputFiles.length > 0 &&
-				['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'video/mp4'].includes(inputFiles[0]['type'])
+				['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'video/mp4'].includes(
+					inputFiles[0]['type']
+				)
 			) {
 				reader.readAsDataURL(inputFiles[0]);
 			} else {

@@ -1,21 +1,6 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { marked } from 'marked';
-
-	import { onMount, getContext, tick, createEventDispatcher } from 'svelte';
-	import { blur, fade } from 'svelte/transition';
 
 	const dispatch = createEventDispatcher();
-
-	import {
-		config,
-		user,
-		models as _models,
-		temporaryChatEnabled,
-		selectedFolder
-	} from '$lib/stores';
-	import { sanitizeResponseContent, extractCurlyBraceWords } from '$lib/utils';
-	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import Suggestions from './Suggestions.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
@@ -24,8 +9,9 @@
 	import FolderOpen from '../icons/FolderOpen.svelte';
 	import XMark from '../icons/XMark.svelte';
 	import Folder from '../icons/Folder.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let transparentBackground = false;
 
@@ -130,19 +116,19 @@
 											selectedModelIdx = modelIdx;
 										}}
 									>
-									{#if model?.info?.meta?.profile_image_url?.toLowerCase().endsWith('.mp4')}
-										<video
-											src={model.info.meta.profile_image_url}
-											class=" size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
-											autoplay
-											muted
-											loop
-											playsinline
-											draggable="false"
-										>
-											<track kind="captions" />
-										</video>
-									{:else}
+										{#if model?.info?.meta?.profile_image_url?.toLowerCase().endsWith('.mp4')}
+											<video
+												src={model.info.meta.profile_image_url}
+												class=" size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
+												autoplay
+												muted
+												loop
+												playsinline
+												draggable="false"
+											>
+												<track kind="captions" />
+											</video>
+										{:else}
 											<img
 												crossorigin="anonymous"
 												src={model?.info?.meta?.profile_image_url ??
@@ -153,7 +139,7 @@
 												aria-hidden="true"
 												draggable="false"
 											/>
-									{/if}
+										{/if}
 									</button>
 								</Tooltip>
 							{/each}

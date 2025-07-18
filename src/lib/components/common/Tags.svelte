@@ -1,12 +1,14 @@
 <script lang="ts">
 	import TagInput from './Tags/TagInput.svelte';
 	import TagList from './Tags/TagList.svelte';
-	import { getContext, createEventDispatcher } from 'svelte';
+
+	import type { Tag } from '$lib/types';
+	import { getI18n } from '$lib/i18n/helpers';
+
 	const dispatch = createEventDispatcher();
+	const i18n = getI18n();
 
-	const i18n = getContext('i18n');
-
-	export let tags = [];
+	export let tags: Tag[] = [];
 </script>
 
 <ul class="flex flex-row flex-wrap gap-1 line-clamp-1">

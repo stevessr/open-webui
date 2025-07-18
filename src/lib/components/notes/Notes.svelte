@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
+
 	import fileSaver from 'file-saver';
 	import Fuse from 'fuse.js';
 
@@ -29,13 +29,6 @@
 	// Assuming $i18n.languages is an array of language codes
 	$: loadLocale($i18n.languages);
 
-	import { goto } from '$app/navigation';
-	import { onMount, getContext, onDestroy } from 'svelte';
-	import { WEBUI_NAME, config, prompts as _prompts, user } from '$lib/stores';
-
-	import { createNewNote, deleteNoteById, getNotes } from '$lib/apis/notes';
-	import { capitalizeFirstLetter, copyToClipboard, getTimeRange } from '$lib/utils';
-
 	import EllipsisHorizontal from '../icons/EllipsisHorizontal.svelte';
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 	import Search from '../icons/Search.svelte';
@@ -45,10 +38,11 @@
 	import Tooltip from '../common/Tooltip.svelte';
 	import NoteMenu from './Notes/NoteMenu.svelte';
 	import FilesOverlay from '../chat/MessageInput/FilesOverlay.svelte';
-	import { marked } from 'marked';
-	import XMark from '../icons/XMark.svelte';
 
-	const i18n = getContext('i18n');
+	import XMark from '../icons/XMark.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
+
+	const i18n = getI18n();
 	let loaded = false;
 
 	let importFiles = '';

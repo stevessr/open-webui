@@ -1,15 +1,11 @@
 <script lang="ts">
-	import { DropdownMenu } from 'bits-ui';
-	import { createEventDispatcher, getContext, onMount } from 'svelte';
-
-	import { showSettings, mobile, showSidebar, user } from '$lib/stores';
-	import { flyAndScale } from '$lib/utils/transitions';
 
 	import PencilSquare from '../icons/PencilSquare.svelte';
 	import ChatBubbleOval from '../icons/ChatBubbleOval.svelte';
 	import Sparkles from '../icons/Sparkles.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let show = false;
 	export let className = 'max-w-[170px]';

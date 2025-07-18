@@ -5,8 +5,9 @@
 	import EllipsisVertical from '$lib/components/icons/EllipsisVertical.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import Sortable from 'sortablejs';
-	import { getContext } from 'svelte';
-	const i18n = getContext('i18n');
+	import { getI18n } from '$lib/i18n/helpers';
+
+	const i18n = getI18n();
 
 	export let banners = [];
 

@@ -1,29 +1,11 @@
 <script>
-	import { getContext, createEventDispatcher, onMount, onDestroy, tick } from 'svelte';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 	const dispatch = createEventDispatcher();
 
 	import DOMPurify from 'dompurify';
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
-
-	import { toast } from 'svelte-sonner';
-
-	import { chatId, selectedFolder } from '$lib/stores';
-
-	import {
-		deleteFolderById,
-		updateFolderIsExpandedById,
-		updateFolderById,
-		updateFolderParentIdById
-	} from '$lib/apis/folders';
-	import {
-		getChatById,
-		getChatsByFolderId,
-		importChat,
-		updateChatFolderIdById
-	} from '$lib/apis/chats';
 
 	import ChevronDown from '../../icons/ChevronDown.svelte';
 	import ChevronRight from '../../icons/ChevronRight.svelte';
@@ -37,7 +19,7 @@
 	import FolderMenu from './Folders/FolderMenu.svelte';
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 	import EditFolderModal from './Folders/EditFolderModal.svelte';
-	import { goto } from '$app/navigation';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let open = false;
 
@@ -186,8 +168,7 @@
 	};
 
 	const dragImage = new Image();
-	dragImage.src =
-		'/user.gif';
+	dragImage.src = '/user.gif';
 
 	let x;
 	let y;
@@ -414,7 +395,6 @@
 			dispatch('open', state);
 		}}
 	>
-		
 		<div class="w-full group">
 			<button
 				id="folder-{folderId}-button"

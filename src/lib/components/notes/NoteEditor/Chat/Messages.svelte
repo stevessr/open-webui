@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { onMount, getContext } from 'svelte';
-	import Message from './Message.svelte';
 
-	const i18n = getContext('i18n');
+	import Message from './Message.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
+
+	const i18n = getI18n();
 
 	export let messages = [];
 	export let onInsert = (content: string) => {};

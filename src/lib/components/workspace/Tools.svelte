@@ -1,22 +1,8 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
+
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
 
-	import { onMount, getContext } from 'svelte';
-	import { WEBUI_NAME, config, prompts, tools as _tools, user } from '$lib/stores';
-	import { createNewPrompt, deletePromptByCommand, getPrompts } from '$lib/apis/prompts';
-
-	import { goto } from '$app/navigation';
-	import {
-		createNewTool,
-		loadToolByUrl,
-		deleteToolById,
-		exportTools,
-		getToolById,
-		getToolList,
-		getTools
-	} from '$lib/apis/tools';
 	import ArrowDownTray from '../icons/ArrowDownTray.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import ConfirmDialog from '../common/ConfirmDialog.svelte';
@@ -31,12 +17,12 @@
 	import Plus from '../icons/Plus.svelte';
 	import ChevronRight from '../icons/ChevronRight.svelte';
 	import Spinner from '../common/Spinner.svelte';
-	import { capitalizeFirstLetter } from '$lib/utils';
+
 	import XMark from '../icons/XMark.svelte';
 	import AddToolMenu from './Tools/AddToolMenu.svelte';
 	import ImportModal from '../ImportModal.svelte';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let shiftKey = false;
 	let loaded = false;

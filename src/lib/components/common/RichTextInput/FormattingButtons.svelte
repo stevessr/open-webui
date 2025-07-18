@@ -1,6 +1,6 @@
 <script>
-	import { getContext } from 'svelte';
-	const i18n = getContext('i18n');
+
+	const i18n = getI18n();
 
 	export let editor = null;
 
@@ -17,6 +17,8 @@
 
 	import Tooltip from '../Tooltip.svelte';
 	import CheckBox from '$lib/components/icons/CheckBox.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
+
 </script>
 
 <div

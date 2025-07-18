@@ -1,17 +1,11 @@
 <script lang="ts">
-	import { onMount, getContext } from 'svelte';
-	import { Confetti } from 'svelte-confetti';
-
-	import { WEBUI_NAME, config, settings } from '$lib/stores';
-
-	import { WEBUI_VERSION } from '$lib/constants';
-	import { getChangelog } from '$lib/apis';
 
 	import Modal from './common/Modal.svelte';
-	import { updateUserSettings } from '$lib/apis/users';
-	import XMark from '$lib/components/icons/XMark.svelte';
 
-	const i18n = getContext('i18n');
+	import XMark from '$lib/components/icons/XMark.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
+
+	const i18n = getI18n();
 
 	export let show = false;
 

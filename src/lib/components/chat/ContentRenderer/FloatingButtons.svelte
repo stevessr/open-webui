@@ -1,18 +1,14 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
 
 	import DOMPurify from 'dompurify';
-	import { marked } from 'marked';
 
-	import { getContext, tick } from 'svelte';
-	const i18n = getContext('i18n');
-
-	import { chatCompletion } from '$lib/apis/openai';
+	const i18n = getI18n();
 
 	import ChatBubble from '$lib/components/icons/ChatBubble.svelte';
 	import LightBulb from '$lib/components/icons/LightBulb.svelte';
 	import Markdown from '../Messages/Markdown.svelte';
 	import Skeleton from '../Messages/Skeleton.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let id = '';
 	export let model = null;

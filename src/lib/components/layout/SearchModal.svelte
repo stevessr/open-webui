@@ -1,16 +1,17 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { getContext, onMount } from 'svelte';
-	const i18n = getContext('i18n');
+
+	const i18n = getI18n();
 
 	import Modal from '$lib/components/common/Modal.svelte';
 	import SearchInput from './Sidebar/SearchInput.svelte';
-	import { getChatList, getChatListBySearchText } from '$lib/apis/chats';
+
 	import Spinner from '../common/Spinner.svelte';
 
 	import dayjs from '$lib/dayjs';
 	import calendar from 'dayjs/plugin/calendar';
 	import Loader from '../common/Loader.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
+
 	dayjs.extend(calendar);
 
 	export let show = false;
@@ -113,8 +114,6 @@
 				}}
 			/>
 		</div>
-
-		
 
 		<div class="flex flex-col overflow-y-auto h-80 scrollbar-hidden px-3 pb-1">
 			{#if chatList}

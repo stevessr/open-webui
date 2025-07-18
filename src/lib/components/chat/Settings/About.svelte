@@ -1,15 +1,10 @@
 <script lang="ts">
-	import { getVersionUpdates } from '$lib/apis';
-	import { getOllamaVersion } from '$lib/apis/ollama';
-	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
-	import { WEBUI_NAME, config, showChangelog } from '$lib/stores';
-	import { compareVersion } from '$lib/utils';
-	import { onMount, getContext } from 'svelte';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import FloatingDocPreview from '$lib/components/common/FloatingDocPreview.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let ollamaVersion = '';
 	let showReleasesPreview = false;

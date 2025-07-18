@@ -1,13 +1,14 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-	import { getContext } from 'svelte';
-	const i18n = getContext('i18n');
+
+	import type { Tag } from '$lib/types';
 	import Tooltip from '../Tooltip.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
-	import Badge from '../Badge.svelte';
-	const dispatch = createEventDispatcher();
+	import { getI18n } from '$lib/i18n/helpers';
 
-	export let tags = [];
+	const dispatch = createEventDispatcher();
+	const i18n = getI18n();
+
+	export let tags: Tag[] = [];
 </script>
 
 {#each tags as tag}

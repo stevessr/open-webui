@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
 
 	export let x;
 	export let y;
@@ -16,9 +15,6 @@
 		document.body.style.overflow = 'unset';
 	});
 </script>
-
-
-
 
 <div
 	bind:this={popupElement}

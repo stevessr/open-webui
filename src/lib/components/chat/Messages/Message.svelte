@@ -1,16 +1,12 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
 
-	import { tick, getContext, onMount, createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
-	const i18n = getContext('i18n');
-
-	import { settings } from '$lib/stores';
-	import { copyToClipboard } from '$lib/utils';
+	const i18n = getI18n();
 
 	import MultiResponseMessages from './MultiResponseMessages.svelte';
 	import ResponseMessage from './ResponseMessage.svelte';
 	import UserMessage from './UserMessage.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let chatId;
 	export let selectedModels = [];

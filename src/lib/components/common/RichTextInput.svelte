@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { marked } from 'marked';
+
 	marked.use({
 		breaks: true,
 		gfm: true,
@@ -27,7 +27,7 @@
 	});
 
 	import TurndownService from 'turndown';
-	import { gfm } from 'turndown-plugin-gfm';
+
 	const turndownService = new TurndownService({
 		codeBlockStyle: 'fenced',
 		headingStyle: 'atx'
@@ -48,30 +48,12 @@
 		}
 	});
 
-	import { onMount, onDestroy, tick, getContext } from 'svelte';
-	import { createEventDispatcher } from 'svelte';
-
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 	const eventDispatch = createEventDispatcher();
-
-	import { Fragment, DOMParser } from 'prosemirror-model';
-	import { EditorState, Plugin, PluginKey, TextSelection, Selection } from 'prosemirror-state';
-	import { Editor, Extension } from '@tiptap/core';
 
 	// Yjs imports
 	import * as Y from 'yjs';
-	import {
-		ySyncPlugin,
-		yCursorPlugin,
-		yUndoPlugin,
-		undo,
-		redo,
-		prosemirrorJSONToYDoc,
-		yDocToProsemirrorJSON
-	} from 'y-prosemirror';
-	import { keymap } from 'prosemirror-keymap';
 
-	import { AIAutocompletion } from './RichTextInput/AutoCompletion.js';
 	import Table from '@tiptap/extension-table';
 	import TableRow from '@tiptap/extension-table-row';
 	import TableHeader from '@tiptap/extension-table-header';
@@ -93,11 +75,8 @@
 	import BubbleMenu from '@tiptap/extension-bubble-menu';
 	import FloatingMenu from '@tiptap/extension-floating-menu';
 
-	import { all, createLowlight } from 'lowlight';
-
-	import { PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
-
 	import FormattingButtons from './RichTextInput/FormattingButtons.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let oncompositionstart = (e) => {};
 	export let oncompositionend = (e) => {};

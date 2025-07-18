@@ -1,11 +1,5 @@
 <script>
-	import { getContext, tick, onMount } from 'svelte';
-	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
-	import { toast } from 'svelte-sonner';
 
-	import { config } from '$lib/stores';
-	import { getBackendConfig } from '$lib/apis';
 	import Database from './Settings/Database.svelte';
 
 	import General from './Settings/General.svelte';
@@ -23,8 +17,9 @@
 	import Evaluations from './Settings/Evaluations.svelte';
 	import CodeExecution from './Settings/CodeExecution.svelte';
 	import Tools from './Settings/Tools.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let selectedTab = 'general';
 

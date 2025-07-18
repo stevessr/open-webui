@@ -1,8 +1,9 @@
 <script>
-	import { getContext, onMount } from 'svelte';
-	const i18n = getContext('i18n');
+
+	const i18n = getI18n();
 
 	import ManageOllama from './ManageOllama.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let ollamaConfig = null;
 

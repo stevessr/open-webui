@@ -1,12 +1,9 @@
 <script lang="ts">
-	import { onMount, getContext } from 'svelte';
-	import { goto } from '$app/navigation';
 
-	import { WEBUI_NAME, showSidebar, user, settings } from '$lib/stores';
 	import MenuLines from '$lib/components/icons/MenuLines.svelte';
-	import { page } from '$app/stores';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let loaded = false;
 

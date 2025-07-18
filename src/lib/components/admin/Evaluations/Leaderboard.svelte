@@ -1,11 +1,7 @@
 <script lang="ts">
 	import * as ort from 'onnxruntime-web';
-	import { env, AutoModel, AutoTokenizer } from '@huggingface/transformers';
 
 	env.backends.onnx.wasm.wasmPaths = '/wasm/';
-
-	import { onMount, getContext } from 'svelte';
-	import { models } from '$lib/stores';
 
 	import ModelModal from './LeaderboardModal.svelte';
 
@@ -15,9 +11,9 @@
 
 	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
-	import { WEBUI_BASE_URL } from '$lib/constants';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	const EMBEDDING_MODEL = 'TaylorAI/bge-micro-v2';
 
@@ -298,7 +294,7 @@
 		}, 1500); // Debounce for 1.5 seconds
 	};
 
-	$: query, debouncedQueryHandler();
+	$: (query, debouncedQueryHandler());
 
 	onMount(async () => {
 		rankHandler();

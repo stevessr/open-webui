@@ -1,5 +1,4 @@
 <script lang="ts" context="module">
-	import { marked, type Token } from 'marked';
 
 	type AlertType = 'NOTE' | 'TIP' | 'IMPORTANT' | 'WARNING' | 'CAUTION';
 

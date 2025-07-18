@@ -1,11 +1,11 @@
 <script lang="ts">
 	import Modal from '$lib/components/common/Modal.svelte';
-	import { getContext } from 'svelte';
-	const i18n = getContext('i18n');
+
+	const i18n = getI18n();
 	import XMark from '$lib/components/icons/XMark.svelte';
-	import { getFeedbackById } from '$lib/apis/evaluations';
-	import { toast } from 'svelte-sonner';
+
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let show = false;
 	export let selectedFeedback = null;

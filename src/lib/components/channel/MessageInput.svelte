@@ -1,36 +1,20 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { v4 as uuidv4 } from 'uuid';
+
 	import heic2any from 'heic2any';
 
-	import { tick, getContext, onMount, onDestroy } from 'svelte';
-
-	const i18n = getContext('i18n');
-
-	import { config, mobile, settings, socket, user } from '$lib/stores';
-	import {
-		blobToFile,
-		compressImage,
-		extractInputVariables,
-		getCurrentDateTime,
-		getFormattedDate,
-		getFormattedTime,
-		getUserPosition,
-		getUserTimezone,
-		getWeekday
-	} from '$lib/utils';
+	const i18n = getI18n();
 
 	import Tooltip from '../common/Tooltip.svelte';
 	import RichTextInput from '../common/RichTextInput.svelte';
 	import VoiceRecording from '../chat/MessageInput/VoiceRecording.svelte';
 	import InputMenu from './MessageInput/InputMenu.svelte';
-	import { uploadFile } from '$lib/apis/files';
-	import { WEBUI_API_BASE_URL } from '$lib/constants';
+
 	import FileItem from '../common/FileItem.svelte';
 	import Image from '../common/Image.svelte';
 	import FilesOverlay from '../chat/MessageInput/FilesOverlay.svelte';
 	import Commands from '../chat/MessageInput/Commands.svelte';
 	import InputVariablesModal from '../chat/MessageInput/InputVariablesModal.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let placeholder = $i18n.t('Send a Message');
 	export let transparentBackground = false;

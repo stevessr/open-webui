@@ -1,18 +1,10 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
 
-	import { goto } from '$app/navigation';
-	import { onMount, tick, getContext } from 'svelte';
-
-	import { WEBUI_BASE_URL } from '$lib/constants';
-	import { WEBUI_NAME, config, user, models, settings, showSidebar } from '$lib/stores';
-	import { chatCompletion } from '$lib/apis/openai';
-
-	import { splitStream } from '$lib/utils';
 	import Selector from '$lib/components/chat/ModelSelector/Selector.svelte';
 	import MenuLines from '../icons/MenuLines.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let loaded = false;
 	let text = '';
@@ -120,7 +112,9 @@
 	});
 </script>
 
-<div class=" flex flex-col justify-between w-full overflow-y-auto h-full bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-cyan-50/30 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-cyan-950/20">
+<div
+	class=" flex flex-col justify-between w-full overflow-y-auto h-full bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-cyan-50/30 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-cyan-950/20"
+>
 	<div class="mx-auto w-full md:px-0 h-full">
 		<div class=" flex flex-col h-full px-4">
 			<div class="flex flex-col justify-between mb-1 gap-1">

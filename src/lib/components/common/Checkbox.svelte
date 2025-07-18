@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+
 	const dispatch = createEventDispatcher();
 
 	export let state = 'unchecked';
@@ -72,6 +72,4 @@
 			</svg>
 		{/if}
 	</div>
-
-	
 </button>

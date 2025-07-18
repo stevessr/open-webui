@@ -31,7 +31,7 @@ export default defineConfig({
 	},
 	server: {
 		watch: {
-			ignored: ['**/node_modules/**', '**/.venv/**','**/backend/**']
+			ignored: ['**/node_modules/**', '**/.venv/**', '**/backend/**']
 		}
 	}
 });

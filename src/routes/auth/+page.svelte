@@ -1,25 +1,10 @@
-<script>
+<script lang="ts">
 	import DOMPurify from 'dompurify';
-	import { marked } from 'marked';
-
-	import { toast } from 'svelte-sonner';
-
-	import { onMount, getContext, tick } from 'svelte';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-
-	import { getBackendConfig } from '$lib/apis';
-	import { ldapUserSignIn, getSessionUser, userSignIn, userSignUp } from '$lib/apis/auths';
-
-	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
-	import { WEBUI_NAME, config, user, socket } from '$lib/stores';
-
-	import { generateInitialsImage, canvasPixelTest } from '$lib/utils';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import OnBoarding from '$lib/components/OnBoarding.svelte';
 
-	const i18n = getContext('i18n');
+	import i18n from '$lib/i18n';
 
 	let loaded = false;
 

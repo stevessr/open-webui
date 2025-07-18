@@ -1,8 +1,6 @@
 <script>
-	import { getContext, onMount, tick } from 'svelte';
-	import { goto } from '$app/navigation';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	import CodeEditor from '$lib/components/common/CodeEditor.svelte';
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
@@ -50,7 +48,6 @@ version: 0.1
 
 from pydantic import BaseModel, Field
 from typing import Optional
-
 
 class Filter:
     class Valves(BaseModel):
@@ -116,7 +113,6 @@ from open_webui.utils.misc import get_last_user_message
 import os
 import requests
 
-
 # Filter Class: This class is designed to serve as a pre-processor and post-processor
 # for request and response modifications. It checks and transforms requests and responses
 # to ensure they meet specific criteria before further processing or returning to the user.
@@ -170,8 +166,6 @@ class Filter:
         ]
 
         return {"messages": messages}
-
-
 
 # Pipe Class: This class functions as a customizable pipeline.
 # It can be adapted to work with any external or internal models,
@@ -254,6 +248,7 @@ class Pipe:
         except Exception as e:
             return f"Error: {e}"
 `;
+	import { getI18n } from '$lib/i18n/helpers';
 
 	const saveHandler = async () => {
 		loading = true;

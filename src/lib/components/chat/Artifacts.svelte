@@ -1,11 +1,7 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { onMount, getContext, createEventDispatcher } from 'svelte';
-	const i18n = getContext('i18n');
-	const dispatch = createEventDispatcher();
 
-	import { artifactCode, chatId, settings, showArtifacts, showControls } from '$lib/stores';
-	import { copyToClipboard, createMessagesList } from '$lib/utils';
+	const i18n = getI18n();
+	const dispatch = createEventDispatcher();
 
 	import XMark from '../icons/XMark.svelte';
 	import ArrowsPointingOut from '../icons/ArrowsPointingOut.svelte';
@@ -13,6 +9,7 @@
 	import SvgPanZoom from '../common/SVGPanZoom.svelte';
 	import ArrowLeft from '../icons/ArrowLeft.svelte';
 	import ArrowDownTray from '../icons/ArrowDownTray.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let overlay = false;
 	export let history;

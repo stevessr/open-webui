@@ -1,33 +1,8 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { goto, invalidate, invalidateAll } from '$app/navigation';
-	import { onMount, getContext, createEventDispatcher, tick, onDestroy } from 'svelte';
-	const i18n = getContext('i18n');
+
+	const i18n = getI18n();
 
 	const dispatch = createEventDispatcher();
-
-	import {
-		archiveChatById,
-		cloneChatById,
-		deleteChatById,
-		getAllTags,
-		getChatById,
-		getChatList,
-		getChatListByTagName,
-		getPinnedChatList,
-		updateChatById
-	} from '$lib/apis/chats';
-	import {
-		chatId,
-		chatTitle as _chatTitle,
-		chats,
-		mobile,
-		pinnedChats,
-		showSidebar,
-		currentChatPage,
-		tags,
-		selectedFolder
-	} from '$lib/stores';
 
 	import ChatMenu from './ChatMenu.svelte';
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
@@ -40,7 +15,7 @@
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import Document from '$lib/components/icons/Document.svelte';
 	import Sparkles from '$lib/components/icons/Sparkles.svelte';
-	import { generateTitle } from '$lib/apis';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let className = '';
 
@@ -145,8 +120,7 @@
 	let y = 0;
 
 	const dragImage = new Image();
-	dragImage.src =
-		'/user.gif';
+	dragImage.src = '/user.gif';
 
 	const onDragStart = (event) => {
 		event.stopPropagation();
@@ -391,7 +365,6 @@
 		</a>
 	{/if}
 
-	
 	<div
 		class="
         {id === $chatId || confirmEdit
@@ -505,7 +478,6 @@
 				</ChatMenu>
 
 				{#if id === $chatId}
-					
 					<button
 						id="delete-chat-button"
 						class="hidden"

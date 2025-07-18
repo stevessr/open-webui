@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
-	const i18n = getContext('i18n');
+
+	const i18n = getI18n();
 
 	import XMark from '$lib/components/icons/XMark.svelte';
-	import { models } from '$lib/stores';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let show = false;
 	export let selectedModelId = '';

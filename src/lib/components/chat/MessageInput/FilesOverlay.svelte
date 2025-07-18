@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { showSidebar } from '$lib/stores';
+
 	import AddFilesPlaceholder from '$lib/components/AddFilesPlaceholder.svelte';
 
 	export let show = false;

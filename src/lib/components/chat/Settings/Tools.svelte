@@ -1,12 +1,7 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { createEventDispatcher, onMount, getContext, tick } from 'svelte';
-	import { getModels as _getModels, getToolServersData } from '$lib/apis';
 
 	const dispatch = createEventDispatcher();
-	const i18n = getContext('i18n');
-
-	import { models, settings, toolServers, user } from '$lib/stores';
+	const i18n = getI18n();
 
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
@@ -15,6 +10,7 @@
 	import Connection from './Tools/Connection.svelte';
 
 	import AddServerModal from '$lib/components/AddServerModal.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let saveSettings: Function;
 

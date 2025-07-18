@@ -1,27 +1,23 @@
-<script>
-	import { goto } from '$app/navigation';
-	import { createNewTool, getTools } from '$lib/apis/tools';
-	import ToolkitEditor from '$lib/components/workspace/Tools/ToolkitEditor.svelte';
-	import { WEBUI_VERSION } from '$lib/constants';
-	import { tools } from '$lib/stores';
-	import { compareVersion, extractFrontmatter } from '$lib/utils';
-	import { onMount, getContext } from 'svelte';
-	import { toast } from 'svelte-sonner';
+<script lang="ts">
 
-	const i18n = getContext('i18n');
+	import type { Tool } from '$lib/apis/tools'; // Added this line
+	import ToolkitEditor from '$lib/components/workspace/Tools/ToolkitEditor.svelte';
+
+	const i18n = getContext<any>('i18n');
 
 	let mounted = false;
 	let clone = false;
-	let tool = null;
+	let tool: Tool | null = null; // Modified this line
 
-	const saveHandler = async (data) => {
+	const saveHandler = async (data: Tool) => {
+		// Modified this line
 		console.log(data);
 
 		const manifest = extractFrontmatter(data.content);
 		if (compareVersion(manifest?.required_open_webui_version ?? '0.0.0', WEBUI_VERSION)) {
 			console.log('Version is lower than required');
 			toast.error(
-				$i18n.t(
+				i18n.t(
 					'Open WebUI version (v{{OPEN_WEBUI_VERSION}}) is lower than required version (v{{REQUIRED_VERSION}})',
 					{
 						OPEN_WEBUI_VERSION: WEBUI_VERSION,
@@ -44,7 +40,7 @@
 		});
 
 		if (res) {
-			toast.success($i18n.t('Tool created successfully'));
+			toast.success(i18n.t('Tool created successfully'));
 			tools.set(await getTools(localStorage.token));
 
 			await goto('/workspace/tools');
@@ -87,7 +83,7 @@
 			name={tool?.name ?? ''}
 			meta={tool?.meta ?? { description: '' }}
 			content={tool?.content ?? ''}
-			access_control={null}
+			accessControl={tool?.access_control}
 			{clone}
 			onSave={(value) => {
 				saveHandler(value);

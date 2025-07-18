@@ -37,7 +37,7 @@ export function generateMaterialPalette(dominantColors: RGB[]): ColorPalette {
 	const isLightTheme = isLightColor(primaryColor.r, primaryColor.g, primaryColor.b);
 
 	// Generate background and surface colors
-	const background = isLightTheme 
+	const background = isLightTheme
 		? { r: 250, g: 250, b: 250 } // Light background
 		: { r: 18, g: 18, b: 18 }; // Dark background
 
@@ -74,7 +74,12 @@ export function generateMaterialPalette(dominantColors: RGB[]): ColorPalette {
 /**
  * Generate a color variant by adjusting HSL values
  */
-function generateColorVariant(hsl: HSL, hueShift: number, satShift: number, lightShift: number): RGB {
+function generateColorVariant(
+	hsl: HSL,
+	hueShift: number,
+	satShift: number,
+	lightShift: number
+): RGB {
 	const newHsl: HSL = {
 		h: (hsl.h + hueShift + 360) % 360,
 		s: Math.max(0, Math.min(100, hsl.s + satShift)),
@@ -153,7 +158,7 @@ export function applyMaterialTheme(palette: ColorPalette, isDark = false): void 
 	// Map to existing Tailwind color variables for compatibility
 	root.style.setProperty('--color-primary', palette.primary);
 	root.style.setProperty('--color-secondary', palette.secondary);
-	
+
 	// Update button colors
 	root.style.setProperty('--color-button-primary', palette.primary);
 	root.style.setProperty('--color-button-primary-hover', palette.primaryVariant);
@@ -166,7 +171,7 @@ export function applyMaterialTheme(palette: ColorPalette, isDark = false): void 
 
 	// Add Material Design theme class
 	root.classList.add('md-theme');
-	
+
 	// Store the palette for future reference
 	(window as any).currentMaterialPalette = palette;
 }
@@ -176,19 +181,34 @@ export function applyMaterialTheme(palette: ColorPalette, isDark = false): void 
  */
 export function removeMaterialTheme(): void {
 	const root = document.documentElement;
-	
+
 	// Remove Material Design CSS variables
 	const mdProperties = [
-		'--md-primary', '--md-primary-variant', '--md-secondary', '--md-secondary-variant',
-		'--md-background', '--md-surface', '--md-error', '--md-on-primary', '--md-on-secondary',
-		'--md-on-background', '--md-on-surface', '--md-on-error', '--color-primary', '--color-secondary',
-		'--color-button-primary', '--color-button-primary-hover', '--color-button-secondary',
-		'--color-button-secondary-hover', '--color-text-primary', '--color-text-secondary'
+		'--md-primary',
+		'--md-primary-variant',
+		'--md-secondary',
+		'--md-secondary-variant',
+		'--md-background',
+		'--md-surface',
+		'--md-error',
+		'--md-on-primary',
+		'--md-on-secondary',
+		'--md-on-background',
+		'--md-on-surface',
+		'--md-on-error',
+		'--color-primary',
+		'--color-secondary',
+		'--color-button-primary',
+		'--color-button-primary-hover',
+		'--color-button-secondary',
+		'--color-button-secondary-hover',
+		'--color-text-primary',
+		'--color-text-secondary'
 	];
 
-	mdProperties.forEach(prop => root.style.removeProperty(prop));
+	mdProperties.forEach((prop) => root.style.removeProperty(prop));
 	root.classList.remove('md-theme');
-	
+
 	delete (window as any).currentMaterialPalette;
 }
 
@@ -198,7 +218,7 @@ export function removeMaterialTheme(): void {
 export async function generateThemeFromBackground(backgroundUrl: string): Promise<ColorPalette> {
 	try {
 		let dominantColors: RGB[];
-		
+
 		if (backgroundUrl.endsWith('.mp4')) {
 			// Handle video
 			const { extractVideoColors } = await import('./colorAnalysis');

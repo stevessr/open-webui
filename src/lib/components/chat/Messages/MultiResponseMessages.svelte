@@ -1,13 +1,5 @@
 <script lang="ts">
 	import dayjs from 'dayjs';
-	import { onMount, tick, getContext } from 'svelte';
-	import { createEventDispatcher } from 'svelte';
-
-	import { mobile, settings } from '$lib/stores';
-
-	import { generateMoACompletion } from '$lib/apis';
-	import { updateChatById } from '$lib/apis/chats';
-	import { createOpenAITextStream } from '$lib/apis/streaming';
 
 	import ResponseMessage from './ResponseMessage.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
@@ -17,7 +9,9 @@
 	import Name from './Name.svelte';
 	import Skeleton from './Skeleton.svelte';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
-	const i18n = getContext('i18n');
+	import { getI18n } from '$lib/i18n/helpers';
+
+	const i18n = getI18n();
 	dayjs.extend(localizedFormat);
 
 	export let chatId;
@@ -218,8 +212,6 @@
 		>
 			{#each Object.keys(groupedMessageIds) as modelIdx}
 				{#if groupedMessageIdsIdx[modelIdx] !== undefined && groupedMessageIds[modelIdx].messageIds.length > 0}
-					
-					
 					{@const _messageId =
 						groupedMessageIds[modelIdx].messageIds[groupedMessageIdsIdx[modelIdx]]}
 

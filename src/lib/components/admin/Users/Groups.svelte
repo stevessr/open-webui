@@ -1,14 +1,8 @@
 <script>
-	import { toast } from 'svelte-sonner';
+
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	dayjs.extend(relativeTime);
-
-	import { onMount, getContext } from 'svelte';
-	import { goto } from '$app/navigation';
-
-	import { WEBUI_NAME, config, user, showSidebar, knowledge } from '$lib/stores';
-	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Plus from '$lib/components/icons/Plus.svelte';
@@ -23,14 +17,9 @@
 	import Pencil from '$lib/components/icons/Pencil.svelte';
 	import GroupItem from './Groups/GroupItem.svelte';
 	import AddGroupModal from './Groups/AddGroupModal.svelte';
-	import { createNewGroup, getGroups } from '$lib/apis/groups';
-	import {
-		getUserDefaultPermissions,
-		getAllUsers,
-		updateUserDefaultPermissions
-	} from '$lib/apis/users';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let loaded = false;
 

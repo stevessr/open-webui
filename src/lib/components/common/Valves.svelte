@@ -1,11 +1,11 @@
 <script>
-	import { onMount, getContext, createEventDispatcher } from 'svelte';
+
 	const dispatch = createEventDispatcher();
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	import Switch from './Switch.svelte';
 	import MapSelector from './Valves/MapSelector.svelte';
-	import { split } from 'postcss/lib/list';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let valvesSpec = null;
 	export let valves = {};
@@ -50,7 +50,6 @@
 			</div>
 
 			{#if (valves[property] ?? null) !== null}
-				
 				<div class="flex mt-0.5 mb-1.5 space-x-2">
 					<div class=" flex-1">
 						{#if valvesSpec.properties[property]?.enum ?? null}

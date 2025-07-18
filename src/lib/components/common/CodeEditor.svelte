@@ -1,32 +1,15 @@
 <script lang="ts">
-	import { basicSetup, EditorView } from 'codemirror';
-	import { keymap, placeholder } from '@codemirror/view';
-	import { Compartment, EditorState } from '@codemirror/state';
-
-	import { acceptCompletion } from '@codemirror/autocomplete';
-	import { indentWithTab } from '@codemirror/commands';
-
-	import { indentUnit, LanguageDescription } from '@codemirror/language';
-	import { languages } from '@codemirror/language-data';
-
-	import { oneDark } from '@codemirror/theme-one-dark';
-
-	import { onMount, createEventDispatcher, getContext, tick, onDestroy } from 'svelte';
 
 	import PyodideWorker from '$lib/workers/pyodide.worker?worker';
 
-	import { formatPythonCode } from '$lib/apis/utils';
-	import { toast } from 'svelte-sonner';
-	import { user } from '$lib/stores';
-
 	const dispatch = createEventDispatcher();
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let boilerplate = '';
 	export let value = '';
 
 	export let onSave = () => {};
-	export let onChange = () => {};
+	export let onChange: (value: string) => void = () => {};
 
 	let _value = '';
 
@@ -131,8 +114,9 @@
 import black
 print(black.format_str("""${code.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/"/g, '\\"')}""", mode=black.Mode()))
 `;
+	import { getI18n } from '$lib/i18n/helpers';
 
-			const packages = ['black'];
+				const packages = ['black'];
 
 			function handleMessage(event) {
 				const { id: eventId, stdout, stderr } = event.data;

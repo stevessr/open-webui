@@ -4,52 +4,10 @@
 	pdfjs.GlobalWorkerOptions.workerSrc = import.meta.url + 'pdfjs-dist/build/pdf.worker.mjs';
 
 	import DOMPurify from 'dompurify';
-	import { marked } from 'marked';
+
 	import heic2any from 'heic2any';
 
-	import { toast } from 'svelte-sonner';
-
-	import { v4 as uuidv4 } from 'uuid';
-	import { createPicker, getAuthToken } from '$lib/utils/google-drive-picker';
-	import { pickAndDownloadFile } from '$lib/utils/onedrive-file-picker';
-
-	import { onMount, tick, getContext, createEventDispatcher, onDestroy } from 'svelte';
 	const dispatch = createEventDispatcher();
-
-	import {
-		type Model,
-		mobile,
-		settings,
-		showSidebar,
-		models,
-		config,
-		showCallOverlay,
-		tools,
-		user as _user,
-		showControls,
-		TTSWorker,
-		temporaryChatEnabled
-	} from '$lib/stores';
-
-	import {
-		blobToFile,
-		compressImage,
-		createMessagesList,
-		extractContentFromFile,
-		extractCurlyBraceWords,
-		extractInputVariables,
-		getCurrentDateTime,
-		getFormattedDate,
-		getFormattedTime,
-		getUserPosition,
-		getUserTimezone,
-		getWeekday
-	} from '$lib/utils';
-	import { uploadFile } from '$lib/apis/files';
-	import { generateAutoCompletion } from '$lib/apis';
-	import { deleteFileById } from '$lib/apis/files';
-
-	import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
 
 	import InputMenu from './MessageInput/InputMenu.svelte';
 	import VoiceRecording from './MessageInput/VoiceRecording.svelte';
@@ -70,9 +28,10 @@
 	import CommandLine from '../icons/CommandLine.svelte';
 	import Sparkles from '../icons/Sparkles.svelte';
 
-	import { KokoroWorker } from '$lib/workers/KokoroWorker';
 	import InputVariablesModal from './MessageInput/InputVariablesModal.svelte';
-	const i18n = getContext('i18n');
+	import { getI18n } from '$lib/i18n/helpers';
+
+	const i18n = getI18n();
 
 	export let transparentBackground = false;
 

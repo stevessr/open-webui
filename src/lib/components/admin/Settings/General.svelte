@@ -1,27 +1,15 @@
 <script lang="ts">
 	import DOMPurify from 'dompurify';
 
-	import { getVersionUpdates, getWebhookUrl, updateWebhookUrl } from '$lib/apis';
-	import {
-		getAdminConfig,
-		getLdapConfig,
-		getLdapServer,
-		updateAdminConfig,
-		updateLdapConfig,
-		updateLdapServer
-	} from '$lib/apis/auths';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import FloatingDocPreview from '$lib/components/common/FloatingDocPreview.svelte';
-	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
-	import { config, showChangelog } from '$lib/stores';
-	import { compareVersion } from '$lib/utils';
-	import { onMount, getContext } from 'svelte';
-	import { toast } from 'svelte-sonner';
-	import Textarea from '$lib/components/common/Textarea.svelte';
 
-	const i18n = getContext('i18n');
+	import Textarea from '$lib/components/common/Textarea.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
+
+	const i18n = getI18n();
 
 	export let saveHandler: Function;
 

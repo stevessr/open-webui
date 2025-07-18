@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { DropdownMenu } from 'bits-ui';
-	import { getContext } from 'svelte';
 
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
@@ -9,30 +6,15 @@
 	import jsPDF from 'jspdf';
 	import html2canvas from 'html2canvas-pro';
 
-	import { downloadChatAsPDF } from '$lib/apis/utils';
-	import { copyToClipboard, createMessagesList } from '$lib/utils';
-
-	import {
-		showOverview,
-		showControls,
-		showArtifacts,
-		mobile,
-		temporaryChatEnabled,
-		theme,
-		user,
-		settings
-	} from '$lib/stores';
-	import { flyAndScale } from '$lib/utils/transitions';
-
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import Tags from '$lib/components/chat/Tags.svelte';
 	import Map from '$lib/components/icons/Map.svelte';
 	import Clipboard from '$lib/components/icons/Clipboard.svelte';
 	import AdjustmentsHorizontal from '$lib/components/icons/AdjustmentsHorizontal.svelte';
 	import Cube from '$lib/components/icons/Cube.svelte';
-	import { getChatById } from '$lib/apis/chats';
+	import { getI18n } from '$lib/i18n/helpers';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let shareEnabled: boolean = false;
 	export let shareHandler: Function;

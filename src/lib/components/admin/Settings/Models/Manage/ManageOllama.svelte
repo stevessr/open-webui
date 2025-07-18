@@ -1,28 +1,12 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { getContext, onMount } from 'svelte';
-	const i18n = getContext('i18n');
 
-	import { WEBUI_NAME, models, MODEL_DOWNLOAD_POOL, user, config, settings } from '$lib/stores';
-	import { splitStream } from '$lib/utils';
-
-	import {
-		createModel,
-		deleteModel,
-		downloadModel,
-		getOllamaUrls,
-		getOllamaVersion,
-		pullModel,
-		uploadModel,
-		getOllamaConfig,
-		getOllamaModels
-	} from '$lib/apis/ollama';
-	import { getModels } from '$lib/apis';
+	const i18n = getI18n();
 
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import ModelDeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	let modelUploadInputElement: HTMLInputElement;
 	let showModelDeleteConfirm = false;

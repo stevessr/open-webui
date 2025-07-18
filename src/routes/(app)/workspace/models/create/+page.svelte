@@ -1,20 +1,13 @@
-<script>
-	import { v4 as uuidv4 } from 'uuid';
-	import { toast } from 'svelte-sonner';
-	import { goto } from '$app/navigation';
-	import { config, models, settings } from '$lib/stores';
-	import { WEBUI_BASE_URL } from '$lib/constants';
-	import type { Model, Prompt } from '$lib/stores';
+<script lang="ts">
 
-	import { onMount, tick, getContext } from 'svelte';
-	import { createNewModel, getModelById } from '$lib/apis/models';
-	import { getModels } from '$lib/apis';
+	import type { Prompt } from '$lib/stores';
+	import type { ModelConfig } from '$lib/apis';
 
 	import ModelEditor from '$lib/components/workspace/Models/ModelEditor.svelte';
 
-	const i18n = getContext('i18n');
+	const i18n = getContext<any>('i18n');
 
-	const onSubmit = async (modelInfo: Model) => {
+	const onSubmit = async (modelInfo: ModelConfig) => {
 		if ($models.find((m) => m.id === modelInfo.id)) {
 			toast.error(
 				`Error: A model with the ID '${modelInfo.id}' already exists. Please select a different ID to proceed.`
@@ -48,16 +41,17 @@
 				await models.set(
 					await getModels(
 						localStorage.token,
-						($config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)) as object | null | undefined
+						($config?.features?.enable_direct_connections &&
+							($settings?.directConnections ?? null)) as object | null | undefined
 					)
 				);
-				toast.success($i18n.t('Model created successfully!'));
+				toast.success(i18n.t('Model created successfully!'));
 				await goto('/workspace/models');
 			}
 		}
 	};
 
-	let model: Model | null = null;
+	let model: ModelConfig | null = null;
 
 	onMount(async () => {
 		window.addEventListener('message', async (event: MessageEvent) => {

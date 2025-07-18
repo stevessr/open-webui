@@ -1,14 +1,10 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { onMount, getContext, tick, onDestroy } from 'svelte';
-	const i18n = getContext('i18n');
 
-	import { page } from '$app/stores';
-	import { mobile, showSidebar, user } from '$lib/stores';
-	import { updateChannelById } from '$lib/apis/channels';
+	const i18n = getI18n();
 
 	import Cog6 from '$lib/components/icons/Cog6.svelte';
 	import ChannelModal from './ChannelModal.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	export let onUpdate: Function = () => {};
 

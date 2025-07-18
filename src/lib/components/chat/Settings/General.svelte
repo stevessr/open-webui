@@ -1,8 +1,4 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { createEventDispatcher, onMount, getContext } from 'svelte';
-	import { slide, fade } from 'svelte/transition';
-	import { quintOut } from 'svelte/easing';
 
 	// Custom transition that combines slide and fade
 	function slideAndFade(node, params = {}) {
@@ -18,16 +14,15 @@
 			}
 		};
 	}
-	import { getLanguages, changeLanguage } from '$lib/i18n';
+
 	const dispatch = createEventDispatcher();
 
-	import { models, settings, theme, user } from '$lib/stores';
-	import { generateThemeFromBackground, applyMaterialTheme, removeMaterialTheme } from '$lib/utils/materialThemeGenerator';
-
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	import AdvancedParams from './Advanced/AdvancedParams.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
+
 	export let saveSettings: Function;
 	export let getModels: Function;
 
@@ -366,10 +361,7 @@
 				</div>
 
 				{#if showAdvanced}
-					<div
-						in:slideAndFade={{ delay: 100 }}
-						out:slideAndFade
-					>
+					<div in:slideAndFade={{ delay: 100 }} out:slideAndFade>
 						<AdvancedParams admin={$user?.role === 'admin'} bind:params />
 					</div>
 				{/if}

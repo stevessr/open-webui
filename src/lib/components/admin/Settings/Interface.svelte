@@ -2,29 +2,18 @@
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
 
-	import { v4 as uuidv4 } from 'uuid';
-	import { toast } from 'svelte-sonner';
-
-	import { getBackendConfig, getModels, getTaskConfig, updateTaskConfig } from '$lib/apis';
-	import { setDefaultPromptSuggestions } from '$lib/apis/configs';
-	import { config, settings, user } from '$lib/stores';
-	import { createEventDispatcher, onMount, getContext } from 'svelte';
-
-	import { banners as _banners } from '$lib/stores';
 	import type { Banner } from '$lib/types';
-
-	import { getBaseModels } from '$lib/apis/models';
-	import { getBanners, setBanners } from '$lib/apis/configs';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Banners from './Interface/Banners.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	const dispatch = createEventDispatcher();
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	let taskConfig = {
 		TASK_MODEL: '',
@@ -47,16 +36,12 @@
 	let promptSuggestions = [];
 	let banners: Banner[] = [];
 
-
-
 	const updateInterfaceHandler = async () => {
 		taskConfig = await updateTaskConfig(localStorage.token, taskConfig);
 
 		promptSuggestions = promptSuggestions.filter((p) => p.content !== '');
 		promptSuggestions = await setDefaultPromptSuggestions(localStorage.token, promptSuggestions);
 		await updateBanners();
-
-
 
 		await config.set(await getBackendConfig());
 	};
@@ -67,8 +52,6 @@
 
 		promptSuggestions = $config?.default_prompt_suggestions ?? [];
 		banners = await getBanners(localStorage.token);
-
-
 	});
 
 	const updateBanners = async () => {
@@ -434,8 +417,6 @@
 
 					<Banners bind:banners />
 				</div>
-
-
 
 				{#if $user?.role === 'admin'}
 					<div class=" space-y-3">

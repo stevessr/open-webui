@@ -1,15 +1,9 @@
 <script lang="ts">
 	import fileSaver from 'file-saver';
+	import { getI18n } from '$lib/i18n/helpers';
 	const { saveAs } = fileSaver;
 
-	import { downloadDatabase, downloadLiteLLMConfig } from '$lib/apis/utils';
-	import { onMount, getContext } from 'svelte';
-	import { config, user } from '$lib/stores';
-	import { toast } from 'svelte-sonner';
-	import { getAllUserChats } from '$lib/apis/chats';
-	import { exportConfig, importConfig } from '$lib/apis/configs';
-
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	export let saveHandler: Function;
 
@@ -123,8 +117,6 @@
 
 			{#if $config?.features.enable_admin_export ?? true}
 				<div class="  flex w-full justify-between">
-					
-
 					<button
 						class=" flex rounded-md py-1.5 px-3 w-full hover:bg-gray-200 dark:hover:bg-gray-800 transition"
 						type="button"

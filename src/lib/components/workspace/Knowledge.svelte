@@ -5,18 +5,7 @@
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	dayjs.extend(relativeTime);
 
-	import { toast } from 'svelte-sonner';
-	import { onMount, getContext } from 'svelte';
-	const i18n = getContext('i18n');
-
-	import { WEBUI_NAME, knowledge } from '$lib/stores';
-	import {
-		getKnowledgeBases,
-		deleteKnowledgeById,
-		getKnowledgeBaseList
-	} from '$lib/apis/knowledge';
-
-	import { goto } from '$app/navigation';
+	const i18n = getI18n();
 
 	import DeleteConfirmDialog from '../common/ConfirmDialog.svelte';
 	import ItemMenu from './Knowledge/ItemMenu.svelte';
@@ -24,9 +13,10 @@
 	import Search from '../icons/Search.svelte';
 	import Plus from '../icons/Plus.svelte';
 	import Spinner from '../common/Spinner.svelte';
-	import { capitalizeFirstLetter } from '$lib/utils';
+
 	import Tooltip from '../common/Tooltip.svelte';
 	import XMark from '../icons/XMark.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
 
 	let loaded = false;
 

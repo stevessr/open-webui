@@ -1,24 +1,13 @@
 <script lang="ts">
-	import { onMount, tick, getContext } from 'svelte';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
 
 	import dayjs from 'dayjs';
-
-	import { settings, chatId, WEBUI_NAME, models, config } from '$lib/stores';
-	import { convertMessagesToHistory, createMessagesList } from '$lib/utils';
-
-	import { getChatByShareId, cloneSharedChatById } from '$lib/apis/chats';
 
 	import Messages from '$lib/components/chat/Messages.svelte';
 	import Navbar from '$lib/components/layout/Navbar.svelte';
 
-	import { getUserById, getUserSettings } from '$lib/apis/users';
-	import { getModels } from '$lib/apis';
-	import { toast } from 'svelte-sonner';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
 
-	const i18n = getContext('i18n');
+	const i18n = getContext<any>('i18n');
 	dayjs.extend(localizedFormat);
 
 	let loaded = false;

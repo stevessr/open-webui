@@ -1,16 +1,16 @@
 <script>
-	import { showSidebar, user, settings } from '$lib/stores';
-	import { getContext } from 'svelte';
 
-	const i18n = getContext('i18n');
+	const i18n = getI18n();
 
 	import MenuLines from '$lib/components/icons/MenuLines.svelte';
 	import UserMenu from '$lib/components/layout/Sidebar/UserMenu.svelte';
 	import Notes from '$lib/components/notes/Notes.svelte';
+	import { getI18n } from '$lib/i18n/helpers';
+
 </script>
 
 <div
-	class=" flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out  max-w-full relative"
+	class=" flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out max-w-full relative"
 >
 	<!-- Custom Background Support -->
 	{#if $settings?.backgroundImageUrl ?? null}
