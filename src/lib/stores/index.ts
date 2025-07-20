@@ -1,7 +1,7 @@
 import { APP_NAME } from '$lib/constants';
 import { type Writable, writable } from 'svelte/store';
 import type { ModelConfig } from '$lib/apis';
-import type { Banner } from '$lib/types';
+import type { Banner, ToolServer } from '$lib/types';
 import type { Socket } from 'socket.io-client';
 
 import emojiShortCodes from '$lib/emoji-shortcodes.json';
@@ -28,7 +28,7 @@ export const USAGE_POOL: Writable<null | string[]> = writable(null);
 export const theme = writable('system');
 
 export const shortCodesToEmojis = writable(
-	Object.entries(emojiShortCodes).reduce((acc, [key, value]) => {
+	Object.entries(emojiShortCodes).reduce((acc: { [key: string]: string }, [key, value]) => {
 		if (typeof value === 'string') {
 			acc[value] = key;
 		} else {
@@ -47,7 +47,7 @@ export const chatId = writable('');
 export const chatTitle = writable('');
 
 export const channels = writable([]);
-export const chats = writable(null);
+export const chats: Writable<Chat[] | null> = writable(null);
 export const pinnedChats = writable([]);
 export const tags = writable([]);
 
@@ -60,7 +60,7 @@ export const knowledge: Writable<null | Document[]> = writable(null);
 export const tools = writable(null);
 export const functions = writable(null);
 
-export const toolServers = writable([]);
+export const toolServers: Writable<ToolServer[]> = writable([]);
 
 export const banners: Writable<Banner[]> = writable([]);
 
@@ -137,9 +137,20 @@ type OllamaModelDetails = {
 	quantization_level: string;
 };
 
+export type Chat = {
+	id: string;
+	title: string;
+	chat: any;
+	timestamp?: number;
+	models?: string[];
+	tags?: string[];
+	user_id?: string;
+	time_range?: string;
+};
+
 type Settings = {
 	pinnedModels?: never[];
-	toolServers?: never[];
+	toolServers?: ToolServer[];
 	detectArtifacts?: boolean;
 	showUpdateToast?: boolean;
 	showChangelog?: boolean;
@@ -166,7 +177,6 @@ type Settings = {
 	autoTags?: boolean;
 	autoFollowUps?: boolean;
 	splitLargeChunks?(body: any, splitLargeChunks: any): unknown;
-	backgroundImageUrl?: null;
 	landingPageMode?: string;
 	iframeSandboxAllowForms?: boolean;
 	iframeSandboxAllowSameOrigin?: boolean;
@@ -186,7 +196,7 @@ type Settings = {
 	splitLargeDeltas?: boolean;
 	chatDirection?: 'LTR' | 'RTL' | 'auto';
 	ctrlEnterToSend?: boolean;
-	backgroundImageUrl?: string;
+	backgroundImageUrl?: string | null;
 	materialThemeEnabled?: boolean;
 
 	system?: string;

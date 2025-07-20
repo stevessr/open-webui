@@ -12,12 +12,9 @@
 
 	import { getKnowledgeBases } from '$lib/apis/knowledge';
 	import { getFunctions } from '$lib/apis/functions';
-	import { getModels, getToolServersData, getVersionUpdates } from '$lib/apis';
+	import { getToolServersData } from '$lib/apis';
 	import { getAllTags } from '$lib/apis/chats';
 	import { getPrompts } from '$lib/apis/prompts';
-	import { getTools } from '$lib/apis/tools';
-	import { getBanners } from '$lib/apis/configs';
-	import { getUserSettings } from '$lib/apis/users';
 
 	import { WEBUI_VERSION } from '$lib/constants';
 	import { compareVersion } from '$lib/utils';
@@ -47,14 +44,44 @@
 	import AccountPending from '$lib/components/layout/Overlay/AccountPending.svelte';
 	import UpdateInfoToast from '$lib/components/layout/UpdateInfoToast.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import type { LayoutData } from './$types';
+	import type { i18n as i18nType } from 'i18next';
 
-	const i18n = getContext('i18n');
+	export let data: LayoutData;
+	import type { IDBPDatabase } from 'idb';
+	import type { Banner, ToolServer } from '$lib/types';
+	import type { Chat } from '$lib/stores';
+
+	const i18n: i18nType = getContext('i18n');
 
 	let loaded = false;
-	let DB = null;
-	let localDBChats = [];
+	let DB: IDBPDatabase | null = null;
+	let localDBChats: Chat[] = [];
 
-	let version;
+	let version: { current: string; latest: string } | undefined;
+
+	$: if (data) {
+		if (data.userSettings) {
+			settings.set(data.userSettings.ui);
+		} else {
+			let localStorageSettings = {} as Parameters<(typeof settings)['set']>[0];
+			try {
+				localStorageSettings = JSON.parse(localStorage.getItem('settings') ?? '{}');
+			} catch (e: unknown) {
+				console.error('Failed to parse settings from localStorage', e);
+			}
+			settings.set(localStorageSettings);
+		}
+
+		models.set(data.models ?? []);
+		banners.set(data.banners ?? []);
+		tools.set(data.tools ?? []);
+		version = data.version;
+
+		getToolServersData(i18n, data.userSettings?.ui?.toolServers ?? []).then((res) => {
+			toolServers.set((res.filter(Boolean) as ToolServer[]) ?? []);
+		});
+	}
 
 	onMount(async () => {
 		if ($user === undefined || $user === null) {
@@ -84,36 +111,6 @@
 					localStorage.removeItem(key);
 				});
 			}
-
-			const userSettings = await getUserSettings(localStorage.token).catch((error) => {
-				console.error(error);
-				return null;
-			});
-
-			if (userSettings) {
-				settings.set(userSettings.ui);
-			} else {
-				let localStorageSettings = {} as Parameters<(typeof settings)['set']>[0];
-
-				try {
-					localStorageSettings = JSON.parse(localStorage.getItem('settings') ?? '{}');
-				} catch (e: unknown) {
-					console.error('Failed to parse settings from localStorage', e);
-				}
-
-				settings.set(localStorageSettings);
-			}
-
-			models.set(
-				await getModels(
-					localStorage.token,
-					$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
-				)
-			);
-
-			banners.set(await getBanners(localStorage.token));
-			tools.set(await getTools(localStorage.token));
-			toolServers.set(await getToolServersData($i18n, $settings?.toolServers ?? []));
 
 			document.addEventListener('keydown', async function (event) {
 				const isCtrlPressed = event.ctrlKey || event.metaKey; // metaKey is for Cmd key on Mac
@@ -152,7 +149,9 @@
 				if (isCtrlPressed && isShiftPressed && event.key === ';') {
 					event.preventDefault();
 					console.log('copyLastCodeBlock');
-					const button = [...document.getElementsByClassName('copy-code-button')]?.at(-1);
+					const button = [...document.getElementsByClassName('copy-code-button')]?.at(
+						-1
+					) as HTMLElement;
 					button?.click();
 				}
 
@@ -160,7 +159,9 @@
 				if (isCtrlPressed && isShiftPressed && event.key.toLowerCase() === 'c') {
 					event.preventDefault();
 					console.log('copyLastResponse');
-					const button = [...document.getElementsByClassName('copy-response-button')]?.at(-1);
+					const button = [...document.getElementsByClassName('copy-response-button')]?.at(
+						-1
+					) as HTMLElement;
 					console.log(button);
 					button?.click();
 				}
@@ -221,7 +222,9 @@
 			});
 
 			if ($user?.role === 'admin' && ($settings?.showChangelog ?? true)) {
-				showChangelog.set($settings?.version !== $config.version);
+				if ($config && data.version) {
+					showChangelog.set(data.version.current !== $config.version);
+				}
 			}
 
 			if ($user?.role === 'admin' || ($user?.permissions?.chat?.temporary ?? true)) {
@@ -234,34 +237,13 @@
 				}
 			}
 
-			// Check for version updates
-			if ($user?.role === 'admin' && $config?.features?.enable_version_update_check) {
-				// Check if the user has dismissed the update toast in the last 24 hours
-				if (localStorage.dismissedUpdateToast) {
-					const dismissedUpdateToast = new Date(Number(localStorage.dismissedUpdateToast));
-					const now = new Date();
-
-					if (now - dismissedUpdateToast > 24 * 60 * 60 * 1000) {
-						checkForVersionUpdates();
-					}
-				} else {
-					checkForVersionUpdates();
-				}
-			}
+			// Check for version updates is now handled by the `load` function.
+			// The `version` variable is populated from `data.version`.
 			await tick();
 		}
 
 		loaded = true;
 	});
-
-	const checkForVersionUpdates = async () => {
-		version = await getVersionUpdates(localStorage.token).catch((error) => {
-			return {
-				current: WEBUI_VERSION,
-				latest: WEBUI_VERSION
-			};
-		});
-	};
 </script>
 
 <SettingsModal bind:show={$showSettings} />
@@ -273,7 +255,7 @@
 			{version}
 			on:close={() => {
 				localStorage.setItem('dismissedUpdateToast', Date.now().toString());
-				version = null;
+				version = undefined;
 			}}
 		/>
 	</div>
@@ -299,12 +281,12 @@
 									</div>
 
 									<div class=" mt-4 text-center text-sm dark:text-gray-200 w-full">
-										{$i18n.t(
+										{i18n.t(
 											"Saving chat logs directly to your browser's storage is no longer supported. Please take a moment to download and delete your chat logs by clicking the button below. Don't worry, you can easily re-import your chat logs to the backend through"
 										)}
 										<span class="font-semibold dark:text-white"
-											>{$i18n.t('Settings')} > {$i18n.t('Chats')} > {$i18n.t('Import Chats')}</span
-										>. {$i18n.t(
+											>{i18n.t('Settings')} > {i18n.t('Chats')} > {i18n.t('Import Chats')}</span
+										>. {i18n.t(
 											'This ensures that your valuable conversations are securely saved to your backend database. Thank you!'
 										)}
 									</div>
@@ -318,9 +300,11 @@
 												});
 												saveAs(blob, `chat-export-${Date.now()}.json`);
 
-												const tx = DB.transaction('chats', 'readwrite');
-												await Promise.all([tx.store.clear(), tx.done]);
-												await deleteDB('Chats');
+												if (DB) {
+													const tx = DB.transaction('chats', 'readwrite');
+													await Promise.all([tx.store.clear(), tx.done]);
+													await deleteDB('Chats');
+												}
 
 												localDBChats = [];
 											}}
@@ -332,7 +316,7 @@
 											class="text-xs text-center w-full mt-2 text-gray-400 underline"
 											on:click={async () => {
 												localDBChats = [];
-											}}>{$i18n.t('Close')}</button
+											}}>{i18n.t('Close')}</button
 										>
 									</div>
 								</div>

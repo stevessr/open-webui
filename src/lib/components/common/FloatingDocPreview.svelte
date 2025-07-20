@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount, onDestroy } from 'svelte';
+	import { createEventDispatcher, onMount, onDestroy, tick } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import XMark from '../icons/XMark.svelte';
@@ -12,7 +12,7 @@
 	export let show = false;
 	export let url = '';
 	export let title = 'Documentation';
-	export let pages: Array<{url: string, title: string}> = [];
+	export let pages: Array<{ url: string; title: string }> = [];
 
 	let isMinimized = false;
 
@@ -23,13 +23,13 @@
 	let currentPageIndex = 0;
 
 	// Multi-page support
-	$: allPages = pages.length > 0 ? pages : [{url, title}];
+	$: allPages = pages.length > 0 ? pages : [{ url, title }];
 	$: canNavigateBack = currentPageIndex > 0;
 	$: canNavigateForward = currentPageIndex < allPages.length - 1;
 
 	// Get current page without cyclical dependency
 	function getCurrentPage() {
-		return allPages[currentPageIndex] || allPages[0] || {url, title};
+		return allPages[currentPageIndex] || allPages[0] || { url, title };
 	}
 
 	// Dragging state
@@ -45,6 +45,7 @@
 	// URL editing state
 	let isEditingUrl = false;
 	let editableUrl = '';
+	let urlInputElement: HTMLInputElement;
 
 	// Bottom-left menu state
 	let showBottomMenu = false;
@@ -65,8 +66,6 @@
 			}
 		}
 	};
-
-
 
 	const handleIframeLoad = () => {
 		isLoading = false;
@@ -133,14 +132,19 @@
 				// Restore scroll position after iframe loads
 				const restoreScroll = () => {
 					try {
-						if (savedIframeState.scrollPosition.x !== 0 || savedIframeState.scrollPosition.y !== 0) {
+						if (
+							savedIframeState.scrollPosition.x !== 0 ||
+							savedIframeState.scrollPosition.y !== 0
+						) {
 							iframeElement.contentWindow.scrollTo(
 								savedIframeState.scrollPosition.x,
 								savedIframeState.scrollPosition.y
 							);
 						}
 					} catch (error) {
-						console.warn('Could not restore iframe scroll position due to cross-origin restrictions');
+						console.warn(
+							'Could not restore iframe scroll position due to cross-origin restrictions'
+						);
 					}
 				};
 
@@ -176,9 +180,11 @@
 	};
 
 	// URL editing functions
-	const startEditingUrl = () => {
+	const startEditingUrl = async () => {
 		isEditingUrl = true;
 		editableUrl = getCurrentPage().url;
+		await tick();
+		urlInputElement?.focus();
 	};
 
 	const cancelEditingUrl = () => {
@@ -223,12 +229,15 @@
 	const copyCurrentUrl = () => {
 		const currentUrl = getCurrentPage().url;
 		if (currentUrl) {
-			navigator.clipboard.writeText(currentUrl).then(() => {
-				// Could show a toast notification here
-				console.log('URL copied to clipboard');
-			}).catch(err => {
-				console.error('Failed to copy URL: ', err);
-			});
+			navigator.clipboard
+				.writeText(currentUrl)
+				.then(() => {
+					// Could show a toast notification here
+					console.log('URL copied to clipboard');
+				})
+				.catch((err) => {
+					console.error('Failed to copy URL: ', err);
+				});
 		}
 		showBottomMenu = false;
 	};
@@ -424,10 +433,13 @@
 {#if show}
 	{#if isMinimized}
 		<!-- Minimized Tray -->
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 		<div
 			class="fixed z-[9998] bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-3 cursor-move hover:bg-white/90 dark:hover:bg-gray-900/90 transition-all duration-200"
-			style="transform: translate({minimizedPosition.x || 0}px, {minimizedPosition.y || 0}px); {minimizedPosition.x === 0 && minimizedPosition.y === 0 ? 'bottom: 1rem; right: 1rem;' : ''}"
+			style="transform: translate({minimizedPosition.x || 0}px, {minimizedPosition.y ||
+				0}px); {minimizedPosition.x === 0 && minimizedPosition.y === 0
+				? 'bottom: 1rem; right: 1rem;'
+				: ''}"
 			on:mousedown={handleMinimizedMouseDown}
 			transition:fly={{ x: 100, duration: 300, easing: quintOut }}
 			role="button"
@@ -446,7 +458,9 @@
 			}}
 		>
 			<div class="flex items-center gap-2">
-				<div class="w-8 h-6 bg-gray-200/70 dark:bg-gray-700/70 rounded border border-gray-300/50 dark:border-gray-600/50"></div>
+				<div
+					class="w-8 h-6 bg-gray-200/70 dark:bg-gray-700/70 rounded border border-gray-300/50 dark:border-gray-600/50"
+				></div>
 				<div class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[200px]">
 					{getCurrentPage().title}
 				</div>
@@ -483,192 +497,208 @@
 				tabindex="-1"
 				on:mousedown={(e) => e.stopPropagation()}
 			>
-			<!-- Header -->
-			<!-- svelte-ignore a11y-no-static-element-interactions -->
-			<div
-				bind:this={headerElement}
-				class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 cursor-move select-none"
-				on:mousedown={handleMouseDown}
-			>
-				<div class="flex items-center gap-3 flex-1 min-w-0">
-					<!-- Navigation controls for multi-page -->
-					{#if allPages.length > 1}
-						<div class="flex items-center gap-1">
-							<button
-								on:click={navigateBack}
-								disabled={!canNavigateBack}
-								class="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors theme-button disabled:opacity-50 disabled:cursor-not-allowed"
-								aria-label="Previous page"
-								title="Previous page"
+				<!-- Header -->
+				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+				<div
+					bind:this={headerElement}
+					class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 cursor-move select-none"
+					on:mousedown={handleMouseDown}
+				>
+					<div class="flex items-center gap-3 flex-1 min-w-0">
+						<!-- Navigation controls for multi-page -->
+						{#if allPages.length > 1}
+							<div class="flex items-center gap-1">
+								<button
+									on:click={navigateBack}
+									disabled={!canNavigateBack}
+									class="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors theme-button disabled:opacity-50 disabled:cursor-not-allowed"
+									aria-label="Previous page"
+									title="Previous page"
+								>
+									<ChevronLeft className="size-4 text-gray-600 dark:text-gray-400 theme-icon" />
+								</button>
+								<span class="text-xs text-gray-500 dark:text-gray-400 px-2">
+									{currentPageIndex + 1} / {allPages.length}
+								</span>
+								<button
+									on:click={navigateForward}
+									disabled={!canNavigateForward}
+									class="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors theme-button disabled:opacity-50 disabled:cursor-not-allowed"
+									aria-label="Next page"
+									title="Next page"
+								>
+									<ChevronRight className="size-4 text-gray-600 dark:text-gray-400 theme-icon" />
+								</button>
+							</div>
+						{/if}
+
+						<div class="flex flex-col gap-1 flex-1 min-w-0">
+							<div class="text-lg font-semibold text-gray-900 dark:text-white truncate">
+								{getCurrentPage().title}
+							</div>
+
+							<!-- Editable URL field -->
+							<div class="flex items-center gap-2">
+								{#if isEditingUrl}
+									<input
+										bind:this={urlInputElement}
+										type="url"
+										bind:value={editableUrl}
+										on:keydown={handleUrlKeyDown}
+										on:blur={cancelEditingUrl}
+										class="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+										placeholder="Enter URL..."
+									/>
+									<button
+										on:click={saveEditedUrl}
+										class="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
+										title="Save URL"
+									>
+										Save
+									</button>
+									<button
+										on:click={cancelEditingUrl}
+										class="px-2 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors"
+										title="Cancel"
+									>
+										Cancel
+									</button>
+								{:else}
+									<button
+										on:click={startEditingUrl}
+										class="flex-1 text-left text-sm text-blue-600 dark:text-blue-400 hover:underline truncate"
+										title="Click to edit URL"
+									>
+										{getCurrentPage().url || 'No URL'}
+									</button>
+									{#if getCurrentPage().url}
+										<a
+											href={getCurrentPage().url}
+											target="_blank"
+											rel="noopener noreferrer"
+											class="text-xs text-blue-600 dark:text-blue-400 hover:underline flex-shrink-0"
+											title="Open in new tab"
+										>
+											↗
+										</a>
+									{/if}
+								{/if}
+							</div>
+						</div>
+					</div>
+					<div class="flex items-center gap-2 flex-shrink-0">
+						<button
+							on:click={handleReload}
+							class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors theme-button"
+							aria-label="Reload page"
+							title="Reload page"
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+								class="size-5 text-gray-600 dark:text-gray-400 theme-icon"
 							>
-								<ChevronLeft className="size-4 text-gray-600 dark:text-gray-400 theme-icon" />
+								<path
+									fill-rule="evenodd"
+									d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H3.989a.75.75 0 00-.75.75v4.242a.75.75 0 001.5 0v-2.43l.31.31a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm-3.068-9.93a7 7 0 00-11.712 3.138.75.75 0 101.449.39 5.5 5.5 0 019.201-2.466l.312.311h-2.433a.75.75 0 000 1.5h4.243a.75.75 0 00.75-.75V3.375a.75.75 0 00-1.5 0v2.43l-.31-.31z"
+									clip-rule="evenodd"
+								/>
+							</svg>
+						</button>
+						<button
+							on:click={minimizePreview}
+							class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors theme-button"
+							aria-label="Minimize preview"
+							title="Minimize preview"
+						>
+							<Minus className="size-5 text-gray-600 dark:text-gray-400 theme-icon" />
+						</button>
+						<button
+							on:click={() => (show = false)}
+							class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors theme-button"
+							aria-label="Close preview"
+							title="Close preview"
+						>
+							<XMark className="size-5 text-gray-600 dark:text-gray-400 theme-icon" />
+						</button>
+					</div>
+				</div>
+
+				<!-- Loading indicator -->
+				{#if isLoading}
+					<div
+						class="absolute inset-x-0 top-[73px] bottom-0 flex items-center justify-center bg-white dark:bg-gray-900 z-[1]"
+					>
+						<div class="flex flex-col items-center gap-3">
+							<div class="breathing-light rounded-full h-8 w-8"></div>
+							<div class="text-sm text-gray-600 dark:text-gray-400">Loading documentation...</div>
+						</div>
+					</div>
+				{/if}
+
+				<!-- Iframe -->
+				{#if getCurrentPage().url}
+					<iframe
+						bind:this={iframeElement}
+						src={getCurrentPage().url}
+						title={getCurrentPage().title}
+						class="w-full h-full border-0"
+						on:load={handleIframeLoad}
+						loading="lazy"
+						allowfullscreen
+						sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-presentation allow-pointer-lock allow-top-navigation allow-storage-access-by-user-activation allow-clipboard-write allow-web-share allow-orientation-lock allow-screen-wake-lock allow-downloads-without-user-activation allow-payment allow-encrypted-media allow-autoplay"
+						referrerpolicy="no-referrer"
+					></iframe>
+				{/if}
+
+				<!-- Bottom-left menu -->
+				<div class="absolute bottom-4 left-4 z-10">
+					{#if showBottomMenu}
+						<div
+							class="mb-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 min-w-[160px]"
+						>
+							<button
+								on:click={copyCurrentUrl}
+								class="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+							>
+								Copy URL
 							</button>
-							<span class="text-xs text-gray-500 dark:text-gray-400 px-2">
-								{currentPageIndex + 1} / {allPages.length}
-							</span>
 							<button
-								on:click={navigateForward}
-								disabled={!canNavigateForward}
-								class="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors theme-button disabled:opacity-50 disabled:cursor-not-allowed"
-								aria-label="Next page"
-								title="Next page"
+								on:click={openInNewWindow}
+								class="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
 							>
-								<ChevronRight className="size-4 text-gray-600 dark:text-gray-400 theme-icon" />
+								Open in New Window
+							</button>
+							<button
+								on:click={printPage}
+								class="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+							>
+								Print Page
 							</button>
 						</div>
 					{/if}
-
-					<div class="flex flex-col gap-1 flex-1 min-w-0">
-						<div class="text-lg font-semibold text-gray-900 dark:text-white truncate">
-							{getCurrentPage().title}
-						</div>
-
-						<!-- Editable URL field -->
-						<div class="flex items-center gap-2">
-							{#if isEditingUrl}
-								<input
-									type="url"
-									bind:value={editableUrl}
-									on:keydown={handleUrlKeyDown}
-									on:blur={cancelEditingUrl}
-									class="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-									placeholder="Enter URL..."
-									autofocus
-								/>
-								<button
-									on:click={saveEditedUrl}
-									class="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
-									title="Save URL"
-								>
-									Save
-								</button>
-								<button
-									on:click={cancelEditingUrl}
-									class="px-2 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors"
-									title="Cancel"
-								>
-									Cancel
-								</button>
-							{:else}
-								<button
-									on:click={startEditingUrl}
-									class="flex-1 text-left text-sm text-blue-600 dark:text-blue-400 hover:underline truncate"
-									title="Click to edit URL"
-								>
-									{getCurrentPage().url || 'No URL'}
-								</button>
-								{#if getCurrentPage().url}
-									<a
-										href={getCurrentPage().url}
-										target="_blank"
-										rel="noopener noreferrer"
-										class="text-xs text-blue-600 dark:text-blue-400 hover:underline flex-shrink-0"
-										title="Open in new tab"
-									>
-										↗
-									</a>
-								{/if}
-							{/if}
-						</div>
-					</div>
-				</div>
-				<div class="flex items-center gap-2 flex-shrink-0">
 					<button
-						on:click={handleReload}
-						class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors theme-button"
-						aria-label="Reload page"
-						title="Reload page"
+						on:click={toggleBottomMenu}
+						class="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+						aria-label="Menu"
+						title="Menu"
 					>
 						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-							class="size-5 text-gray-600 dark:text-gray-400 theme-icon"
+							class="size-4 text-gray-600 dark:text-gray-400"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
 						>
 							<path
-								fill-rule="evenodd"
-								d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H3.989a.75.75 0 00-.75.75v4.242a.75.75 0 001.5 0v-2.43l.31.31a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm-3.068-9.93a7 7 0 00-11.712 3.138.75.75 0 101.449.39 5.5 5.5 0 019.201-2.466l.312.311h-2.433a.75.75 0 000 1.5h4.243a.75.75 0 00.75-.75V3.375a.75.75 0 00-1.5 0v2.43l-.31-.31z"
-								clip-rule="evenodd"
-							/>
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M4 6h16M4 12h16M4 18h16"
+							></path>
 						</svg>
 					</button>
-					<button
-						on:click={minimizePreview}
-						class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors theme-button"
-						aria-label="Minimize preview"
-						title="Minimize preview"
-					>
-						<Minus className="size-5 text-gray-600 dark:text-gray-400 theme-icon" />
-					</button>
-					<button
-						on:click={() => (show = false)}
-						class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors theme-button"
-						aria-label="Close preview"
-						title="Close preview"
-					>
-						<XMark className="size-5 text-gray-600 dark:text-gray-400 theme-icon" />
-					</button>
 				</div>
-			</div>
-
-			<!-- Loading indicator -->
-			{#if isLoading}
-				<div class="absolute inset-x-0 top-[73px] bottom-0 flex items-center justify-center bg-white dark:bg-gray-900 z-[1]">
-					<div class="flex flex-col items-center gap-3">
-						<div class="breathing-light rounded-full h-8 w-8"></div>
-						<div class="text-sm text-gray-600 dark:text-gray-400">Loading documentation...</div>
-					</div>
-				</div>
-			{/if}
-
-			<!-- Iframe -->
-			{#if getCurrentPage().url}
-				<iframe
-					bind:this={iframeElement}
-					src={getCurrentPage().url}
-					title={getCurrentPage().title}
-					class="w-full h-full border-0"
-					on:load={handleIframeLoad}
-					sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-				></iframe>
-			{/if}
-
-			<!-- Bottom-left menu -->
-			<div class="absolute bottom-4 left-4 z-10">
-				{#if showBottomMenu}
-					<div class="mb-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 min-w-[160px]">
-						<button
-							on:click={copyCurrentUrl}
-							class="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-						>
-							Copy URL
-						</button>
-						<button
-							on:click={openInNewWindow}
-							class="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-						>
-							Open in New Window
-						</button>
-						<button
-							on:click={printPage}
-							class="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-						>
-							Print Page
-						</button>
-					</div>
-				{/if}
-				<button
-					on:click={toggleBottomMenu}
-					class="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-					aria-label="Menu"
-					title="Menu"
-				>
-					<svg class="size-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-					</svg>
-				</button>
-			</div>
-
 			</div>
 		</div>
 	{/if}
@@ -693,7 +723,7 @@
 		}
 		25% {
 			opacity: 0.7;
-			transform: scale(1.0);
+			transform: scale(1);
 			background-position: 100% 50%;
 		}
 		50% {
@@ -703,7 +733,7 @@
 		}
 		75% {
 			opacity: 0.7;
-			transform: scale(1.0);
+			transform: scale(1);
 			background-position: 0% 100%;
 		}
 		100% {

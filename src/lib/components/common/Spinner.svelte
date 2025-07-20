@@ -1,10 +1,15 @@
+<script>
+	let { className, ...rest } = $$props;
+</script>
+
 <div class="self-center">
-    <svg
-        class=" w-4 h-4"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        xmlns="http://www.w3.org/2000/svg"
-    >
+	<svg
+		class={`w-4 h-4 ${className ?? ''}`}
+		{...rest}
+		viewBox="0 0 24 24"
+		fill="currentColor"
+		xmlns="http://www.w3.org/2000/svg"
+	>
         <style>
             .spinner_ajPY {
                 transform-origin: center;
