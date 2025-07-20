@@ -198,7 +198,7 @@
 	});
 </script>
 
-<Modal size="xl" bind:show>
+<Modal size="xl" bind:show draggable={false}>
 	<div class="py-2.5 dark:text-gray-300 text-gray-700">
 		<div class="px-3.5 pb-1.5">
 			<SearchInput

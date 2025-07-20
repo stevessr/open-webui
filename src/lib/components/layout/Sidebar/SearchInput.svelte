@@ -1,23 +1,23 @@
 <script lang="ts">
 	import { getAllTags } from '$lib/apis/chats';
 	import { tags } from '$lib/stores';
-	import { getContext, createEventDispatcher, onMount, onDestroy, tick } from 'svelte';
+	import { createEventDispatcher, onMount, onDestroy, tick } from 'svelte';
 	import { fade } from 'svelte/transition';
+	import i18n from '$lib/i18n';
 	import Search from '$lib/components/icons/Search.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 
 	const dispatch = createEventDispatcher();
-	const i18n = getContext('i18n');
 
 	export let placeholder = '';
 	export let value = '';
 	export let showClearButton = false;
-	export let onKeydown = (e) => {};
+	export let onKeydown = (e: KeyboardEvent) => {};
 
-	let selectedIdx = 0;
+	let selectedIdx: number = 0;
 
 	let lastWord = '';
-	$: lastWord = value ? value.split(' ').at(-1) : value;
+	$: lastWord = value ? value.split(' ').at(-1) ?? '' : value;
 
 	let options = [
 		{
@@ -68,12 +68,20 @@
 		dispatch('input');
 	};
 
-	const documentClickHandler = (e) => {
+	const documentClickHandler = (e: MouseEvent) => {
 		const searchContainer = document.getElementById('search-container');
 		const chatSearch = document.getElementById('chat-search');
 
-		if (!searchContainer.contains(e.target) && !chatSearch.contains(e.target)) {
-			if (e.target.id.startsWith('search-tag-') || e.target.id.startsWith('search-option-')) {
+		if (
+			searchContainer &&
+			chatSearch &&
+			!searchContainer.contains(e.target as Node) &&
+			!chatSearch.contains(e.target as Node)
+		) {
+			if (
+				(e.target as HTMLElement).id.startsWith('search-tag-') ||
+				(e.target as HTMLElement).id.startsWith('search-option-')
+			) {
 				return;
 			}
 			focused = false;
@@ -114,14 +122,18 @@
 				if (e.key === 'Enter') {
 					if (filteredTags.length > 0) {
 						const tagElement = document.getElementById(`search-tag-${selectedIdx}`);
-						tagElement.click();
-						return;
+						if (tagElement) {
+							tagElement.click();
+							return;
+						}
 					}
 
 					if (filteredOptions.length > 0) {
 						const optionElement = document.getElementById(`search-option-${selectedIdx}`);
-						optionElement.click();
-						return;
+						if (optionElement) {
+							optionElement.click();
+							return;
+						}
 					}
 				}
 
@@ -160,13 +172,14 @@
 	</div>
 
 	{#if focused && (filteredOptions.length > 0 || filteredTags.length > 0)}
-		
 		<div
-			class="absolute top-0 mt-8 left-0 right-1 border border-gray-100 dark:border-gray-900 bg-gray-50 dark:bg-gray-950 rounded-lg z-10 shadow-lg"
+			class="absolute top-0 mt-8 left-0 right-1 border border-gray-100 dark:border-gray-900 bg-gray-50 dark:bg-gray-950 rounded-lg z-10 shadow-lg trans"
 			id="search-options-container"
+			role="listbox"
+			tabindex="0"
 			in:fade={{ duration: 50 }}
 			on:mouseenter={() => {
-				selectedIdx = null;
+				selectedIdx = -1;
 			}}
 			on:mouseleave={() => {
 				selectedIdx = 0;
@@ -200,7 +213,7 @@
 								</div>
 
 								<div class=" text-gray-500 line-clamp-1">
-									{tag.id}
+									{tag.name}
 								</div>
 							</button>
 						{/each}
@@ -222,7 +235,7 @@
 									const words = value.split(' ');
 
 									words.pop();
-									words.push('tag:');
+									words.push(`${option.name.toLowerCase()}:`);
 
 									value = words.join(' ');
 

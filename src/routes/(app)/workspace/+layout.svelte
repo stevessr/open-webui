@@ -52,7 +52,7 @@
 
 {#if loaded}
 	<div
-		class=" relative flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out max-w-full"
+		class=" auto flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out max-w-full"
 	>
 		<!-- Custom Background Support -->
 		{#if $settings?.backgroundImageUrl ?? null}

@@ -26,7 +26,7 @@
 
 {#if loaded}
 	<div
-		class=" flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out max-w-full relative"
+		class="static left-0 flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out max-w-full relative"
 	>
 		<!-- Custom Background Support -->
 		{#if $settings?.backgroundImageUrl ?? null}
