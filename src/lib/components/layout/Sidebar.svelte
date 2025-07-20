@@ -23,9 +23,11 @@
 		config,
 		isApp,
 		models,
-		selectedFolder
+		selectedFolder,
+		docs
 	} from '$lib/stores';
 	import { onMount, getContext, tick, onDestroy } from 'svelte';
+	import FloatingDocPreview from '$lib/components/common/FloatingDocPreview.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -442,6 +444,13 @@
 	}}
 />
 
+<FloatingDocPreview
+	show={$docs.docs.length > 0}
+	docs={$docs.docs}
+	activeDocId={$docs.activeDocId}
+	on:close-doc={(e) => docs.closeDoc(e.detail.id)}
+/>
+
 {#if $showSidebar}
 	<div
 		class=" {$isApp
@@ -668,7 +677,7 @@
 										{#if model?.info?.meta?.profile_image_url?.endsWith('.mp4')}
 											<video
 												src={model?.info?.meta?.profile_image_url}
-												class=" size-5 rounded-full -translate-x-[0.5px]"
+												class="size-5 w-auto rounded-full -translate-x-[0.5px]"
 												autoplay
 												muted
 												loop
@@ -680,8 +689,9 @@
 											<img
 												crossorigin="anonymous"
 												src={model?.info?.meta?.profile_image_url ?? '/static/favicon.png'}
-												class=" size-5 rounded-full -translate-x-[0.5px]"
+												class="size-5 w-auto rounded-full -translate-x-[0.5px]"
 												alt="logo"
+												draggable="false"
 											/>
 										{/if}
 									</div>

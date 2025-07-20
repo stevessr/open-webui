@@ -31,3 +31,9 @@ export type ToolServer = {
 		};
 	}[];
 };
+
+export interface DocInfo {
+	id: string;
+	url: string;
+	title: string;
+}

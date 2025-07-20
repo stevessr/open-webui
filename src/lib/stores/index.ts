@@ -198,6 +198,7 @@ type Settings = {
 	ctrlEnterToSend?: boolean;
 	backgroundImageUrl?: string | null;
 	materialThemeEnabled?: boolean;
+showUserGravatar?: boolean;
 
 	system?: string;
 	seed?: number;
@@ -296,3 +297,5 @@ type SessionUser = {
 	role: string;
 	profile_image_url: string;
 };
+
+export { docs } from './docs';

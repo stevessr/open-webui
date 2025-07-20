@@ -1,7 +1,7 @@
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 import type { Banner } from '$lib/types';
 
-export const importConfig = async (token: string, config) => {
+export const importConfig = async (token: string, config: any) => {
 	let error = null;
 
 	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/import`, {
@@ -346,10 +346,13 @@ export const setDefaultPromptSuggestions = async (token: string, promptSuggestio
 	return res;
 };
 
-export const getBanners = async (token: string): Promise<Banner[]> => {
+export const getBanners = async (
+	token: string,
+	fetcher: typeof fetch = fetch
+): Promise<Banner[]> => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/banners`, {
+	const res = await fetcher(`${WEBUI_API_BASE_URL}/configs/banners`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',

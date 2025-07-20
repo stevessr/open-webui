@@ -7,9 +7,10 @@ import { toast } from 'svelte-sonner';
 
 export const getModels = async (
 	token: string = '',
-	connections: object | null = null,
+	connections: any | null = null,
 	base: boolean = false,
-	refresh: boolean = false
+	refresh: boolean = false,
+	fetcher: typeof fetch = fetch
 ) => {
 	const searchParams = new URLSearchParams();
 	if (refresh) {
@@ -17,7 +18,7 @@ export const getModels = async (
 	}
 
 	let error = null;
-	const res = await fetch(
+	const res = await fetcher(
 		`${WEBUI_BASE_URL}/api/models${base ? '/base' : ''}?${searchParams.toString()}`,
 		{
 			method: 'GET',
@@ -45,7 +46,7 @@ export const getModels = async (
 	let models = res?.data ?? [];
 
 	if (connections && !base) {
-		let localModels = [];
+		let localModels: any[] = [];
 
 		if (connections) {
 			const OPENAI_API_BASE_URLS = connections.OPENAI_API_BASE_URLS;
@@ -66,7 +67,7 @@ export const getModels = async (
 						if (modelIds.length > 0) {
 							const modelList = {
 								object: 'list',
-								data: modelIds.map((modelId) => ({
+								data: modelIds.map((modelId: string) => ({
 									id: modelId,
 									name: modelId,
 									owned_by: 'openai',
@@ -118,7 +119,7 @@ export const getModels = async (
 				const apiConfig = OPENAI_API_CONFIGS[idx.toString()] ?? {};
 
 				let models = Array.isArray(response) ? response : (response?.data ?? []);
-				models = models.map((model) => ({ ...model, openai: { id: model.id }, urlIdx: idx }));
+				models = models.map((model: any) => ({ ...model, openai: { id: model.id }, urlIdx: idx }));
 
 				const prefixId = apiConfig.prefix_id;
 				if (prefixId) {
@@ -147,7 +148,7 @@ export const getModels = async (
 		);
 
 		// Remove duplicates
-		const modelsMap = {};
+		const modelsMap: { [key: string]: any } = {};
 		for (const model of models) {
 			modelsMap[model.id] = model;
 		}
@@ -165,10 +166,14 @@ type ChatCompletedForm = {
 	session_id: string;
 };
 
-export const chatCompleted = async (token: string, body: ChatCompletedForm) => {
+export const chatCompleted = async (
+	token: string,
+	body: ChatCompletedForm,
+	fetcher: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/chat/completed`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/chat/completed`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
@@ -204,10 +209,15 @@ type ChatActionForm = {
 	chat_id: string;
 };
 
-export const chatAction = async (token: string, action_id: string, body: ChatActionForm) => {
+export const chatAction = async (
+	token: string,
+	action_id: string,
+	body: ChatActionForm,
+	fetcher: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/chat/actions/${action_id}`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/chat/actions/${action_id}`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
@@ -237,10 +247,10 @@ export const chatAction = async (token: string, action_id: string, body: ChatAct
 	return res;
 };
 
-export const stopTask = async (token: string, id: string) => {
+export const stopTask = async (token: string, id: string, fetcher: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/tasks/stop/${id}`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/tasks/stop/${id}`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
@@ -269,10 +279,14 @@ export const stopTask = async (token: string, id: string) => {
 	return res;
 };
 
-export const getTaskIdsByChatId = async (token: string, chat_id: string) => {
+export const getTaskIdsByChatId = async (
+	token: string,
+	chat_id: string,
+	fetcher: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/tasks/chat/${chat_id}`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/tasks/chat/${chat_id}`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',
@@ -301,10 +315,10 @@ export const getTaskIdsByChatId = async (token: string, chat_id: string) => {
 	return res;
 };
 
-export const getToolServerData = async (token: string, url: string) => {
+export const getToolServerData = async (token: string, url: string, fetcher: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${url}`, {
+	const res = await fetcher(`${url}`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',
@@ -347,7 +361,11 @@ export const getToolServerData = async (token: string, url: string) => {
 	return data;
 };
 
-export const getToolServersData = async (i18n, servers: object[]) => {
+export const getToolServersData = async (
+	i18n: any,
+	servers: any[],
+	fetcher: typeof fetch = fetch
+) => {
 	return (
 		await Promise.all(
 			servers
@@ -357,7 +375,8 @@ export const getToolServersData = async (i18n, servers: object[]) => {
 						(server?.auth_type ?? 'bearer') === 'bearer' ? server?.key : localStorage.token,
 						(server?.path ?? '').includes('://')
 							? server?.path
-							: `${server?.url}${(server?.path ?? '').startsWith('/') ? '' : '/'}${server?.path}`
+							: `${server?.url}${(server?.path ?? '').startsWith('/') ? '' : '/'}${server?.path}`,
+						fetcher
 					).catch((err) => {
 						toast.error(
 							i18n.t(`Failed to connect to {{URL}} OpenAPI tool server`, {
@@ -388,7 +407,8 @@ export const executeToolServer = async (
 	url: string,
 	name: string,
 	params: Record<string, any>,
-	serverData: { openapi: any; info: any; specs: any }
+	serverData: { openapi: any; info: any; specs: any },
+	fetcher: typeof fetch = fetch
 ) => {
 	let error = null;
 
@@ -474,7 +494,7 @@ export const executeToolServer = async (
 			requestOptions.body = JSON.stringify(bodyParams);
 		}
 
-		const res = await fetch(finalUrl, requestOptions);
+		const res = await fetcher(finalUrl, requestOptions);
 		if (!res.ok) {
 			const resText = await res.text();
 			throw new Error(`HTTP error! Status: ${res.status}. Message: ${resText}`);
@@ -488,10 +508,10 @@ export const executeToolServer = async (
 	}
 };
 
-export const getTaskConfig = async (token: string = '') => {
+export const getTaskConfig = async (token: string = '', fetcher: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/tasks/config`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/v1/tasks/config`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',
@@ -516,10 +536,14 @@ export const getTaskConfig = async (token: string = '') => {
 	return res;
 };
 
-export const updateTaskConfig = async (token: string, config: object) => {
+export const updateTaskConfig = async (
+	token: string,
+	config: object,
+	fetcher: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/tasks/config/update`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/v1/tasks/config/update`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
@@ -553,11 +577,12 @@ export const generateTitle = async (
 	token: string = '',
 	model: string,
 	messages: object[],
-	chat_id?: string
+	chat_id?: string,
+	fetcher: typeof fetch = fetch
 ) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/tasks/title/completions`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/v1/tasks/title/completions`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
@@ -625,11 +650,12 @@ export const generateFollowUps = async (
 	token: string = '',
 	model: string,
 	messages: string,
-	chat_id?: string
+	chat_id?: string,
+	fetcher: typeof fetch = fetch
 ) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/tasks/follow_ups/completions`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/v1/tasks/follow_ups/completions`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
@@ -697,11 +723,12 @@ export const generateTags = async (
 	token: string = '',
 	model: string,
 	messages: string,
-	chat_id?: string
+	chat_id?: string,
+	fetcher: typeof fetch = fetch
 ) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/tasks/tags/completions`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/v1/tasks/tags/completions`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
@@ -769,11 +796,12 @@ export const generateEmoji = async (
 	token: string = '',
 	model: string,
 	prompt: string,
-	chat_id?: string
+	chat_id?: string,
+	fetcher: typeof fetch = fetch
 ) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/tasks/emoji/completions`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/v1/tasks/emoji/completions`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
@@ -818,11 +846,12 @@ export const generateQueries = async (
 	model: string,
 	messages: object[],
 	prompt: string,
-	type?: string = 'web_search'
+	type: string = 'web_search',
+	fetcher: typeof fetch = fetch
 ) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/tasks/queries/completions`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/v1/tasks/queries/completions`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
@@ -887,12 +916,13 @@ export const generateAutoCompletion = async (
 	model: string,
 	prompt: string,
 	messages?: object[],
-	type: string = 'search query'
+	type: string = 'search query',
+	fetcher: typeof fetch = fetch
 ) => {
 	const controller = new AbortController();
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/tasks/auto/completions`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/v1/tasks/auto/completions`, {
 		signal: controller.signal,
 		method: 'POST',
 		headers: {
@@ -957,12 +987,13 @@ export const generateMoACompletion = async (
 	token: string = '',
 	model: string,
 	prompt: string,
-	responses: string[]
+	responses: string[],
+	fetcher: typeof fetch = fetch
 ) => {
 	const controller = new AbortController();
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/tasks/moa/completions`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/v1/tasks/moa/completions`, {
 		signal: controller.signal,
 		method: 'POST',
 		headers: {
@@ -989,10 +1020,10 @@ export const generateMoACompletion = async (
 	return [res, controller];
 };
 
-export const getPipelinesList = async (token: string = '') => {
+export const getPipelinesList = async (token: string = '', fetcher: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/pipelines/list`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/v1/pipelines/list`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',
@@ -1018,7 +1049,12 @@ export const getPipelinesList = async (token: string = '') => {
 	return pipelines;
 };
 
-export const uploadPipeline = async (token: string, file: File, urlIdx: string) => {
+export const uploadPipeline = async (
+	token: string,
+	file: File,
+	urlIdx: string,
+	fetcher: typeof fetch = fetch
+) => {
 	let error = null;
 
 	// Create a new FormData object to handle the file upload
@@ -1026,7 +1062,7 @@ export const uploadPipeline = async (token: string, file: File, urlIdx: string) 
 	formData.append('file', file);
 	formData.append('urlIdx', urlIdx);
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/pipelines/upload`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/v1/pipelines/upload`, {
 		method: 'POST',
 		headers: {
 			...(token && { authorization: `Bearer ${token}` })
@@ -1055,10 +1091,15 @@ export const uploadPipeline = async (token: string, file: File, urlIdx: string) 
 	return res;
 };
 
-export const downloadPipeline = async (token: string, url: string, urlIdx: string) => {
+export const downloadPipeline = async (
+	token: string,
+	url: string,
+	urlIdx: string,
+	fetcher: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/pipelines/add`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/v1/pipelines/add`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
@@ -1091,10 +1132,15 @@ export const downloadPipeline = async (token: string, url: string, urlIdx: strin
 	return res;
 };
 
-export const deletePipeline = async (token: string, id: string, urlIdx: string) => {
+export const deletePipeline = async (
+	token: string,
+	id: string,
+	urlIdx: string,
+	fetcher: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/pipelines/delete`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/v1/pipelines/delete`, {
 		method: 'DELETE',
 		headers: {
 			Accept: 'application/json',
@@ -1127,7 +1173,7 @@ export const deletePipeline = async (token: string, id: string, urlIdx: string) 
 	return res;
 };
 
-export const getPipelines = async (token: string, urlIdx?: string) => {
+export const getPipelines = async (token: string, urlIdx?: string, fetcher: typeof fetch = fetch) => {
 	let error = null;
 
 	const searchParams = new URLSearchParams();
@@ -1135,7 +1181,7 @@ export const getPipelines = async (token: string, urlIdx?: string) => {
 		searchParams.append('urlIdx', urlIdx);
 	}
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/pipelines/?${searchParams.toString()}`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/v1/pipelines/?${searchParams.toString()}`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',
@@ -1161,7 +1207,12 @@ export const getPipelines = async (token: string, urlIdx?: string) => {
 	return pipelines;
 };
 
-export const getPipelineValves = async (token: string, pipeline_id: string, urlIdx: string) => {
+export const getPipelineValves = async (
+	token: string,
+	pipeline_id: string,
+	urlIdx: string,
+	fetcher: typeof fetch = fetch
+) => {
 	let error = null;
 
 	const searchParams = new URLSearchParams();
@@ -1169,7 +1220,7 @@ export const getPipelineValves = async (token: string, pipeline_id: string, urlI
 		searchParams.append('urlIdx', urlIdx);
 	}
 
-	const res = await fetch(
+	const res = await fetcher(
 		`${WEBUI_BASE_URL}/api/v1/pipelines/${pipeline_id}/valves?${searchParams.toString()}`,
 		{
 			method: 'GET',
@@ -1360,10 +1411,10 @@ export const getChangelog = async () => {
 	return res;
 };
 
-export const getVersionUpdates = async (token: string) => {
+export const getVersionUpdates = async (token: string, fetcher: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/version/updates`, {
+	const res = await fetcher(`${WEBUI_BASE_URL}/api/version/updates`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',

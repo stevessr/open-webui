@@ -81,7 +81,7 @@
 								<div class=" self-center">
 									<img
 										src={$user?.profile_image_url}
-										class="size-6 object-cover rounded-full"
+										class="size-6 w-auto object-cover rounded-full"
 										alt="User profile"
 										draggable="false"
 									/>

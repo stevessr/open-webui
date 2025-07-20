@@ -9,7 +9,7 @@
 	import { getUsage } from '$lib/apis';
 	import { userSignOut } from '$lib/apis/auths';
 
-	import { showSettings, mobile, showSidebar, showShortcuts, user } from '$lib/stores';
+	import { showSettings, mobile, showSidebar, showShortcuts, user, docs } from '$lib/stores';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import ArchiveBox from '$lib/components/icons/ArchiveBox.svelte';
@@ -18,7 +18,6 @@
 	import Keyboard from '$lib/components/icons/Keyboard.svelte';
 	import ShortcutsModal from '$lib/components/chat/ShortcutsModal.svelte';
 	import CustomStylesModal from '$lib/components/chat/CustomStylesModal.svelte';
-	import FloatingDocPreview from '$lib/components/common/FloatingDocPreview.svelte';
 	import Settings from '$lib/components/icons/Settings.svelte';
 	import Code from '$lib/components/icons/Code.svelte';
 	import UserGroup from '$lib/components/icons/UserGroup.svelte';
@@ -31,9 +30,6 @@
 	export let help = false;
 	export let className = 'max-w-[240px]';
 	let showCustomStyles = false;
-	let showDocPreview = false;
-	let showReleasesPreview = false;
-	let showCurrentPagePreview = false;
 
 	const dispatch = createEventDispatcher();
 
@@ -71,21 +67,6 @@
 
 <ShortcutsModal bind:show={$showShortcuts} />
 <CustomStylesModal bind:show={showCustomStyles} />
-<FloatingDocPreview
-	bind:show={showDocPreview}
-	url="https://docs.openwebui.com"
-	title="Open WebUI Documentation"
-/>
-<FloatingDocPreview
-	bind:show={showReleasesPreview}
-	url="https://github.com/open-webui/open-webui/releases"
-	title="Open WebUI Releases"
-/>
-<FloatingDocPreview
-	bind:show={showCurrentPagePreview}
-	url={typeof window !== 'undefined' ? window.location.href : ''}
-	title="Current Page Preview"
-/>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <DropdownMenu.Root
@@ -183,7 +164,11 @@
 					class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition"
 					id="chat-share-button"
 					on:click={() => {
-						showDocPreview = true;
+						docs.openDoc({
+							id: 'documentation',
+							url: 'https://docs.openwebui.com',
+							title: 'Open WebUI Documentation'
+						});
 						show = false;
 					}}
 				>
@@ -196,7 +181,11 @@
 					class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition"
 					id="menu-item-releases"
 					on:click={() => {
-						showReleasesPreview = true;
+						docs.openDoc({
+							id: 'releases',
+							url: 'https://github.com/open-webui/open-webui/releases',
+							title: 'Open WebUI Releases'
+						});
 						show = false;
 					}}
 				>
@@ -209,7 +198,13 @@
 					class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition"
 					id="current-page-preview-button"
 					on:click={() => {
-						showCurrentPagePreview = true;
+						if (typeof window !== 'undefined') {
+							docs.openDoc({
+								id: window.location.href,
+								url: window.location.href,
+								title: 'Current Page Preview'
+							});
+						}
 						show = false;
 					}}
 				>

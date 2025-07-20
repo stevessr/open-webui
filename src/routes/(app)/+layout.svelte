@@ -48,6 +48,7 @@
 	import type { i18n as i18nType } from 'i18next';
 
 	export let data: LayoutData;
+	export let params: any;
 	import type { IDBPDatabase } from 'idb';
 	import type { Banner, ToolServer } from '$lib/types';
 	import type { Chat } from '$lib/stores';
@@ -93,7 +94,9 @@
 
 				if (DB) {
 					const chats = await DB.getAllFromIndex('chats', 'timestamp');
-					localDBChats = chats.map((item, idx) => chats[chats.length - 1 - idx]);
+					localDBChats = chats.map(
+						(item: any, idx: number) => chats[chats.length - 1 - idx]
+					);
 
 					if (localDBChats.length === 0) {
 						await deleteDB('Chats');

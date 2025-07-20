@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { createEventDispatcher, onMount, getContext } from 'svelte';
+	import { get, type Readable } from 'svelte/store';
 	import { slide, fade } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import type { i18n as i18nType } from 'i18next';
@@ -29,7 +30,7 @@
 		removeMaterialTheme
 	} from '$lib/utils/materialThemeGenerator';
 
-	const i18n = getContext('i18n') as i18nType;
+	const i18n = getContext('i18n') as Readable<i18nType>;
 
 	import AdvancedParams, {
 		defaultParams
@@ -43,8 +44,9 @@
 	let selectedTheme = 'system';
 
 	let languages: Awaited<ReturnType<typeof getLanguages>> = [];
-	let lang = i18n.language;
+	let lang = get(i18n).language;
 	let notificationEnabled = false;
+let showUserGravatar = false;
 	let system = '';
 
 	let showAdvanced = false;
@@ -57,7 +59,7 @@
 			saveSettings({ notificationEnabled: notificationEnabled });
 		} else {
 			toast.error(
-				i18n.t(
+				get(i18n).t(
 					'Response notifications cannot be activated as the website permissions have been denied. Please visit your browser settings to grant the necessary access.'
 				)
 			);
@@ -93,6 +95,7 @@
 		languages = await getLanguages();
 
 		notificationEnabled = $settings.notificationEnabled ?? false;
+	showUserGravatar = $settings.showUserGravatar ?? false;
 		system = $settings.system ?? '';
 
 		advancedParams = { ...advancedParams, ...$settings.params };
@@ -222,10 +225,10 @@
 <div class="flex flex-col h-full justify-between text-sm" id="tab-general">
 	<div class="  overflow-y-scroll max-h-[28rem] lg:max-h-full">
 		<div class="">
-			<div class=" mb-1 text-sm font-medium">{i18n.t('WebUI Settings')}</div>
+			<div class=" mb-1 text-sm font-medium">{$i18n.t('WebUI Settings')}</div>
 
 			<div class="flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">{i18n.t('Theme')}</div>
+				<div class=" self-center text-xs font-medium">{$i18n.t('Theme')}</div>
 				<div class="flex items-center relative">
 					<select
 						class="dark:bg-gray-900 w-fit pr-8 rounded-sm py-2 px-2 text-xs bg-transparent text-right {$settings.highContrastMode
@@ -235,20 +238,20 @@
 						placeholder="Select a theme"
 						on:change={() => themeChangeHandler(selectedTheme)}
 					>
-						<option value="system">⚙️ {i18n.t('System')}</option>
-						<option value="dark">🌑 {i18n.t('Dark')}</option>
-						<option value="oled-dark">🌃 {i18n.t('OLED Dark')}</option>
-						<option value="light">☀️ {i18n.t('Light')}</option>
+						<option value="system">⚙️ {$i18n.t('System')}</option>
+						<option value="dark">🌑 {$i18n.t('Dark')}</option>
+						<option value="oled-dark">🌃 {$i18n.t('OLED Dark')}</option>
+						<option value="light">☀️ {$i18n.t('Light')}</option>
 						<option value="her">🌷 Her</option>
-						<option value="material-design">🎨 {i18n.t('Material Design')}</option>
-						<!-- <option value="rose-pine dark">🪻 {i18n.t('Rosé Pine')}</option>
-						<option value="rose-pine-dawn light">🌷 {i18n.t('Rosé Pine Dawn')}</option> -->
+						<option value="material-design">🎨 {$i18n.t('Material Design')}</option>
+						<!-- <option value="rose-pine dark">🪻 {$i18n.t('Rosé Pine')}</option>
+						<option value="rose-pine-dawn light">🌷 {$i18n.t('Rosé Pine Dawn')}</option> -->
 					</select>
 				</div>
 			</div>
 
 			<div class=" flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">{i18n.t('Language')}</div>
+				<div class=" self-center text-xs font-medium">{$i18n.t('Language')}</div>
 				<div class="flex items-center relative">
 					<select
 						class="dark:bg-gray-900 w-fit pr-8 rounded-sm py-2 px-2 text-xs bg-transparent text-right {$settings.highContrastMode
@@ -266,7 +269,7 @@
 					</select>
 				</div>
 			</div>
-			{#if i18n.language === 'en-US'}
+			{#if $i18n.language === 'en-US'}
 				<div class="mb-2 text-xs text-gray-400 dark:text-gray-500">
 					Couldn't find your language?
 					<a
@@ -281,7 +284,7 @@
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
-					<div class=" self-center text-xs font-medium">{i18n.t('Notifications')}</div>
+					<div class=" self-center text-xs font-medium">{$i18n.t('Notifications')}</div>
 
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
@@ -291,20 +294,37 @@
 						type="button"
 					>
 						{#if notificationEnabled === true}
-							<span class="ml-2 self-center">{i18n.t('On')}</span>
+							<span class="ml-2 self-center">{$i18n.t('On')}</span>
 						{:else}
-							<span class="ml-2 self-center">{i18n.t('Off')}</span>
+							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 						{/if}
 					</button>
 				</div>
 			</div>
+			
+			<div class=" py-0.5 flex w-full justify-between">
+				<div class=" self-center text-xs font-medium">{$i18n.t('Show User Gravatar')}</div>
+				<label class="relative inline-flex items-center cursor-pointer">
+					<input
+						type="checkbox"
+						bind:checked={showUserGravatar}
+						class="sr-only peer"
+						on:change={() => {
+							saveSettings({ showUserGravatar: showUserGravatar });
+						}}
+					/>
+					<div
+						class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+					></div>
+				</label>
+			</div>
 		</div>
 
-		{#if $user?.role === 'admin' || ($user?.permissions.chat?.system_prompt ?? true)}
+		{#if $user?.role === 'admin' || ($user?.permissions?.chat?.system_prompt ?? true)}
 			<hr class="border-gray-50 dark:border-gray-850 my-3" />
 
 			<div>
-				<div class=" my-2.5 text-sm font-medium">{i18n.t('System Prompt')}</div>
+				<div class=" my-2.5 text-sm font-medium">{$i18n.t('System Prompt')}</div>
 				<Textarea
 					bind:value={system}
 					className={'w-full text-sm outline-hidden resize-vertical' +
@@ -312,21 +332,21 @@
 							? ' p-2.5 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-850 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 overflow-y-hidden'
 							: ' bg-white dark:text-gray-300 dark:bg-gray-900')}
 					rows={4}
-					placeholder={i18n.t('Enter system prompt here')}
+					placeholder={$i18n.t('Enter system prompt here')}
 				/>
 			</div>
 		{/if}
 
-		{#if $user?.role === 'admin' || ($user?.permissions.chat?.controls ?? true)}
+		{#if $user?.role === 'admin' || ($user?.permissions?.chat?.controls ?? true)}
 			<div class="mt-2 space-y-3 pr-1.5">
 				<div class="flex justify-between items-center text-sm">
-					<div class="  font-medium">{i18n.t('Advanced Parameters')}</div>
+					<div class="  font-medium">{$i18n.t('Advanced Parameters')}</div>
 					<button
 						class=" text-xs font-medium text-gray-500"
 						type="button"
 						on:click={() => {
 							showAdvanced = !showAdvanced;
-						}}>{showAdvanced ? i18n.t('Hide') : i18n.t('Show')}</button
+						}}>{showAdvanced ? $i18n.t('Hide') : $i18n.t('Show')}</button
 					>
 				</div>
 
@@ -355,7 +375,7 @@
 				saveHandler();
 			}}
 		>
-			{i18n.t('Save')}
+			{$i18n.t('Save')}
 		</button>
 	</div>
 </div>
