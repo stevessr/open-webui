@@ -9,7 +9,7 @@
 	import { getUsage } from '$lib/apis';
 	import { userSignOut } from '$lib/apis/auths';
 
-	import { showSettings, mobile, showSidebar, user } from '$lib/stores';
+	import { showSettings, mobile, showSidebar, showShortcuts, user } from '$lib/stores';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import ArchiveBox from '$lib/components/icons/ArchiveBox.svelte';
@@ -30,8 +30,6 @@
 	export let role = '';
 	export let help = false;
 	export let className = 'max-w-[240px]';
-
-	let showShortcuts = false;
 	let showCustomStyles = false;
 	let showDocPreview = false;
 	let showReleasesPreview = false;
@@ -71,7 +69,7 @@
 	});
 </script>
 
-<ShortcutsModal bind:show={showShortcuts} />
+<ShortcutsModal bind:show={$showShortcuts} />
 <CustomStylesModal bind:show={showCustomStyles} />
 <FloatingDocPreview
 	bind:show={showDocPreview}
@@ -239,7 +237,7 @@
 					class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition"
 					id="chat-share-button"
 					on:click={() => {
-						showShortcuts = !showShortcuts;
+						showShortcuts.set(!$showShortcuts);
 						show = false;
 					}}
 				>

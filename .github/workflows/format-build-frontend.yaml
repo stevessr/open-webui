@@ -51,7 +51,7 @@ jobs:
             ${{ runner.os }}-vite-
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install --force
 
       - name: Format Frontend
         run: npm run format
@@ -97,7 +97,7 @@ jobs:
             ${{ runner.os }}-vite-
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm ci --force
 
       - name: Run vitest
         run: npm run test:frontend

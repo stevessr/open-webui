@@ -1,5 +1,5 @@
 <script>
-	import { showSidebar, user, settings } from '$lib/stores';
+	import { showArchivedChats, showSidebar, user, settings } from '$lib/stores';
 	import { getContext } from 'svelte';
 
 	const i18n = getContext('i18n');
