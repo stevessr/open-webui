@@ -4,7 +4,6 @@
 	import { goto } from '$app/navigation';
 	import { config, models, settings } from '$lib/stores';
 	import { WEBUI_BASE_URL } from '$lib/constants';
-	import type { Model, Prompt } from '$lib/stores';
 
 	import { onMount, tick, getContext } from 'svelte';
 	import { createNewModel, getModelById } from '$lib/apis/models';
@@ -14,7 +13,7 @@
 
 	const i18n = getContext('i18n');
 
-	const onSubmit = async (modelInfo: Model) => {
+	const onSubmit = async (modelInfo) => {
 		if ($models.find((m) => m.id === modelInfo.id)) {
 			toast.error(
 				`Error: A model with the ID '${modelInfo.id}' already exists. Please select a different ID to proceed.`
@@ -35,7 +34,7 @@
 					profile_image_url:
 						modelInfo.meta.profile_image_url ?? `${WEBUI_BASE_URL}/static/favicon.png`,
 					suggestion_prompts: modelInfo.meta.suggestion_prompts
-						? modelInfo.meta.suggestion_prompts.filter((prompt: Prompt) => prompt.content !== '')
+						? modelInfo.meta.suggestion_prompts.filter((prompt) => prompt.content !== '')
 						: null
 				},
 				params: { ...modelInfo.params }
@@ -48,7 +47,7 @@
 				await models.set(
 					await getModels(
 						localStorage.token,
-						($config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)) as object | null | undefined
+						$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
 					)
 				);
 				toast.success($i18n.t('Model created successfully!'));
@@ -57,10 +56,10 @@
 		}
 	};
 
-	let model: Model | null = null;
+	let model = null;
 
 	onMount(async () => {
-		window.addEventListener('message', async (event: MessageEvent) => {
+		window.addEventListener('message', async (event) => {
 			if (
 				!['https://openwebui.com', 'https://www.openwebui.com', 'http://localhost:5173'].includes(
 					event.origin
@@ -89,6 +88,6 @@
 	});
 </script>
 
-{#key model?.id}
+{#key model}
 	<ModelEditor {model} {onSubmit} />
 {/key}

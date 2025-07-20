@@ -3,20 +3,16 @@
 	import { goto } from '$app/navigation';
 	import { prompts } from '$lib/stores';
 	import { onMount, tick, getContext } from 'svelte';
-	import { type Writable } from 'svelte/store';
-	import type { i18n as i18nType } from 'i18next';
 
-	const i18n: Writable<i18nType> = getContext('i18n');
+	const i18n = getContext('i18n');
 
 	import { getPromptByCommand, getPrompts, updatePromptByCommand } from '$lib/apis/prompts';
 	import { page } from '$app/stores';
 
 	import PromptEditor from '$lib/components/workspace/Prompts/PromptEditor.svelte';
 
-	import type { Prompt } from '$lib/stores';
-
-	let prompt: Prompt | null = null;
-	const onSubmit = async (_prompt: Prompt) => {
+	let prompt = null;
+	const onSubmit = async (_prompt) => {
 		console.log(_prompt);
 		const prompt = await updatePromptByCommand(localStorage.token, _prompt).catch((error) => {
 			toast.error(`${error}`);
@@ -46,9 +42,7 @@
 					title: _prompt.title,
 					command: _prompt.command,
 					content: _prompt.content,
-					access_control: _prompt?.access_control === undefined ? {} : _prompt?.access_control,
-					user_id: _prompt.user_id,
-					timestamp: _prompt.timestamp
+					access_control: _prompt?.access_control === undefined ? {} : _prompt?.access_control
 				};
 			} else {
 				goto('/workspace/prompts');

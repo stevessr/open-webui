@@ -10,8 +10,8 @@
 	export let className = 'bg-white dark:bg-gray-900 rounded-2xl';
 	export let draggable = true;
 
-	let modalElement: HTMLElement | null = null;
-	let contentElement: HTMLElement | null = null;
+	let modalElement = null;
+	let contentElement = null;
 	let mounted = false;
 
 	// Dragging state
@@ -23,7 +23,7 @@
 	// https://www.w3.org/WAI/WCAG21/Understanding/keyboard.html
 	let focusTrap: FocusTrap.FocusTrap | null = null;
 
-	const sizeToWidth = (size: string) => {
+	const sizeToWidth = (size) => {
 		if (size === 'full') {
 			return 'w-full';
 		}
@@ -64,13 +64,11 @@
 		}
 
 		isDragging = true;
-		if (contentElement) {
-			const rect = contentElement.getBoundingClientRect();
-			dragOffset = {
-				x: event.clientX - rect.left,
-				y: event.clientY - rect.top
-			};
-		}
+		const rect = contentElement.getBoundingClientRect();
+		dragOffset = {
+			x: event.clientX - rect.left,
+			y: event.clientY - rect.top
+		};
 		document.addEventListener('mousemove', handleMouseMove);
 		document.addEventListener('mouseup', handleMouseUp);
 		event.preventDefault();
@@ -105,9 +103,7 @@
 		// Reset position when opening
 		position = { x: 0, y: 0 };
 	} else if (modalElement) {
-		if (focusTrap) {
-			focusTrap.deactivate();
-		}
+		focusTrap.deactivate();
 		window.removeEventListener('keydown', handleKeyDown);
 		document.body.removeChild(modalElement);
 		document.body.style.overflow = 'unset';

@@ -125,8 +125,8 @@ matplotlib.pyplot.show = show`);
 		// 		}
 		// 	});
 		// });
-	} catch (error: unknown) {
-		self.stderr = (error as Error).toString();
+	} catch (error) {
+		self.stderr = error.toString();
 	}
 
 	self.postMessage({ id, result: self.result, stdout: self.stdout, stderr: self.stderr });
@@ -167,9 +167,9 @@ function processResult(result: any): any {
 		}
 		// Stringify anything that's left (e.g., Proxy objects that cannot be directly processed)
 		return JSON.stringify(result);
-	} catch (err: unknown) {
+	} catch (err) {
 		// In case something unexpected happens, we return a stringified fallback
-		return `[processResult error]: ${(err as Error).message || (err as Error).toString()}`;
+		return `[processResult error]: ${err.message || err.toString()}`;
 	}
 }
 

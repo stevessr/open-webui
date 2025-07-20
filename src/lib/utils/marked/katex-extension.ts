@@ -23,15 +23,15 @@ const ALLOWED_SURROUNDING_CHARS =
 // const inlineRule = /^(\${1,2})(?!\$)((?:\\.|[^\\\n])*?(?:\\.|[^\\\n\$]))\1(?=[\s?!\.,:？！。，：]|$)/;
 // const blockRule = /^(\${1,2})\n((?:\\[^]|[^\\])+?)\n\1(?:\n|$)/;
 
-let inlinePatterns: string[] = [];
-let blockPatterns: string[] = [];
+let inlinePatterns = [];
+let blockPatterns = [];
 
-function escapeRegex(string: string) {
+function escapeRegex(string) {
 	return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
-function generateRegexRules(delimiters: any[]) {
-	delimiters.forEach((delimiter: any) => {
+function generateRegexRules(delimiters) {
+	delimiters.forEach((delimiter) => {
 		const { left, right, display } = delimiter;
 		// Ensure regex-safe delimiters
 		const escapedLeft = escapeRegex(left);
@@ -68,7 +68,7 @@ export default function (options = {}) {
 	};
 }
 
-function katexStart(src: string, displayMode: boolean) {
+function katexStart(src, displayMode: boolean) {
 	let ruleReg = displayMode ? blockRule : inlineRule;
 
 	let indexSrc = src;
@@ -114,7 +114,7 @@ function katexStart(src: string, displayMode: boolean) {
 	}
 }
 
-function katexTokenizer(src: string, tokens: any, displayMode: boolean) {
+function katexTokenizer(src, tokens, displayMode: boolean) {
 	let ruleReg = displayMode ? blockRule : inlineRule;
 	let type = displayMode ? 'blockKatex' : 'inlineKatex';
 
@@ -123,8 +123,8 @@ function katexTokenizer(src: string, tokens: any, displayMode: boolean) {
 	if (match) {
 		const text = match
 			.slice(2)
-			.filter((item: string) => item)
-			.find((item: string) => item.trim());
+			.filter((item) => item)
+			.find((item) => item.trim());
 
 		return {
 			type,
@@ -135,33 +135,33 @@ function katexTokenizer(src: string, tokens: any, displayMode: boolean) {
 	}
 }
 
-function inlineKatex(options: any) {
+function inlineKatex(options) {
 	return {
 		name: 'inlineKatex',
 		level: 'inline',
-		start(src: string) {
+		start(src) {
 			return katexStart(src, false);
 		},
-		tokenizer(src: string, tokens: any) {
+		tokenizer(src, tokens) {
 			return katexTokenizer(src, tokens, false);
 		},
-		renderer(token: any) {
+		renderer(token) {
 			return `${token?.text ?? ''}`;
 		}
 	};
 }
 
-function blockKatex(options: any) {
+function blockKatex(options) {
 	return {
 		name: 'blockKatex',
 		level: 'block',
-		start(src: string) {
+		start(src) {
 			return katexStart(src, true);
 		},
-		tokenizer(src: string, tokens: any) {
+		tokenizer(src, tokens) {
 			return katexTokenizer(src, tokens, true);
 		},
-		renderer(token: any) {
+		renderer(token) {
 			return `${token?.text ?? ''}`;
 		}
 	};

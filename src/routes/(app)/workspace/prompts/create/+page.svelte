@@ -3,21 +3,22 @@
 	import { goto } from '$app/navigation';
 	import { prompts } from '$lib/stores';
 	import { onMount, tick, getContext } from 'svelte';
-	import { type Writable } from 'svelte/store';
-	import type { i18n as i18nType } from 'i18next';
 
-	const i18n: Writable<i18nType> = getContext('i18n');
+	const i18n = getContext('i18n');
 
 	import { createNewPrompt, getPrompts } from '$lib/apis/prompts';
 	import PromptEditor from '$lib/components/workspace/Prompts/PromptEditor.svelte';
 
-	import type { Prompt } from '$lib/stores';
-
-	let prompt: Prompt | null = null;
+	let prompt: {
+		title: string;
+		command: string;
+		content: string;
+		access_control: any | null;
+	} | null = null;
 
 	let clone = false;
 
-	const onSubmit = async (_prompt: Prompt) => {
+	const onSubmit = async (_prompt) => {
 		const res = await createNewPrompt(localStorage.token, _prompt).catch((error) => {
 			toast.error(`${error}`);
 			return null;
@@ -47,9 +48,7 @@
 				title: _prompt.title,
 				command: _prompt.command,
 				content: _prompt.content,
-				access_control: null,
-				user_id: '', // Placeholder, replace with actual user ID if available
-				timestamp: Date.now() / 1000 // Current Unix timestamp
+				access_control: null
 			};
 		});
 
@@ -68,9 +67,7 @@
 				title: _prompt.title,
 				command: _prompt.command,
 				content: _prompt.content,
-				access_control: null,
-				user_id: '', // Placeholder, replace with actual user ID if available
-				timestamp: Date.now() / 1000 // Current Unix timestamp
+				access_control: null
 			};
 		}
 	});

@@ -1,6 +1,6 @@
 import CRC32 from 'crc-32';
 
-export const parseFile = async (file: File) => {
+export const parseFile = async (file) => {
 	if (file.type === 'application/json') {
 		return await parseJsonFile(file);
 	} else if (file.type === 'image/png') {
@@ -10,7 +10,7 @@ export const parseFile = async (file: File) => {
 	}
 };
 
-const parseJsonFile = async (file: File) => {
+const parseJsonFile = async (file) => {
 	const text = await file.text();
 	const json = JSON.parse(text);
 
@@ -24,7 +24,7 @@ const parseJsonFile = async (file: File) => {
 	};
 };
 
-const parsePngFile = async (file: File) => {
+const parsePngFile = async (file) => {
 	const arrayBuffer = await file.arrayBuffer();
 	const text = parsePngText(arrayBuffer);
 	const json = JSON.parse(text);
@@ -41,7 +41,7 @@ const parsePngFile = async (file: File) => {
 	};
 };
 
-const parsePngText = (arrayBuffer: ArrayBuffer) => {
+const parsePngText = (arrayBuffer) => {
 	const textChunkKeyword = 'chara';
 	const chunks = readPngChunks(new Uint8Array(arrayBuffer));
 
@@ -56,12 +56,12 @@ const parsePngText = (arrayBuffer: ArrayBuffer) => {
 
 	try {
 		return new TextDecoder().decode(Uint8Array.from(atob(textChunk.text), (c) => c.charCodeAt(0)));
-	} catch (e: unknown) {
-		throw new Error('Unable to parse "chara" field as base64', { cause: e });
+	} catch (e) {
+		throw new Error('Unable to parse "chara" field as base64', e);
 	}
 };
 
-const readPngChunks = (data: Uint8Array) => {
+const readPngChunks = (data) => {
 	const isValidPng =
 		data[0] === 0x89 &&
 		data[1] === 0x50 &&
@@ -80,7 +80,7 @@ const readPngChunks = (data: Uint8Array) => {
 	while (offset < data.length) {
 		let length =
 			(data[offset] << 24) | (data[offset + 1] << 16) | (data[offset + 2] << 8) | data[offset + 3];
-		let type = String.fromCharCode.apply(null, Array.from(data.slice(offset + 4, offset + 8)));
+		let type = String.fromCharCode.apply(null, data.slice(offset + 4, offset + 8));
 		let chunkData = data.slice(offset + 8, offset + 8 + length);
 		let crc =
 			(data[offset + 8 + length] << 24) |
@@ -99,7 +99,7 @@ const readPngChunks = (data: Uint8Array) => {
 	return chunks;
 };
 
-const decodeTextChunk = (data: Uint8Array) => {
+const decodeTextChunk = (data) => {
 	let i = 0;
 	const keyword = [];
 	const text = [];
@@ -115,12 +115,12 @@ const decodeTextChunk = (data: Uint8Array) => {
 	return { keyword: keyword.join(''), text: text.join('') };
 };
 
-const extractCharacter = (json: Record<string, any>) => {
-	function getTrimmedValue(json: Record<string, any>, keys: string[]) {
+const extractCharacter = (json) => {
+	function getTrimmedValue(json, keys) {
 		return keys
 			.map((key) => {
 				const keyParts = key.split('.');
-				let value: any = json;
+				let value = json;
 				for (const part of keyParts) {
 					if (value && value[part] != null) {
 						value = value[part];
@@ -154,7 +154,7 @@ const extractCharacter = (json: Record<string, any>) => {
 	return { name, summary, personality, scenario, greeting, examples };
 };
 
-const detectFormats = (json: Record<string, any>) => {
+const detectFormats = (json) => {
 	const formats = [];
 
 	if (

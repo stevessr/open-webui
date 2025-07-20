@@ -59,7 +59,7 @@ export const AIAutocompletion = Extension.create({
 	},
 
 	addProseMirrorPlugins() {
-		let debounceTimer: NodeJS.Timeout | null = null;
+		let debounceTimer = null;
 		let loading = false;
 
 		let touchStartX = 0;
@@ -67,7 +67,7 @@ export const AIAutocompletion = Extension.create({
 
 		let isComposing = false;
 
-		const handleAICompletion = (view: any) => {
+		const handleAICompletion = (view) => {
 			const { state, dispatch } = view;
 			const { selection } = state;
 			const { $head } = selection;
@@ -75,7 +75,7 @@ export const AIAutocompletion = Extension.create({
 			// Start debounce logic for AI generation only if the cursor is at the end of the paragraph
 			if (selection.empty && $head.pos === $head.end()) {
 				// Set up debounce for AI generation
-				if (this.options.debounceTime !== null && debounceTimer) {
+				if (this.options.debounceTime !== null) {
 					clearTimeout(debounceTimer);
 
 					// Capture current position
@@ -102,7 +102,7 @@ export const AIAutocompletion = Extension.create({
 								loading = true;
 								this.options
 									.generateCompletion(prompt)
-									.then((suggestion: string) => {
+									.then((suggestion) => {
 										if (suggestion && suggestion.trim() !== '') {
 											if (view.state.selection.$head.pos === view.state.selection.$head.end()) {
 												if (view.state === newState) {
@@ -268,9 +268,7 @@ export const AIAutocompletion = Extension.create({
 							const { state, dispatch } = view;
 
 							// Reset debounce timer on mouse click
-							if (debounceTimer) {
-								clearTimeout(debounceTimer);
-							}
+							clearTimeout(debounceTimer);
 
 							// Iterate over all nodes in the document
 							const tr = state.tr;
