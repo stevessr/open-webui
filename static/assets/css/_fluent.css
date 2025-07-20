@@ -36,6 +36,11 @@
     border: none;
 }
 
-.tag-selcetor{
+.tag-selcetor,.clean{
     background: transparent;
+}
+
+tr,tbody,thead,table{
+    background: transparent;
+    backdrop-filter: blur(8px);
 }
