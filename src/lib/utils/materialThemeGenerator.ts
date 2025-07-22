@@ -19,7 +19,21 @@ import {
 export function generateMaterialPalette(dominantColors: RGB[]): ColorPalette {
 	if (dominantColors.length === 0) {
 		// Fallback to default Material Design colors
-		return getDefaultPalette();
+		// Fallback to CSS variables if no dominant colors are found
+		return {
+			primary: 'var(--md-sys-color-primary)',
+			primaryVariant: 'var(--md-sys-color-primary-variant)',
+			secondary: 'var(--md-sys-color-secondary)',
+			secondaryVariant: 'var(--md-sys-color-secondary-variant)',
+			background: 'var(--md-sys-color-background)',
+			surface: 'var(--md-sys-color-surface)',
+			error: 'var(--md-sys-color-error)',
+			onPrimary: 'var(--md-sys-color-on-primary)',
+			onSecondary: 'var(--md-sys-color-on-secondary)',
+			onBackground: 'var(--md-sys-color-on-background)',
+			onSurface: 'var(--md-sys-color-on-surface)',
+			onError: 'var(--md-sys-color-on-error)'
+		};
 	}
 
 	const primaryColor = dominantColors[0];
@@ -113,62 +127,48 @@ function getOptimalTextColor(backgroundColor: RGB): RGB {
 /**
  * Get default Material Design palette
  */
-function getDefaultPalette(): ColorPalette {
-	return {
-		primary: '#6200EE',
-		primaryVariant: '#3700B3',
-		secondary: '#03DAC6',
-		secondaryVariant: '#018786',
-		background: '#FFFFFF',
-		surface: '#FFFFFF',
-		error: '#B00020',
-		onPrimary: '#FFFFFF',
-		onSecondary: '#000000',
-		onBackground: '#000000',
-		onSurface: '#000000',
-		onError: '#FFFFFF'
-	};
-}
 
 /**
  * Apply Material Design theme to CSS custom properties
  */
-export function applyMaterialTheme(palette: ColorPalette, isDark = false): void {
+export function applyMaterialTheme(palette?: ColorPalette, isDark = false): void {
 	const root = document.documentElement;
 
-	// Apply Material Design colors
-	root.style.setProperty('--md-primary', palette.primary);
-	root.style.setProperty('--md-primary-variant', palette.primaryVariant);
-	root.style.setProperty('--md-secondary', palette.secondary);
-	root.style.setProperty('--md-secondary-variant', palette.secondaryVariant);
-	root.style.setProperty('--md-background', palette.background);
-	root.style.setProperty('--md-surface', palette.surface);
-	root.style.setProperty('--md-error', palette.error);
-	root.style.setProperty('--md-on-primary', palette.onPrimary);
-	root.style.setProperty('--md-on-secondary', palette.onSecondary);
-	root.style.setProperty('--md-on-background', palette.onBackground);
-	root.style.setProperty('--md-on-surface', palette.onSurface);
-	root.style.setProperty('--md-on-error', palette.onError);
+	if (palette) {
+		// Apply Material Design colors from palette
+		root.style.setProperty('--md-primary', palette.primary);
+		root.style.setProperty('--md-primary-variant', palette.primaryVariant);
+		root.style.setProperty('--md-secondary', palette.secondary);
+		root.style.setProperty('--md-secondary-variant', palette.secondaryVariant);
+		root.style.setProperty('--md-background', palette.background);
+		root.style.setProperty('--md-surface', palette.surface);
+		root.style.setProperty('--md-error', palette.error);
+		root.style.setProperty('--md-on-primary', palette.onPrimary);
+		root.style.setProperty('--md-on-secondary', palette.onSecondary);
+		root.style.setProperty('--md-on-background', palette.onBackground);
+		root.style.setProperty('--md-on-surface', palette.onSurface);
+		root.style.setProperty('--md-on-error', palette.onError);
 
-	// Map to existing Tailwind color variables for compatibility
-	root.style.setProperty('--color-primary', palette.primary);
-	root.style.setProperty('--color-secondary', palette.secondary);
-	
-	// Update button colors
-	root.style.setProperty('--color-button-primary', palette.primary);
-	root.style.setProperty('--color-button-primary-hover', palette.primaryVariant);
-	root.style.setProperty('--color-button-secondary', palette.secondary);
-	root.style.setProperty('--color-button-secondary-hover', palette.secondaryVariant);
+		// Map to existing Tailwind color variables for compatibility
+		root.style.setProperty('--color-primary', palette.primary);
+		root.style.setProperty('--color-secondary', palette.secondary);
 
-	// Update text colors
-	root.style.setProperty('--color-text-primary', palette.onBackground);
-	root.style.setProperty('--color-text-secondary', palette.onSurface);
+		// Update button colors
+		root.style.setProperty('--color-button-primary', palette.primary);
+		root.style.setProperty('--color-button-primary-hover', palette.primaryVariant);
+		root.style.setProperty('--color-button-secondary', palette.secondary);
+		root.style.setProperty('--color-button-secondary-hover', palette.secondaryVariant);
+
+		// Update text colors
+		root.style.setProperty('--color-text-primary', palette.onBackground);
+		root.style.setProperty('--color-text-secondary', palette.onSurface);
+
+		// Store the palette for future reference
+		(window as any).currentMaterialPalette = palette;
+	}
 
 	// Add Material Design theme class
 	root.classList.add('md-theme');
-	
-	// Store the palette for future reference
-	(window as any).currentMaterialPalette = palette;
 }
 
 /**
@@ -212,6 +212,20 @@ export async function generateThemeFromBackground(backgroundUrl: string): Promis
 		return generateMaterialPalette(dominantColors);
 	} catch (error) {
 		console.error('Failed to generate theme from background:', error);
-		return getDefaultPalette();
+		// Return a default palette based on CSS variables if image processing fails
+		return {
+			primary: 'var(--md-sys-color-primary)',
+			primaryVariant: 'var(--md-sys-color-primary-variant)',
+			secondary: 'var(--md-sys-color-secondary)',
+			secondaryVariant: 'var(--md-sys-color-secondary-variant)',
+			background: 'var(--md-sys-color-background)',
+			surface: 'var(--md-sys-color-surface)',
+			error: 'var(--md-sys-color-error)',
+			onPrimary: 'var(--md-sys-color-on-primary)',
+			onSecondary: 'var(--md-sys-color-on-secondary)',
+			onBackground: 'var(--md-sys-color-on-background)',
+			onSurface: 'var(--md-sys-color-on-surface)',
+			onError: 'var(--md-sys-color-on-error)'
+		};
 	}
 }

@@ -36,4 +36,5 @@ export interface DocInfo {
 	id: string;
 	url: string;
 	title: string;
+	isLoading?: boolean;
 }

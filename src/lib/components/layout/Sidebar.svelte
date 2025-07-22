@@ -445,10 +445,7 @@
 />
 
 <FloatingDocPreview
-	show={$docs.docs.length > 0}
-	docs={$docs.docs}
-	activeDocId={$docs.activeDocId}
-	on:close-doc={(e) => docs.closeDoc(e.detail.id)}
+	show={$docs !== null}
 />
 
 {#if $showSidebar}

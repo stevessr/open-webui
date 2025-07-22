@@ -54,12 +54,12 @@
 	};
 
 	const signInHandler = async () => {
-		const sessionUser = await userSignIn(email, password).catch((error) => {
-			toast.error(`${error}`);
-			return null;
-		});
-
+		try {
+			const sessionUser = await userSignIn(email, password);
 		await setSessionUser(sessionUser);
+		} catch (error) {
+			toast.error(error?.detail ?? `${error}`);
+		}
 	};
 
 	const signUpHandler = async () => {

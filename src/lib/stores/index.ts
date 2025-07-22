@@ -282,6 +282,7 @@ type Config = {
 		pending_user_overlay_title?: string;
 		pending_user_overlay_description?: string;
 	};
+	audio?: AudioSettings;
 };
 
 type PromptSuggestion = {
@@ -289,7 +290,7 @@ type PromptSuggestion = {
 	title: [string, string];
 };
 
-type SessionUser = {
+export type SessionUser = {
 	permissions: any;
 	id: string;
 	email: string;

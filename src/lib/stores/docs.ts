@@ -1,73 +1,62 @@
 import { writable } from 'svelte/store';
 import type { DocInfo } from '$lib/types';
+import { DocsCache } from '$lib/utils/cache';
 
 const createDocsStore = () => {
-	const { subscribe, update } = writable<{ docs: DocInfo[]; activeDocId: string | null }>({
-		docs: [],
-		activeDocId: null
-	});
+	const { subscribe, set, update } = writable<DocInfo | null>(null);
+	const cache = DocsCache.getInstance();
+
+	const fetchDocContent = async (url: string) => {
+		const cachedContent = await cache.get<string>(url);
+		if (cachedContent) {
+			update((state) => (state ? { ...state, content: cachedContent, isLoading: false } : null));
+			return;
+		}
+
+		try {
+			const response = await fetch(url);
+			if (!response.ok) {
+				throw new Error(`Failed to fetch doc from ${url}`);
+			}
+			const content = await response.text();
+			await cache.set(url, content);
+			update((state) => (state ? { ...state, content, isLoading: false } : null));
+		} catch (error) {
+			console.error(error);
+			update((state) => (state ? { ...state, isLoading: false } : state));
+		}
+	};
 
 	const openDoc = (doc: DocInfo) => {
-		update((state) => {
-			const existingDoc = state.docs.find((d) => d.id === doc.id);
-			if (existingDoc) {
-				return { ...state, activeDocId: doc.id };
-			}
-			return { ...state, docs: [...state.docs, doc], activeDocId: doc.id };
-		});
+		set({ ...doc, isLoading: true });
+		if (doc.url) {
+			fetchDocContent(doc.url);
+		}
 	};
 
-	const closeDoc = (id: string) => {
-		update((state) => {
-			const newDocs = state.docs.filter((d) => d.id !== id);
-			let newActiveDocId = state.activeDocId;
-
-			if (state.activeDocId === id) {
-				if (newDocs.length > 0) {
-					const currentIndex = state.docs.findIndex((d) => d.id === id);
-					newActiveDocId = newDocs[Math.max(0, currentIndex - 1)].id;
-				} else {
-					newActiveDocId = null;
-				}
-			}
-
-			return { docs: newDocs, activeDocId: newActiveDocId };
-		});
+	const closeDoc = () => {
+		set(null);
 	};
 
-	const openNewTab = () => {
+	const updateDoc = (updatedFields: Partial<Omit<DocInfo, 'id'>>) => {
 		update((state) => {
-			const { docs, activeDocId } = state;
-			const activeDoc = docs.find((d) => d.id === activeDocId);
+			if (!state) return null;
 
-			if (!activeDoc) {
-				return state; // No active doc to copy
+			const newDoc = { ...state, ...updatedFields };
+			if (updatedFields.url && updatedFields.url !== state.url) {
+				newDoc.isLoading = true;
+				fetchDocContent(updatedFields.url);
 			}
-
-			const newDoc: DocInfo = {
-				id: crypto.randomUUID(),
-				url: activeDoc.url,
-				title: `${activeDoc.title}『複製品』`
-			};
-
-			return {
-				...state,
-				docs: [...docs, newDoc],
-				activeDocId: newDoc.id
-			};
+			return newDoc;
 		});
-	};
-
-	const selectDoc = (id: string) => {
-		update((state) => ({ ...state, activeDocId: id }));
 	};
 
 	return {
 		subscribe,
 		openDoc,
 		closeDoc,
-		openNewTab,
-		selectDoc
+		updateDoc,
+		fetchDocContent
 	};
 };
 
