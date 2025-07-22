@@ -25,7 +25,7 @@
 			if (styleElement) {
 				styleElement.remove();
 			}
-			
+
 			// Create new style element
 			styleElement = document.createElement('style');
 			styleElement.setAttribute('data-custom-css', 'true');
@@ -39,7 +39,7 @@
 			if (scriptElement) {
 				scriptElement.remove();
 			}
-			
+
 			// Create new script element
 			scriptElement = document.createElement('script');
 			scriptElement.setAttribute('data-custom-js', 'true');
@@ -87,4 +87,7 @@
 	}
 </script>
 
-<!-- This component doesn't render anything visible -->
+<!-- /src/lib/components/common/CustomStyles.svelte -->
+<style>
+	@import '$lib/styles/theme.css';
+</style>
