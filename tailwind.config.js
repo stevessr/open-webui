@@ -1,10 +1,14 @@
-import typography from '@tailwindcss/typography';
 import containerQuries from '@tailwindcss/container-queries';
+import typography from '@tailwindcss/typography';
 
 /** @type {import('tailwindcss').Config} */
 export default {
 	darkMode: 'class',
-	content: ['./src/**/*.{html,js,svelte,ts}'],
+	content: [
+		'./src/**/*.{svelte,ts,html}',
+		'./src/lib/components/**/*.{svelte,ts,html}',
+		'./src/routes/**/*.{svelte,ts,html}'
+	],
 	theme: {
 		extend: {
 			colors: {
@@ -23,21 +27,10 @@ export default {
 					950: 'var(--color-gray-950, #0d0d0d)'
 				}
 			},
-			typography: {
-				DEFAULT: {
-					css: {
-						pre: false,
-						code: false,
-						'pre code': false,
-						'code::before': false,
-						'code::after': false
-					}
-				}
-			},
 			padding: {
 				'safe-bottom': 'env(safe-area-inset-bottom)'
 			}
 		}
 	},
-	plugins: [typography, containerQuries]
+	plugins: [containerQuries, typography]
 };

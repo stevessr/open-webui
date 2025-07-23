@@ -666,26 +666,26 @@
 		align-items: center;
 		justify-content: center;
 		height: 100%;
-		color: theme('colors.gray.500');
-		background-color: theme('colors.gray.50');
-		padding: theme('spacing.8');
+		color: #6b7280;
+		background-color: #f9fafb;
+		padding: 2rem;
 		text-align: center;
 	}
 	:global(.dark) .new-tab-placeholder {
-		color: theme('colors.gray.400');
-		background-color: theme('colors.gray.800');
+		color: #9ca3af;
+		background-color: #1f2937;
 	}
 	.new-tab-placeholder h1 {
-		font-size: theme('fontSize.2xl');
-		font-weight: theme('fontWeight.bold');
-		color: theme('colors.gray.800');
-		margin-bottom: theme('spacing.2');
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: #1f2937;
+		margin-bottom: 0.5rem;
 	}
 	:global(.dark) .new-tab-placeholder h1 {
-		color: theme('colors.gray.100');
+		color: #f3f4f6;
 	}
 	.new-tab-placeholder p {
-		font-size: theme('fontSize.base');
+		font-size: 1rem;
 		max-width: 400px;
 	}
 
@@ -729,9 +729,9 @@
 	}
 
 	.active-menu {
-		background-color: theme('colors.gray.300');
+		background-color: #d1d5db;
 	}
 	:global(.dark) .active-menu {
-		background-color: theme('colors.gray.600');
+		background-color: #4b5563;
 	}
 </style>

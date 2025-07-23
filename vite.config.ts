@@ -1,6 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-
+import tailwindcss from '@tailwindcss/vite'
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
@@ -10,11 +10,11 @@ export default defineConfig({
 			targets: [
 				{
 					src: 'node_modules/onnxruntime-web/dist/*.jsep.*',
-
 					dest: 'wasm'
 				}
 			]
-		})
+		}),
+		tailwindcss()
 	],
 	define: {
 		APP_VERSION: JSON.stringify(process.env.npm_package_version),
