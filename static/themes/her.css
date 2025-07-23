@@ -1,0 +1,28 @@
+.her {
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --background: 12 60% 90%;
+  --foreground: 12 60% 10%;
+  --accent: 12 80% 50%;
+  --accent-foreground: 12 60% 98%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 12 60% 80%;
+  --input: 12 60% 80%;
+  --ring: 12 80% 50%;
+
+  --color-gray-50: #fdf6f5;
+  --color-gray-100: #fbebe9;
+  --color-gray-200: #f8e0dd;
+  --color-gray-300: #f5d5d1;
+  --color-gray-400: #f2cac5;
+  --color-gray-500: #eebfb9;
+  --color-gray-600: #e8a99d;
+  --color-gray-700: #e29381;
+  --color-gray-800: #dc7d65;
+  --color-gray-850: #d66749;
+  --color-gray-900: #ce512d;
+  --color-gray-950: #983724;
+}

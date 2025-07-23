@@ -40,7 +40,7 @@
 	export let getModels: Function;
 
 	// General
-	let themes = ['dark', 'light', 'oled-dark', 'material-design'];
+	let themes = ['dark', 'light', 'oled-dark', 'material-design', 'her'];
 	let selectedTheme = 'system';
 
 	let languages: Awaited<ReturnType<typeof getLanguages>> = [];
@@ -91,6 +91,7 @@ let showUserGravatar = false;
 
 	onMount(async () => {
 		selectedTheme = localStorage.theme ?? 'system';
+		applyTheme(selectedTheme);
 
 		languages = await getLanguages();
 
@@ -103,69 +104,49 @@ let showUserGravatar = false;
 	});
 
 	const applyTheme = (_theme: string) => {
-		let themeToApply = _theme === 'oled-dark' ? 'dark' : _theme;
-
+		let themeToApply = _theme;
 		if (_theme === 'system') {
 			themeToApply = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 		}
 
-		if (themeToApply === 'dark' && !_theme.includes('oled')) {
-			document.documentElement.style.setProperty('--color-gray-800', '#333');
-			document.documentElement.style.setProperty('--color-gray-850', '#262626');
-			document.documentElement.style.setProperty('--color-gray-900', '#171717');
-			document.documentElement.style.setProperty('--color-gray-950', '#0d0d0d');
+		const themeLink = document.head.querySelector('link[data-theme]');
+		if (themeLink && themeLink.getAttribute('href') !== `/static/themes/${themeToApply}.css`) {
+			themeLink.remove();
 		}
 
-		themes
-			.filter((e) => e !== themeToApply)
-			.forEach((e) => {
-				e.split(' ').forEach((e) => {
-					document.documentElement.classList.remove(e);
-				});
-			});
+		if (themeToApply !== 'dark' && themeToApply !== 'light' && themeToApply !== 'system') {
+			const link = document.createElement('link');
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = `/static/themes/${themeToApply}.css`;
+			link.setAttribute('data-theme', themeToApply);
+			document.head.appendChild(link);
+		}
 
-		themeToApply.split(' ').forEach((e) => {
-			document.documentElement.classList.add(e);
-		});
+		// oled-dark is a variant of dark
+		if (themeToApply === 'oled-dark') {
+			document.documentElement.classList.add('dark');
+		} else {
+			themes
+				.filter((e) => e !== themeToApply)
+				.forEach((e) => {
+					document.documentElement.classList.remove(e.split(' ')[0]);
+				});
+			document.documentElement.classList.add(themeToApply);
+		}
 
 		const metaThemeColor = document.querySelector('meta[name="theme-color"]');
 		if (metaThemeColor) {
-			if (_theme.includes('system')) {
-				const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-					? 'dark'
-					: 'light';
-				console.log('Setting system meta theme color: ' + systemTheme);
-				metaThemeColor.setAttribute('content', systemTheme === 'light' ? '#ffffff' : '#171717');
+			if (themeToApply === 'dark' || themeToApply === 'oled-dark') {
+				metaThemeColor.setAttribute('content', themeToApply === 'oled-dark' ? '#000000' : '#171717');
 			} else {
-				console.log('Setting meta theme color: ' + _theme);
-				metaThemeColor.setAttribute(
-					'content',
-					_theme === 'dark'
-						? '#171717'
-						: _theme === 'oled-dark'
-							? '#000000'
-							: _theme === 'her'
-								? '#983724'
-								: _theme === 'material-design'
-									? '#6200EE'
-									: '#ffffff'
-				);
+				metaThemeColor.setAttribute('content', '#ffffff');
 			}
 		}
 
 		if (typeof window !== 'undefined' && window.applyTheme) {
 			window.applyTheme();
 		}
-
-		if (_theme.includes('oled')) {
-			document.documentElement.style.setProperty('--color-gray-800', '#101010');
-			document.documentElement.style.setProperty('--color-gray-850', '#050505');
-			document.documentElement.style.setProperty('--color-gray-900', '#000000');
-			document.documentElement.style.setProperty('--color-gray-950', '#000000');
-			document.documentElement.classList.add('dark');
-		}
-
-		console.log(_theme);
 	};
 
 	const themeChangeHandler = async (_theme: string) => {
