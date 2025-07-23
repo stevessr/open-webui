@@ -194,9 +194,9 @@ export const getAllUsers = async (token: string) => {
 	return res;
 };
 
-export const getUserSettings = async (token: string, fetcher: typeof fetch = fetch) => {
+export const getUserSettings = async (token: string) => {
 	let error = null;
-	const res = await fetcher(`${WEBUI_API_BASE_URL}/users/user/settings`, {
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/user/settings`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',

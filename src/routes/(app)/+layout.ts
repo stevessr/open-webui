@@ -1,4 +1,4 @@
-import { getModels, getToolServersData, getVersionUpdates } from '$lib/apis';
+import { getModels, getVersionUpdates } from '$lib/apis';
 import { getBanners } from '$lib/apis/configs';
 import { getTools } from '$lib/apis/tools';
 import { getUserSettings } from '$lib/apis/users';
@@ -14,13 +14,13 @@ export const load: LayoutLoad = async ({ fetch, depends }) => {
 
 	depends('layout:data');
 
-	const userSettings = await getUserSettings(token, fetch).catch(() => null);
+	const userSettings = await getUserSettings(token).catch(() => null);
 
 	const [models, banners, tools, version] = await Promise.all([
-		getModels(token, undefined, undefined, undefined, fetch).catch(() => []),
-		getBanners(token, fetch).catch(() => []),
-		getTools(token, fetch).catch(() => []),
-		getVersionUpdates(token, fetch).catch(() => ({
+		getModels(token).catch(() => []),
+		getBanners(token).catch(() => []),
+		getTools(token).catch(() => []),
+		getVersionUpdates(token).catch(() => ({
 			current: WEBUI_VERSION,
 			latest: WEBUI_VERSION
 		}))

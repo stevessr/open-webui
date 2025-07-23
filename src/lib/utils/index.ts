@@ -275,12 +275,16 @@ export const canvasPixelTest = () => {
 	return true;
 };
 
-export const compressImage = async (imageUrl, maxWidth, maxHeight) => {
+export const compressImage = async (
+	imageUrl: string,
+	maxWidth: number,
+	maxHeight: number
+): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		const img = new Image();
 		img.onload = () => {
 			const canvas = document.createElement('canvas');
-			let width = img.width;
+let width = img.width;
 			let height = img.height;
 
 			// Maintain aspect ratio while resizing

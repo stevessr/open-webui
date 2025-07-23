@@ -1,21 +1,28 @@
-<script>
-	import { onMount, getContext, createEventDispatcher } from 'svelte';
+<script lang="ts">
+	import { onMount, createEventDispatcher } from 'svelte';
+	import i18n from '$lib/i18n';
+
 	const dispatch = createEventDispatcher();
-	const i18n = getContext('i18n');
 
 	import Switch from './Switch.svelte';
 	import MapSelector from './Valves/MapSelector.svelte';
 	import { split } from 'postcss/lib/list';
 
-	export let valvesSpec = null;
-	export let valves = {};
+	export let valvesSpec: any = null;
+	export let valves: Record<string, any> = {};
+
+	const handleColorInput = (e: Event, property: string) => {
+		valves[property] = (e.target as HTMLInputElement).value.toUpperCase();
+		dispatch('change');
+	};
 </script>
 
 {#if valvesSpec && Object.keys(valvesSpec?.properties ?? {}).length}
-	{#each Object.keys(valvesSpec.properties) as property, idx}
-		<div class=" py-0.5 w-full justify-between">
-			<div class="flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
+	<div class="max-h-[50vh] overflow-y-auto pr-1">
+		{#each Object.keys(valvesSpec.properties) as property, idx}
+			<div class=" py-0.5 w-full justify-between">
+				<div class="flex w-full justify-between">
+					<div class=" self-center text-xs font-medium">
 					{valvesSpec.properties[property].title}
 
 					{#if (valvesSpec?.required ?? []).includes(property)}
@@ -102,11 +109,7 @@
 											type="color"
 											class="size-6 rounded cursor-pointer border border-gray-200 dark:border-gray-700"
 											value={valves[property] ?? '#000000'}
-											on:input={(e) => {
-												// Convert the color value to uppercase immediately
-												valves[property] = e.target.value.toUpperCase();
-												dispatch('change');
-											}}
+											on:input={(e) => handleColorInput(e, property)}
 										/>
 									</div>
 
@@ -171,7 +174,8 @@
 				</div>
 			{/if}
 		</div>
-	{/each}
+		{/each}
+	</div>
 {:else}
 	<div class="text-xs">No valves</div>
 {/if}

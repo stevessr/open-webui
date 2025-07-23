@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, getContext } from 'svelte';
+	import type { Writable } from 'svelte/store';
 	import { formatFileSize } from '$lib/utils';
 
 	import FileItemModal from './FileItemModal.svelte';
@@ -9,7 +10,7 @@
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import { settings } from '$lib/stores';
 
-	const i18n = getContext('i18n');
+	const i18n: Writable<{ t: (key: string, vars?: object) => string }> = getContext('i18n');
 	const dispatch = createEventDispatcher();
 
 	export let className = 'w-60';
@@ -20,7 +21,7 @@
 	export let modal = false;
 	export let loading = false;
 
-	export let item = null;
+	export let item: any = null;
 	export let edit = false;
 	export let small = false;
 
@@ -55,10 +56,12 @@
 			showModal = !showModal;
 		} else {
 			if (url) {
-				if (type === 'file') {
-					window.open(`${url}/content`, '_blank').focus();
-				} else {
-					window.open(`${url}`, '_blank').focus();
+				const newWindow = window.open(
+					type === 'file' ? `${url}/content` : url,
+					'_blank'
+				);
+				if (newWindow) {
+					newWindow.focus();
 				}
 			}
 		}
