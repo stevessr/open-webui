@@ -1,20 +1,28 @@
 <script lang="ts">
 	import { config, models, settings, user } from '$lib/stores';
-	import { createEventDispatcher, onMount, getContext } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { updateUserInfo } from '$lib/apis/users';
 	import { getUserPosition } from '$lib/utils';
-	import { generateThemeFromBackground, applyMaterialTheme, removeMaterialTheme } from '$lib/utils/materialThemeGenerator';
+	import i18n from '$lib/i18n';
+	import type { Settings } from '$lib/stores';
+	import {
+		generateThemeFromBackground,
+		applyMaterialTheme,
+		removeMaterialTheme
+	} from '$lib/utils/materialThemeGenerator';
+	import FloppyDisk from '$lib/components/icons/FloppyDisk.svelte';
 	const dispatch = createEventDispatcher();
 
-	const i18n = getContext('i18n');
+	let t = $i18n.t.bind($i18n);
+	$: t = $i18n.t.bind($i18n);
 
-	export let saveSettings: Function;
+	export let saveSettings: (settings: Partial<Settings>) => void;
 
-	let backgroundImageUrl = null;
-	let inputFiles = null;
-	let filesInputElement;
+	let backgroundImageUrl: string | null = null;
+	let inputFiles: FileList | null = null;
+	let filesInputElement: HTMLInputElement;
 	let backgroundImageUrlInput = '';
 	let showUrlInput = false;
 
@@ -64,7 +72,7 @@
 	let expandDetails = false;
 
 	let imageCompression = false;
-	let imageCompressionSize = {
+	let imageCompressionSize: { width: number | string; height: number | string } = {
 		width: '',
 		height: ''
 	};
@@ -80,7 +88,7 @@
 	let voiceInterruption = false;
 	let hapticFeedback = false;
 
-	let webSearch = null;
+	let webSearch: string | null = null;
 
 	let iframeSandboxAllowSameOrigin = false;
 	let iframeSandboxAllowForms = false;
@@ -110,7 +118,7 @@
 		saveSettings({ promptAutocomplete: promptAutocomplete });
 	};
 
-	const togglesScrollOnBranchChange = async () => {
+	const toggleScrollOnBranchChange = async () => {
 		scrollOnBranchChange = !scrollOnBranchChange;
 		saveSettings({ scrollOnBranchChange: scrollOnBranchChange });
 	};
@@ -196,7 +204,7 @@
 
 			if (position) {
 				await updateUserInfo(localStorage.token, { location: position });
-				toast.success($i18n.t('User location successfully retrieved.'));
+				toast.success(t('User location successfully retrieved.'));
 			} else {
 				userLocation = false;
 			}
@@ -272,7 +280,7 @@
 			saveSettings({ responseAutoCopy: responseAutoCopy });
 		} else {
 			toast.error(
-				$i18n.t(
+				t(
 					'Clipboard write permission denied. Please check your browser settings to grant the necessary access.'
 				)
 			);
@@ -295,7 +303,7 @@
 		saveSettings({ chatDirection });
 	};
 
-	const togglectrlEnterToSend = async () => {
+	const toggleCtrlEnterToSend = async () => {
 		ctrlEnterToSend = !ctrlEnterToSend;
 		saveSettings({ ctrlEnterToSend });
 	};
@@ -340,9 +348,9 @@
 		materialThemeEnabled = !materialThemeEnabled;
 		saveSettings({ materialThemeEnabled });
 
-		if (materialThemeEnabled && backgroundImageUrl) {
-			await generateMaterialTheme();
-		} else if (!materialThemeEnabled) {
+		if (materialThemeEnabled) {
+			setMorandiTheme();
+		} else {
 			removeMaterialTheme();
 		}
 	};
@@ -364,6 +372,25 @@
 		} finally {
 			isGeneratingTheme = false;
 		}
+	};
+
+	const setMorandiTheme = () => {
+		const morandiPalette = {
+			primary: '#b0a494',
+			primaryVariant: '#877a6f',
+			secondary: '#e3dcd2',
+			secondaryVariant: '#c4bba8',
+			background: '#f5f1ec',
+			surface: '#ffffff',
+			error: '#b00020',
+			onPrimary: '#ffffff',
+			onSecondary: '#000000',
+			onBackground: '#000000',
+			onSurface: '#000000',
+			onError: '#ffffff'
+		};
+		applyMaterialTheme(morandiPalette);
+		toast.success('Morandi theme applied!');
 	};
 
 	const toggleUrlInput = () => {
@@ -437,20 +464,17 @@
 		materialThemeEnabled = $settings?.materialThemeEnabled ?? false;
 
 		// Apply Material Design theme if enabled and background exists
-		if (materialThemeEnabled && backgroundImageUrl) {
-			generateMaterialTheme();
+		if (materialThemeEnabled) {
+			if (backgroundImageUrl) {
+				generateMaterialTheme();
+			} else {
+				setMorandiTheme();
+			}
 		}
 	});
 </script>
 
-<form
-	id="tab-interface"
-	class="flex flex-col h-full justify-between space-y-3 text-sm"
-	on:submit|preventDefault={() => {
-		updateInterfaceHandler();
-		dispatch('save');
-	}}
->
+<div class="flex flex-col h-full">
 	<input
 		bind:this={filesInputElement}
 		bind:files={inputFiles}
@@ -458,863 +482,946 @@
 		hidden
 		accept="image/*,video/mp4"
 		on:change={() => {
-			let reader = new FileReader();
-			reader.onload = (event) => {
-				let originalImageUrl = `${event.target.result}`;
+			if (inputFiles && inputFiles.length > 0) {
+				const reader = new FileReader();
+				reader.onload = (e) => {
+					if (e.target?.result) {
+						backgroundImageUrl = e.target.result.toString();
+						saveSettings({ backgroundImageUrl });
+						if (materialThemeEnabled) {
+							generateMaterialTheme();
+						}
+					}
+				};
 
-				backgroundImageUrl = originalImageUrl;
-				saveSettings({ backgroundImageUrl });
-
-				// Auto-generate Material Design theme if enabled
-				if (materialThemeEnabled) {
-					generateMaterialTheme();
+				if (['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'video/mp4'].includes(inputFiles[0].type)) {
+					reader.readAsDataURL(inputFiles[0]);
+				} else {
+					console.log(`Unsupported File Type '${inputFiles[0].type}'.`);
+					inputFiles = null;
 				}
-			};
-
-			if (
-				inputFiles &&
-				inputFiles.length > 0 &&
-				['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'video/mp4'].includes(inputFiles[0]['type'])
-			) {
-				reader.readAsDataURL(inputFiles[0]);
-			} else {
-				console.log(`Unsupported File Type '${inputFiles[0]['type']}'.`);
-				inputFiles = null;
 			}
 		}}
 	/>
+	<div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+		<h1 class=" text-lg font-medium">{$i18n.t('UI')}</h1>
+	</div>
 
-	<div class=" space-y-3 overflow-y-scroll max-h-[28rem] lg:max-h-full">
-		<div>
-			<h1 class=" mb-1.5 text-sm font-medium">{$i18n.t('UI')}</h1>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="high-contrast-mode-label" class=" self-center text-xs">
-						{$i18n.t('High Contrast Mode')} ({$i18n.t('Beta')})
-					</div>
-
+	<div class=" flex-1 overflow-y-auto p-4 space-y-4">
+		<div class="space-y-2">
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('High Contrast Mode')} ({$i18n.t('Beta')})</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="high-contrast-mode-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {highContrastMode
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleHighContrastMode();
 						}}
-						type="button"
 					>
-						{#if highContrastMode === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!highContrastMode
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleHighContrastMode();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="landing-page-mode-label" class=" self-center text-xs">
-						{$i18n.t('Landing Page Mode')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Landing Page Mode')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="landing-page-mode-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {landingPageMode !== 'chat'
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleLandingPageMode();
 						}}
-						type="button"
 					>
-						{#if landingPageMode === ''}
-							<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Chat')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {landingPageMode === 'chat'
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleLandingPageMode();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Chat')}</span>
 					</button>
 				</div>
 			</div>
 
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="chat-bubble-ui-label" class=" self-center text-xs">
-						{$i18n.t('Chat Bubble UI')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Chat Bubble UI')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="chat-bubble-ui-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {chatBubble
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleChatBubble();
 						}}
-						type="button"
 					>
-						{#if chatBubble === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!chatBubble
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleChatBubble();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			{#if !$settings.chatBubble}
-				<div>
-					<div class=" py-0.5 flex w-full justify-between">
-						<div id="chat-bubble-username-label" class=" self-center text-xs">
-							{$i18n.t('Display the username instead of You in the Chat')}
-						</div>
-
-						<button
-							aria-labelledby="chat-bubble-username-label"
-							class="p-1 px-3 text-xs flex rounded-sm transition"
-							on:click={() => {
-								toggleShowUsername();
-							}}
-							type="button"
-						>
-							{#if showUsername === true}
-								<span class="ml-2 self-center">{$i18n.t('On')}</span>
-							{:else}
-								<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-							{/if}
-						</button>
-					</div>
+			<div class="flex items-center justify-between">
+				<div class="flex-1 self-center text-xs">
+					<div>{$i18n.t('Display the username instead of You in the Chat')}</div>
+					<div class=" text-gray-500 text-xs">{'Requires a page refresh to apply'}</div>
 				</div>
-			{/if}
 
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="widescreen-mode-label" class=" self-center text-xs">
-						{$i18n.t('Widescreen Mode')}
-					</div>
-
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {showUsername
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleShowUsername();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!showUsername
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleShowUsername();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+					</button>
+				</div>
+			</div>
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Widescreen Mode')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
+					<button
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {widescreenMode
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleWidescreenMode();
 						}}
-						aria-labelledby="widescreen-mode-label"
-						type="button"
 					>
-						{#if widescreenMode === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!widescreenMode
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleWidescreenMode();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="chat-direction-label" class=" self-center text-xs">
-						{$i18n.t('Chat direction')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Chat direction')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="chat-direction-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={toggleChangeChatDirection}
-						type="button"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {chatDirection === 'LTR'
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							chatDirection = 'LTR';
+						}}
 					>
-						{#if chatDirection === 'LTR'}
-							<span class="ml-2 self-center">{$i18n.t('LTR')}</span>
-						{:else if chatDirection === 'RTL'}
-							<span class="ml-2 self-center">{$i18n.t('RTL')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Auto')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('LTR')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {chatDirection === 'RTL'
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							chatDirection = 'RTL';
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('RTL')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {chatDirection === 'auto'
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							chatDirection = 'auto';
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Auto')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class="py-0.5 flex w-full justify-between">
-					<div id="notification-sound-label" class=" self-center text-xs">
-						{$i18n.t('Notification Sound')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Notification Sound')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="notification-sound-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {notificationSound
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleNotificationSound();
 						}}
-						type="button"
 					>
-						{#if notificationSound === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!notificationSound
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleNotificationSound();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+					</button>
+				</div>
+			</div>
+			<div class="flex items-center justify-between">
+				<div class="flex-1">
+					<div class=" self-center text-xs">{$i18n.t('Always Play Notification Sound')}</div>
+					<div class=" text-gray-500 text-xs">
+						{'Play notification sound even if the tab is active'}
+					</div>
+				</div>
+
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
+					<button
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {notificationSoundAlways
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleNotificationSoundAlways();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!notificationSoundAlways
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleNotificationSoundAlways();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
 
-			{#if notificationSound}
-				<div>
-					<div class=" py-0.5 flex w-full justify-between">
-						<div id="play-notification-sound-label" class=" self-center text-xs">
-							{$i18n.t('Always Play Notification Sound')}
-						</div>
-
-						<button
-							aria-labelledby="play-notification-sound-label"
-							class="p-1 px-3 text-xs flex rounded-sm transition"
-							on:click={() => {
-								toggleNotificationSoundAlways();
-							}}
-							type="button"
-						>
-							{#if notificationSoundAlways === true}
-								<span class="ml-2 self-center">{$i18n.t('On')}</span>
-							{:else}
-								<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-							{/if}
-						</button>
+			<div class="flex items-center justify-between">
+				<div class="flex-1">
+					<div class=" self-center text-xs">
+						{$i18n.t('Toast notifications for new updates')}
 					</div>
-				</div>
-			{/if}
-
-			{#if $user?.role === 'admin'}
-				<div>
-					<div class=" py-0.5 flex w-full justify-between">
-						<div id="toast-notifications-label" class=" self-center text-xs">
-							{$i18n.t('Toast notifications for new updates')}
-						</div>
-
-						<button
-							aria-labelledby="toast-notifications-label"
-							class="p-1 px-3 text-xs flex rounded-sm transition"
-							on:click={() => {
-								toggleShowUpdateToast();
-							}}
-							type="button"
-						>
-							{#if showUpdateToast === true}
-								<span class="ml-2 self-center">{$i18n.t('On')}</span>
-							{:else}
-								<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-							{/if}
-						</button>
+					<div class=" text-gray-500 text-xs">
+						{'Receive a toast notification when a new update is available'}
 					</div>
 				</div>
 
-				<div>
-					<div class=" py-0.5 flex w-full justify-between">
-						<div id="whats-new-label" class=" self-center text-xs">
-							{$i18n.t(`Show "What's New" modal on login`)}
-						</div>
-
-						<button
-							aria-labelledby="whats-new-label"
-							class="p-1 px-3 text-xs flex rounded-sm transition"
-							on:click={() => {
-								toggleShowChangelog();
-							}}
-							type="button"
-						>
-							{#if showChangelog === true}
-								<span class="ml-2 self-center">{$i18n.t('On')}</span>
-							{:else}
-								<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-							{/if}
-						</button>
-					</div>
-				</div>
-			{/if}
-
-			<div class=" my-1.5 text-sm font-medium">{$i18n.t('Chat')}</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="auto-generation-label" class=" self-center text-xs">
-						{$i18n.t('Title Auto-Generation')}
-					</div>
-
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="auto-generation-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {showUpdateToast
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleShowUpdateToast();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!showUpdateToast
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleShowUpdateToast();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+					</button>
+				</div>
+			</div>
+			<div class="flex items-center justify-between">
+				<div class="flex-1">
+					<div class=" self-center text-xs">{$i18n.t(`Show "What's New" modal on login`)}</div>
+					<div class=" text-gray-500 text-xs">
+						{'Display new features and updates when you log in'}
+					</div>
+				</div>
+
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
+					<button
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {showChangelog
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleShowChangelog();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!showChangelog
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleShowChangelog();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="space-y-2">
+			<div class=" my-1.5 text-sm font-medium">{$i18n.t('Chat')}</div>
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Title Auto-Generation')}</div>
+
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
+					<button
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {titleAutoGenerate
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleTitleAutoGenerate();
 						}}
-						type="button"
 					>
-						{#if titleAutoGenerate === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!titleAutoGenerate
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleTitleAutoGenerate();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Follow-Up Auto-Generation')}</div>
 
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div class=" self-center text-xs">{$i18n.t('Follow-Up Auto-Generation')}</div>
-
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="auto-generation-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {autoFollowUps
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleAutoFollowUps();
 						}}
-						type="button"
 					>
-						{#if autoFollowUps === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!autoFollowUps
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleAutoFollowUps();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="chat-tags-label" class=" self-center text-xs">
-						{$i18n.t('Chat Tags Auto-Generation')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Chat Tags Auto-Generation')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="chat-tags-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {autoTags
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleAutoTags();
 						}}
-						type="button"
 					>
-						{#if autoTags === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!autoTags
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleAutoTags();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="detect-artifacts-label" class=" self-center text-xs">
-						{$i18n.t('Detect Artifacts Automatically')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Detect Artifacts Automatically')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="detect-artifacts-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {detectArtifacts
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleDetectArtifacts();
 						}}
-						type="button"
 					>
-						{#if detectArtifacts === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!detectArtifacts
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleDetectArtifacts();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="auto-copy-label" class=" self-center text-xs">
-						{$i18n.t('Auto-Copy Response to Clipboard')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Auto-Copy Response to Clipboard')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="auto-copy-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {responseAutoCopy
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleResponseAutoCopy();
 						}}
-						type="button"
 					>
-						{#if responseAutoCopy === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!responseAutoCopy
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleResponseAutoCopy();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="fade-streaming-label" class=" self-center text-xs">
-						{$i18n.t('Fade Effect for Streaming Text')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Fade Effect for Streaming Text')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="fade-streaming-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {chatFadeStreamingText
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleChatFadeStreamingText();
 						}}
-						type="button"
 					>
-						{#if chatFadeStreamingText === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!chatFadeStreamingText
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleChatFadeStreamingText();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
 
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="keep-followup-prompts-label" class=" self-center text-xs">
-						{$i18n.t('Keep Follow-Up Prompts in Chat')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Keep Follow-Up Prompts in Chat')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="keep-followup-prompts-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {keepFollowUpPrompts
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleKeepFollowUpPrompts();
 						}}
-						type="button"
 					>
-						{#if keepFollowUpPrompts === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!keepFollowUpPrompts
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleKeepFollowUpPrompts();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
 
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="insert-followup-prompt-label" class=" self-center text-xs">
-						{$i18n.t('Insert Follow-Up Prompt to Input')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Insert Follow-Up Prompt to Input')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="insert-followup-prompt-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {insertFollowUpPrompt
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleInsertFollowUpPrompt();
 						}}
-						type="button"
 					>
-						{#if insertFollowUpPrompt === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!insertFollowUpPrompt
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleInsertFollowUpPrompt();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="rich-input-label" class=" self-center text-xs">
-						{$i18n.t('Rich Text Input for Chat')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Rich Text Input for Chat')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="rich-input-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {richTextInput
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleRichTextInput();
 						}}
-						type="button"
 					>
-						{#if richTextInput === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!richTextInput
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleRichTextInput();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			{#if richTextInput}
-				<div>
-					<div class=" py-0.5 flex w-full justify-between">
-						<div id="rich-input-label" class=" self-center text-xs">
-							{$i18n.t('Insert Prompt as Rich Text')}
-						</div>
-
-						<button
-							aria-labelledby="rich-input-label"
-							class="p-1 px-3 text-xs flex rounded-sm transition"
-							on:click={() => {
-								toggleInsertPromptAsRichText();
-							}}
-							type="button"
-						>
-							{#if insertPromptAsRichText === true}
-								<span class="ml-2 self-center">{$i18n.t('On')}</span>
-							{:else}
-								<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-							{/if}
-						</button>
-					</div>
+			<div class="flex items-center justify-between">
+				<div class="flex-1">
+					<div class=" self-center text-xs">{$i18n.t('Insert Prompt as Rich Text')}</div>
+					<div class=" text-gray-500 text-xs">{'Requires Rich Text Input to be enabled'}</div>
 				</div>
 
-				{#if $config?.features?.enable_autocomplete_generation}
-					<div>
-						<div class=" py-0.5 flex w-full justify-between">
-							<div id="prompt-autocompletion-label" class=" self-center text-xs">
-								{$i18n.t('Prompt Autocompletion')}
-							</div>
-
-							<button
-								aria-labelledby="prompt-autocompletion-label"
-								class="p-1 px-3 text-xs flex rounded-sm transition"
-								on:click={() => {
-									togglePromptAutocomplete();
-								}}
-								type="button"
-							>
-								{#if promptAutocomplete === true}
-									<span class="ml-2 self-center">{$i18n.t('On')}</span>
-								{:else}
-									<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-								{/if}
-							</button>
-						</div>
-					</div>
-				{/if}
-			{/if}
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="paste-large-label" class=" self-center text-xs">
-						{$i18n.t('Paste Large Text as File')}
-					</div>
-
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="paste-large-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {insertPromptAsRichText
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleInsertPromptAsRichText();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!insertPromptAsRichText
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleInsertPromptAsRichText();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+					</button>
+				</div>
+			</div>
+			<div class="flex items-center justify-between">
+				<div class="flex-1">
+					<div class=" self-center text-xs">{$i18n.t('Prompt Autocompletion')}</div>
+					<div class=" text-gray-500 text-xs">{'Press Tab to complete prompts.'}</div>
+				</div>
+
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
+					<button
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {promptAutocomplete
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							togglePromptAutocomplete();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!promptAutocomplete
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							togglePromptAutocomplete();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+					</button>
+				</div>
+			</div>
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Paste Large Text as File')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
+					<button
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {largeTextAsFile
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleLargeTextAsFile();
 						}}
-						type="button"
 					>
-						{#if largeTextAsFile === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!largeTextAsFile
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleLargeTextAsFile();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="copy-formatted-label" class=" self-center text-xs">
-						{$i18n.t('Copy Formatted Text')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Copy Formatted Text')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="copy-formatted-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {copyFormatted
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleCopyFormatted();
 						}}
-						type="button"
 					>
-						{#if copyFormatted === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!copyFormatted
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleCopyFormatted();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="always-collapse-label" class=" self-center text-xs">
-						{$i18n.t('Always Collapse Code Blocks')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Always Collapse Code Blocks')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="always-collapse-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {collapseCodeBlocks
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleCollapseCodeBlocks();
 						}}
-						type="button"
 					>
-						{#if collapseCodeBlocks === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!collapseCodeBlocks
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleCollapseCodeBlocks();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="always-expand-label" class=" self-center text-xs">
-						{$i18n.t('Always Expand Details')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Always Expand Details')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="always-expand-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {expandDetails
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleExpandDetails();
 						}}
-						type="button"
 					>
-						{#if expandDetails === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!expandDetails
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleExpandDetails();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="chat-background-label" class=" self-center text-xs">
-						{$i18n.t('Chat Background Image')}
-					</div>
-
-					<div class="flex gap-2">
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Chat Background Image')}</div>
+				<div class="self-center flex space-x-2">
+					<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 						{#if backgroundImageUrl !== null}
+							<Tooltip content={'Reset'}>
+								<button
+									class=" text-xs px-2 py-1 flex-1 rounded-md transition-all hover:bg-white dark:hover:bg-gray-700"
+									on:click={() => {
+										backgroundImageUrl = null;
+										saveSettings({ backgroundImageUrl: null });
+									}}
+								>
+									<span class="ml-2 self-center">{$i18n.t('Reset')}</span>
+								</button>
+							</Tooltip>
+						{/if}
+						<Tooltip content={'Upload'}>
 							<button
-								aria-labelledby="chat-background-label"
-								class="p-1 px-3 text-xs flex rounded-sm transition"
-								on:click={() => {
-									backgroundImageUrl = null;
-									saveSettings({ backgroundImageUrl });
-								}}
-								type="button"
-							>
-								<span class="ml-2 self-center">{$i18n.t('Reset')}</span>
-							</button>
-						{:else}
-							<button
-								aria-labelledby="chat-background-label"
-								class="p-1 px-3 text-xs flex rounded-sm transition"
+								class=" text-xs px-2 py-1 flex-1 rounded-md transition-all hover:bg-white dark:hover:bg-gray-700"
 								on:click={() => {
 									filesInputElement.click();
 								}}
-								type="button"
 							>
 								<span class="ml-2 self-center">{$i18n.t('Upload')}</span>
 							</button>
+						</Tooltip>
+
+						<Tooltip content={'URL'}>
 							<button
-								aria-labelledby="chat-background-label"
-								class="p-1 px-3 text-xs flex rounded-sm transition"
-								on:click={toggleUrlInput}
-								type="button"
+								class=" text-xs px-2 py-1 flex-1 rounded-md transition-all hover:bg-white dark:hover:bg-gray-700"
+								on:click={() => {
+									showUrlInput = true;
+								}}
 							>
 								<span class="ml-2 self-center">{$i18n.t('URL')}</span>
 							</button>
-						{/if}
+						</Tooltip>
 					</div>
 				</div>
+			</div>
 
-				{#if showUrlInput}
-					<div class="mt-2 flex gap-2">
+			{#if showUrlInput}
+				<div class="flex items-center justify-between">
+					<div class=" self-center text-xs">{'Image URL'}</div>
+					<div class=" self-center flex space-x-2">
 						<input
-							bind:value={backgroundImageUrlInput}
-							type="url"
+							class="w-full"
+							type="text"
 							placeholder={$i18n.t('Enter image/video URL')}
-							class="flex-1 px-3 py-2 text-xs bg-transparent border border-gray-300 dark:border-gray-600 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+							bind:value={backgroundImageUrlInput}
 							on:keydown={(e) => {
 								if (e.key === 'Enter') {
 									setBackgroundImageFromUrl();
+									showUrlInput = false;
 								}
 							}}
 						/>
-						<button
-							class="px-3 py-2 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-sm transition"
-							on:click={setBackgroundImageFromUrl}
-							type="button"
+						<div
+							class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5"
+							role="group"
 						>
-							{$i18n.t('Set')}
-						</button>
-						<button
-							class="px-3 py-2 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded-sm transition"
-							on:click={toggleUrlInput}
-							type="button"
-						>
-							{$i18n.t('Cancel')}
-						</button>
+							<button
+								class=" text-xs px-2 py-1 flex-1 rounded-md transition-all bg-white dark:bg-gray-700 shadow"
+								on:click={() => {
+									setBackgroundImageFromUrl();
+									showUrlInput = false;
+								}}
+							>
+								{$i18n.t('Set')}
+							</button>
+							<button
+								class=" text-xs px-2 py-1 flex-1 rounded-md transition-all"
+								on:click={() => {
+									showUrlInput = false;
+								}}
+							>
+								{$i18n.t('Cancel')}
+							</button>
+						</div>
 					</div>
-				{/if}
-			</div>
+				</div>
+			{/if}
 
-			<!-- Material Design Theme -->
-			<div>
-				<div id="material-design-theme-label" class="py-0.5 flex w-full justify-between">
-					<div class="self-center text-xs">
-						{$i18n.t('Material Design Theme')}
-					</div>
-
-					<div class="flex gap-2">
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Material Design Theme')}</div>
+				<div class="self-center flex space-x-2">
+					<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 						<button
-							aria-labelledby="material-design-theme-label"
-							class="p-1 px-3 text-xs flex rounded-sm transition"
-							on:click={toggleMaterialTheme}
-							type="button"
+							class=" min-w-[4rem] text-xs px-2 py-1 flex-1 rounded-md transition-all {materialThemeEnabled
+								? ' bg-white dark:bg-gray-700 shadow'
+								: ''}"
+							on:click={() => {
+								toggleMaterialTheme();
+							}}
 							disabled={isGeneratingTheme}
 						>
-							<span class="ml-2 self-center">
-								{#if isGeneratingTheme}
-									{$i18n.t('Generating...')}
-								{:else if materialThemeEnabled}
-									{$i18n.t('Disable')}
-								{:else}
-									{$i18n.t('Enable')}
-								{/if}
-							</span>
+							{#if isGeneratingTheme}
+								{$i18n.t('Generating...')}
+							{:else if materialThemeEnabled}
+								{$i18n.t('Disable')}
+							{:else}
+								{$i18n.t('Enable')}
+							{/if}
 						</button>
+					</div>
 
+					<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 						{#if backgroundImageUrl && !materialThemeEnabled}
-							<button
-								aria-labelledby="material-design-theme-label"
-								class="p-1 px-3 text-xs flex rounded-sm transition"
-								on:click={generateMaterialTheme}
-								type="button"
-								disabled={isGeneratingTheme}
-							>
-								<span class="ml-2 self-center">
+							<Tooltip content={'Generate and Apply Theme'}>
+								<button
+									class=" text-xs px-2 py-1 flex-1 rounded-md transition-all hover:bg-white dark:hover:bg-gray-700"
+									on:click={() => {
+										generateMaterialTheme();
+									}}
+								>
 									{$i18n.t('Generate Theme')}
-								</span>
-							</button>
+								</button>
+							</Tooltip>
 						{/if}
+						<!-- Morandi theme is now default, so this button is no longer needed -->
 					</div>
 				</div>
 			</div>
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Allow User Location')}</div>
 
-			<div>
-				<div id="allow-user-location-label" class=" py-0.5 flex w-full justify-between">
-					<div class=" self-center text-xs">{$i18n.t('Allow User Location')}</div>
-
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="allow-user-location-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {userLocation
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleUserLocation();
 						}}
-						type="button"
 					>
-						{#if userLocation === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!userLocation
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleUserLocation();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="haptic-feedback-label" class=" self-center text-xs">
-						{$i18n.t('Haptic Feedback')} ({$i18n.t('Android')})
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Haptic Feedback')} ({$i18n.t('Android')})</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="haptic-feedback-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {hapticFeedback
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleHapticFeedback();
 						}}
-						type="button"
 					>
-						{#if hapticFeedback === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!hapticFeedback
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleHapticFeedback();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
 
-			<!-- <div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="fluidly-stream-label" class=" self-center text-xs">
-						{$i18n.t('Fluidly stream large external response chunks')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Enter Key Behavior')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-					aria-labelledby="fluidly-stream-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {ctrlEnterToSend
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
-							toggleSplitLargeChunks();
+							toggleCtrlEnterToSend();
 						}}
-						type="button"
 					>
-						{#if splitLargeChunks === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('Ctrl+Enter to Send')}</span>
 					</button>
-				</div>
-			</div> -->
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="enter-key-behavior-label" class=" self-center text-xs">
-						{$i18n.t('Enter Key Behavior')}
-					</div>
-
 					<button
-						aria-labelledby="enter-key-behavior-label"
-						class="p-1 px-3 text-xs flex rounded transition"
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!ctrlEnterToSend
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
-							togglectrlEnterToSend();
+							toggleCtrlEnterToSend();
 						}}
-						type="button"
 					>
-						{#if ctrlEnterToSend === true}
-							<span class="ml-2 self-center">{$i18n.t('Ctrl+Enter to Send')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Enter to Send')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('Enter to Send')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="scroll-on-branch-change-label" class=" self-center text-xs">
-						{$i18n.t('Scroll On Branch Change')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Scroll On Branch Change')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="scroll-on-branch-change-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {scrollOnBranchChange
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
-							togglesScrollOnBranchChange();
+							toggleScrollOnBranchChange();
 						}}
-						type="button"
 					>
-						{#if scrollOnBranchChange === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!scrollOnBranchChange
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleScrollOnBranchChange();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Web Search in Chat')}</div>
 
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="web-search-in-chat-label" class=" self-center text-xs">
-						{$i18n.t('Web Search in Chat')}
-					</div>
-
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="web-search-in-chat-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
-							toggleWebSearch();
-						}}
-						type="button"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all"
+						class:bg-white={webSearch === null}
+						class:dark:bg-gray-700={webSearch === null}
+						class:shadow={webSearch === null}
+						on:click={toggleWebSearch}
 					>
 						{#if webSearch === 'always'}
 							<span class="ml-2 self-center">{$i18n.t('Always')}</span>
@@ -1324,174 +1431,189 @@
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="iframe-sandbox-allow-same-origin-label" class=" self-center text-xs">
-						{$i18n.t('iframe Sandbox Allow Same Origin')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('iframe Sandbox Allow Same Origin')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="iframe-sandbox-allow-same-origin-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {iframeSandboxAllowSameOrigin
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleIframeSandboxAllowSameOrigin();
 						}}
-						type="button"
 					>
-						{#if iframeSandboxAllowSameOrigin === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!iframeSandboxAllowSameOrigin
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleIframeSandboxAllowSameOrigin();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="iframe-sandbox-allow-forms-label" class=" self-center text-xs">
-						{$i18n.t('iframe Sandbox Allow Forms')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('iframe Sandbox Allow Forms')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="iframe-sandbox-allow-forms-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {iframeSandboxAllowForms
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleIframeSandboxAllowForms();
 						}}
-						type="button"
 					>
-						{#if iframeSandboxAllowForms === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!iframeSandboxAllowForms
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleIframeSandboxAllowForms();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="stylized-pdf-export-label" class=" self-center text-xs">
-						{$i18n.t('Stylized PDF Export')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Stylized PDF Export')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="stylized-pdf-export-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {stylizedPdfExport
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleStylizedPdfExport();
 						}}
-						type="button"
 					>
-						{#if stylizedPdfExport === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!stylizedPdfExport
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleStylizedPdfExport();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
+		</div>
+		<div class="space-y-2">
 			<div class=" my-1.5 text-sm font-medium">{$i18n.t('Voice')}</div>
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Allow Voice Interruption in Call')}</div>
 
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div class=" self-center text-xs">{$i18n.t('Allow Voice Interruption in Call')}</div>
-
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="allow-voice-interruption-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {voiceInterruption
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleVoiceInterruption();
 						}}
-						type="button"
 					>
-						{#if voiceInterruption === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!voiceInterruption
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleVoiceInterruption();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="display-emoji-label" class=" self-center text-xs">
-						{$i18n.t('Display Emoji in Call')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Display Emoji in Call')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="display-emoji-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {showEmojiInCall
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleEmojiInCall();
 						}}
-						type="button"
 					>
-						{#if showEmojiInCall === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!showEmojiInCall
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleEmojiInCall();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
+		</div>
+		<div class="space-y-2">
 			<div class=" my-1.5 text-sm font-medium">{$i18n.t('File')}</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="image-compression-label" class=" self-center text-xs">
-						{$i18n.t('Image Compression')}
-					</div>
-
+			<div class="flex items-center justify-between">
+				<div class=" self-center text-xs">{$i18n.t('Image Compression')}</div>
+				<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
 					<button
-						aria-labelledby="image-compression-label"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
+						class=" text-xs px-2 py-1 flex-1 rounded-md transition-all {imageCompression
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
 						on:click={() => {
 							toggleImageCompression();
 						}}
-						type="button"
 					>
-						{#if imageCompression === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
+						<span class="ml-2 self-center">{$i18n.t('On')}</span>
+					</button>
+					<button
+						class="text-xs px-2 py-1 flex-1 rounded-md transition-all {!imageCompression
+							? ' bg-white dark:bg-gray-700 shadow'
+							: ''}"
+						on:click={() => {
+							toggleImageCompression();
+						}}
+					>
+						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
 					</button>
 				</div>
 			</div>
-
 			{#if imageCompression}
-				<div>
-					<div class=" py-0.5 flex w-full justify-between text-xs">
-						<div id="image-compression-size-label" class=" self-center text-xs">
-							{$i18n.t('Image Max Compression Size')}
-						</div>
-
-						<div>
-							<label class="sr-only" for="image-comp-width"
+				<div class="flex items-center justify-between">
+					<div class=" self-center text-xs">{$i18n.t('Image Max Compression Size')}</div>
+					<div class=" self-center flex space-x-2">
+						<div class="max-w-24">
+							<label class="text-xs text-gray-500" for="image-compression-width"
 								>{$i18n.t('Image Max Compression Size width')}</label
 							>
 							<input
-								bind:value={imageCompressionSize.width}
+								id="image-compression-width"
+								class="w-full"
 								type="number"
-								class="w-20 bg-transparent outline-hidden text-center"
-								min="0"
-								placeholder="Width"
-							/>x
-							<label class="sr-only" for="image-comp-height"
+								placeholder="1024"
+								bind:value={imageCompressionSize.width}
+							/>
+						</div>
+						<div class="max-w-24">
+							<label class="text-xs text-gray-500" for="image-compression-height"
 								>{$i18n.t('Image Max Compression Size height')}</label
 							>
 							<input
-								bind:value={imageCompressionSize.height}
+								id="image-compression-height"
+								class="w-full"
 								type="number"
-								class="w-20 bg-transparent outline-hidden text-center"
-								min="0"
-								placeholder="Height"
+								placeholder="1024"
+								bind:value={imageCompressionSize.height}
 							/>
 						</div>
 					</div>
@@ -1500,12 +1622,16 @@
 		</div>
 	</div>
 
-	<div class="flex justify-end text-sm font-medium">
+	<div class=" p-4 border-t border-gray-100 dark:border-gray-800">
 		<button
-			class="px-3.5 py-1.5 text-sm font-medium bg-black hover:bg-gray-900 text-white dark:bg-white dark:text-black dark:hover:bg-gray-100 transition rounded-full"
-			type="submit"
+			type="button"
+			class=" w-full"
+			on:click={() => {
+				dispatch('save');
+			}}
 		>
+			<FloppyDisk className="w-4 h-4 mr-2" />
 			{$i18n.t('Save')}
 		</button>
 	</div>
-</form>
+</div>

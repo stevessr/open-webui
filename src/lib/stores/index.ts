@@ -64,7 +64,9 @@ export const toolServers: Writable<ToolServer[]> = writable([]);
 
 export const banners: Writable<Banner[]> = writable([]);
 
-export const settings: Writable<Settings> = writable({});
+export const settings: Writable<Settings> = writable({
+	materialThemeEnabled: false
+});
 
 export const showSidebar = writable(false);
 export const showSearch = writable(false);
@@ -148,7 +150,7 @@ export type Chat = {
 	time_range?: string;
 };
 
-type Settings = {
+export type Settings = {
 	pinnedModels?: never[];
 	toolServers?: ToolServer[];
 	detectArtifacts?: boolean;
@@ -157,6 +159,7 @@ type Settings = {
 	showEmojiInCall?: boolean;
 	voiceInterruption?: boolean;
 	collapseCodeBlocks?: boolean;
+	chatFadeStreamingText?: boolean;
 	expandDetails?: boolean;
 	notificationSound?: boolean;
 	notificationSoundAlways?: boolean;
@@ -164,19 +167,22 @@ type Settings = {
 	notifications?: any;
 	imageCompression?: boolean;
 	imageCompressionSize?: any;
-	widescreenMode?: null;
+	widescreenMode?: boolean;
 	largeTextAsFile?: boolean;
 	promptAutocomplete?: boolean;
 	hapticFeedback?: boolean;
 	responseAutoCopy?: any;
 	richTextInput?: boolean;
+	insertPromptAsRichText?: boolean;
+	keepFollowUpPrompts?: boolean;
+	insertFollowUpPrompt?: boolean;
 	params?: any;
 	userLocation?: any;
-	webSearch?: boolean;
+	webSearch?: string | null;
 	memory?: boolean;
 	autoTags?: boolean;
 	autoFollowUps?: boolean;
-	splitLargeChunks?(body: any, splitLargeChunks: any): unknown;
+	splitLargeChunks?: boolean;
 	landingPageMode?: string;
 	iframeSandboxAllowForms?: boolean;
 	iframeSandboxAllowSameOrigin?: boolean;
@@ -198,7 +204,7 @@ type Settings = {
 	ctrlEnterToSend?: boolean;
 	backgroundImageUrl?: string | null;
 	materialThemeEnabled?: boolean;
-showUserGravatar?: boolean;
+	showUserGravatar?: boolean;
 
 	system?: string;
 	seed?: number;
