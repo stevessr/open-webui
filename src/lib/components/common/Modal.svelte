@@ -10,8 +10,8 @@
 	export let className = 'bg-white dark:bg-gray-900 rounded-2xl';
 	export let draggable = true;
 
-	let modalElement = null;
-	let contentElement = null;
+	let modalElement: HTMLDivElement | null = null;
+	let contentElement: HTMLDivElement | null = null;
 	let mounted = false;
 
 	// Dragging state
@@ -23,7 +23,7 @@
 	// https://www.w3.org/WAI/WCAG21/Understanding/keyboard.html
 	let focusTrap: FocusTrap.FocusTrap | null = null;
 
-	const sizeToWidth = (size) => {
+	const sizeToWidth = (size: string) => {
 		if (size === 'full') {
 			return 'w-full';
 		}
@@ -52,8 +52,6 @@
 
 	// Drag functionality
 	const handleMouseDown = (event: MouseEvent) => {
-		if (!draggable) return;
-
 		// Don't enable dragging if the target is an interactive element
 		const target = event.target as HTMLElement;
 		if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.tagName === 'INPUT' ||
@@ -62,6 +60,8 @@
 			target.closest('[role="tab"]') || target.closest('[role="menuitem"]')) {
 			return;
 		}
+
+		if (!contentElement) return;
 
 		isDragging = true;
 		const rect = contentElement.getBoundingClientRect();
@@ -76,7 +76,7 @@
 	};
 
 	const handleMouseMove = (event: MouseEvent) => {
-		if (isDragging && draggable) {
+		if (isDragging) {
 			position = {
 				x: event.clientX - dragOffset.x,
 				y: event.clientY - dragOffset.y
@@ -102,7 +102,7 @@
 		document.body.style.overflow = 'hidden';
 		// Reset position when opening
 		position = { x: 0, y: 0 };
-	} else if (modalElement) {
+	} else if (modalElement && focusTrap) {
 		focusTrap.deactivate();
 		window.removeEventListener('keydown', handleKeyDown);
 		document.body.removeChild(modalElement);
