@@ -18,6 +18,7 @@
 
 	import { WEBUI_VERSION } from '$lib/constants';
 	import { compareVersion } from '$lib/utils';
+	import { checkForVersionUpdates } from '$lib/utils/version';
 
 	import {
 		config,
@@ -60,8 +61,6 @@
 	let DB: IDBPDatabase | null = null;
 	let localDBChats: Chat[] = [];
 
-	let version: { current: string; latest: string } | undefined;
-
 	$: if (data) {
 		if (data.userSettings) {
 			settings.set(data.userSettings.ui);
@@ -78,7 +77,6 @@
 		models.set(data.models ?? []);
 		banners.set(data.banners ?? []);
 		tools.set(data.tools ?? []);
-		version = data.version;
 
 		getToolServersData(i18n, data.userSettings?.ui?.toolServers ?? []).then((res) => {
 			toolServers.set((res.filter(Boolean) as ToolServer[]) ?? []);
@@ -284,8 +282,10 @@
 				}
 			}
 
-			// Check for version updates is now handled by the `load` function.
-			// The `version` variable is populated from `data.version`.
+			// Check for version updates
+			if ($user?.role === 'admin') {
+				checkForVersionUpdates();
+			}
 			await tick();
 		}
 
@@ -295,18 +295,6 @@
 
 <SettingsModal bind:show={$showSettings} />
 <ChangelogModal bind:show={$showChangelog} />
-
-{#if version && compareVersion(version.latest, version.current) && ($settings?.showUpdateToast ?? true)}
-	<div class=" absolute bottom-8 right-8 z-50" in:fade={{ duration: 100 }}>
-		<UpdateInfoToast
-			{version}
-			on:close={() => {
-				localStorage.setItem('dismissedUpdateToast', Date.now().toString());
-				version = undefined;
-			}}
-		/>
-	</div>
-{/if}
 
 {#if $user}
 	<div class="app relative">

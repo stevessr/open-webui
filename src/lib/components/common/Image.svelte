@@ -5,6 +5,7 @@
 	import ImagePreview from './ImagePreview.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import { getContext, onMount } from 'svelte';
+	import type { i18n as i18nInstance } from 'i18next';
 
 	export let src = '';
 	export let alt = '';
@@ -17,10 +18,13 @@
 	export let dismissible = false;
 	export let onDismiss = () => {};
 
-	const i18n = getContext('i18n');
+	const i18n = getContext<i18nInstance>('i18n');
 
 	let _src = '';
 	$: _src = src.startsWith('/') ? `${WEBUI_BASE_URL}${src}` : src;
+
+	const showImagePreviewLabel = i18n?.t('Show image preview');
+	const removeImageLabel = i18n?.t('Remove image');
 
 	let showImagePreview = false;
 	let containerElement: HTMLElement;
@@ -68,7 +72,7 @@
 		on:click={() => {
 			showImagePreview = true;
 		}}
-		aria-label={$i18n.t('Show image preview')}
+		aria-label={showImagePreviewLabel}
 		type="button"
 	>
 		{#if actualSrc}
@@ -94,7 +98,7 @@
 	{#if dismissible}
 		<div class=" absolute -top-1 -right-1">
 			<button
-				aria-label={$i18n.t('Remove image')}
+				aria-label={removeImageLabel}
 				class=" bg-white text-black border border-white rounded-full group-hover:visible invisible transition"
 				type="button"
 				on:click={() => {

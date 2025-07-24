@@ -37,3 +37,15 @@ export interface DocInfo {
 	url: string;
 	title: string;
 }
+
+export interface Folder {
+	id: string;
+	name: string;
+	data: any;
+	is_expanded: boolean;
+	childrenIds: string[];
+	items: {
+		chats: any[];
+	};
+	new?: boolean;
+}

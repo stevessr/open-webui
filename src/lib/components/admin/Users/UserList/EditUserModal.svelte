@@ -2,7 +2,8 @@
 	import { toast } from 'svelte-sonner';
 	import dayjs from 'dayjs';
 	import { createEventDispatcher } from 'svelte';
-	import { onMount, getContext } from 'svelte';
+	import { onMount } from 'svelte';
+	import { i18n } from '$lib/i18n';
 
 	import { goto } from '$app/navigation';
 
@@ -13,7 +14,6 @@
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 
-	const i18n = getContext('i18n');
 	const dispatch = createEventDispatcher();
 	dayjs.extend(localizedFormat);
 
@@ -61,7 +61,7 @@
 	});
 </script>
 
-<Modal size="sm" bind:show>
+<Modal size="sm" bind:show draggable={false}>
 	<div>
 		<div class=" flex justify-between dark:text-gray-300 px-5 pt-4 pb-2">
 			<div class=" text-lg font-medium self-center">{$i18n.t('Edit User')}</div>
