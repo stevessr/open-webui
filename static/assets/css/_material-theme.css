@@ -608,6 +608,59 @@ html.md-theme.transparent body,
   -webkit-backdrop-filter: blur(10px) !important;
 }
 
+/* High specificity overrides for transparency */
+html.md-theme.transparent body,
+html.md-theme.transparent body *,
+.md-theme.transparent.md-theme *[class*="bg-"] {
+  /* Allow transparency to show through */
+}
+
+/* Force transparency on common background classes */
+.md-theme.transparent .bg-white,
+.md-theme.transparent .bg-gray-50,
+.md-theme.transparent .bg-gray-100,
+.md-theme.transparent .bg-gray-200 {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.md-theme.transparent .bg-gray-800,
+.md-theme.transparent .bg-gray-850,
+.md-theme.transparent .bg-gray-900,
+.md-theme.transparent .bg-gray-950 {
+  background-color: rgba(230, 215, 255, 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* Ensure the main app wrapper is transparent */
+.md-theme.transparent #app,
+.md-theme.transparent .app,
+.md-theme.transparent [data-sveltekit-preload-data] {
+  background-color: rgba(255, 248, 240, 0.6) !important;
+}
+
+/* Critical: Ensure document root transparency */
+html.md-theme.transparent {
+  background: rgba(255, 248, 240, 0.5) !important;
+}
+
+html.md-theme.transparent body {
+  background: rgba(255, 248, 240, 0.6) !important;
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+}
+
+/* Ensure all major containers are transparent */
+.md-theme.transparent .container,
+.md-theme.transparent .wrapper,
+.md-theme.transparent .main-wrapper {
+  background-color: rgba(255, 248, 240, 0.7) !important;
+  backdrop-filter: blur(15px) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+}
+
 /* Animation for theme transitions */
 .md-theme * {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
