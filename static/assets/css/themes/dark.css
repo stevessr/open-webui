@@ -1,0 +1,58 @@
+/* Dark theme styles */
+html.dark {
+  --background-color: #1f2937;
+  --text-color: #d1d5db;
+  --border-color: #374151;
+}
+
+/* Ensure text elements use the correct color in dark theme */
+html.dark body,
+html.dark p,
+html.dark span,
+html.dark div,
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6,
+html.dark label,
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-gray-700,
+html.dark .text-gray-600,
+html.dark .text-black {
+  color: var(--text-color, #d1d5db) !important;
+}
+
+/* Fix input and textarea text colors */
+html.dark input,
+html.dark textarea,
+html.dark select {
+  color: var(--text-color, #d1d5db) !important;
+  background-color: var(--background-color, #1f2937) !important;
+  border-color: var(--border-color, #374151) !important;
+}
+
+/* Fix button text colors */
+html.dark button {
+  color: var(--text-color, #d1d5db) !important;
+}
+
+/* Fix specific component text colors */
+html.dark .prose,
+html.dark .prose p,
+html.dark .prose span,
+html.dark .prose div {
+  color: var(--text-color, #d1d5db) !important;
+}
+
+/* Fix modal and card text colors */
+html.dark .modal-content,
+html.dark .card,
+html.dark .bg-white,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100 {
+  background-color: var(--background-color, #1f2937) !important;
+  color: var(--text-color, #d1d5db) !important;
+}

@@ -1,0 +1,6 @@
+/* Light theme styles */
+html.light {
+  --background-color: #f9fafb;
+  --text-color: #374151;
+  --border-color: #d1d5db;
+}

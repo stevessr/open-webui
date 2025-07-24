@@ -5,18 +5,85 @@ import { getOpenAIModelsDirect } from './openai';
 import { parse } from 'yaml';
 import { toast } from 'svelte-sonner';
 
+// Re-export getBackendConfig from configs
+export { getBackendConfig } from './configs';
+
+// Models cache configuration
+const MODELS_CACHE_KEY = 'webui_models_cache';
+const MODELS_CACHE_DURATION = 24 * 60 * 60 * 1000; // 1 day in milliseconds
+
+interface ModelsCacheEntry {
+	data: any;
+	timestamp: number;
+	token: string;
+}
+
+// Cache management functions
+const getModelsFromCache = (token: string): any | null => {
+	try {
+		const cached = localStorage.getItem(MODELS_CACHE_KEY);
+		if (!cached) return null;
+
+		const cacheEntry: ModelsCacheEntry = JSON.parse(cached);
+		const now = Date.now();
+
+		// Check if cache is expired or token has changed
+		if (now - cacheEntry.timestamp > MODELS_CACHE_DURATION || cacheEntry.token !== token) {
+			localStorage.removeItem(MODELS_CACHE_KEY);
+			return null;
+		}
+
+		return cacheEntry.data;
+	} catch (error) {
+		console.error('Error reading models cache:', error);
+		localStorage.removeItem(MODELS_CACHE_KEY);
+		return null;
+	}
+};
+
+const saveModelsToCache = (data: any, token: string): void => {
+	try {
+		const cacheEntry: ModelsCacheEntry = {
+			data,
+			timestamp: Date.now(),
+			token
+		};
+		localStorage.setItem(MODELS_CACHE_KEY, JSON.stringify(cacheEntry));
+	} catch (error) {
+		console.error('Error saving models to cache:', error);
+	}
+};
+
+export const clearModelsCache = (): void => {
+	try {
+		localStorage.removeItem(MODELS_CACHE_KEY);
+	} catch (error) {
+		console.error('Error clearing models cache:', error);
+	}
+};
+
 export const getModels = async (
 	token: string = '',
 	connections: any | null = null,
 	base: boolean = false,
-	refresh: boolean = false
+	refresh: boolean = false,
+	fetchFn: typeof fetch = fetch
 ) => {
+	// Check cache first (only for non-base models and when not refreshing)
+	if (!base && !refresh && typeof localStorage !== 'undefined') {
+		const cachedModels = getModelsFromCache(token);
+		if (cachedModels) {
+			console.log('Using cached models');
+			return cachedModels;
+		}
+	}
+
 	const searchParams = new URLSearchParams();
 	if (refresh) {
 		searchParams.append('refresh', 'true');
 	}
 
-	const res = await fetch(
+	const res = await fetchFn(
 		`${WEBUI_BASE_URL}/api/models${base ? '/base' : ''}?${searchParams.toString()}`,
 		{
 			method: 'GET',
@@ -143,6 +210,11 @@ export const getModels = async (
 		}
 
 		models = Object.values(modelsMap);
+	}
+
+	// Cache the models (only for non-base models)
+	if (!base && typeof localStorage !== 'undefined') {
+		saveModelsToCache(models, token);
 	}
 
 	return models;
@@ -1033,22 +1105,6 @@ export const getUsage = async (token: string = '') => {
 	return await res.json();
 };
 
-export const getBackendConfig = async () => {
-	const res = await fetch(`${WEBUI_BASE_URL}/api/config`, {
-		method: 'GET',
-		credentials: 'include',
-		headers: {
-			'Content-Type': 'application/json'
-		}
-	});
-
-	if (!res.ok) {
-		const error = await res.json().catch(() => null);
-		throw new Error(error?.detail ?? res.statusText);
-	}
-
-	return await res.json();
-};
 
 export const getChangelog = async () => {
 	const res = await fetch(`${WEBUI_BASE_URL}/api/changelog`, {
@@ -1066,8 +1122,8 @@ export const getChangelog = async () => {
 	return await res.json();
 };
 
-export const getVersionUpdates = async (token: string) => {
-	const res = await fetch(`${WEBUI_BASE_URL}/api/version/updates`, {
+export const getVersionUpdates = async (token: string, fetchFn: typeof fetch = fetch) => {
+	const res = await fetchFn(`${WEBUI_BASE_URL}/api/version/updates`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',

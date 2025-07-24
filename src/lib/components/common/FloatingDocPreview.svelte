@@ -643,7 +643,7 @@
 								on:load={(e) => handleIframeLoad(e, activeDoc)}
 								loading="lazy"
 								allowfullscreen
-								sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-presentation allow-pointer-lock allow-top-navigation allow-storage-access-by-user-activation allow-clipboard-write allow-web-share allow-orientation-lock allow-screen-wake-lock allow-downloads-without-user-activation allow-payment allow-encrypted-media allow-autoplay"
+								sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-presentation allow-pointer-lock allow-top-navigation allow-storage-access-by-user-activation"
 								referrerpolicy="no-referrer"
 							></iframe>
 						</div>

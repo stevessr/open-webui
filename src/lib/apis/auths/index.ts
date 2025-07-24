@@ -1,9 +1,9 @@
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 
-export const getAdminDetails = async (token: string) => {
+export const getAdminDetails = async (token: string, fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/admin/details`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/admin/details`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -27,10 +27,10 @@ export const getAdminDetails = async (token: string) => {
 	return res;
 };
 
-export const getAdminConfig = async (token: string) => {
+export const getAdminConfig = async (token: string, fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/admin/config`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/admin/config`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -54,10 +54,14 @@ export const getAdminConfig = async (token: string) => {
 	return res;
 };
 
-export const updateAdminConfig = async (token: string, body: object) => {
+export const updateAdminConfig = async (
+	token: string,
+	body: object,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/admin/config`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/admin/config`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -82,10 +86,10 @@ export const updateAdminConfig = async (token: string, body: object) => {
 	return res;
 };
 
-export const getSessionUser = async (token: string) => {
+export const getSessionUser = async (token: string, fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -110,10 +114,14 @@ export const getSessionUser = async (token: string) => {
 	return res;
 };
 
-export const ldapUserSignIn = async (user: string, password: string) => {
+export const ldapUserSignIn = async (
+	user: string,
+	password: string,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/ldap`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/ldap`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -142,10 +150,10 @@ export const ldapUserSignIn = async (user: string, password: string) => {
 	return res;
 };
 
-export const getLdapConfig = async (token: string = '') => {
+export const getLdapConfig = async (token: string = '', fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/admin/config/ldap`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/admin/config/ldap`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -169,10 +177,14 @@ export const getLdapConfig = async (token: string = '') => {
 	return res;
 };
 
-export const updateLdapConfig = async (token: string = '', enable_ldap: boolean) => {
+export const updateLdapConfig = async (
+	token: string = '',
+	enable_ldap: boolean,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/admin/config/ldap`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/admin/config/ldap`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -199,10 +211,10 @@ export const updateLdapConfig = async (token: string = '', enable_ldap: boolean)
 	return res;
 };
 
-export const getLdapServer = async (token: string = '') => {
+export const getLdapServer = async (token: string = '', fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/admin/config/ldap/server`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/admin/config/ldap/server`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -226,10 +238,14 @@ export const getLdapServer = async (token: string = '') => {
 	return res;
 };
 
-export const updateLdapServer = async (token: string = '', body: object) => {
+export const updateLdapServer = async (
+	token: string = '',
+	body: object,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/admin/config/ldap/server`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/admin/config/ldap/server`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -254,10 +270,14 @@ export const updateLdapServer = async (token: string = '', body: object) => {
 	return res;
 };
 
-export const userSignIn = async (email: string, password: string) => {
+export const userSignIn = async (
+	email: string,
+	password: string,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/signin`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/signin`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -290,11 +310,12 @@ export const userSignUp = async (
 	name: string,
 	email: string,
 	password: string,
-	profile_image_url: string
+	profile_image_url: string,
+	fetchFn: typeof fetch = fetch
 ) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/signup`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/signup`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -324,10 +345,10 @@ export const userSignUp = async (
 	return res;
 };
 
-export const userSignOut = async () => {
+export const userSignOut = async (fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/signout`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/signout`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json'
@@ -358,11 +379,12 @@ export const addUser = async (
 	email: string,
 	password: string,
 	role: string = 'pending',
-	profile_image_url: null | string = null
+	profile_image_url: null | string = null,
+	fetchFn: typeof fetch = fetch
 ) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/add`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/add`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -393,10 +415,15 @@ export const addUser = async (
 	return res;
 };
 
-export const updateUserProfile = async (token: string, name: string, profileImageUrl: string) => {
+export const updateUserProfile = async (
+	token: string,
+	name: string,
+	profileImageUrl: string,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/update/profile`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/update/profile`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -424,10 +451,15 @@ export const updateUserProfile = async (token: string, name: string, profileImag
 	return res;
 };
 
-export const updateUserPassword = async (token: string, password: string, newPassword: string) => {
+export const updateUserPassword = async (
+	token: string,
+	password: string,
+	newPassword: string,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/update/password`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/update/password`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -455,10 +487,10 @@ export const updateUserPassword = async (token: string, password: string, newPas
 	return res;
 };
 
-export const getSignUpEnabledStatus = async (token: string) => {
+export const getSignUpEnabledStatus = async (token: string, fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/signup/enabled`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/signup/enabled`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -482,10 +514,10 @@ export const getSignUpEnabledStatus = async (token: string) => {
 	return res;
 };
 
-export const getDefaultUserRole = async (token: string) => {
+export const getDefaultUserRole = async (token: string, fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/signup/user/role`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/signup/user/role`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -509,10 +541,14 @@ export const getDefaultUserRole = async (token: string) => {
 	return res;
 };
 
-export const updateDefaultUserRole = async (token: string, role: string) => {
+export const updateDefaultUserRole = async (
+	token: string,
+	role: string,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/signup/user/role`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/signup/user/role`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -539,10 +575,10 @@ export const updateDefaultUserRole = async (token: string, role: string) => {
 	return res;
 };
 
-export const toggleSignUpEnabledStatus = async (token: string) => {
+export const toggleSignUpEnabledStatus = async (token: string, fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/signup/enabled/toggle`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/signup/enabled/toggle`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -566,10 +602,10 @@ export const toggleSignUpEnabledStatus = async (token: string) => {
 	return res;
 };
 
-export const getJWTExpiresDuration = async (token: string) => {
+export const getJWTExpiresDuration = async (token: string, fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/token/expires`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/token/expires`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -593,10 +629,14 @@ export const getJWTExpiresDuration = async (token: string) => {
 	return res;
 };
 
-export const updateJWTExpiresDuration = async (token: string, duration: string) => {
+export const updateJWTExpiresDuration = async (
+	token: string,
+	duration: string,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/token/expires/update`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/token/expires/update`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -623,10 +663,10 @@ export const updateJWTExpiresDuration = async (token: string, duration: string) 
 	return res;
 };
 
-export const createAPIKey = async (token: string) => {
+export const createAPIKey = async (token: string, fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/api_key`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/api_key`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -648,10 +688,10 @@ export const createAPIKey = async (token: string) => {
 	return res.api_key;
 };
 
-export const getAPIKey = async (token: string) => {
+export const getAPIKey = async (token: string, fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/api_key`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/api_key`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -673,10 +713,10 @@ export const getAPIKey = async (token: string) => {
 	return res.api_key;
 };
 
-export const deleteAPIKey = async (token: string) => {
+export const deleteAPIKey = async (token: string, fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/api_key`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/auths/api_key`, {
 		method: 'DELETE',
 		headers: {
 			'Content-Type': 'application/json',

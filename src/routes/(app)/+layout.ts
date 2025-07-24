@@ -14,13 +14,13 @@ export const load: LayoutLoad = async ({ fetch, depends }) => {
 
 	depends('layout:data');
 
-	const userSettings = await getUserSettings(token).catch(() => null);
+	const userSettings = await getUserSettings(token, fetch).catch(() => null);
 
 	const [models, banners, tools, version] = await Promise.all([
-		getModels(token).catch(() => []),
-		getBanners(token).catch(() => []),
-		getTools(token).catch(() => []),
-		getVersionUpdates(token).catch(() => ({
+		getModels(token, null, false, false, fetch).catch(() => []),
+		getBanners(token, fetch).catch(() => []),
+		getTools(token, fetch).catch(() => []),
+		getVersionUpdates(token, fetch).catch(() => ({
 			current: WEBUI_VERSION,
 			latest: WEBUI_VERSION
 		}))

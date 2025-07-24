@@ -74,7 +74,7 @@ export const initI18n = (defaultLocale?: string | undefined) => {
 const i18n = createI18nStore(i18next);
 const isLoadingStore = createIsLoadingStore(i18next);
 
-export const getLanguages = async () => {
+export const getLanguages = async (fetchFn: typeof fetch = fetch) => {
 	const languages = (await import(`./locales/languages.json`)).default;
 	return languages;
 };

@@ -88,6 +88,3 @@
 </script>
 
 <!-- /src/lib/components/common/CustomStyles.svelte -->
-<style>
-	@import '$lib/styles/theme.css';
-</style>

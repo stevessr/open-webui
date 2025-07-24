@@ -1,5 +1,5 @@
 <script>
-	export let data;
+	export const data = undefined; // External reference for SvelteKit layout data
 
 	import { io } from 'socket.io-client';
 	import { spring } from 'svelte/motion';
@@ -475,6 +475,14 @@
 	onMount(async () => {
 		if (typeof window !== 'undefined' && window.applyTheme) {
 			window.applyTheme();
+		}
+
+		// Initialize Material Design ripple effects
+		try {
+			const { autoInitializeRipples } = await import('$lib/utils/materialRipple');
+			autoInitializeRipples();
+		} catch (error) {
+			console.warn('Failed to initialize Material Design ripples:', error);
 		}
 
 		if (window?.electronAPI) {

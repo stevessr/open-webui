@@ -124,9 +124,10 @@ html.her #progress-bar {
   animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-.tippy-box {
+/* Remove transparent background override for tooltips to allow theme-specific styling */
+/* .tippy-box {
   background-color:transparent;
-}
+} */
 
 /* 设置 textarea 背景为主题背景 */
 textarea, .theme-textarea {
@@ -166,6 +167,11 @@ html.dark textarea, html.dark .theme-textarea {
 .trans {
   background-color: transparent !important;
   backdrop-filter: none !important;
+}
+
+.trans2 {
+  background-color: color(srgb 1 1 1 / 0.5) !important;
+  backdrop-filter: blur(8px) !important;
 }
 
 .little-color {

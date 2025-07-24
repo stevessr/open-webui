@@ -42,7 +42,7 @@
 
 	const i18n = getContext('i18n');
 
-	export let onChange: (params: any) => void = () => {};
+	export const onChange: (params: any) => void = () => {}; // External reference for parent component
 
 	export let admin = false;
 	export let custom = false;

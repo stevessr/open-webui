@@ -1,12 +1,11 @@
 <script lang="ts">
-	import { onMount, createEventDispatcher } from 'svelte';
+	import { createEventDispatcher } from 'svelte';
 	import i18n from '$lib/i18n';
 
 	const dispatch = createEventDispatcher();
 
 	import Switch from './Switch.svelte';
 	import MapSelector from './Valves/MapSelector.svelte';
-	import { split } from 'postcss/lib/list';
 
 	export let valvesSpec: any = null;
 	export let valves: Record<string, any> = {};
@@ -19,7 +18,7 @@
 
 {#if valvesSpec && Object.keys(valvesSpec?.properties ?? {}).length}
 	<div class="max-h-[50vh] overflow-y-auto pr-1">
-		{#each Object.keys(valvesSpec.properties) as property, idx}
+		{#each Object.keys(valvesSpec.properties) as property}
 			<div class=" py-0.5 w-full justify-between">
 				<div class="flex w-full justify-between">
 					<div class=" self-center text-xs font-medium">

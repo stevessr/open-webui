@@ -96,13 +96,23 @@
 	<div
 		bind:this={modalElement}
 		class=" fixed top-0 right-0 left-0 bottom-0 bg-black/60 w-full h-screen max-h-[100dvh] flex justify-center z-99999999 overflow-hidden overscroll-contain"
+		role="dialog"
+		aria-modal="true"
+		aria-label="Confirmation dialog"
 		in:fade={{ duration: 10 }}
 		on:mousedown={() => {
 			show = false;
 		}}
+		on:keydown={(e) => {
+			if (e.key === 'Escape') {
+				e.preventDefault();
+				show = false;
+			}
+		}}
 	>
 		<div
 			class=" m-auto rounded-2xl max-w-full w-[32rem] mx-2 bg-gray-50 dark:bg-gray-950 max-h-[100dvh] shadow-3xl"
+			role="document"
 			in:flyAndScale
 			on:mousedown={(e) => {
 				e.stopPropagation();

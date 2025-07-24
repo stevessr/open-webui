@@ -16,6 +16,12 @@ export default defineConfig({
 		}),
 		tailwindcss()
 	],
+	optimizeDeps: {
+		exclude: ['postcss', 'postcss-*']
+	},
+	ssr: {
+		noExternal: []
+	},
 	define: {
 		APP_VERSION: JSON.stringify(process.env.npm_package_version),
 		APP_BUILD_HASH: JSON.stringify(process.env.APP_BUILD_HASH || 'dev-build')

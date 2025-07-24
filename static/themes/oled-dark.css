@@ -1,4 +1,70 @@
 :root {
   --background-color: #000000;
   --text-color: #ffffff;
+  --primary-color: #3b82f6;
+  --secondary-color: #1f2937;
+  --border-color: #374151;
+  --hover-color: #111827;
+}
+
+body,
+html {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* Fix text color on various elements */
+p,
+span,
+div,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+label,
+button,
+input,
+textarea,
+.text-gray-800,
+.text-gray-700,
+.text-gray-600,
+.text-gray-500,
+.text-black {
+  color: var(--text-color) !important;
+}
+
+/* Fix component backgrounds */
+.bg-white,
+.bg-gray-50,
+.bg-gray-100,
+.bg-gray-200 {
+  background-color: var(--secondary-color) !important;
+  color: var(--text-color) !important;
+}
+
+/* Fix input and button styles */
+input,
+textarea,
+select,
+button {
+  background-color: var(--secondary-color) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+button:hover {
+  background-color: var(--hover-color) !important;
+}
+
+/* Fix card and modal backgrounds to remove "white mask" */
+.card,
+.modal-content {
+  background-color: var(--secondary-color) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.chat-bubble-content {
+  background-color: var(--secondary-color) !important;
 }

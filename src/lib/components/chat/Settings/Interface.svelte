@@ -7,11 +7,7 @@
 	import { getUserPosition } from '$lib/utils';
 	import i18n from '$lib/i18n';
 	import type { Settings } from '$lib/stores';
-	import {
-		generateThemeFromBackground,
-		applyMaterialTheme,
-		removeMaterialTheme
-	} from '$lib/utils/materialThemeGenerator';
+
 	import FloppyDisk from '$lib/components/icons/FloppyDisk.svelte';
 	const dispatch = createEventDispatcher();
 
@@ -26,9 +22,7 @@
 	let backgroundImageUrlInput = '';
 	let showUrlInput = false;
 
-	// Material Design theme
-	let materialThemeEnabled = false;
-	let isGeneratingTheme = false;
+
 
 	// Addons
 	let titleAutoGenerate = true;
@@ -336,62 +330,10 @@
 			saveSettings({ backgroundImageUrl });
 			backgroundImageUrlInput = '';
 			showUrlInput = false;
-
-			// Auto-generate Material Design theme if enabled
-			if (materialThemeEnabled) {
-				generateMaterialTheme();
-			}
 		}
 	};
 
-	const toggleMaterialTheme = async () => {
-		materialThemeEnabled = !materialThemeEnabled;
-		saveSettings({ materialThemeEnabled });
 
-		if (materialThemeEnabled) {
-			setMorandiTheme();
-		} else {
-			removeMaterialTheme();
-		}
-	};
-
-	const generateMaterialTheme = async () => {
-		if (!backgroundImageUrl) {
-			toast.error('Please set a background image first');
-			return;
-		}
-
-		isGeneratingTheme = true;
-		try {
-			const palette = await generateThemeFromBackground(backgroundImageUrl);
-			applyMaterialTheme(palette);
-			toast.success('Material Design theme generated successfully!');
-		} catch (error) {
-			console.error('Failed to generate theme:', error);
-			toast.error('Failed to generate theme from background');
-		} finally {
-			isGeneratingTheme = false;
-		}
-	};
-
-	const setMorandiTheme = () => {
-		const morandiPalette = {
-			primary: '#b0a494',
-			primaryVariant: '#877a6f',
-			secondary: '#e3dcd2',
-			secondaryVariant: '#c4bba8',
-			background: '#f5f1ec',
-			surface: '#ffffff',
-			error: '#b00020',
-			onPrimary: '#ffffff',
-			onSecondary: '#000000',
-			onBackground: '#000000',
-			onSurface: '#000000',
-			onError: '#ffffff'
-		};
-		applyMaterialTheme(morandiPalette);
-		toast.success('Morandi theme applied!');
-	};
 
 	const toggleUrlInput = () => {
 		showUrlInput = !showUrlInput;
@@ -461,16 +403,6 @@
 
 		backgroundImageUrl = $settings?.backgroundImageUrl ?? null;
 		webSearch = $settings?.webSearch ?? null;
-		materialThemeEnabled = $settings?.materialThemeEnabled ?? false;
-
-		// Apply Material Design theme if enabled and background exists
-		if (materialThemeEnabled) {
-			if (backgroundImageUrl) {
-				generateMaterialTheme();
-			} else {
-				setMorandiTheme();
-			}
-		}
 	});
 </script>
 
@@ -488,9 +420,6 @@
 					if (e.target?.result) {
 						backgroundImageUrl = e.target.result.toString();
 						saveSettings({ backgroundImageUrl });
-						if (materialThemeEnabled) {
-							generateMaterialTheme();
-						}
 					}
 				};
 
@@ -1270,46 +1199,7 @@
 				</div>
 			{/if}
 
-			<div class="flex items-center justify-between">
-				<div class=" self-center text-xs">{$i18n.t('Material Design Theme')}</div>
-				<div class="self-center flex space-x-2">
-					<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
-						<button
-							class=" min-w-[4rem] text-xs px-2 py-1 flex-1 rounded-md transition-all {materialThemeEnabled
-								? ' bg-white dark:bg-gray-700 shadow'
-								: ''}"
-							on:click={() => {
-								toggleMaterialTheme();
-							}}
-							disabled={isGeneratingTheme}
-						>
-							{#if isGeneratingTheme}
-								{$i18n.t('Generating...')}
-							{:else if materialThemeEnabled}
-								{$i18n.t('Disable')}
-							{:else}
-								{$i18n.t('Enable')}
-							{/if}
-						</button>
-					</div>
 
-					<div class=" self-center flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5" role="group">
-						{#if backgroundImageUrl && !materialThemeEnabled}
-							<Tooltip content={'Generate and Apply Theme'}>
-								<button
-									class=" text-xs px-2 py-1 flex-1 rounded-md transition-all hover:bg-white dark:hover:bg-gray-700"
-									on:click={() => {
-										generateMaterialTheme();
-									}}
-								>
-									{$i18n.t('Generate Theme')}
-								</button>
-							</Tooltip>
-						{/if}
-						<!-- Morandi theme is now default, so this button is no longer needed -->
-					</div>
-				</div>
-			</div>
 			<div class="flex items-center justify-between">
 				<div class=" self-center text-xs">{$i18n.t('Allow User Location')}</div>
 

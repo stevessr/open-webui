@@ -11,14 +11,17 @@
 	export let showButtonClassName = 'pl-1.5  transition bg-transparent';
 
 	let show = false;
+
+	// Generate unique ID for each instance
+	const uniqueId = `password-input-${Math.random().toString(36).substring(2, 11)}`;
 </script>
 
 <div class={outerClassName}>
-	<label class="sr-only" for="password-input">{placeholder || $i18n.t('Password')}</label>
+	<label class="sr-only" for={uniqueId}>{placeholder || $i18n.t('Password')}</label>
 	<input
 		class={`${inputClassName} ${show ? 'rainbow-text' : 'password'} ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : ' outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
 		{placeholder}
-		id="password-input"
+		id={uniqueId}
 		bind:value
 		required={required && !readOnly}
 		disabled={readOnly}

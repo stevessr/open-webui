@@ -3,8 +3,22 @@
 	stroke: #907aa9 !important;
 }
 
-.rose-pine .app > * {
+/* Remove overly broad background override to allow transparency */
+.rose-pine .app > *:not([role="menu"]):not(#user-menu) {
 	background-color: #1f1d2e !important;
+}
+
+/* Allow menu components to be transparent over background */
+.rose-pine [role="menu"],
+.rose-pine #user-menu {
+	background-color: transparent !important;
+}
+
+/* Show theme color when menu is not over background */
+.rose-pine [role="menu"]:not(.over-background),
+.rose-pine #user-menu:not(.over-background) {
+	background-color: rgba(31, 29, 46, 0.9) !important;
+	backdrop-filter: blur(8px);
 }
 
 .rose-pine #nav {
@@ -15,22 +29,28 @@
 	background: #191724;
 }
 
+/* Add transparency to cards and modals */
 .rose-pine .bg-white.dark\:bg-gray-800 {
-	background: #26233a;
+	background: rgba(38, 35, 58, 0.85) !important;
+	backdrop-filter: blur(12px);
 }
 
 .rose-pine .w-4.h-4 {
 	fill: #c4a7e7;
 }
 
+/* Chat input with transparency */
 .rose-pine #chat-input {
-	background: #393552;
+	background: rgba(57, 53, 82, 0.9) !important;
+	backdrop-filter: blur(8px);
 	margin: 0.3rem;
 	padding: 0.5rem;
 }
 
+/* Gradient backgrounds with transparency */
 .rose-pine .bg-gradient-to-t.from-white.dark\:from-gray-800.from-40\%.pb-2 {
-	background: #26233a !important;
+	background: rgba(38, 35, 58, 0.8) !important;
+	backdrop-filter: blur(10px);
 	padding-top: 0.6rem;
 }
 
@@ -53,15 +73,18 @@
 	transition: fill 0.2s ease-out linear;
 }
 
+/* Add transparency to navigation and menu items */
 .rose-pine
 	.w-full.flex.justify-between.rounded-md.px-3.py-2.hover\:bg-gray-900.bg-gray-900.transition.whitespace-nowrap.text-ellipsis {
-	background-color: #56526e;
+	background-color: rgba(86, 82, 110, 0.8) !important;
+	backdrop-filter: blur(6px);
 	font-weight: bold;
 }
 
 .rose-pine .hover\:bg-gray-900:hover {
-	--tw-bg-opacity: 1;
-	background-color: rgb(57 53 82 / var(--tw-bg-opacity));
+	--tw-bg-opacity: 0.8;
+	background-color: rgba(57, 53, 82, 0.8) !important;
+	backdrop-filter: blur(6px);
 }
 
 .rose-pine .text-xs.text-gray-700.uppercase.bg-gray-50.dark\:bg-gray-700.dark\:text-gray-400 {
@@ -128,4 +151,41 @@
 .rose-pine .svelte-11kvm4p {
 	--primary: #9ccfd8 !important;
 	--secondary: #1f1d2e !important;
+}
+
+.rose-pine body,
+.rose-pine html {
+	 background-color: #1f1d2e !important;
+	 color: #e0def4 !important;
+}
+
+/* Fix text color on various elements */
+.rose-pine p,
+.rose-pine span,
+.rose-pine div,
+.rose-pine h1,
+.rose-pine h2,
+.rose-pine h3,
+.rose-pine h4,
+.rose-pine h5,
+.rose-pine h6,
+.rose-pine label,
+.rose-pine button,
+.rose-pine input,
+.rose-pine textarea,
+.rose-pine .text-gray-800,
+.rose-pine .text-gray-700,
+.rose-pine .text-gray-600,
+.rose-pine .text-gray-500,
+.rose-pine .text-black {
+	 color: #e0def4 !important;
+}
+
+/* Fix component backgrounds */
+.rose-pine .bg-white,
+.rose-pine .bg-gray-50,
+.rose-pine .bg-gray-100,
+.rose-pine .bg-gray-200 {
+	 background-color: #26233a !important;
+	 color: #e0def4 !important;
 }

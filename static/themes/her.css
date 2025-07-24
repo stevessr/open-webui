@@ -1,17 +1,23 @@
 .her {
-  --primary: 222.2 47.4% 11.2%;
+  /* Fix text colors for Her theme - use light colors for dark theme */
+  --primary: 12 80% 50%;
   --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --background: 12 60% 90%;
-  --foreground: 12 60% 10%;
+  --secondary: 12 60% 80%;
+  --secondary-foreground: 210 40% 98%;
+  --background: 12 10% 10%;  /* Dark background */
+  --foreground: 12 60% 90%;  /* Light foreground text */
   --accent: 12 80% 50%;
   --accent-foreground: 12 60% 98%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 210 40% 98%;
-  --border: 12 60% 80%;
-  --input: 12 60% 80%;
+  --border: 12 60% 30%;  /* Darker border for dark theme */
+  --input: 12 60% 20%;   /* Darker input background */
   --ring: 12 80% 50%;
+
+  /* Override theme colors to ensure light text */
+  --background-color: #1a1a1a;
+  --text-color: #e0e0e0;
+  --border-color: #444444;
 
   --color-gray-50: #fdf6f5;
   --color-gray-100: #fbebe9;
@@ -25,4 +31,38 @@
   --color-gray-850: #d66749;
   --color-gray-900: #ce512d;
   --color-gray-950: #983724;
+}
+
+/* Ensure all text elements use light colors in Her theme */
+html.her body,
+html.her p,
+html.her span,
+html.her div,
+html.her h1,
+html.her h2,
+html.her h3,
+html.her h4,
+html.her h5,
+html.her h6,
+html.her label,
+html.her .text-gray-900,
+html.her .text-gray-800,
+html.her .text-gray-700,
+html.her .text-gray-600,
+html.her .text-black {
+  color: var(--text-color, #e0e0e0) !important;
+}
+
+/* Fix input and textarea colors */
+html.her input,
+html.her textarea,
+html.her select {
+  color: var(--text-color, #e0e0e0) !important;
+  background-color: var(--background-color, #1a1a1a) !important;
+  border-color: var(--border-color, #444444) !important;
+}
+
+/* Fix button text colors */
+html.her button {
+  color: var(--text-color, #e0e0e0) !important;
 }

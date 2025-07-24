@@ -1,6 +1,9 @@
 @reference "./tailwind.css";
 @config "../tailwind.config.js";
 
+/* Import theme CSS variables */
+@import './lib/styles/theme.css';
+
 @font-face {
 	font-family: 'Inter';
 	src: url('/assets/fonts/Inter-Variable.ttf');
@@ -283,8 +286,63 @@ input[type='number'] {
 	outline: none;
 }
 
+/* Tooltip styling that adapts to theme */
 .tippy-box[data-theme~='dark'] {
-	@apply rounded-lg bg-gray-950 text-xs border border-gray-900 shadow-xl;
+	@apply rounded-lg text-xs border shadow-xl;
+	background-color: var(--background-color, #1f2937) !important;
+	color: var(--text-color, #d1d5db) !important;
+	border-color: var(--border-color, #374151) !important;
+}
+
+/* Light theme tooltip override */
+html.light .tippy-box[data-theme~='dark'] {
+	background-color: #1f2937 !important;
+	color: #d1d5db !important;
+	border-color: #374151 !important;
+}
+
+/* Dark theme tooltip */
+html.dark .tippy-box[data-theme~='dark'] {
+	background-color: var(--background-color, #1f2937) !important;
+	color: var(--text-color, #d1d5db) !important;
+	border-color: var(--border-color, #374151) !important;
+}
+
+/* OLED Dark theme tooltip */
+html.oled-dark .tippy-box[data-theme~='dark'] {
+	background-color: #000000 !important;
+	color: #d1d5db !important;
+	border-color: #374151 !important;
+}
+
+/* Rose Pine theme tooltip */
+html.rose-pine .tippy-box[data-theme~='dark'] {
+	background-color: #1f1d2e !important;
+	color: #e0def4 !important;
+	border-color: #403d52 !important;
+}
+
+/* Her theme tooltip */
+html.her .tippy-box[data-theme~='dark'] {
+	background-color: #1a1a1a !important;
+	color: #e0e0e0 !important;
+	border-color: #444444 !important;
+}
+
+/* Material Design theme tooltip */
+html.md-theme .tippy-box[data-theme~='dark'] {
+	background-color: var(--md-surface, #1E1E1E) !important;
+	color: var(--md-on-surface, #FFFFFF) !important;
+	border-color: var(--md-primary, #FFB6C1) !important;
+}
+
+/* Material Design transparent theme tooltip */
+html.md-theme.transparent .tippy-box[data-theme~='dark'] {
+	background-color: rgba(255, 255, 255, 0.95) !important;
+	color: var(--md-on-surface, #5D4E37) !important;
+	border-color: var(--md-primary, #FFB6C1) !important;
+	backdrop-filter: blur(10px) !important;
+	-webkit-backdrop-filter: blur(10px) !important;
 }
 
 .password {

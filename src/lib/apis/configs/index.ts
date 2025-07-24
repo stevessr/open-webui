@@ -1,8 +1,8 @@
-import { WEBUI_API_BASE_URL } from '$lib/constants';
+import { WEBUI_API_BASE_URL, WEBUI_COOMMON_API_BASE_URL } from '$lib/constants';
 import type { Banner } from '$lib/types';
 
-export const importConfig = async (token: string, config: any) => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/import`, {
+export const importConfig = async (token: string, config: any, fetchFn: typeof fetch = fetch) => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/import`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -20,8 +20,8 @@ export const importConfig = async (token: string, config: any) => {
 	return res.json();
 };
 
-export const exportConfig = async (token: string) => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/export`, {
+export const exportConfig = async (token: string, fetchFn: typeof fetch = fetch) => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/export`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -36,8 +36,8 @@ export const exportConfig = async (token: string) => {
 	return res.json();
 };
 
-export const getConnectionsConfig = async (token: string) => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/connections`, {
+export const getConnectionsConfig = async (token: string, fetchFn: typeof fetch = fetch) => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/connections`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -52,8 +52,12 @@ export const getConnectionsConfig = async (token: string) => {
 	return res.json();
 };
 
-export const setConnectionsConfig = async (token: string, config: object) => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/connections`, {
+export const setConnectionsConfig = async (
+	token: string,
+	config: object,
+	fetchFn: typeof fetch = fetch
+) => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/connections`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -71,8 +75,8 @@ export const setConnectionsConfig = async (token: string, config: object) => {
 	return res.json();
 };
 
-export const getToolServerConnections = async (token: string) => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/tool_servers`, {
+export const getToolServerConnections = async (token: string, fetchFn: typeof fetch = fetch) => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/tool_servers`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -87,8 +91,12 @@ export const getToolServerConnections = async (token: string) => {
 	return res.json();
 };
 
-export const setToolServerConnections = async (token: string, connections: object) => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/tool_servers`, {
+export const setToolServerConnections = async (
+	token: string,
+	connections: object,
+	fetchFn: typeof fetch = fetch
+) => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/tool_servers`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -106,8 +114,12 @@ export const setToolServerConnections = async (token: string, connections: objec
 	return res.json();
 };
 
-export const verifyToolServerConnection = async (token: string, connection: object) => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/tool_servers/verify`, {
+export const verifyToolServerConnection = async (
+	token: string,
+	connection: object,
+	fetchFn: typeof fetch = fetch
+) => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/tool_servers/verify`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -125,8 +137,8 @@ export const verifyToolServerConnection = async (token: string, connection: obje
 	return res.json();
 };
 
-export const getCodeExecutionConfig = async (token: string) => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/code_execution`, {
+export const getCodeExecutionConfig = async (token: string, fetchFn: typeof fetch = fetch) => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/code_execution`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -141,8 +153,12 @@ export const getCodeExecutionConfig = async (token: string) => {
 	return res.json();
 };
 
-export const setCodeExecutionConfig = async (token: string, config: object) => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/code_execution`, {
+export const setCodeExecutionConfig = async (
+	token: string,
+	config: object,
+	fetchFn: typeof fetch = fetch
+) => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/code_execution`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -160,8 +176,8 @@ export const setCodeExecutionConfig = async (token: string, config: object) => {
 	return res.json();
 };
 
-export const getModelsConfig = async (token: string) => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/models`, {
+export const getModelsConfig = async (token: string, fetchFn: typeof fetch = fetch) => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/models`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -176,8 +192,12 @@ export const getModelsConfig = async (token: string) => {
 	return res.json();
 };
 
-export const setModelsConfig = async (token: string, config: object) => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/models`, {
+export const setModelsConfig = async (
+	token: string,
+	config: object,
+	fetchFn: typeof fetch = fetch
+) => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/models`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -195,8 +215,12 @@ export const setModelsConfig = async (token: string, config: object) => {
 	return res.json();
 };
 
-export const setDefaultPromptSuggestions = async (token: string, promptSuggestions: string) => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/suggestions`, {
+export const setDefaultPromptSuggestions = async (
+	token: string,
+	promptSuggestions: string,
+	fetchFn: typeof fetch = fetch
+) => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/suggestions`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -214,8 +238,11 @@ export const setDefaultPromptSuggestions = async (token: string, promptSuggestio
 	return res.json();
 };
 
-export const getBanners = async (token: string): Promise<Banner[]> => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/banners`, {
+export const getBanners = async (
+	token: string,
+	fetchFn: typeof fetch = fetch
+): Promise<Banner[]> => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/banners`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -230,8 +257,12 @@ export const getBanners = async (token: string): Promise<Banner[]> => {
 	return res.json();
 };
 
-export const setBanners = async (token: string, banners: Banner[]) => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/banners`, {
+export const setBanners = async (
+	token: string,
+	banners: Banner[],
+	fetchFn: typeof fetch = fetch
+) => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/banners`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -249,8 +280,8 @@ export const setBanners = async (token: string, banners: Banner[]) => {
 	return res.json();
 };
 
-export const getCustomStylesConfig = async (token: string) => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/custom_styles`, {
+export const getCustomStylesConfig = async (token: string, fetchFn: typeof fetch = fetch) => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/custom_styles`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -265,8 +296,28 @@ export const getCustomStylesConfig = async (token: string) => {
 	return res.json();
 };
 
-export const setCustomStylesConfig = async (token: string, config: object) => {
-	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/custom_styles`, {
+export const getBackendConfig = async (token: string, fetchFn: typeof fetch = fetch) => {
+	const res = await fetchFn(`${WEBUI_COOMMON_API_BASE_URL}/config`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	});
+
+	if (!res.ok) {
+		throw await res.json();
+	}
+
+	return await res.json();
+};
+
+export const setCustomStylesConfig = async (
+	token: string,
+	config: object,
+	fetchFn: typeof fetch = fetch
+) => {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/configs/custom_styles`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',

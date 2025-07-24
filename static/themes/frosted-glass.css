@@ -1,0 +1,212 @@
+/* Frosted Glass Theme */
+.frosted-glass {
+  /* Base glass variables */
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-bg-hover: rgba(255, 255, 255, 0.2);
+  --glass-bg-active: rgba(255, 255, 255, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  --glass-text: #2d3748;
+  --glass-text-light: #4a5568;
+  --glass-backdrop: blur(20px);
+  
+  /* Override theme colors */
+  --background-color: rgba(255, 255, 255, 0.05);
+  --text-color: #2d3748;
+  --border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Body and main background with gradient */
+html.frosted-glass body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Glass effect for main containers */
+.frosted-glass .app,
+.frosted-glass .main-container,
+.frosted-glass .chat-container {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
+}
+
+/* Navigation with glass effect */
+.frosted-glass nav,
+.frosted-glass .sidebar,
+.frosted-glass #nav {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 12px;
+}
+
+/* Cards and panels */
+.frosted-glass .card,
+.frosted-glass .bg-white,
+.frosted-glass .dark\:bg-gray-800,
+.frosted-glass .bg-gray-50,
+.frosted-glass .bg-gray-100 {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow);
+  border-radius: 12px;
+  color: var(--glass-text) !important;
+}
+
+/* Input fields with glass effect */
+.frosted-glass input,
+.frosted-glass textarea,
+.frosted-glass select {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border) !important;
+  color: var(--glass-text) !important;
+  border-radius: 8px;
+  box-shadow: inset 0 2px 4px 0 rgba(31, 38, 135, 0.2);
+}
+
+.frosted-glass input:focus,
+.frosted-glass textarea:focus,
+.frosted-glass select:focus {
+  background: var(--glass-bg-hover) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+/* Buttons with glass effect */
+.frosted-glass button {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border) !important;
+  color: var(--glass-text) !important;
+  border-radius: 8px;
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s ease;
+}
+
+.frosted-glass button:hover {
+  background: var(--glass-bg-hover) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+}
+
+.frosted-glass button:active {
+  background: var(--glass-bg-active) !important;
+  transform: translateY(0);
+}
+
+/* Chat input with enhanced glass effect */
+.frosted-glass #chat-input {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow);
+}
+
+/* Messages with glass effect */
+.frosted-glass .message,
+.frosted-glass .chat-message {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.2);
+}
+
+/* Modals and popups */
+.frosted-glass .modal,
+.frosted-glass .popup,
+.frosted-glass .dropdown {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow);
+}
+
+/* Text colors */
+.frosted-glass p,
+.frosted-glass span,
+.frosted-glass div,
+.frosted-glass h1,
+.frosted-glass h2,
+.frosted-glass h3,
+.frosted-glass h4,
+.frosted-glass h5,
+.frosted-glass h6,
+.frosted-glass label {
+  color: var(--glass-text) !important;
+}
+
+/* Hover effects for interactive elements */
+.frosted-glass .hover\:bg-gray-100:hover,
+.frosted-glass .hover\:bg-gray-200:hover {
+  background: var(--glass-bg-hover) !important;
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+}
+
+/* Scrollbars with glass effect */
+.frosted-glass ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.frosted-glass ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.frosted-glass ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.frosted-glass ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Special glass effects for specific components */
+.frosted-glass .glass-intense {
+  background: rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+}
+
+.frosted-glass .glass-subtle {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+/* Animation for glass elements */
+.frosted-glass * {
+  transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+/* Ensure tooltips work with glass theme */
+.frosted-glass .tippy-box[data-theme~='dark'] {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border) !important;
+  color: var(--glass-text) !important;
+  box-shadow: var(--glass-shadow);
+}

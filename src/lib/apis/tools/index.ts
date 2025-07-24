@@ -1,9 +1,13 @@
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 
-export const createNewTool = async (token: string, tool: object) => {
+export const createNewTool = async (
+	token: string,
+	tool: object,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/create`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/tools/create`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
@@ -31,10 +35,14 @@ export const createNewTool = async (token: string, tool: object) => {
 	return res;
 };
 
-export const loadToolByUrl = async (token: string = '', url: string) => {
+export const loadToolByUrl = async (
+	token: string = '',
+	url: string,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/load/url`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/tools/load/url`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
@@ -65,10 +73,10 @@ export const loadToolByUrl = async (token: string = '', url: string) => {
 	return res;
 };
 
-export const getTools = async (token: string = '') => {
+export const getTools = async (token: string = '', fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/tools/`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',
@@ -96,10 +104,10 @@ export const getTools = async (token: string = '') => {
 	return res;
 };
 
-export const getToolList = async (token: string = '') => {
+export const getToolList = async (token: string = '', fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/list`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/tools/list`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',
@@ -127,10 +135,10 @@ export const getToolList = async (token: string = '') => {
 	return res;
 };
 
-export const exportTools = async (token: string = '') => {
+export const exportTools = async (token: string = '', fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/export`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/tools/export`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',
@@ -158,10 +166,10 @@ export const exportTools = async (token: string = '') => {
 	return res;
 };
 
-export const getToolById = async (token: string, id: string) => {
+export const getToolById = async (token: string, id: string, fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/id/${id}`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/tools/id/${id}`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',
@@ -190,10 +198,15 @@ export const getToolById = async (token: string, id: string) => {
 	return res;
 };
 
-export const updateToolById = async (token: string, id: string, tool: object) => {
+export const updateToolById = async (
+	token: string,
+	id: string,
+	tool: object,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/id/${id}/update`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/tools/id/${id}/update`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
@@ -225,10 +238,10 @@ export const updateToolById = async (token: string, id: string, tool: object) =>
 	return res;
 };
 
-export const deleteToolById = async (token: string, id: string) => {
+export const deleteToolById = async (token: string, id: string, fetchFn: typeof fetch = fetch) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/id/${id}/delete`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/tools/id/${id}/delete`, {
 		method: 'DELETE',
 		headers: {
 			Accept: 'application/json',
@@ -257,10 +270,14 @@ export const deleteToolById = async (token: string, id: string) => {
 	return res;
 };
 
-export const getToolValvesById = async (token: string, id: string) => {
+export const getToolValvesById = async (
+	token: string,
+	id: string,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/id/${id}/valves`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/tools/id/${id}/valves`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',
@@ -289,10 +306,14 @@ export const getToolValvesById = async (token: string, id: string) => {
 	return res;
 };
 
-export const getToolValvesSpecById = async (token: string, id: string) => {
+export const getToolValvesSpecById = async (
+	token: string,
+	id: string,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/id/${id}/valves/spec`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/tools/id/${id}/valves/spec`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',
@@ -321,10 +342,15 @@ export const getToolValvesSpecById = async (token: string, id: string) => {
 	return res;
 };
 
-export const updateToolValvesById = async (token: string, id: string, valves: object) => {
+export const updateToolValvesById = async (
+	token: string,
+	id: string,
+	valves: object,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/id/${id}/valves/update`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/tools/id/${id}/valves/update`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
@@ -356,10 +382,14 @@ export const updateToolValvesById = async (token: string, id: string, valves: ob
 	return res;
 };
 
-export const getUserValvesById = async (token: string, id: string) => {
+export const getUserValvesById = async (
+	token: string,
+	id: string,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/id/${id}/valves/user`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/tools/id/${id}/valves/user`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',
@@ -388,10 +418,14 @@ export const getUserValvesById = async (token: string, id: string) => {
 	return res;
 };
 
-export const getUserValvesSpecById = async (token: string, id: string) => {
+export const getUserValvesSpecById = async (
+	token: string,
+	id: string,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/id/${id}/valves/user/spec`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/tools/id/${id}/valves/user/spec`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',
@@ -420,10 +454,15 @@ export const getUserValvesSpecById = async (token: string, id: string) => {
 	return res;
 };
 
-export const updateUserValvesById = async (token: string, id: string, valves: object) => {
+export const updateUserValvesById = async (
+	token: string,
+	id: string,
+	valves: object,
+	fetchFn: typeof fetch = fetch
+) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/tools/id/${id}/valves/user/update`, {
+	const res = await fetchFn(`${WEBUI_API_BASE_URL}/tools/id/${id}/valves/user/update`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',

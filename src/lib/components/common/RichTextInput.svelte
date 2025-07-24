@@ -911,7 +911,14 @@
 			element: element,
 			extensions: [
 				StarterKit.configure({
-					link: link
+					link: link ? {} : false,
+					// Disable extensions that are included in ListKit to avoid duplicates
+					bulletList: false,
+					orderedList: false,
+					listItem: false,
+					listKeymap: false,
+					// Disable codeBlock since we're using CodeBlockLowlight
+					codeBlock: false
 				}),
 				Placeholder.configure({ placeholder }),
 				SelectionDecoration,

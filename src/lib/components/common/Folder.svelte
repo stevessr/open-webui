@@ -12,7 +12,7 @@
 
 	export let open = true;
 
-	export let id = '';
+	export const id = ''; // External reference for parent component
 	export let name = '';
 	export let collapsible = true;
 

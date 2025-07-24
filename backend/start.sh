@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 
+if [ -f .env ]; then
+  while IFS= read -r line || [ -n "$line" ]; do
+    # Skip comments and empty lines
+    case "$line" in
+      '#'* | '') continue ;;
+    esac
+
+    # Export the variable
+    export "$line"
+  done < .env
+fi
+
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$SCRIPT_DIR" || exit
 

@@ -48,7 +48,7 @@
 	import type { i18n as i18nType } from 'i18next';
 
 	export let data: LayoutData;
-	export let params: any;
+	export const params: any = undefined; // External reference for SvelteKit route params
 	import type { IDBPDatabase } from 'idb';
 	import type { Banner, ToolServer } from '$lib/types';
 	import type { Chat } from '$lib/stores';

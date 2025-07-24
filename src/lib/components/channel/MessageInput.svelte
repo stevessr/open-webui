@@ -698,6 +698,7 @@
 							>
 								<RichTextInput
 									bind:this={chatInputElement}
+									id="channel-input"
 									json={true}
 									messageInput={true}
 									{showFormattingButtons}

@@ -1,25 +1,15 @@
 import { writable } from 'svelte/store';
 import type { DocInfo } from '$lib/types';
-import { DocsCache } from '$lib/utils/cache';
 
 const createDocsStore = () => {
 	const { subscribe, set, update } = writable<DocInfo | null>(null);
-	const cache = DocsCache.getInstance();
-
 	const fetchDocContent = async (url: string) => {
-		const cachedContent = await cache.get<string>(url);
-		if (cachedContent) {
-			update((state) => (state ? { ...state, content: cachedContent, isLoading: false } : null));
-			return;
-		}
-
 		try {
 			const response = await fetch(url);
 			if (!response.ok) {
 				throw new Error(`Failed to fetch doc from ${url}`);
 			}
 			const content = await response.text();
-			await cache.set(url, content);
 			update((state) => (state ? { ...state, content, isLoading: false } : null));
 		} catch (error) {
 			console.error(error);

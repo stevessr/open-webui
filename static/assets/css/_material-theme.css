@@ -1,19 +1,37 @@
 /* Material Design Theme Styles */
 
 .md-theme {
-  /* Material Design color variables */
-  --md-primary: #6200EE;
-  --md-primary-variant: #3700B3;
-  --md-secondary: #03DAC6;
-  --md-secondary-variant: #018786;
-  --md-background: #FFFFFF;
-  --md-surface: #FFFFFF;
-  --md-error: #B00020;
-  --md-on-primary: #FFFFFF;
-  --md-on-secondary: #000000;
-  --md-on-background: #000000;
-  --md-on-surface: #000000;
-  --md-on-error: #FFFFFF;
+  /* Material Design color variables - Macaron Theme */
+  --md-primary: #FFB6C1;     /* Light Pink (macaron pink) */
+  --md-primary-variant: #FF91A4; /* Deeper Pink */
+  --md-secondary: #B8E6B8;   /* Mint Green (macaron green) */
+  --md-secondary-variant: #98D982; /* Deeper Mint */
+  --md-tertiary: #E6D7FF;    /* Lavender (macaron purple) */
+  --md-tertiary-variant: #D1C4E9; /* Deeper Lavender */
+  --md-background: #FFF8F0;  /* Cream (macaron cream) */
+  --md-surface: #FFFFFF;     /* White */
+  --md-surface-variant: #F5F5DC; /* Beige surface variant */
+  --md-error: #FFB3BA;       /* Soft Red (macaron red) */
+  --md-warning: #FFE4B5;     /* Moccasin (macaron yellow) */
+  --md-success: #B8E6B8;     /* Same as secondary for consistency */
+  --md-info: #B3E5FC;        /* Light Blue (macaron blue) */
+  --md-on-primary: #FFFFFF;   /* White text on primary */
+  --md-on-secondary: #2D5016; /* Dark green text on secondary */
+  --md-on-tertiary: #4A148C;  /* Deep purple text on tertiary */
+  --md-on-background: #5D4E37; /* Brown text on background */
+  --md-on-surface: #5D4E37;   /* Brown text on surface */
+  --md-on-surface-variant: #6D4C41; /* Darker brown for variant */
+  --md-on-error: #8B0000;     /* Dark red text on error */
+  --md-on-warning: #8B4513;   /* Saddle brown text on warning */
+  --md-on-success: #2D5016;   /* Dark green text on success */
+  --md-on-info: #0D47A1;      /* Dark blue text on info */
+
+  /* Override common theme variables to use macaron colors */
+  --background-color: #FFF8F0 !important;  /* Cream background */
+  --text-color: #5D4E37 !important;        /* Brown text */
+  --border-color: #E6D7FF !important;      /* Lavender borders */
+  --primary-color: #FFB6C1 !important;     /* Pink primary */
+  --secondary-color: #B8E6B8 !important;   /* Mint secondary */
   
   /* Elevation shadows */
   --md-elevation-1: 0px 2px 1px -1px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.12);
@@ -92,7 +110,7 @@
   background-color: rgba(98, 0, 238, 0.04) !important;
 }
 
-/* Card styles */
+/* Card styles - Different variants for different purposes */
 .md-theme .card,
 .md-theme .bg-white,
 .md-theme .dark\:bg-gray-800 {
@@ -102,7 +120,32 @@
   box-shadow: var(--md-elevation-1);
 }
 
-/* Input styles */
+/* Chat message cards */
+.md-theme .message-card,
+.md-theme .chat-message {
+  background-color: var(--md-surface-variant) !important;
+  color: var(--md-on-surface-variant) !important;
+  border-radius: 12px;
+  box-shadow: var(--md-elevation-2);
+}
+
+/* Settings cards */
+.md-theme .settings-card {
+  background-color: var(--md-tertiary) !important;
+  color: var(--md-on-tertiary) !important;
+  border-radius: 8px;
+  box-shadow: var(--md-elevation-1);
+}
+
+/* Info cards */
+.md-theme .info-card {
+  background-color: var(--md-info) !important;
+  color: var(--md-on-info) !important;
+  border-radius: 8px;
+  box-shadow: var(--md-elevation-1);
+}
+
+/* Input styles - Different styles for different input types */
 .md-theme input,
 .md-theme textarea,
 .md-theme select {
@@ -111,7 +154,7 @@
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 4px;
   padding: 12px 16px;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .md-theme input:focus,
@@ -119,10 +162,58 @@
 .md-theme select:focus {
   border-color: var(--md-primary) !important;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(98, 0, 238, 0.12);
+  box-shadow: 0 0 0 2px rgba(255, 182, 193, 0.3);
 }
 
-/* Navigation styles */
+/* Search inputs - Secondary color scheme */
+.md-theme input[type="search"],
+.md-theme .search-input {
+  border-color: var(--md-secondary) !important;
+}
+
+.md-theme input[type="search"]:focus,
+.md-theme .search-input:focus {
+  border-color: var(--md-secondary-variant) !important;
+  box-shadow: 0 0 0 2px rgba(184, 230, 184, 0.3);
+}
+
+/* Chat input - Tertiary color scheme */
+.md-theme .chat-input,
+.md-theme #chat-input {
+  background-color: var(--md-tertiary) !important;
+  color: var(--md-on-tertiary) !important;
+  border-color: var(--md-tertiary-variant) !important;
+  border-radius: 20px;
+}
+
+.md-theme .chat-input:focus,
+.md-theme #chat-input:focus {
+  border-color: var(--md-tertiary-variant) !important;
+  box-shadow: 0 0 0 2px rgba(230, 215, 255, 0.5);
+}
+
+/* Form validation states */
+.md-theme input.error,
+.md-theme textarea.error {
+  border-color: var(--md-error) !important;
+}
+
+.md-theme input.error:focus,
+.md-theme textarea.error:focus {
+  box-shadow: 0 0 0 2px rgba(255, 179, 186, 0.3);
+}
+
+.md-theme input.success,
+.md-theme textarea.success {
+  border-color: var(--md-success) !important;
+}
+
+.md-theme input.success:focus,
+.md-theme textarea.success:focus {
+  box-shadow: 0 0 0 2px rgba(184, 230, 184, 0.3);
+}
+
+/* Navigation styles - Primary color scheme */
 .md-theme nav,
 .md-theme .navbar {
   background-color: var(--md-primary) !important;
@@ -133,6 +224,31 @@
 .md-theme nav a,
 .md-theme .navbar a {
   color: var(--md-on-primary) !important;
+}
+
+/* Sidebar navigation - Secondary color scheme */
+.md-theme .sidebar nav,
+.md-theme .sidebar .navbar {
+  background-color: var(--md-secondary) !important;
+  color: var(--md-on-secondary) !important;
+}
+
+.md-theme .sidebar nav a,
+.md-theme .sidebar .navbar a {
+  color: var(--md-on-secondary) !important;
+}
+
+/* Tab navigation - Tertiary color scheme */
+.md-theme .tab-nav,
+.md-theme .tabs {
+  background-color: var(--md-tertiary) !important;
+  color: var(--md-on-tertiary) !important;
+  border-radius: 8px 8px 0 0;
+}
+
+.md-theme .tab-nav a,
+.md-theme .tabs a {
+  color: var(--md-on-tertiary) !important;
 }
 
 /* Sidebar styles */
@@ -152,14 +268,59 @@
   box-shadow: var(--md-elevation-24);
 }
 
-/* Chip styles */
+/* Chip styles - Different colors for different types */
 .md-theme .chip,
 .md-theme .tag {
-  background-color: rgba(98, 0, 238, 0.12) !important;
-  color: var(--md-primary) !important;
+  background-color: var(--md-tertiary) !important;
+  color: var(--md-on-tertiary) !important;
   border-radius: 16px;
   padding: 6px 12px;
   font-size: 0.875rem;
+  transition: background-color 0.2s ease;
+}
+
+.md-theme .chip.primary,
+.md-theme .tag.primary {
+  background-color: var(--md-primary) !important;
+  color: var(--md-on-primary) !important;
+}
+
+.md-theme .chip.secondary,
+.md-theme .tag.secondary {
+  background-color: var(--md-secondary) !important;
+  color: var(--md-on-secondary) !important;
+}
+
+/* Alert and notification styles */
+.md-theme .alert {
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 8px 0;
+  box-shadow: var(--md-elevation-2);
+}
+
+.md-theme .alert.error {
+  background-color: var(--md-error) !important;
+  color: var(--md-on-error) !important;
+  border-left: 4px solid var(--md-on-error);
+}
+
+.md-theme .alert.warning {
+  background-color: var(--md-warning) !important;
+  color: var(--md-on-warning) !important;
+  border-left: 4px solid var(--md-on-warning);
+}
+
+.md-theme .alert.success {
+  background-color: var(--md-success) !important;
+  color: var(--md-on-success) !important;
+  border-left: 4px solid var(--md-on-success);
+}
+
+.md-theme .alert.info {
+  background-color: var(--md-info) !important;
+  color: var(--md-on-info) !important;
+  border-left: 4px solid var(--md-on-info);
 }
 
 /* Switch styles */
@@ -215,7 +376,7 @@
   box-shadow: var(--md-elevation-8);
 }
 
-/* Ripple effect for buttons */
+/* Ripple effect for buttons - starts from touch point */
 .md-theme button,
 .md-theme .btn {
   position: relative;
@@ -226,20 +387,37 @@
 .md-theme .btn::before {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: var(--ripple-y, 50%);
+  left: var(--ripple-x, 50%);
   width: 0;
   height: 0;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.3);
   transform: translate(-50%, -50%);
-  transition: width 0.3s ease, height 0.3s ease;
+  transition: width 0.6s ease, height 0.6s ease, opacity 0.6s ease;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .md-theme button:active::before,
 .md-theme .btn:active::before {
   width: 300px;
   height: 300px;
+  opacity: 1;
+}
+
+/* Ripple animation keyframes */
+@keyframes ripple {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  100% {
+    width: 300px;
+    height: 300px;
+    opacity: 0;
+  }
 }
 
 /* Dark theme adjustments */
@@ -262,6 +440,174 @@
   box-shadow: 0 0 0 2px rgba(98, 0, 238, 0.24);
 }
 
+/* Transparent variant for Material Design theme */
+.md-theme.transparent {
+  /* Override background colors to be transparent */
+  --md-background: rgba(255, 248, 240, 0.8) !important;  /* Semi-transparent cream */
+  --md-surface: rgba(255, 255, 255, 0.9) !important;     /* Semi-transparent white */
+  --md-surface-variant: rgba(245, 245, 220, 0.8) !important; /* Semi-transparent beige */
+
+  /* Keep text colors opaque for readability */
+  --md-on-background: #5D4E37 !important;
+  --md-on-surface: #5D4E37 !important;
+  --md-on-surface-variant: #6D4C41 !important;
+}
+
+.md-theme.transparent .sidebar,
+.md-theme.transparent aside,
+.md-theme.transparent nav,
+.md-theme.transparent .menu {
+  background-color: rgba(184, 230, 184, 0.9) !important; /* Semi-transparent mint green */
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.md-theme.transparent .modal,
+.md-theme.transparent .dialog {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(15px) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+}
+
+.md-theme.transparent button,
+.md-theme.transparent .btn {
+  background-color: rgba(255, 182, 193, 0.9) !important; /* Semi-transparent pink */
+  backdrop-filter: blur(5px) !important;
+  -webkit-backdrop-filter: blur(5px) !important;
+}
+
+.md-theme.transparent input,
+.md-theme.transparent textarea,
+.md-theme.transparent select {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* User menu transparency - addressing memory about transparent user menu */
+.md-theme.transparent [role="menu"]#user-menu {
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* When user menu is not over background, show theme color */
+.md-theme.transparent [role="menu"]#user-menu:not(.over-background) {
+  background-color: var(--md-secondary, #B8E6B8) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* Main application areas transparency */
+.md-theme.transparent body,
+.md-theme.transparent #app,
+.md-theme.transparent .app,
+.md-theme.transparent main {
+  background-color: rgba(255, 248, 240, 0.7) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* Content areas transparency */
+.md-theme.transparent .content,
+.md-theme.transparent .main-content,
+.md-theme.transparent .chat-container,
+.md-theme.transparent .workspace {
+  background-color: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(15px) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+}
+
+/* Card and panel transparency */
+.md-theme.transparent .card,
+.md-theme.transparent .panel,
+.md-theme.transparent .bg-white,
+.md-theme.transparent .bg-gray-50,
+.md-theme.transparent .bg-gray-100 {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* Dark background overrides for transparency */
+.md-theme.transparent .bg-gray-800,
+.md-theme.transparent .bg-gray-900,
+.md-theme.transparent .dark\:bg-gray-800,
+.md-theme.transparent .dark\:bg-gray-900 {
+  background-color: rgba(230, 215, 255, 0.8) !important; /* Transparent lavender */
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* Chat and message areas transparency */
+.md-theme.transparent .chat-message,
+.md-theme.transparent .message,
+.md-theme.transparent .chat-bubble {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* Settings and configuration panels transparency */
+.md-theme.transparent .settings-panel,
+.md-theme.transparent .config-panel,
+.md-theme.transparent .form-container {
+  background-color: rgba(255, 248, 240, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* Dropdown and menu transparency */
+.md-theme.transparent .dropdown,
+.md-theme.transparent .dropdown-menu,
+.md-theme.transparent .context-menu {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(15px) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+  border: 1px solid rgba(255, 182, 193, 0.3) !important;
+}
+
+/* Ensure body and html have transparent background */
+.md-theme.transparent,
+.md-theme.transparent html,
+.md-theme.transparent body {
+  background-color: rgba(255, 248, 240, 0.6) !important;
+}
+
+/* Override any solid backgrounds that might interfere */
+.md-theme.transparent * {
+  /* Allow elements to inherit transparency unless specifically overridden */
+}
+
+.md-theme.transparent .bg-transparent {
+  background-color: transparent !important;
+}
+
+/* Specific layout elements for transparency */
+.md-theme.transparent .layout,
+.md-theme.transparent .layout-container,
+.md-theme.transparent .main-layout,
+.md-theme.transparent .app-container {
+  background-color: rgba(255, 248, 240, 0.7) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* Ensure root elements are transparent */
+html.md-theme.transparent,
+html.md-theme.transparent body,
+.md-theme.transparent #svelte {
+  background-color: rgba(255, 248, 240, 0.6) !important;
+}
+
+/* Override any remaining solid backgrounds */
+.md-theme.transparent .solid-bg,
+.md-theme.transparent .opaque-bg {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
 /* Animation for theme transitions */
 .md-theme * {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
@@ -274,9 +620,233 @@
     padding: 12px 24px;
     font-size: 0.875rem;
   }
-  
+
   .md-theme .fab {
     width: 48px;
     height: 48px;
   }
+}
+
+/* Comprehensive overrides to prevent black components and ensure macaron colors */
+.md-theme .bg-black,
+.md-theme .bg-gray-900,
+.md-theme .bg-gray-800,
+.md-theme .bg-gray-700 {
+  background-color: var(--md-primary, #FFB6C1) !important;
+  color: var(--md-on-primary, #FFFFFF) !important;
+}
+
+.md-theme .text-black,
+.md-theme .text-gray-900,
+.md-theme .text-gray-800 {
+  color: var(--md-on-surface, #5D4E37) !important;
+}
+
+/* Navigation and sidebar components */
+.md-theme nav,
+.md-theme .sidebar,
+.md-theme .menu {
+  background-color: var(--md-secondary, #B8E6B8) !important;
+  color: var(--md-on-secondary, #2D5016) !important;
+}
+
+/* Chat components */
+.md-theme .chat-container,
+.md-theme .message-container {
+  background-color: var(--md-surface-variant, #F5F5DC) !important;
+  color: var(--md-on-surface-variant, #6D4C41) !important;
+}
+
+/* Modal and dialog components */
+.md-theme .modal,
+.md-theme .dialog,
+.md-theme .popup {
+  background-color: var(--md-surface, #FFFFFF) !important;
+  color: var(--md-on-surface, #5D4E37) !important;
+  border: 2px solid var(--md-primary, #FFB6C1) !important;
+}
+
+/* Ensure all dark/black elements use macaron colors */
+.md-theme .dark\:bg-gray-900,
+.md-theme .dark\:bg-gray-800,
+.md-theme .dark\:text-white,
+.md-theme .hover\:bg-gray-900,
+.md-theme .hover\:bg-black {
+  background-color: var(--md-tertiary, #E6D7FF) !important;
+  color: var(--md-on-tertiary, #4A148C) !important;
+}
+
+/* Comprehensive fix for black/dark components - addressing task about black components */
+.md-theme .bg-black,
+.md-theme .bg-gray-950,
+.md-theme .bg-gray-900,
+.md-theme .bg-gray-800,
+.md-theme .bg-gray-700,
+.md-theme .bg-gray-600 {
+  background-color: var(--md-primary, #FFB6C1) !important;
+  color: var(--md-on-primary, #FFFFFF) !important;
+}
+
+.md-theme .text-black,
+.md-theme .text-gray-950,
+.md-theme .text-gray-900,
+.md-theme .text-gray-800,
+.md-theme .text-gray-700 {
+  color: var(--md-on-surface, #5D4E37) !important;
+}
+
+/* Fix for textarea elements - addressing memory about textarea background */
+.md-theme textarea {
+  background-color: var(--md-background, #FFF8F0) !important;
+  color: var(--md-on-background, #5D4E37) !important;
+  border-color: var(--md-primary, #FFB6C1) !important;
+}
+
+.md-theme textarea:focus {
+  background-color: var(--md-surface, #FFFFFF) !important;
+  border-color: var(--md-primary-variant, #FF91A4) !important;
+  box-shadow: 0 0 0 2px rgba(255, 182, 193, 0.24) !important;
+}
+
+/* Input field fixes - addressing task about white input fields */
+.md-theme input[type="text"],
+.md-theme input[type="email"],
+.md-theme input[type="password"],
+.md-theme input[type="search"],
+.md-theme input[type="url"],
+.md-theme input[type="number"] {
+  background-color: var(--md-surface, #FFFFFF) !important;
+  color: var(--md-on-surface, #5D4E37) !important;
+  border-color: var(--md-primary, #FFB6C1) !important;
+}
+
+.md-theme input:focus {
+  background-color: var(--md-surface, #FFFFFF) !important;
+  border-color: var(--md-primary-variant, #FF91A4) !important;
+  box-shadow: 0 0 0 2px rgba(255, 182, 193, 0.24) !important;
+}
+
+/* Button sizing fixes - addressing task about abnormal button sizes */
+.md-theme button,
+.md-theme .btn {
+  min-height: 36px !important;
+  padding: 8px 16px !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+}
+
+.md-theme button.btn-sm,
+.md-theme .btn.btn-sm {
+  min-height: 32px !important;
+  padding: 6px 12px !important;
+  font-size: 0.75rem !important;
+}
+
+.md-theme button.btn-lg,
+.md-theme .btn.btn-lg {
+  min-height: 44px !important;
+  padding: 12px 24px !important;
+  font-size: 1rem !important;
+}
+
+/* Switch/Toggle component fixes - addressing task about switch display issues */
+.md-theme input[type="checkbox"],
+.md-theme .toggle,
+.md-theme .switch {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 44px !important;
+  height: 24px !important;
+  background-color: var(--md-surface-variant, #F5F5DC) !important;
+  border-radius: 12px !important;
+  position: relative !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.md-theme input[type="checkbox"]:checked,
+.md-theme .toggle.checked,
+.md-theme .switch.checked {
+  background-color: var(--md-primary, #FFB6C1) !important;
+}
+
+.md-theme input[type="checkbox"]::before,
+.md-theme .toggle::before,
+.md-theme .switch::before {
+  content: '' !important;
+  position: absolute !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  background-color: var(--md-surface, #FFFFFF) !important;
+  top: 2px !important;
+  left: 2px !important;
+  transition: transform 0.2s ease !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+}
+
+.md-theme input[type="checkbox"]:checked::before,
+.md-theme .toggle.checked::before,
+.md-theme .switch.checked::before {
+  transform: translateX(20px) !important;
+}
+
+/* Modal overlay fixes - addressing task about white/black overlays */
+.md-theme .modal-overlay,
+.md-theme .overlay,
+.md-theme .backdrop {
+  background-color: rgba(230, 215, 255, 0.6) !important; /* Lavender overlay instead of black/white */
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+
+/* Archived conversations modal fixes - addressing task about white mask */
+.md-theme .archived-chats-modal,
+.md-theme .archived-modal {
+  background-color: var(--md-surface, #FFFFFF) !important;
+  color: var(--md-on-surface, #5D4E37) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--md-elevation-24) !important;
+}
+
+.md-theme .archived-chats-modal .overlay,
+.md-theme .archived-modal .overlay {
+  background-color: rgba(230, 215, 255, 0.4) !important; /* Light lavender instead of white */
+}
+
+/* Settings modal fixes - addressing task about black overlay in settings */
+.md-theme .settings-modal,
+.md-theme .settings-dialog {
+  background-color: var(--md-surface, #FFFFFF) !important;
+  color: var(--md-on-surface, #5D4E37) !important;
+}
+
+.md-theme .settings-modal .overlay,
+.md-theme .settings-dialog .overlay {
+  background-color: rgba(184, 230, 184, 0.4) !important; /* Light mint instead of black */
+}
+
+/* Preview modal fixes - addressing task about white screen in preview */
+.md-theme .preview-modal,
+.md-theme .preview-dialog {
+  background-color: var(--md-background, #FFF8F0) !important;
+  color: var(--md-on-background, #5D4E37) !important;
+}
+
+.md-theme .preview-modal iframe,
+.md-theme .preview-dialog iframe {
+  background-color: var(--md-surface, #FFFFFF) !important;
+  border: 1px solid var(--md-primary, #FFB6C1) !important;
+  border-radius: 4px !important;
+}
+
+/* Iframe link fixes - addressing task about iframe <a> affecting outside */
+.md-theme iframe {
+  pointer-events: auto !important;
+  isolation: isolate !important;
+}
+
+.md-theme iframe a {
+  pointer-events: auto !important;
+  target: "_blank" !important;
 }
