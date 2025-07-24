@@ -9,7 +9,7 @@
 	<span
 		class="relative inline-flex {size === 'md'
 			? 'size-3'
-			: 'size-2'} rounded-full breathing-light-core"
+			: 'size-2'} rounded-full bg-black dark:bg-white animate-size"
 	></span>
 </span>
 

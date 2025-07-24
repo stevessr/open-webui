@@ -19,6 +19,11 @@
 	export let onExport = () => {};
 	export let onDelete = () => {};
 
+	export let align: 'start' | 'end' = 'start';
+	export let onEdit = () => {};
+	export let onExport = () => {};
+	export let onDelete = () => {};
+
 	let show = false;
 </script>
 

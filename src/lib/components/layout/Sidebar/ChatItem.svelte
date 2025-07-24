@@ -373,7 +373,7 @@
 
 				if (
 					$selectedFolder &&
-					!isChatInSelectedFolder
+					!($selectedFolder?.items?.chats.map((chat) => chat.id) ?? []).includes(id)
 				) {
 					selectedFolder.set(null); // Reset selected folder if the chat is not in it
 				}

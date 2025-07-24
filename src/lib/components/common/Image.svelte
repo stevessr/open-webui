@@ -12,6 +12,8 @@
 
 	export let className = ` w-full ${($settings?.highContrastMode ?? false) ? '' : 'outline-hidden focus:outline-hidden'}`;
 
+	export let className = ` w-full ${($settings?.highContrastMode ?? false) ? '' : 'outline-hidden focus:outline-hidden'}`;
+
 	export let imageClassName = 'rounded-lg';
 
 	export let dismissible = false;

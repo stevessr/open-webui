@@ -266,7 +266,7 @@
 						<button
 							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-lg px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-800 transition"
 							on:click={async () => {
-								profileImageUrl = '/user.gif';
+								profileImageUrl = '${WEBUI_BASE_URL}/user.gif';
 							}}>{$i18n.t('Remove')}</button
 						>
 					</div>

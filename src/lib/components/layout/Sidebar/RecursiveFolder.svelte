@@ -474,11 +474,14 @@
 					{/if}
 				</div>
 
-				<div
-					class="absolute z-10 right-2 invisible group-hover:visible self-center flex items-center"
+				<button
+					class="absolute z-10 right-2 invisible group-hover:visible self-center flex items-center dark:text-gray-300"
+					on:pointerup={(e) => {
+						e.stopPropagation();
+					}}
+					on:click={(e) => e.stopPropagation()}
 				>
 					<FolderMenu
-						{i18n}
 						onEdit={() => {
 							showFolderModal = true;
 						}}
