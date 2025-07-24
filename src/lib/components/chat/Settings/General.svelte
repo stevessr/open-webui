@@ -24,11 +24,6 @@
 	const dispatch = createEventDispatcher();
 
 	import { models, settings, theme, user } from '$lib/stores';
-	import {
-		generateThemeFromBackground,
-		applyMaterialTheme,
-		removeMaterialTheme
-	} from '$lib/utils/materialThemeGenerator';
 
 	const i18n = getContext('i18n') as Readable<i18nType>;
 
@@ -40,7 +35,7 @@
 	export let getModels: Function;
 
 	// General
-	let themes = ['dark', 'light', 'oled-dark', 'material-design'];
+	let themes = ['dark', 'light', 'oled-dark'];
 	let selectedTheme = 'system';
 
 	let languages: Awaited<ReturnType<typeof getLanguages>> = [];
@@ -146,9 +141,7 @@ let showUserGravatar = false;
 							? '#000000'
 							: _theme === 'her'
 								? '#983724'
-								: _theme === 'material-design'
-									? '#6200EE'
-									: '#ffffff'
+								: '#ffffff'
 				);
 			}
 		}
@@ -173,52 +166,6 @@ let showUserGravatar = false;
 		localStorage.setItem('theme', _theme);
 		applyTheme(_theme);
 
-		// Handle Material Design theme
-		if (_theme === 'material-design') {
-			const backgroundImageUrl = $settings?.backgroundImageUrl;
-			if (backgroundImageUrl) {
-				try {
-					const palette = await generateThemeFromBackground(backgroundImageUrl);
-					applyMaterialTheme(palette);
-				} catch (error) {
-					console.error('Failed to generate Material Design theme:', error);
-					// Apply default Material Design theme
-					applyMaterialTheme({
-						primary: '#6200EE',
-						primaryVariant: '#3700B3',
-						secondary: '#03DAC6',
-						secondaryVariant: '#018786',
-						background: '#FFFFFF',
-						surface: '#FFFFFF',
-						error: '#B00020',
-						onPrimary: '#FFFFFF',
-						onSecondary: '#000000',
-						onBackground: '#000000',
-						onSurface: '#000000',
-						onError: '#FFFFFF'
-					});
-				}
-			} else {
-				// Apply default Material Design theme when no background image
-				applyMaterialTheme({
-					primary: '#6200EE',
-					primaryVariant: '#3700B3',
-					secondary: '#03DAC6',
-					secondaryVariant: '#018786',
-					background: '#FFFFFF',
-					surface: '#FFFFFF',
-					error: '#B00020',
-					onPrimary: '#FFFFFF',
-					onSecondary: '#000000',
-					onBackground: '#000000',
-					onSurface: '#000000',
-					onError: '#FFFFFF'
-				});
-			}
-		} else {
-			// Remove Material Design theme when switching to other themes
-			removeMaterialTheme();
-		}
 	};
 </script>
 
@@ -243,7 +190,8 @@ let showUserGravatar = false;
 						<option value="oled-dark">🌃 {$i18n.t('OLED Dark')}</option>
 						<option value="light">☀️ {$i18n.t('Light')}</option>
 						<option value="her">🌷 Her</option>
-						<option value="material-design">🎨 {$i18n.t('Material Design')}</option>
+						<option value="material-dark dark"> Material Design (Dark)</option>
+						<option value="material-light light"> Material Design (Light)</option>
 						<!-- <option value="rose-pine dark">🪻 {$i18n.t('Rosé Pine')}</option>
 						<option value="rose-pine-dawn light">🌷 {$i18n.t('Rosé Pine Dawn')}</option> -->
 					</select>
@@ -379,3 +327,4 @@ let showUserGravatar = false;
 		</button>
 	</div>
 </div>
+

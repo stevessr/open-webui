@@ -1,39 +1,16 @@
 <script lang="ts">
-	import { getVersionUpdates } from '$lib/apis';
 	import { getOllamaVersion } from '$lib/apis/ollama';
 	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
 	import { WEBUI_NAME, config, showChangelog } from '$lib/stores';
-	import { compareVersion } from '$lib/utils';
-	import { onMount, getContext } from 'svelte';
+	import { onMount } from 'svelte';
+	import { i18n } from '$lib/i18n';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import FloatingDocPreview from '$lib/components/common/FloatingDocPreview.svelte';
-
-	const i18n = getContext('i18n');
+	import { checkForVersionUpdates, updateAvailable, version } from '$lib/utils/version';
 
 	let ollamaVersion = '';
 	let showReleasesPreview = false;
-
-	let updateAvailable = null;
-	let version = {
-		current: '',
-		latest: ''
-	};
-
-	const checkForVersionUpdates = async () => {
-		updateAvailable = null;
-		version = await getVersionUpdates(localStorage.token).catch((error) => {
-			return {
-				current: WEBUI_VERSION,
-				latest: WEBUI_VERSION
-			};
-		});
-
-		console.log(version);
-
-		updateAvailable = compareVersion(version.latest, version.current);
-		console.log(updateAvailable);
-	};
 
 	onMount(async () => {
 		ollamaVersion = await getOllamaVersion(localStorage.token).catch((error) => {
@@ -69,10 +46,10 @@
 									showReleasesPreview = true;
 								}}
 							>
-								{updateAvailable === null
+								{($updateAvailable === null)
 									? $i18n.t('Checking for updates...')
-									: updateAvailable
-										? `(v${version.latest} ${$i18n.t('available!')})`
+									: ($updateAvailable)
+										? `(v${$version.latest} ${$i18n.t('available!')})`
 										: $i18n.t('(latest)')}
 							</button>
 						{/if}
@@ -210,7 +187,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	<FloatingDocPreview
 		bind:show={showReleasesPreview}
-		url="https://github.com/open-webui/open-webui/releases"
-		title="Open WebUI Releases"
+		docs={[{ id: 'releases', title: 'Open WebUI Releases', url: 'https://github.com/open-webui/open-webui/releases' }]}
+		activeDocId={'releases'}
 	/>
 </div>
