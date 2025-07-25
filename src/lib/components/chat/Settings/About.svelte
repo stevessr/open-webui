@@ -2,8 +2,11 @@
 	import { getOllamaVersion } from '$lib/apis/ollama';
 	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
 	import { WEBUI_NAME, config, showChangelog } from '$lib/stores';
-	import { onMount } from 'svelte';
-	import { i18n } from '$lib/i18n';
+	import { onMount, getContext } from 'svelte';
+	import type { i18n as i18nType } from 'i18next';
+	import type { Writable } from 'svelte/store';
+
+	const i18n = getContext<Writable<i18nType>>('i18n');
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import FloatingDocPreview from '$lib/components/common/FloatingDocPreview.svelte';
