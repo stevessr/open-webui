@@ -441,7 +441,7 @@ export const executeToolServer = async (
 			operation.parameters.forEach((param: any) => {
 				const paramName = param.name;
 				const paramIn = param.in;
-				if (params.hasOwnProperty(paramName)) {
+				if (Object.prototype.hasOwnProperty.call(params, paramName)) {
 					if (paramIn === 'path') {
 						pathParams[paramName] = params[paramName];
 					} else if (paramIn === 'query') {
@@ -483,7 +483,7 @@ export const executeToolServer = async (
 			...(token && { authorization: `Bearer ${token}` })
 		};
 
-		let requestOptions: RequestInit = {
+		const requestOptions: RequestInit = {
 			method: httpMethod.toUpperCase(),
 			headers
 		};
@@ -1043,7 +1043,7 @@ export const getPipelinesList = async (token: string = '', fetcher: typeof fetch
 		throw error;
 	}
 
-	let pipelines = res?.data ?? [];
+	const pipelines = res?.data ?? [];
 	return pipelines;
 };
 
@@ -1201,7 +1201,7 @@ export const getPipelines = async (token: string, urlIdx?: string, fetcher: type
 		throw error;
 	}
 
-	let pipelines = res?.data ?? [];
+	const pipelines = res?.data ?? [];
 	return pipelines;
 };
 
@@ -1651,7 +1651,7 @@ export interface ModelMeta {
 	profile_image_url?: string;
 }
 
-export interface ModelParams {}
+export type ModelParams = Record<string, never>;
 
 export type GlobalModelConfig = ModelConfig[];
 

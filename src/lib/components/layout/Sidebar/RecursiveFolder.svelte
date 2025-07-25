@@ -1,7 +1,11 @@
-<script>
+<script lang="ts">
 	import { getContext, createEventDispatcher, onMount, onDestroy, tick } from 'svelte';
-
-	const i18n = getContext('i18n');
+	import type { Writable } from 'svelte/store';
+	import { get } from 'svelte/store';
+	import type { i18n as i18nInstance } from 'i18next';
+	import type { Folder } from '$lib/types';
+	
+	const i18n = getContext<Writable<i18nInstance>>('i18n');
 	const dispatch = createEventDispatcher();
 
 	import DOMPurify from 'dompurify';
@@ -49,9 +53,9 @@
 
 	export let parentDragged = false;
 
-	export let onDelete = (e) => {};
+	export let onDelete = (e: string) => {};
 
-	let folderElement;
+	let folderElement: HTMLDivElement;
 
 	let showFolderModal = false;
 	let edit = false;
@@ -61,7 +65,7 @@
 
 	let name = '';
 
-	const onDragOver = (e) => {
+	const onDragOver = (e: DragEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
 		if (dragged || parentDragged) {
@@ -70,17 +74,17 @@
 		draggedOver = true;
 	};
 
-	const onDrop = async (e) => {
+	const onDrop = async (e: DragEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
 		if (dragged || parentDragged) {
 			return;
 		}
 
-		if (folderElement.contains(e.target)) {
+		if (folderElement.contains(e.target as Node)) {
 			console.log('Dropped on the Button');
 
-			if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+			if (e.dataTransfer && e.dataTransfer.items && e.dataTransfer.items.length > 0) {
 				// Iterate over all items in the DataTransferItemList use functional programming
 				for (const item of Array.from(e.dataTransfer.items)) {
 					// If dropped items aren't files, reject them
@@ -92,15 +96,17 @@
 							// Read the JSON file with FileReader
 							const reader = new FileReader();
 							reader.onload = async function (event) {
-								try {
-									const fileContent = JSON.parse(event.target.result);
-									open = true;
-									dispatch('import', {
-										folderId: folderId,
-										items: fileContent
-									});
-								} catch (error) {
-									console.error('Error parsing JSON file:', error);
+								if (event.target) {
+									try {
+										const fileContent = JSON.parse(event.target.result as string);
+										open = true;
+										dispatch('import', {
+											folderId: folderId,
+											items: fileContent
+										});
+									} catch (error) {
+										console.error('Error parsing JSON file:', error);
+									}
 								}
 							};
 
@@ -183,7 +189,7 @@
 		}
 	};
 
-	const onDragLeave = (e) => {
+	const onDragLeave = (e: DragEvent) => {
 		e.preventDefault();
 		if (dragged || parentDragged) {
 			return;
@@ -196,34 +202,37 @@
 	dragImage.src =
 		'/user.gif';
 
-	let x;
-	let y;
+	let x: number;
+	let y: number;
 
-	const onDragStart = (event) => {
+	const onDragStart = (event: DragEvent) => {
 		event.stopPropagation();
-		event.dataTransfer.setDragImage(dragImage, 0, 0);
 
-		// Set the data to be transferred
-		event.dataTransfer.setData(
-			'text/plain',
-			JSON.stringify({
-				type: 'folder',
-				id: folderId
-			})
-		);
+		if (event.dataTransfer) {
+			event.dataTransfer.setDragImage(dragImage, 0, 0);
+
+			// Set the data to be transferred
+			event.dataTransfer.setData(
+				'text/plain',
+				JSON.stringify({
+					type: 'folder',
+					id: folderId
+				})
+			);
+		}
 
 		dragged = true;
 		folderElement.style.opacity = '0.5'; // Optional: Visual cue to show it's being dragged
 	};
 
-	const onDrag = (event) => {
+	const onDrag = (event: DragEvent) => {
 		event.stopPropagation();
 
 		x = event.clientX;
 		y = event.clientY;
 	};
 
-	const onDragEnd = (event) => {
+	const onDragEnd = (event: DragEvent) => {
 		event.stopPropagation();
 
 		folderElement.style.opacity = '1'; // Reset visual cue after drag
@@ -274,14 +283,14 @@
 		});
 
 		if (res) {
-			toast.success($i18n.t('Folder deleted successfully'));
+			toast.success(get(i18n).t('Folder deleted successfully'));
 			onDelete(folderId);
 		}
 	};
 
-	const updateHandler = async ({ name, data }) => {
+	const updateHandler = async ({ name, data }: { name: string; data?: any }) => {
 		if (name === '') {
-			toast.error($i18n.t('Folder name cannot be empty.'));
+			toast.error(get(i18n).t('Folder name cannot be empty.'));
 			return;
 		}
 
@@ -306,8 +315,8 @@
 				folders[folderId].data = data;
 			}
 
-			// toast.success($i18n.t('Folder name updated successfully'));
-			toast.success($i18n.t('Folder updated successfully'));
+			// toast.success(get(i18n).t('Folder name updated successfully'));
+			toast.success(get(i18n).t('Folder updated successfully'));
 
 			if ($selectedFolder?.id === folderId) {
 				selectedFolder.set(folders[folderId]);
@@ -326,9 +335,9 @@
 		);
 	};
 
-	let isExpandedUpdateTimeout;
+	let isExpandedUpdateTimeout: NodeJS.Timeout;
 
-	const isExpandedUpdateDebounceHandler = (open) => {
+	const isExpandedUpdateDebounceHandler = (open: boolean) => {
 		clearTimeout(isExpandedUpdateTimeout);
 		isExpandedUpdateTimeout = setTimeout(() => {
 			isExpandedUpdateHandler();
@@ -336,6 +345,28 @@
 	};
 
 	$: isExpandedUpdateDebounceHandler(open);
+
+	let sortedChildren: Folder[] = [];
+	$: {
+		if (folders[folderId]?.childrenIds) {
+			sortedChildren = folders[folderId]?.childrenIds
+				.map((id: string) => folders[id])
+				.sort((a: Folder, b: Folder) =>
+					a.name.localeCompare(b.name, undefined, {
+						numeric: true,
+						sensitivity: 'base'
+					})
+				);
+		}
+	}
+
+	const handleCollapsibleChange = (state: boolean) => {
+		dispatch('open', state);
+	};
+
+	const handleInputFocus = (e: FocusEvent & { currentTarget: EventTarget & HTMLInputElement }) => {
+		e.currentTarget.select();
+	};
 
 	const renameHandler = async () => {
 		console.log('Edit');
@@ -380,7 +411,7 @@
 		{@html DOMPurify.sanitize(
 			$i18n.t('This will delete <strong>{{NAME}}</strong> and <strong>all its contents</strong>.', {
 				NAME: folders[folderId].name
-			})
+			}) ?? ''
 		)}
 	</div>
 </DeleteConfirmDialog>
@@ -418,9 +449,7 @@
 		buttonClassName="w-full"
 		hide={(folders[folderId]?.childrenIds ?? []).length === 0 &&
 			(folders[folderId].items?.chats ?? []).length === 0}
-		onChange={(state) => {
-			dispatch('open', state);
-		}}
+		on:change={(e) => handleCollapsibleChange(e.detail)}
 	>
 		
 		<div class="w-full group">
@@ -462,9 +491,7 @@
 							id="folder-{folderId}-input"
 							type="text"
 							bind:value={name}
-							on:focus={(e) => {
-								e.target.select();
-							}}
+							on:focus={handleInputFocus}
 							on:blur={() => {
 								updateHandler({ name });
 								edit = false;
@@ -491,7 +518,11 @@
 				</div>
 
 				<div
-					class="absolute z-10 right-2 invisible group-hover:visible self-center flex items-center"
+					class="absolute z-10 right-2 invisible group-hover:visible self-center flex items-center dark:text-gray-300"
+					on:pointerup={(e) => {
+						e.stopPropagation();
+					}}
+					on:click={(e) => e.stopPropagation()}
 				>
 					<FolderMenu
 						{i18n}
@@ -513,7 +544,7 @@
 						</div>
 					</FolderMenu>
 				</div>
-			</button>
+			
 		</div>
 
 		<div slot="content" class="w-full">
@@ -521,17 +552,8 @@
 				<div
 					class="ml-3 pl-1 mt-[1px] flex flex-col overflow-y-auto scrollbar-hidden border-s border-gray-100 dark:border-gray-900"
 				>
-					{#if folders[folderId]?.childrenIds}
-						{@const children = folders[folderId]?.childrenIds
-							.map((id) => folders[id])
-							.sort((a, b) =>
-								a.name.localeCompare(b.name, undefined, {
-									numeric: true,
-									sensitivity: 'base'
-								})
-							)}
-
-						{#each children as childFolder (`${folderId}-${childFolder.id}`)}
+					{#if sortedChildren.length > 0}
+						{#each sortedChildren as childFolder (`${folderId}-${childFolder.id}`)}
 							<svelte:self
 								{folders}
 								folderId={childFolder.id}

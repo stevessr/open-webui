@@ -47,15 +47,13 @@
 	import UpdateInfoToast from '$lib/components/layout/UpdateInfoToast.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import type { LayoutData } from './$types';
-	import type { i18n as i18nType } from 'i18next';
+	import { i18n } from '$lib/i18n';
 
 	export let data: LayoutData;
 	export let params: any;
 	import type { IDBPDatabase } from 'idb';
 	import type { Banner, ToolServer } from '$lib/types';
 	import type { Chat } from '$lib/stores';
-
-	const i18n: i18nType = getContext('i18n');
 
 	let loaded = false;
 	let DB: IDBPDatabase | null = null;
@@ -317,12 +315,12 @@
 									</div>
 
 									<div class=" mt-4 text-center text-sm dark:text-gray-200 w-full">
-										{i18n.t(
+										{$i18n.t(
 											"Saving chat logs directly to your browser's storage is no longer supported. Please take a moment to download and delete your chat logs by clicking the button below. Don't worry, you can easily re-import your chat logs to the backend through"
 										)}
 										<span class="font-semibold dark:text-white"
-											>{i18n.t('Settings')} > {i18n.t('Chats')} > {i18n.t('Import Chats')}</span
-										>. {i18n.t(
+											>{$i18n.t('Settings')} > {$i18n.t('Chats')} > {$i18n.t('Import Chats')}</span
+										>. {$i18n.t(
 											'This ensures that your valuable conversations are securely saved to your backend database. Thank you!'
 										)}
 									</div>
@@ -352,7 +350,7 @@
 											class="text-xs text-center w-full mt-2 text-gray-400 underline"
 											on:click={async () => {
 												localDBChats = [];
-											}}>{i18n.t('Close')}</button
+											}}>{$i18n.t('Close')}</button
 										>
 									</div>
 								</div>
