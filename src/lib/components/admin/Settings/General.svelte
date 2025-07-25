@@ -18,10 +18,13 @@
 	import { config, showChangelog } from '$lib/stores';
 	import { compareVersion } from '$lib/utils';
 	import { checkForVersionUpdates } from '$lib/utils/version';
-	import { onMount } from 'svelte';
+	import { onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Textarea from '$lib/components/common/Textarea.svelte';
-	import { i18n } from '$lib/i18n';
+	import type { i18n as i18nType } from 'i18next';
+	import type { Writable } from 'svelte/store';
+
+	const i18n = getContext<Writable<i18nType>>('i18n');
 
 	export let saveHandler: () => void;
 
