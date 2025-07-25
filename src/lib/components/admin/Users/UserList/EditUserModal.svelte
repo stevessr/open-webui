@@ -2,8 +2,11 @@
 	import { toast } from 'svelte-sonner';
 	import dayjs from 'dayjs';
 	import { createEventDispatcher } from 'svelte';
-	import { onMount } from 'svelte';
-	import { i18n } from '$lib/i18n';
+	import { onMount, getContext } from 'svelte';
+	import type { i18n as i18nType } from 'i18next';
+	import type { Writable } from 'svelte/store';
+
+	const i18n = getContext<Writable<i18nType>>('i18n');
 
 	import { goto } from '$app/navigation';
 

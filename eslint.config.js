@@ -28,10 +28,20 @@ export default [
 	},
 	{
 		ignores: [
+			// From original .eslintignore
+			'.DS_Store',
+			'node_modules/',
 			'build/',
 			'.svelte-kit/',
+			'package/',
+			'.env',
+			'.env.*',
+			'!.env.example',
+			'pnpm-lock.yaml',
+			'package-lock.json',
+			'yarn.lock',
+			// Additional ignores
 			'dist/',
-			'node_modules/',
 			'backend/',
 			'static/',
 			'pyodide/',
