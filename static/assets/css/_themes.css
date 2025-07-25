@@ -1,151 +1,466 @@
+/* Optimized Theme System using CSS if() function */
 :root {
-  --background-color: #f9fafb; /* 默认浅色主题背景 */
-  --text-color: #374151; /* 默认文本颜色 */
-  --border-color: #d1d5db; /* 默认边框颜色 */
+  /* Theme detection custom properties */
+  --theme-light: initial;
+  --theme-dark: initial;
+  --theme-oled: initial;
+  --theme-rose-pine: initial;
+  --theme-material: initial;
+  --theme-pink: initial;
+  --theme-her: initial;
+
+  /* System preference detection */
+  --prefers-dark: initial;
+
+  /* Core theme variables using if() for conditional values */
+  --background-color: if(
+    style(--theme-light: true): #f9fafb,
+    style(--theme-dark: true): #1f2937,
+    style(--theme-oled: true): #000000,
+    style(--theme-rose-pine: true): #1f1d2e,
+    style(--theme-material: true): #ffffff,
+    style(--theme-pink: true): #f8bbd0,
+    style(--theme-her: true): #983724,
+    else: if(
+      media(prefers-color-scheme: dark): #1f2937,
+      else: #f9fafb
+    )
+  );
+
+  --text-color: if(
+    style(--theme-light: true): #374151,
+    style(--theme-dark: true): #d1d5db,
+    style(--theme-oled: true): #ffffff,
+    style(--theme-rose-pine: true): #e0def4,
+    style(--theme-material: true): #000000,
+    style(--theme-pink: true): #c2185b,
+    style(--theme-her: true): #ffffff,
+    else: if(
+      media(prefers-color-scheme: dark): #d1d5db,
+      else: #374151
+    )
+  );
+
+  --border-color: if(
+    style(--theme-light: true): #d1d5db,
+    style(--theme-dark: true): #374151,
+    style(--theme-oled: true): #333333,
+    style(--theme-rose-pine: true): #403d52,
+    style(--theme-material: true): rgba(0, 0, 0, 0.12),
+    style(--theme-pink: true): #f06292,
+    style(--theme-her: true): #b8860b,
+    else: if(
+      media(prefers-color-scheme: dark): #374151,
+      else: #d1d5db
+    )
+  );
+
+  /* Secondary colors */
+  --surface-color: if(
+    style(--theme-light: true): #ffffff,
+    style(--theme-dark: true): #374151,
+    style(--theme-oled: true): #111111,
+    style(--theme-rose-pine: true): #26233a,
+    style(--theme-material: true): #ffffff,
+    style(--theme-pink: true): #f48fb1,
+    style(--theme-her: true): #654321,
+    else: if(
+      media(prefers-color-scheme: dark): #374151,
+      else: #ffffff
+    )
+  );
+
+  --accent-color: if(
+    style(--theme-light: true): #3b82f6,
+    style(--theme-dark: true): #60a5fa,
+    style(--theme-oled: true): #ffffff,
+    style(--theme-rose-pine: true): #eb6f92,
+    style(--theme-material: true): #6200ee,
+    style(--theme-pink: true): #e91e63,
+    style(--theme-her: true): #daa520,
+    else: if(
+      media(prefers-color-scheme: dark): #60a5fa,
+      else: #3b82f6
+    )
+  );
+
+  /* Hover states */
+  --hover-color: if(
+    style(--theme-light: true): #f3f4f6,
+    style(--theme-dark: true): #4b5563,
+    style(--theme-oled: true): #222222,
+    style(--theme-rose-pine: true): #393552,
+    style(--theme-material: true): #f5f5f5,
+    style(--theme-pink: true): #f06292,
+    style(--theme-her: true): #8b4513,
+    else: if(
+      media(prefers-color-scheme: dark): #4b5563,
+      else: #f3f4f6
+    )
+  );
+}
+
+/* Theme class setters - these set the theme detection variables */
+html.light {
+  --theme-light: true;
 }
 
 html.dark {
-  --background-color: #1f2937; /* 深色主题背景 */
-  --text-color: #d1d5db; /* 深色主题文本颜色 */
-  --border-color: #374151; /* 深色主题边框颜色 */
+  --theme-dark: true;
 }
 
-/* Styles from static/themes/rosepine.css */
-.rose-pine * {
-	color: #e0def4 !important;
-	stroke: #907aa9 !important;
+html.oled-dark {
+  --theme-oled: true;
 }
 
-.rose-pine .app > * {
-	background-color: #1f1d2e !important;
+html.rose-pine {
+  --theme-rose-pine: true;
 }
 
-.rose-pine #nav {
-	background-color: #191724;
+html.material-design {
+  --theme-material: true;
 }
 
-.rose-pine .py-2\.5.my-auto.flex.flex-col.justify-between.h-screen {
-	background: #191724;
+html.pink-theme {
+  --theme-pink: true;
 }
 
-.rose-pine .bg-white.dark\:bg-gray-800 {
-	background: #26233a;
+html.her {
+  --theme-her: true;
 }
 
-.rose-pine .w-4.h-4 {
-	fill: #c4a7e7;
+/* Optimized component-specific styles using if() */
+
+/* Universal text and stroke colors */
+* {
+  color: if(
+    style(--theme-rose-pine: true): #e0def4,
+    else: var(--text-color)
+  );
+
+  stroke: if(
+    style(--theme-rose-pine: true): #907aa9,
+    else: currentColor
+  );
 }
 
-.rose-pine #chat-input {
-	background: #393552;
-	margin: 0.3rem;
-	padding: 0.5rem;
+/* App container */
+.app > * {
+  background-color: if(
+    style(--theme-rose-pine: true): #1f1d2e,
+    else: var(--background-color)
+  );
 }
 
-.rose-pine .bg-gradient-to-t.from-white.dark\:from-gray-800.from-40\%.pb-2 {
-	background: #26233a !important;
-	padding-top: 0.6rem;
+/* Navigation */
+#nav {
+  background-color: if(
+    style(--theme-rose-pine: true): #191724,
+    style(--theme-material: true): var(--md-primary, #6200ee),
+    style(--theme-pink: true): #e91e63,
+    style(--theme-her: true): #654321,
+    else: var(--surface-color)
+  );
 }
 
-.rose-pine
-	.text-white.bg-gray-100.dark\:text-gray-800.dark\:bg-gray-600.disabled.transition.rounded-lg.p-1.mr-0\.5.w-7.h-7.self-center {
-	background-color: #6e6a86;
-	transition: background-color 0.2s ease-out linear;
+/* Sidebar */
+.py-2\.5.my-auto.flex.flex-col.justify-between.h-screen {
+  background: if(
+    style(--theme-rose-pine: true): #191724,
+    else: var(--surface-color)
+  );
 }
 
-.rose-pine
-	.bg-black.text-white.hover\:bg-gray-900.dark\:bg-white.dark\:text-black.dark\:hover\:bg-gray-100.transition.rounded-lg.p-1.mr-0\.5.w-7.h-7.self-center {
-	background-color: #286983;
-	transition: background-color 0.2s ease-out linear;
+/* Surface elements */
+.bg-white.dark\:bg-gray-800 {
+  background: if(
+    style(--theme-rose-pine: true): #26233a,
+    style(--theme-material: true): var(--md-surface, #ffffff),
+    style(--theme-pink: true): #f48fb1,
+    else: var(--surface-color)
+  );
 }
 
-.rose-pine
-	.bg-black.text-white.hover\:bg-gray-900.dark\:bg-white.dark\:text-black.dark\:hover\:bg-gray-100.transition.rounded-lg.p-1.mr-0\.5.w-7.h-7.self-center
-	> * {
-	fill: #9ccfd8 !important;
-	transition: fill 0.2s ease-out linear;
+/* Icons */
+.w-4.h-4 {
+  fill: if(
+    style(--theme-rose-pine: true): #c4a7e7,
+    style(--theme-material: true): var(--md-on-surface, #000000),
+    else: var(--accent-color)
+  );
 }
 
-.rose-pine
-	.w-full.flex.justify-between.rounded-md.px-3.py-2.hover\:bg-gray-900.bg-gray-900.transition.whitespace-nowrap.text-ellipsis {
-	background-color: #56526e;
-	font-weight: bold;
+/* Chat input */
+#chat-input {
+  background: if(
+    style(--theme-rose-pine: true): #393552,
+    style(--theme-material: true): var(--md-surface, #ffffff),
+    style(--theme-pink: true): #f06292,
+    style(--theme-oled: true): #111111,
+    else: var(--surface-color)
+  );
+
+  margin: if(
+    style(--theme-rose-pine: true): 0.3rem,
+    else: 0
+  );
+
+  padding: if(
+    style(--theme-rose-pine: true): 0.5rem,
+    else: 0.75rem
+  );
+
+  /* Apply theme background color for textarea elements */
+  background-color: if(
+    style(--theme-dark: true): var(--surface-color),
+    style(--theme-oled: true): #111111,
+    style(--theme-rose-pine: true): #393552,
+    else: var(--background-color)
+  );
 }
 
-.rose-pine .hover\:bg-gray-900:hover {
-	--tw-bg-opacity: 1;
-	background-color: rgb(57 53 82 / var(--tw-bg-opacity));
+/* Gradient backgrounds */
+.bg-gradient-to-t.from-white.dark\:from-gray-800.from-40\%.pb-2 {
+  background: if(
+    style(--theme-rose-pine: true): #26233a,
+    else: var(--surface-color)
+  ) !important;
+
+  padding-top: if(
+    style(--theme-rose-pine: true): 0.6rem,
+    else: 0.5rem
+  );
 }
 
-.rose-pine .text-xs.text-gray-700.uppercase.bg-gray-50.dark\:bg-gray-700.dark\:text-gray-400 {
-	background-color: #403d52;
+/* Button states */
+.text-white.bg-gray-100.dark\:text-gray-800.dark\:bg-gray-600.disabled.transition.rounded-lg.p-1.mr-0\.5.w-7.h-7.self-center {
+  background-color: if(
+    style(--theme-rose-pine: true): #6e6a86,
+    style(--theme-material: true): rgba(0, 0, 0, 0.12),
+    else: var(--hover-color)
+  );
+
+  transition: background-color 0.2s ease-out linear;
 }
 
-.rose-pine .scrollbar-hidden.relative.overflow-x-auto.whitespace-nowrap.svelte-3g4avz {
-	border-radius: 16px 16px 0 0;
+/* Interactive buttons */
+.bg-black.text-white.hover\:bg-gray-900.dark\:bg-white.dark\:text-black.dark\:hover\:bg-gray-100.transition.rounded-lg.p-1.mr-0\.5.w-7.h-7.self-center {
+  background-color: if(
+    style(--theme-rose-pine: true): #286983,
+    style(--theme-material: true): var(--md-primary, #6200ee),
+    else: var(--accent-color)
+  );
+
+  transition: background-color 0.2s ease-out linear;
 }
 
-.rose-pine .base.enter.svelte-ug60r4 {
-	background-color: #393552;
+.bg-black.text-white.hover\:bg-gray-900.dark\:bg-white.dark\:text-black.dark\:hover\:bg-gray-100.transition.rounded-lg.p-1.mr-0\.5.w-7.h-7.self-center > * {
+  fill: if(
+    style(--theme-rose-pine: true): #9ccfd8,
+    style(--theme-material: true): var(--md-on-primary, #ffffff),
+    else: currentColor
+  ) !important;
+
+  transition: fill 0.2s ease-out linear;
 }
 
-.rose-pine .message.svelte-1nauejd {
-	color: #e0def4 !important;
+/* Menu items */
+.w-full.flex.justify-between.rounded-md.px-3.py-2.hover\:bg-gray-900.bg-gray-900.transition.whitespace-nowrap.text-ellipsis {
+  background-color: if(
+    style(--theme-rose-pine: true): #56526e,
+    else: var(--hover-color)
+  );
+
+  font-weight: if(
+    style(--theme-rose-pine: true): bold,
+    else: normal
+  );
 }
 
-.rose-pine #dropdownDots {
-	background-color: #403d52;
+/* Hover states */
+.hover\:bg-gray-900:hover {
+  --tw-bg-opacity: 1;
+  background-color: if(
+    style(--theme-rose-pine: true): rgb(57 53 82 / var(--tw-bg-opacity)),
+    else: var(--hover-color)
+  );
 }
 
-.rose-pine .flex.py-2\.5.px-3\.5.w-full.hover\:bg-gray-800.transition:hover {
-	background: #524f67;
+/* Headers and labels */
+.text-xs.text-gray-700.uppercase.bg-gray-50.dark\:bg-gray-700.dark\:text-gray-400 {
+  background-color: if(
+    style(--theme-rose-pine: true): #403d52,
+    style(--theme-material: true): var(--md-surface, #f5f5f5),
+    else: var(--surface-color)
+  );
 }
 
-.rose-pine .m-auto.rounded-xl.max-w-full.w-\[40rem\].mx-2.bg-gray-50.dark\:bg-gray-900.shadow-3xl {
-	background-color: #26233a;
+/* Scrollable containers */
+.scrollbar-hidden.relative.overflow-x-auto.whitespace-nowrap.svelte-3g4avz {
+  border-radius: if(
+    style(--theme-rose-pine: true): 16px 16px 0 0,
+    style(--theme-material: true): 4px 4px 0 0,
+    else: 8px 8px 0 0
+  );
 }
 
-.rose-pine
-	.w-full.rounded.p-4.text-sm.dark\:text-gray-300.dark\:bg-gray-800.outline-none.resize-none {
-	background-color: #524f67;
+/* Base elements */
+.base.enter.svelte-ug60r4 {
+  background-color: if(
+    style(--theme-rose-pine: true): #393552,
+    else: var(--surface-color)
+  );
 }
 
-.rose-pine
-	.w-full.rounded.py-2.px-4.text-sm.dark\:text-gray-300.dark\:bg-gray-800.outline-none.svelte-1vx7r9s {
-	background-color: #524f67;
+/* Messages */
+.message.svelte-1nauejd {
+  color: if(
+    style(--theme-rose-pine: true): #e0def4,
+    else: var(--text-color)
+  ) !important;
 }
 
-.rose-pine
-	.px-2\.5.py-2\.5.min-w-fit.rounded-lg.flex-1.md\:flex-none.flex.text-right.transition.bg-gray-200.dark\:bg-gray-700 {
-	background-color: #403d52;
+/* Dropdown menus */
+#dropdownDots {
+  background-color: if(
+    style(--theme-rose-pine: true): #403d52,
+    style(--theme-material: true): var(--md-surface, #ffffff),
+    else: var(--surface-color)
+  );
 }
 
-.rose-pine
-	.px-2\.5.py-2\.5.min-w-fit.rounded-lg.flex-1.md\:flex-none.flex.text-right.transition.hover\:bg-gray-300.dark\:hover\:bg-gray-800:hover {
-	background-color: #524f67;
+/* Interactive list items */
+.flex.py-2\.5.px-3\.5.w-full.hover\:bg-gray-800.transition:hover {
+  background: if(
+    style(--theme-rose-pine: true): #524f67,
+    style(--theme-material: true): rgba(0, 0, 0, 0.04),
+    else: var(--hover-color)
+  );
 }
 
-.rose-pine .px-4.py-2.bg-emerald-600.hover\:bg-emerald-700.text-gray-100.transition.rounded {
-	background-color: #31748f;
+/* Modal containers */
+.m-auto.rounded-xl.max-w-full.w-\[40rem\].mx-2.bg-gray-50.dark\:bg-gray-900.shadow-3xl {
+  background-color: if(
+    style(--theme-rose-pine: true): #26233a,
+    style(--theme-material: true): var(--md-surface, #ffffff),
+    else: var(--surface-color)
+  );
 }
 
-.rose-pine #chat-search > * {
-	background-color: #403d52 !important;
+/* Text areas and inputs */
+.w-full.rounded.p-4.text-sm.dark\:text-gray-300.dark\:bg-gray-800.outline-none.resize-none,
+.w-full.rounded.py-2.px-4.text-sm.dark\:text-gray-300.dark\:bg-gray-800.outline-none.svelte-1vx7r9s {
+  background-color: if(
+    style(--theme-rose-pine: true): #524f67,
+    style(--theme-material: true): var(--md-surface, #ffffff),
+    style(--theme-oled: true): #111111,
+    else: var(--surface-color)
+  );
 }
 
-.rose-pine .svelte-1ee93ns {
-	--primary: #eb6f92 !important;
-	--secondary: #e0def4 !important;
+/* Button groups */
+.px-2\.5.py-2\.5.min-w-fit.rounded-lg.flex-1.md\:flex-none.flex.text-right.transition.bg-gray-200.dark\:bg-gray-700 {
+  background-color: if(
+    style(--theme-rose-pine: true): #403d52,
+    style(--theme-material: true): var(--md-surface, #f5f5f5),
+    else: var(--surface-color)
+  );
 }
 
-.rose-pine .svelte-11kvm4p {
-	--primary: #9ccfd8 !important;
-	--secondary: #1f1d2e !important;
+.px-2\.5.py-2\.5.min-w-fit.rounded-lg.flex-1.md\:flex-none.flex.text-right.transition.hover\:bg-gray-300.dark\:hover\:bg-gray-800:hover {
+  background-color: if(
+    style(--theme-rose-pine: true): #524f67,
+    style(--theme-material: true): rgba(0, 0, 0, 0.08),
+    else: var(--hover-color)
+  );
 }
 
-/* Rose Pine theme CSS variables */
-.rose-pine {
-	--background-color: #1f1d2e;
-	--text-color: #e0def4;
-	--border-color: #403d52;
+/* Action buttons */
+.px-4.py-2.bg-emerald-600.hover\:bg-emerald-700.text-gray-100.transition.rounded {
+  background-color: if(
+    style(--theme-rose-pine: true): #31748f,
+    style(--theme-material: true): var(--md-secondary, #03dac6),
+    style(--theme-pink: true): #d81b60,
+    else: var(--accent-color)
+  );
+}
+
+/* Search elements */
+#chat-search > * {
+  background-color: if(
+    style(--theme-rose-pine: true): #403d52,
+    style(--theme-material: true): var(--md-surface, #ffffff),
+    else: var(--surface-color)
+  ) !important;
+}
+
+/* Component-specific variables */
+.svelte-1ee93ns {
+  --primary: if(
+    style(--theme-rose-pine: true): #eb6f92,
+    style(--theme-material: true): var(--md-primary, #6200ee),
+    style(--theme-pink: true): #e91e63,
+    else: var(--accent-color)
+  ) !important;
+
+  --secondary: if(
+    style(--theme-rose-pine: true): #e0def4,
+    style(--theme-material: true): var(--md-on-primary, #ffffff),
+    else: var(--text-color)
+  ) !important;
+}
+
+.svelte-11kvm4p {
+  --primary: if(
+    style(--theme-rose-pine: true): #9ccfd8,
+    style(--theme-material: true): var(--md-secondary, #03dac6),
+    style(--theme-pink: true): #f06292,
+    else: var(--accent-color)
+  ) !important;
+
+  --secondary: if(
+    style(--theme-rose-pine: true): #1f1d2e,
+    style(--theme-material: true): var(--md-surface, #ffffff),
+    else: var(--surface-color)
+  ) !important;
+}
+
+/* UI components with role='menu' should be transparent when over background,
+   but show theme color when not over background */
+[role="menu"]#user-menu {
+  background-color: if(
+    style(--theme-rose-pine: true): transparent,
+    style(--theme-material: true): transparent,
+    else: transparent
+  );
+
+  /* When not over background */
+  &:not(.over-background) {
+    background-color: if(
+      style(--theme-rose-pine: true): #26233a,
+      style(--theme-material: true): var(--md-surface, #ffffff),
+      style(--theme-pink: true): #f48fb1,
+      else: var(--surface-color)
+    );
+  }
+}
+
+/* Textarea elements should have theme background color */
+textarea {
+  background-color: if(
+    style(--theme-dark: true): var(--surface-color),
+    style(--theme-oled: true): #111111,
+    style(--theme-rose-pine: true): #393552,
+    style(--theme-material: true): var(--md-surface, #ffffff),
+    style(--theme-pink: true): #f06292,
+    else: var(--background-color)
+  );
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition: if(
+    style(--theme-material: true): background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease,
+    else: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease
+  );
 }
