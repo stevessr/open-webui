@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { getContext, onMount } from 'svelte';
-	const i18n = getContext('i18n');
+	import type { i18n as i18nType } from 'i18next';
+	import type { Writable } from 'svelte/store';
+	const i18n = getContext<Writable<i18nType>>('i18n');
 
 	import { settings } from '$lib/stores';
 	import Modal from '$lib/components/common/Modal.svelte';
@@ -18,14 +20,29 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 
-	export let onSubmit: Function = () => {};
-	export let onDelete: Function = () => {};
+	interface Connection {
+		url: string;
+		path: string;
+		auth_type: string;
+		key: string;
+		config: {
+			enable: boolean;
+			access_control: any;
+		};
+		info: {
+			name: string;
+			description: string;
+		};
+	}
+
+	export let onSubmit: (connection: Connection) => Promise<void> = async () => {};
+	export let onDelete: () => void = () => {};
 
 	export let show = false;
 	export let edit = false;
 
 	export let direct = false;
-	export let connection = null;
+	export let connection: Connection | null = null;
 
 	let url = '';
 	let path = 'openapi.json';
@@ -33,7 +50,7 @@
 	let auth_type = 'bearer';
 	let key = '';
 
-	let accessControl = {};
+	let accessControl: any = null;
 
 	let id = '';
 	let name = '';

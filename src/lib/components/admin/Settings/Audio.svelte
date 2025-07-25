@@ -51,7 +51,7 @@
 
 	let STT_WHISPER_MODEL_LOADING = false;
 
-	// eslint-disable-next-line no-undef
+	 
 	let voices: SpeechSynthesisVoice[] = [];
 	let models: Awaited<ReturnType<typeof _getModels>>['models'] = [];
 
