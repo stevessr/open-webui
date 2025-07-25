@@ -12,7 +12,8 @@ self.onmessage = async (event) => {
 	const { type, payload } = event.data;
 
 	if (type === 'init') {
-		let { model_id, dtype } = payload;
+		let { model_id } = payload;
+		const { dtype } = payload;
 		model_id = model_id || DEFAULT_MODEL_ID; // Use default model if none provided
 
 		self.postMessage({ status: 'init:start' });

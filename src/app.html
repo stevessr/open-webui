@@ -41,6 +41,17 @@
 					localStorage.theme = 'system';
 				}
 
+				// Enhanced theme system with CSS if() support
+				const themeColors = {
+					'light': '#ffffff',
+					'dark': '#171717',
+					'oled-dark': '#000000',
+					'rose-pine': '#1f1d2e',
+					'material-design': '#ffffff',
+					'pink-theme': '#f8bbd0',
+					'her': '#983724'
+				};
+
 				if (localStorage.theme === 'system') {
 					document.documentElement.classList.add(prefersDarkTheme ? 'dark' : 'light');
 					metaThemeColorTag.setAttribute('content', prefersDarkTheme ? '#171717' : '#ffffff');
@@ -49,19 +60,13 @@
 					document.documentElement.style.setProperty('--color-gray-850', '#050505');
 					document.documentElement.style.setProperty('--color-gray-900', '#000000');
 					document.documentElement.style.setProperty('--color-gray-950', '#000000');
-					document.documentElement.classList.add('dark');
+					document.documentElement.classList.add('oled-dark');
 					metaThemeColorTag.setAttribute('content', '#000000');
-				} else if (localStorage.theme === 'light') {
-					document.documentElement.classList.add('light');
-					metaThemeColorTag.setAttribute('content', '#ffffff');
-				} else if (localStorage.theme === 'material-design') {
-					document.documentElement.classList.add('light');
-					metaThemeColorTag.setAttribute('content', '#FFF9F9');
-				} else if (localStorage.theme === 'her') {
-					document.documentElement.classList.add('dark');
-					document.documentElement.classList.add('her');
-					metaThemeColorTag.setAttribute('content', '#983724');
+				} else if (localStorage.theme && themeColors[localStorage.theme]) {
+					document.documentElement.classList.add(localStorage.theme);
+					metaThemeColorTag.setAttribute('content', themeColors[localStorage.theme]);
 				} else {
+					// Default to dark theme
 					document.documentElement.classList.add('dark');
 					metaThemeColorTag.setAttribute('content', '#171717');
 				}
