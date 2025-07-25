@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { getContext, onMount } from 'svelte';
-	const i18n = getContext('i18n');
+	import type { i18n as i18nType } from 'i18next';
+	import type { Writable } from 'svelte/store';
+	const i18n = getContext<Writable<i18nType>>('i18n');
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
@@ -10,10 +12,9 @@
 
 	export let show = false;
 
-	export let onImport = (e) => {};
-	export let onClose = () => {};
+	export let onImport = (e: any) => {};
 
-	export let loadUrlHandler: Function = () => {};
+	export let loadUrlHandler: (url: string) => Promise<any> = async () => {};
 	export let successMessage: string = '';
 
 	let loading = false;
@@ -44,7 +45,10 @@
 			let func = res;
 			func.id = func.id || func.name.replace(/\s+/g, '_').toLowerCase();
 
-			const frontmatter = extractFrontmatter(res.content); // Ensure frontmatter is extracted
+			const frontmatter = extractFrontmatter(res.content) as {
+				title?: string;
+				description?: string;
+			}; // Ensure frontmatter is extracted
 
 			if (frontmatter?.title) {
 				func.name = frontmatter.title;

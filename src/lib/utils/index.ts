@@ -1411,7 +1411,7 @@ export const extractInputVariables = (text: string): Record<string, any> => {
 	while ((match = regularRegex.exec(text)) !== null) {
 		const varName = match[1].trim();
 		// Only add if not already processed as custom variable
-		if (!variables.hasOwnProperty(varName)) {
+		if (!Object.prototype.hasOwnProperty.call(variables, varName)) {
 			variables[varName] = { type: 'text' }; // Default type for regular variables
 		}
 	}

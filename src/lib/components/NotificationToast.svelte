@@ -8,7 +8,7 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let onClick: Function = () => {};
+	export let onClick: () => void = () => {};
 	export let title: string = 'HI';
 	export let content: string;
 
@@ -48,6 +48,7 @@
 		{/if}
 
 		<div class=" line-clamp-2 text-xs self-center dark:text-gray-300 font-normal">
+			<!-- svelte-ignore svelte/no-at-html-tags -->
 			{@html DOMPurify.sanitize(marked(content))}
 		</div>
 	</div>
