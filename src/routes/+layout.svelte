@@ -514,7 +514,23 @@
 		// Call visibility change handler initially to set state on load
 		handleVisibilityChange();
 
-		theme.set(localStorage.theme ?? 'system');
+		let previousThemeValue = localStorage.theme ?? 'system';
+		theme.set(previousThemeValue);
+
+		theme.subscribe((value) => {
+			if (browser) {
+				if (previousThemeValue) {
+					const oldClasses = previousThemeValue.split(' ');
+					document.documentElement.classList.remove(...oldClasses);
+				}
+
+				const newClasses = value.split(' ');
+				document.documentElement.classList.add(...newClasses);
+
+				document.documentElement.setAttribute('data-theme', value);
+				previousThemeValue = value;
+			}
+		});
 
 		mobile.set(window.innerWidth < BREAKPOINT);
 
