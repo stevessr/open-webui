@@ -5,7 +5,8 @@
   --theme-dark: initial;
   --theme-oled: initial;
   --theme-rose-pine: initial;
-  --theme-material: initial;
+  --theme-material-light: initial;
+  --theme-material-dark: initial;
   --theme-pink: initial;
   --theme-her: initial;
 
@@ -14,11 +15,12 @@
 
   /* Core theme variables using if() for conditional values */
   --background-color: if(
-    style(--theme-light: true): #f9fafb,
+    style(--theme-light: true): #FFF9F9,
     style(--theme-dark: true): #1f2937,
     style(--theme-oled: true): #000000,
     style(--theme-rose-pine: true): #1f1d2e,
-    style(--theme-material: true): #ffffff,
+    style(--theme-material-light: true): #F4B0A5,
+    style(--theme-material-dark: true): #8C736F,
     style(--theme-pink: true): #f8bbd0,
     style(--theme-her: true): #983724,
     else: if(
@@ -28,11 +30,12 @@
   );
 
   --text-color: if(
-    style(--theme-light: true): #374151,
+    style(--theme-light: true): #5D5C61,
     style(--theme-dark: true): #d1d5db,
     style(--theme-oled: true): #ffffff,
     style(--theme-rose-pine: true): #e0def4,
-    style(--theme-material: true): #000000,
+    style(--theme-material-light: true): #D5B87C,
+    style(--theme-material-dark: true): #D4B8B4,
     style(--theme-pink: true): #c2185b,
     style(--theme-her: true): #ffffff,
     else: if(
@@ -42,11 +45,12 @@
   );
 
   --border-color: if(
-    style(--theme-light: true): #d1d5db,
+    style(--theme-light: true): #E6E6FA,
     style(--theme-dark: true): #374151,
     style(--theme-oled: true): #333333,
     style(--theme-rose-pine: true): #403d52,
-    style(--theme-material: true): rgba(0, 0, 0, 0.12),
+    style(--theme-material-light: true): #EDCFB3,
+    style(--theme-material-dark: true): #ADAAA5,
     style(--theme-pink: true): #f06292,
     style(--theme-her: true): #b8860b,
     else: if(
@@ -61,7 +65,8 @@
     style(--theme-dark: true): #374151,
     style(--theme-oled: true): #111111,
     style(--theme-rose-pine: true): #26233a,
-    style(--theme-material: true): #ffffff,
+    style(--theme-material-light: true): #F4B0A5,
+    style(--theme-material-dark: true): #8C736F,
     style(--theme-pink: true): #f48fb1,
     style(--theme-her: true): #654321,
     else: if(
@@ -71,11 +76,12 @@
   );
 
   --accent-color: if(
-    style(--theme-light: true): #3b82f6,
+    style(--theme-light: true): #99D9EA,
     style(--theme-dark: true): #60a5fa,
     style(--theme-oled: true): #ffffff,
     style(--theme-rose-pine: true): #eb6f92,
-    style(--theme-material: true): #6200ee,
+    style(--theme-material-light: true): #1FC6B2,
+    style(--theme-material-dark: true): #53565C,
     style(--theme-pink: true): #e91e63,
     style(--theme-her: true): #daa520,
     else: if(
@@ -86,11 +92,12 @@
 
   /* Hover states */
   --hover-color: if(
-    style(--theme-light: true): #f3f4f6,
+    style(--theme-light: true): #FFEEF5,
     style(--theme-dark: true): #4b5563,
     style(--theme-oled: true): #222222,
     style(--theme-rose-pine: true): #393552,
-    style(--theme-material: true): #f5f5f5,
+    style(--theme-material-light: true): #C4EBF0,
+    style(--theme-material-dark: true): #B7B7BD,
     style(--theme-pink: true): #f06292,
     style(--theme-her: true): #8b4513,
     else: if(
@@ -117,8 +124,12 @@ html.rose-pine {
   --theme-rose-pine: true;
 }
 
-html.material-design {
-  --theme-material: true;
+html.material-light {
+  --theme-material-light: true;
+}
+
+html.material-dark {
+  --theme-material-dark: true;
 }
 
 html.pink-theme {
@@ -156,7 +167,8 @@ html.her {
 #nav {
   background-color: if(
     style(--theme-rose-pine: true): #191724,
-    style(--theme-material: true): var(--md-primary, #6200ee),
+    style(--theme-material-light: true): #94CCC3,
+    style(--theme-material-dark: true): #53565C,
     style(--theme-pink: true): #e91e63,
     style(--theme-her: true): #654321,
     else: var(--surface-color)
@@ -175,7 +187,8 @@ html.her {
 .bg-white.dark\:bg-gray-800 {
   background: if(
     style(--theme-rose-pine: true): #26233a,
-    style(--theme-material: true): var(--md-surface, #ffffff),
+    style(--theme-material-light: true): #F4B0A5,
+    style(--theme-material-dark: true): #8C736F,
     style(--theme-pink: true): #f48fb1,
     else: var(--surface-color)
   );
@@ -185,7 +198,8 @@ html.her {
 .w-4.h-4 {
   fill: if(
     style(--theme-rose-pine: true): #c4a7e7,
-    style(--theme-material: true): var(--md-on-surface, #000000),
+    style(--theme-material-light: true): #1FC6B2,
+    style(--theme-material-dark: true): #CCD2CC,
     else: var(--accent-color)
   );
 }
@@ -194,7 +208,8 @@ html.her {
 #chat-input {
   background: if(
     style(--theme-rose-pine: true): #393552,
-    style(--theme-material: true): var(--md-surface, #ffffff),
+    style(--theme-material-light: true): #F4B0A5,
+    style(--theme-material-dark: true): #B7B7BD,
     style(--theme-pink: true): #f06292,
     style(--theme-oled: true): #111111,
     else: var(--surface-color)
@@ -236,7 +251,8 @@ html.her {
 .text-white.bg-gray-100.dark\:text-gray-800.dark\:bg-gray-600.disabled.transition.rounded-lg.p-1.mr-0\.5.w-7.h-7.self-center {
   background-color: if(
     style(--theme-rose-pine: true): #6e6a86,
-    style(--theme-material: true): rgba(0, 0, 0, 0.12),
+    style(--theme-material-light: true): #B8F0D3,
+    style(--theme-material-dark: true): #AAB8AB,
     else: var(--hover-color)
   );
 
@@ -247,7 +263,8 @@ html.her {
 .bg-black.text-white.hover\:bg-gray-900.dark\:bg-white.dark\:text-black.dark\:hover\:bg-gray-100.transition.rounded-lg.p-1.mr-0\.5.w-7.h-7.self-center {
   background-color: if(
     style(--theme-rose-pine: true): #286983,
-    style(--theme-material: true): var(--md-primary, #6200ee),
+    style(--theme-material-light: true): #FB6571,
+    style(--theme-material-dark: true): #976666,
     else: var(--accent-color)
   );
 
@@ -257,7 +274,8 @@ html.her {
 .bg-black.text-white.hover\:bg-gray-900.dark\:bg-white.dark\:text-black.dark\:hover\:bg-gray-100.transition.rounded-lg.p-1.mr-0\.5.w-7.h-7.self-center > * {
   fill: if(
     style(--theme-rose-pine: true): #9ccfd8,
-    style(--theme-material: true): var(--md-on-primary, #ffffff),
+    style(--theme-material-light: true): #ffffff,
+    style(--theme-material-dark: true): #DBD2C9,
     else: currentColor
   ) !important;
 
@@ -290,7 +308,8 @@ html.her {
 .text-xs.text-gray-700.uppercase.bg-gray-50.dark\:bg-gray-700.dark\:text-gray-400 {
   background-color: if(
     style(--theme-rose-pine: true): #403d52,
-    style(--theme-material: true): var(--md-surface, #f5f5f5),
+    style(--theme-material-light: true): #F4B0A5,
+    style(--theme-material-dark: true): #C09D9B,
     else: var(--surface-color)
   );
 }
@@ -299,7 +318,8 @@ html.her {
 .scrollbar-hidden.relative.overflow-x-auto.whitespace-nowrap.svelte-3g4avz {
   border-radius: if(
     style(--theme-rose-pine: true): 16px 16px 0 0,
-    style(--theme-material: true): 4px 4px 0 0,
+    style(--theme-material-light: true): 8px 8px 0 0,
+    style(--theme-material-dark: true): 4px 4px 0 0,
     else: 8px 8px 0 0
   );
 }
@@ -324,7 +344,8 @@ html.her {
 #dropdownDots {
   background-color: if(
     style(--theme-rose-pine: true): #403d52,
-    style(--theme-material: true): var(--md-surface, #ffffff),
+    style(--theme-material-light: true): #F4B0A5,
+    style(--theme-material-dark: true): #BEBEBE,
     else: var(--surface-color)
   );
 }
@@ -333,7 +354,8 @@ html.her {
 .flex.py-2\.5.px-3\.5.w-full.hover\:bg-gray-800.transition:hover {
   background: if(
     style(--theme-rose-pine: true): #524f67,
-    style(--theme-material: true): rgba(0, 0, 0, 0.04),
+    style(--theme-material-light: true): #C4EBF0,
+    style(--theme-material-dark: true): #7A848D,
     else: var(--hover-color)
   );
 }
@@ -342,7 +364,8 @@ html.her {
 .m-auto.rounded-xl.max-w-full.w-\[40rem\].mx-2.bg-gray-50.dark\:bg-gray-900.shadow-3xl {
   background-color: if(
     style(--theme-rose-pine: true): #26233a,
-    style(--theme-material: true): var(--md-surface, #ffffff),
+    style(--theme-material-light: true): #F4B0A5,
+    style(--theme-material-dark: true): #A9B7AA,
     else: var(--surface-color)
   );
 }
@@ -352,7 +375,8 @@ html.her {
 .w-full.rounded.py-2.px-4.text-sm.dark\:text-gray-300.dark\:bg-gray-800.outline-none.svelte-1vx7r9s {
   background-color: if(
     style(--theme-rose-pine: true): #524f67,
-    style(--theme-material: true): var(--md-surface, #ffffff),
+    style(--theme-material-light: true): #F4B0A5,
+    style(--theme-material-dark: true): #DBD4C6,
     style(--theme-oled: true): #111111,
     else: var(--surface-color)
   );
@@ -362,7 +386,8 @@ html.her {
 .px-2\.5.py-2\.5.min-w-fit.rounded-lg.flex-1.md\:flex-none.flex.text-right.transition.bg-gray-200.dark\:bg-gray-700 {
   background-color: if(
     style(--theme-rose-pine: true): #403d52,
-    style(--theme-material: true): var(--md-surface, #f5f5f5),
+    style(--theme-material-light: true): #C4EBF0,
+    style(--theme-material-dark: true): #95A098,
     else: var(--surface-color)
   );
 }
@@ -370,7 +395,8 @@ html.her {
 .px-2\.5.py-2\.5.min-w-fit.rounded-lg.flex-1.md\:flex-none.flex.text-right.transition.hover\:bg-gray-300.dark\:hover\:bg-gray-800:hover {
   background-color: if(
     style(--theme-rose-pine: true): #524f67,
-    style(--theme-material: true): rgba(0, 0, 0, 0.08),
+    style(--theme-material-light: true): #A8EFE9,
+    style(--theme-material-dark: true): #C1B0A7,
     else: var(--hover-color)
   );
 }
@@ -379,7 +405,8 @@ html.her {
 .px-4.py-2.bg-emerald-600.hover\:bg-emerald-700.text-gray-100.transition.rounded {
   background-color: if(
     style(--theme-rose-pine: true): #31748f,
-    style(--theme-material: true): var(--md-secondary, #03dac6),
+    style(--theme-material-light: true): #1FC6B2,
+    style(--theme-material-dark: true): #C3AAA6,
     style(--theme-pink: true): #d81b60,
     else: var(--accent-color)
   );
@@ -389,7 +416,8 @@ html.her {
 #chat-search > * {
   background-color: if(
     style(--theme-rose-pine: true): #403d52,
-    style(--theme-material: true): var(--md-surface, #ffffff),
+    style(--theme-material-light: true): #F4B0A5,
+    style(--theme-material-dark: true): #D8C6BA,
     else: var(--surface-color)
   ) !important;
 }
@@ -398,14 +426,16 @@ html.her {
 .svelte-1ee93ns {
   --primary: if(
     style(--theme-rose-pine: true): #eb6f92,
-    style(--theme-material: true): var(--md-primary, #6200ee),
+    style(--theme-material-light: true): #1FC6B2,
+    style(--theme-material-dark: true): #928AD3,
     style(--theme-pink: true): #e91e63,
     else: var(--accent-color)
   ) !important;
 
   --secondary: if(
     style(--theme-rose-pine: true): #e0def4,
-    style(--theme-material: true): var(--md-on-primary, #ffffff),
+    style(--theme-material-light: true): #ffffff,
+    style(--theme-material-dark: true): #C4C1BC,
     else: var(--text-color)
   ) !important;
 }
@@ -413,14 +443,16 @@ html.her {
 .svelte-11kvm4p {
   --primary: if(
     style(--theme-rose-pine: true): #9ccfd8,
-    style(--theme-material: true): var(--md-secondary, #03dac6),
+    style(--theme-material-light: true): #B8F0D3,
+    style(--theme-material-dark: true): #60656C,
     style(--theme-pink: true): #f06292,
     else: var(--accent-color)
   ) !important;
 
   --secondary: if(
     style(--theme-rose-pine: true): #1f1d2e,
-    style(--theme-material: true): var(--md-surface, #ffffff),
+    style(--theme-material-light: true): #F4B0A5,
+    style(--theme-material-dark: true): #8C736F,
     else: var(--surface-color)
   ) !important;
 }
@@ -430,7 +462,8 @@ html.her {
 [role="menu"]#user-menu {
   background-color: if(
     style(--theme-rose-pine: true): transparent,
-    style(--theme-material: true): transparent,
+    style(--theme-material-light: true): transparent,
+    style(--theme-material-dark: true): transparent,
     else: transparent
   );
 
@@ -438,7 +471,8 @@ html.her {
   &:not(.over-background) {
     background-color: if(
       style(--theme-rose-pine: true): #26233a,
-      style(--theme-material: true): var(--md-surface, #ffffff),
+      style(--theme-material-light: true): #F4B0A5,
+      style(--theme-material-dark: true): #8C736F,
       style(--theme-pink: true): #f48fb1,
       else: var(--surface-color)
     );
@@ -451,7 +485,8 @@ textarea {
     style(--theme-dark: true): var(--surface-color),
     style(--theme-oled: true): #111111,
     style(--theme-rose-pine: true): #393552,
-    style(--theme-material: true): var(--md-surface, #ffffff),
+    style(--theme-material-light: true): #F4B0A5,
+    style(--theme-material-dark: true): #B7B7BD,
     style(--theme-pink: true): #f06292,
     else: var(--background-color)
   );
@@ -460,7 +495,8 @@ textarea {
 /* Smooth transitions for theme changes */
 * {
   transition: if(
-    style(--theme-material: true): background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease,
+    style(--theme-material-light: true): background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease,
+    style(--theme-material-dark: true): background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease,
     else: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease
   );
 }

@@ -120,15 +120,13 @@ li p {
 	--tw-border-opacity: 1;
 	border-radius: 9999px;
 	border-width: 1px;
+	background-color: rgba(215, 215, 215, 0.8);
+	border-color: rgba(255, 255, 255, var(--tw-border-opacity));
+}
 
-	/* 使用 if() 根据 .dark 类的存在来切换颜色 */
-	/* 这里的 selector() 是一个假设的函数，用于检查祖先元素是否存在某个选择器 */
-	background-color: if(selector(.dark): rgba(67, 67, 67, 0.8) ; else: rgba(215, 215, 215, 0.8));
-
-	border-color: if(
-		selector(.dark): rgba(0, 0, 0, var(--tw-border-opacity)) ;
-			else: rgba(255, 255, 255, var(--tw-border-opacity))
-	);
+.dark ::-webkit-scrollbar-thumb {
+	background-color: rgba(67, 67, 67, 0.8);
+	border-color: rgba(0, 0, 0, var(--tw-border-opacity));
 }
 
 ::-webkit-scrollbar {
@@ -169,14 +167,13 @@ select {
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 	animation: shimmer 4s linear infinite;
+	background: linear-gradient(90deg, #9a9b9e 25%, #2a2929 50%, #9a9b9e 75%);
+	color: #818286;
+}
 
-	/* 使用 if() 根据 .dark 类切换背景渐变和回退颜色 */
-	background: if(
-		selector(.dark): linear-gradient(90deg, #818286 25%, #eae5e5 50%, #818286 75%) ;
-			else: linear-gradient(90deg, #9a9b9e 25%, #2a2929 50%, #9a9b9e 75%)
-	);
-
-	color: if(selector(.dark): #a1a3a7; /* 暗色回退颜色 */ else: #818286 /* 亮色回退颜色 */);
+.dark .shimmer {
+	background: linear-gradient(90deg, #818286 25%, #eae5e5 50%, #818286 75%);
+	color: #a1a3a7;
 }
 
 @keyframes smoothFadeIn {
@@ -282,32 +279,13 @@ input[type='number'] {
 /* 这部分已使用 if()，保持不变 */
 .tippy-box {
 	@apply text-xs shadow-xl;
-	border-radius: if(style(--theme-material: true): 4px; else: 8px);
-	background-color: if(
-		style(--theme-light: true): #ffffff; style(--theme-dark: true): rgb(3 7 18 / 1) ;
-			style(--theme-oled: true): #000000; style(--theme-rose-pine: true): #26233a;
-			style(--theme-material: true): #1e1e1e; style(--theme-pink: true): #880e4f;
-			style(--theme-her: true): #3e2723; else: rgb(3 7 18 / 1)
-	);
-	color: if(
-		style(--theme-light: true): rgb(17 24 39 / 1) ; style(--theme-dark: true): rgb(243 244 246 / 1)
-			; style(--theme-oled: true): #ffffff; style(--theme-rose-pine: true): #e0def4;
-			style(--theme-material: true): #ffffff; style(--theme-pink: true): #fce4ec;
-			style(--theme-her: true): #d7ccc8; else: rgb(243 244 246 / 1)
-	);
-	border: 1px solid
-		if(
-			style(--theme-light: true): rgb(209 213 219 / 1) ;
-				style(--theme-dark: true): rgb(17 24 39 / 1) ; style(--theme-oled: true): #333333;
-				style(--theme-rose-pine: true): #403d52; style(--theme-material: true): #333333;
-				style(--theme-pink: true): #ad1457; style(--theme-her: true): #5d4037;
-				else: rgb(17 24 39 / 1)
-		);
-	box-shadow: if(
-		style(--theme-material: true): 0 10px 15px -3px rgb(0 0 0 / 0.1),
-		0 4px 6px -4px rgb(0 0 0 / 0.1) ; else: 0 20px 25px -5px rgb(0 0 0 / 0.1),
-		0 8px 10px -6px rgb(0 0 0 / 0.1)
-	);
+	border-radius: 8px;
+	background-color: rgb(3 7 18 / 1);
+	color: rgb(243 244 246 / 1);
+	border: 1px solid rgb(17 24 39 / 1);
+	box-shadow:
+		0 20px 25px -5px rgb(0 0 0 / 0.1),
+		0 8px 10px -6px rgb(0 0 0 / 0.1);
 	transition:
 		background-color 0.2s ease,
 		color 0.2s ease,
@@ -359,9 +337,13 @@ input[type='number'] {
 	float: left;
 	pointer-events: none;
 	@apply line-clamp-1 absolute;
+	color: #676767;
+}
 
-	/* 使用 if() 和 media() 函数来根据系统颜色方案设置颜色 */
-	color: if(media(prefers-color-scheme: dark): #757575; else: #676767);
+@media (prefers-color-scheme: dark) {
+	.ProseMirror p.is-editor-empty:first-child::before {
+		color: #757575;
+	}
 }
 
 .tiptap ul[data-type='taskList'] {
@@ -414,17 +396,6 @@ input[type='number'] {
 			}
 		}
 	}
-}
-
-.tiptap .mention {
-	border-radius: 0.4rem;
-	box-decoration-break: clone;
-	padding: 0.1rem 0.3rem;
-	@apply text-blue-900 dark:text-blue-100 bg-blue-300/20 dark:bg-blue-500/20;
-}
-
-.tiptap .mention::after {
-	content: '\200B';
 }
 
 .input-prose .tiptap ul[data-type='taskList'] {
@@ -604,12 +575,7 @@ input[type='number'] {
 	white-space: nowrap;
 }
 
+/* Hotfix to ensure correct text color is applied across all themes */
 body {
-	background: #fff;
-	color: #000;
-}
-
-.dark body {
-	background: #171717;
-	color: #eee;
+  color: var(--text-color) !important;
 }
