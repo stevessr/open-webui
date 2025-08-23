@@ -7,7 +7,7 @@ set -e
 # 这个脚本使用 Nuitka 将 Open WebUI 后端编译成一个独立的二进制文件。
 #
 # 前置要求:
-# 1. 系统中已安装 Python 3.12+ 和 pip。
+# 1. 系统中已安装 Python 3.12 和 pip。
 # 2. 前端代码已经构建，并且输出目录被复制到了项目根目录下的 `build` 文件夹。
 #    例如:
 #    cd src/
@@ -28,7 +28,7 @@ echo "--> [1/4] 正在准备构建环境..."
 
 if [ ! -d "$VENV_DIR" ]; then
     echo "创建 Python 虚拟环境..."
-    uv venv "$VENV_DIR"
+    uv venv --python 3.12 "$VENV_DIR"
 else
     echo "虚拟环境已存在。"
 fi
@@ -65,22 +65,29 @@ fi
 # --- 步骤 3: 运行 Nuitka 构建 ---
 echo "--> [3/4] 正在启动 Nuitka 构建... (这可能需要很长时间)"
 
-uv run python -m nuitka \
+# 检测 CPU 核心数以加速编译
+if command -v nproc &> /dev/null; then
+    CPU_CORES=$(nproc)
+    echo "使用 $CPU_CORES 个 CPU 核心进行并行编译。"
+else
+    CPU_CORES=4 # 如果 nproc 命令不存在，则使用默认值
+    echo "警告: 'nproc' 命令未找到。默认使用 $CPU_CORES 个核心进行编译。为获得最佳性能，请考虑安装 'coreutils'。"
+fi
+
+uv run --active python -m nuitka \
+    --jobs=$CPU_CORES \
     --onefile \
-    --standalone \
     --output-dir="$OUTPUT_DIR" \
     --output-filename="$EXECUTABLE_NAME" \
-    \
-    --enable-plugin=implicit-imports \
-    \
+    --lto=auto \
+    --windows-disable-console \
     --include-package=open_webui.routers \
-    \
     --include-data-dir=backend/open_webui/static=open_webui/static \
     --include-data-dir=backend/open_webui/migrations=open_webui/migrations \
     --include-data-file=backend/open_webui/alembic.ini=alembic.ini \
     --include-data-dir=./build=build \
-    \
     "$ENTRY_POINT"
+
 
 echo ""
 
