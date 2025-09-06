@@ -788,6 +788,7 @@
 
 		{#if ($config?.features?.enable_notes ?? false) && ($user?.role === 'admin' || ($user?.permissions?.features?.notes ?? true))}
 			<div class="px-1.5 flex justify-center text-gray-800 dark:text-gray-200">
+				<Tooltip>
 				<a
 					class="grow flex items-center space-x-3 rounded-lg px-2 py-[7px] hover:bg-gray-100 dark:hover:bg-gray-900 transition"
 					href="/notes"
@@ -923,7 +924,6 @@
 						onAdd={async () => {
 							if ($user?.role === 'admin') {
 								await tick();
-
 								setTimeout(() => {
 									showCreateChannel = true;
 								}, 0);
@@ -938,15 +938,9 @@
 									await initChannels();
 								}}
 							/>
-						</svg>
-					</div>
-
-					<div class="flex self-center translate-y-[0.5px]">
-						<div class=" self-center text-sm font-primary">{$i18n.t('Notes')}</div>
-					</div>
-				</a>
-			</div>
-		{/if}
+						{/each}
+					</Folder>
+				{/if}
 
 		{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models || $user?.permissions?.workspace?.knowledge || $user?.permissions?.workspace?.prompts || $user?.permissions?.workspace?.tools}
 			<div class="px-1.5 flex justify-center text-gray-800 dark:text-gray-200">
