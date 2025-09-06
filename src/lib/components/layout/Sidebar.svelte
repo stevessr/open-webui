@@ -867,7 +867,6 @@
 							</div>
 						</a>
 					</div>
-		{/if}
 
 				{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models || $user?.permissions?.workspace?.knowledge || $user?.permissions?.workspace?.prompts || $user?.permissions?.workspace?.tools}
 					<div class="px-[7px] flex justify-center text-gray-800 dark:text-gray-200">
@@ -1354,6 +1353,7 @@
 			</div>
 		</div>
 	</div>
+{/if}
 {/if}
 
 <style>
