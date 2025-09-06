@@ -849,9 +849,7 @@
 						</div>
 					</button>
 				</div>
-		{/if}
 
-		{#if ($config?.features?.enable_notes ?? false) && ($user?.role === 'admin' || ($user?.permissions?.features?.notes ?? true))}
 					<div class="px-[7px] flex justify-center text-gray-800 dark:text-gray-200">
 						<a
 							class="grow flex items-center space-x-3 rounded-lg px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition"
@@ -869,7 +867,7 @@
 							</div>
 						</a>
 					</div>
-				{/if}
+		{/if}
 
 				{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models || $user?.permissions?.workspace?.knowledge || $user?.permissions?.workspace?.prompts || $user?.permissions?.workspace?.tools}
 					<div class="px-[7px] flex justify-center text-gray-800 dark:text-gray-200">
@@ -1355,7 +1353,6 @@
 				{/if}
 			</div>
 		</div>
-	</div>
 	</div>
 {/if}
 
