@@ -24,12 +24,14 @@
 	import SignOut from '$lib/components/icons/SignOut.svelte';
 
 	const i18n = getContext('i18n');
+	const dispatch = createEventDispatcher();
 
 	export let show = false;
 	export let role = '';
 	export let help = false;
 	export let className = 'max-w-[240px]';
 	let showCustomStyles = false;
+	let usage = null;
 	const getUsageInfo = async () => {
 		const res = await getUsage(localStorage.token).catch((error) => {
 			console.error('Error fetching usage info:', error);

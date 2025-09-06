@@ -849,6 +849,7 @@
 						</div>
 					</button>
 				</div>
+		{/if}
 
 		{#if ($config?.features?.enable_notes ?? false) && ($user?.role === 'admin' || ($user?.permissions?.features?.notes ?? true))}
 					<div class="px-[7px] flex justify-center text-gray-800 dark:text-gray-200">
@@ -1354,7 +1355,6 @@
 				{/if}
 			</div>
 		</div>
-	</div>
 	</div>
 {/if}
 
