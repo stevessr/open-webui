@@ -51,6 +51,7 @@
 	import AddFilesPlaceholder from '../AddFilesPlaceholder.svelte';
 	import Folder from '../common/Folder.svelte';
 	import Plus from '../icons/Plus.svelte';
+	import Note from '../icons/Note.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import Folders from './Sidebar/Folders.svelte';
 	import { getChannels, createNewChannel } from '$lib/apis/channels';
@@ -59,7 +60,6 @@
 	import PencilSquare from '../icons/PencilSquare.svelte';
 	import Home from '../icons/Home.svelte';
 	import Search from '../icons/Search.svelte';
-	import Note from '../icons/Note.svelte';
 	import SearchModal from './SearchModal.svelte';
 	import FolderModal from './Sidebar/Folders/FolderModal.svelte';
 
@@ -790,24 +790,32 @@
 		{#if ($config?.features?.enable_notes ?? false) && ($user?.role === 'admin' || ($user?.permissions?.features?.notes ?? true))}
 			<div class="px-1.5 flex justify-center text-gray-800 dark:text-gray-200">
 				<Tooltip>
-					<a
-						class="grow flex items-center space-x-3 rounded-lg px-2 py-[7px] hover:bg-gray-100 dark:hover:bg-gray-900 transition"
-						href="/notes"
-						on:click={() => {
-							selectedChatId = null;
-							chatId.set('');
+				<a
+					class="grow flex items-center space-x-3 rounded-lg px-2 py-[7px] hover:bg-gray-100 dark:hover:bg-gray-900 transition"
+					href="/notes"
+					on:click={() => {
+						selectedChatId = null;
+						chatId.set('');
 
-							if ($mobile) {
-								showSidebar.set(false);
-							}
+						if ($mobile) {
+							showSidebar.set(false);
+						}
+					}}
+					draggable="false"
+				>
+					<button
+						class="flex rounded-lg hover:bg-gray-100 dark:hover:bg-gray-850 transition {isWindows
+							? 'cursor-pointer'
+							: 'cursor-[w-resize]'}"
+						on:click={() => {
+							showSidebar.set(!$showSidebar);
 						}}
-						draggable="false"
-						aria-label={$i18n.t('Notes')}
+						aria-label={$showSidebar ? $i18n.t('Close Sidebar') : $i18n.t('Open Sidebar')}
 					>
-						<div class="self-center p-1.5">
-							<Note className="size-4.5" strokeWidth="2" />
+						<div class=" self-center p-1.5">
+							<Sidebar />
 						</div>
-					</a>
+					</button>
 				</Tooltip>
 			</div>
 
@@ -850,6 +858,7 @@
 					</button>
 				</div>
 
+				{#if ($config?.features?.enable_notes ?? false) && ($user?.role === 'admin' || ($user?.permissions?.features?.notes ?? true))}
 					<div class="px-[7px] flex justify-center text-gray-800 dark:text-gray-200">
 						<a
 							class="grow flex items-center space-x-3 rounded-lg px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition"
@@ -867,6 +876,7 @@
 							</div>
 						</a>
 					</div>
+				{/if}
 
 				{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models || $user?.permissions?.workspace?.knowledge || $user?.permissions?.workspace?.prompts || $user?.permissions?.workspace?.tools}
 					<div class="px-[7px] flex justify-center text-gray-800 dark:text-gray-200">
@@ -1353,7 +1363,7 @@
 			</div>
 		</div>
 	</div>
-{/if}
+</div>
 {/if}
 
 <style>
