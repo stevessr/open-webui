@@ -682,6 +682,7 @@
 				</div>
 			</div>
 		</div>
+	</div>
 {/if}
 
 {#if $showSidebar}
@@ -856,9 +857,8 @@
 						</div>
 					</button>
 				</div>
-		{/if}
 
-		{#if ($config?.features?.enable_notes ?? false) && ($user?.role === 'admin' || ($user?.permissions?.features?.notes ?? true))}
+				{#if ($config?.features?.enable_notes ?? false) && ($user?.role === 'admin' || ($user?.permissions?.features?.notes ?? true))}
 					<div class="px-[7px] flex justify-center text-gray-800 dark:text-gray-200">
 						<a
 							class="grow flex items-center space-x-3 rounded-lg px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition"
@@ -877,8 +877,9 @@
 						</a>
 					</div>
 				{/if}
+			</div>
 
-				{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models || $user?.permissions?.workspace?.knowledge || $user?.permissions?.workspace?.prompts || $user?.permissions?.workspace?.tools}
+			{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models || $user?.permissions?.workspace?.knowledge || $user?.permissions?.workspace?.prompts || $user?.permissions?.workspace?.tools}
 					<div class="px-[7px] flex justify-center text-gray-800 dark:text-gray-200">
 						<a
 							class="grow flex items-center space-x-3 rounded-lg px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition"
@@ -1315,7 +1316,9 @@
 							</div>
 						{/if}
 					</div>
+				</div>
 			</Folder>
+		</div>
 
 		<div class="px-2">
 			<div class="flex flex-col font-primary">
@@ -1360,6 +1363,7 @@
 				{/if}
 			</div>
 		</div>
+	</div>
 {/if}
 
 <style>
