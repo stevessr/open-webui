@@ -51,6 +51,7 @@
 	import AddFilesPlaceholder from '../AddFilesPlaceholder.svelte';
 	import Folder from '../common/Folder.svelte';
 	import Plus from '../icons/Plus.svelte';
+	import Note from '../icons/Note.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import Folders from './Sidebar/Folders.svelte';
 	import { getChannels, createNewChannel } from '$lib/apis/channels';
@@ -680,6 +681,7 @@
 					{/if}
 				</div>
 			</div>
+		</div>
 {/if}
 
 {#if $showSidebar}
