@@ -1315,9 +1315,7 @@
 							</div>
 						{/if}
 					</div>
-				</div>
 			</Folder>
-		</div>
 
 		<div class="px-2">
 			<div class="flex flex-col font-primary">
@@ -1362,8 +1360,6 @@
 				{/if}
 			</div>
 		</div>
-	</div>
-</div>
 {/if}
 
 <style>
