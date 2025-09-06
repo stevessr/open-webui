@@ -59,6 +59,7 @@
 	import PencilSquare from '../icons/PencilSquare.svelte';
 	import Home from '../icons/Home.svelte';
 	import Search from '../icons/Search.svelte';
+	import Note from '../icons/Note.svelte';
 	import SearchModal from './SearchModal.svelte';
 	import FolderModal from './Sidebar/Folders/FolderModal.svelte';
 
@@ -789,32 +790,24 @@
 		{#if ($config?.features?.enable_notes ?? false) && ($user?.role === 'admin' || ($user?.permissions?.features?.notes ?? true))}
 			<div class="px-1.5 flex justify-center text-gray-800 dark:text-gray-200">
 				<Tooltip>
-				<a
-					class="grow flex items-center space-x-3 rounded-lg px-2 py-[7px] hover:bg-gray-100 dark:hover:bg-gray-900 transition"
-					href="/notes"
-					on:click={() => {
-						selectedChatId = null;
-						chatId.set('');
-
-						if ($mobile) {
-							showSidebar.set(false);
-						}
-					}}
-					draggable="false"
-				>
-					<button
-						class="flex rounded-lg hover:bg-gray-100 dark:hover:bg-gray-850 transition {isWindows
-							? 'cursor-pointer'
-							: 'cursor-[w-resize]'}"
+					<a
+						class="grow flex items-center space-x-3 rounded-lg px-2 py-[7px] hover:bg-gray-100 dark:hover:bg-gray-900 transition"
+						href="/notes"
 						on:click={() => {
-							showSidebar.set(!$showSidebar);
+							selectedChatId = null;
+							chatId.set('');
+
+							if ($mobile) {
+								showSidebar.set(false);
+							}
 						}}
-						aria-label={$showSidebar ? $i18n.t('Close Sidebar') : $i18n.t('Open Sidebar')}
+						draggable="false"
+						aria-label={$i18n.t('Notes')}
 					>
-						<div class=" self-center p-1.5">
-							<Sidebar />
+						<div class="self-center p-1.5">
+							<Note className="size-4.5" strokeWidth="2" />
 						</div>
-					</button>
+					</a>
 				</Tooltip>
 			</div>
 
@@ -856,8 +849,9 @@
 						</div>
 					</button>
 				</div>
+		{/if}
 
-				{#if ($config?.features?.enable_notes ?? false) && ($user?.role === 'admin' || ($user?.permissions?.features?.notes ?? true))}
+		{#if ($config?.features?.enable_notes ?? false) && ($user?.role === 'admin' || ($user?.permissions?.features?.notes ?? true))}
 					<div class="px-[7px] flex justify-center text-gray-800 dark:text-gray-200">
 						<a
 							class="grow flex items-center space-x-3 rounded-lg px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition"
@@ -1362,7 +1356,6 @@
 			</div>
 		</div>
 	</div>
-</div>
 
 <style>
 	.scrollbar-hidden:active::-webkit-scrollbar-thumb,
