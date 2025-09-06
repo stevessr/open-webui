@@ -32,21 +32,43 @@ try {
         JSON.stringify(mockPackage, null, 2)
     );
     
-    // Create basic mock files
+    // Create basic mock files that pyodide expects
     const mockFiles = [
         'pyodide.js',
-        'pyodide.asm.js',
-        'pyodide_py.tar'
+        'pyodide.asm.js', 
+        'pyodide_py.tar',
+        'python_stdlib.zip',
+        'pyodide.asm.wasm'
     ];
     
     for (const file of mockFiles) {
-        if (!fs.existsSync(path.join(pyodideDir, file))) {
-            fs.writeFileSync(path.join(pyodideDir, file), '// Mock file for build testing');
+        const filePath = path.join(pyodideDir, file);
+        if (!fs.existsSync(filePath)) {
+            if (file.endsWith('.js')) {
+                fs.writeFileSync(filePath, '// Mock file for build testing\nexport default {};');
+            } else {
+                fs.writeFileSync(filePath, 'Mock file for build testing');
+            }
         }
     }
     
+    // Create pyodide-lock.json
+    const mockLock = {
+        info: {
+            platform: "emscripten",
+            version: "0.27.7",
+            arch: "wasm32"
+        },
+        packages: {}
+    };
+    
+    fs.writeFileSync(
+        path.join(pyodideDir, 'pyodide-lock.json'),
+        JSON.stringify(mockLock, null, 2)
+    );
+    
     console.log('✓ Mock pyodide setup completed');
-    console.log('Copying Pyodide files into static directory');
+    console.log('✓ Mock pyodide files ready in static directory');
     
 } catch (error) {
     console.error('Error setting up mock pyodide:', error.message);
