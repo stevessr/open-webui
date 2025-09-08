@@ -17,9 +17,6 @@
 	});
 </script>
 
-
-
-
 <div
 	bind:this={popupElement}
 	class="fixed top-0 left-0 w-screen h-[100dvh] z-50 touch-none pointer-events-none"

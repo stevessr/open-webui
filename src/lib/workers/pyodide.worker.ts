@@ -4,11 +4,11 @@ declare global {
 	interface Window {
 		stdout: string | null;
 		stderr: string | null;
-		 
+
 		result: any;
 		pyodide: PyodideInterface;
 		packages: string[];
-		 
+
 		[key: string]: any;
 	}
 }

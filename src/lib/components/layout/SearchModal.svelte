@@ -251,8 +251,6 @@
 			/>
 		</div>
 
-		
-
 		<div class="flex px-3 pb-1">
 			<div
 				class="flex flex-col overflow-y-auto h-96 md:h-[40rem] max-h-full scrollbar-hidden w-full flex-1"

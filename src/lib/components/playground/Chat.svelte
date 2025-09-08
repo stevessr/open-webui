@@ -118,9 +118,13 @@
 
 		if (res && res.ok) {
 			const stream = res.body as any;
-			const reader = stream && typeof stream.pipeThrough === 'function'
-				? (stream as any).pipeThrough(new (TextDecoderStream as any)()).pipeThrough((splitStream as any)('\n')).getReader()
-				: null;
+			const reader =
+				stream && typeof stream.pipeThrough === 'function'
+					? (stream as any)
+							.pipeThrough(new (TextDecoderStream as any)())
+							.pipeThrough((splitStream as any)('\n'))
+							.getReader()
+					: null;
 
 			if (!reader) {
 				console.error('Response body is not a stream or missing');
@@ -214,7 +218,9 @@
 	});
 </script>
 
-<div class=" flex flex-col justify-between w-full overflow-y-auto h-full bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-cyan-50/30 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-cyan-950/20">
+<div
+	class=" flex flex-col justify-between w-full overflow-y-auto h-full bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-cyan-50/30 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-cyan-950/20"
+>
 	<div class="mx-auto w-full md:px-0 h-full relative">
 		<div class=" flex flex-col h-full px-3.5">
 			<div class="flex w-full items-start gap-1.5">
@@ -278,8 +284,6 @@
 			<div class="pb-3">
 				<div class="border border-gray-100 dark:border-gray-850 w-full px-3 py-2.5 rounded-xl">
 					<div class="py-0.5">
-						
-						
 						<textarea
 							bind:value={message}
 							class=" w-full h-full bg-transparent resize-none outline-hidden text-sm trans"

@@ -26,8 +26,6 @@
 	</div>
 
 	<div class="flex-1">
-		
-		
 		<textarea
 			id="{message.role}-{idx}-textarea"
 			bind:this={textAreaElement}

@@ -72,6 +72,4 @@
 			</svg>
 		{/if}
 	</div>
-
-	
 </button>

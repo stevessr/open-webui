@@ -91,8 +91,6 @@
 </script>
 
 {#if show}
-	
-	
 	<div
 		bind:this={modalElement}
 		class=" fixed top-0 right-0 left-0 bottom-0 bg-black/60 w-full h-screen max-h-[100dvh] flex justify-center z-99999999 overflow-hidden overscroll-contain"

@@ -577,5 +577,5 @@ input[type='number'] {
 
 /* Hotfix to ensure correct text color is applied across all themes */
 body {
-  color: var(--text-color) !important;
+	color: var(--text-color) !important;
 }

@@ -97,11 +97,11 @@
 									<track kind="captions" />
 								</video>
 							{:else}
-							<img
-								src={selectedUser.profile_image_url}
-								class=" max-w-[55px] object-cover rounded-full"
-								alt="User profile"
-							/>
+								<img
+									src={selectedUser.profile_image_url}
+									class=" max-w-[55px] object-cover rounded-full"
+									alt="User profile"
+								/>
 							{/if}
 						</div>
 

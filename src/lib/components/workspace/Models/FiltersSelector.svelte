@@ -31,7 +31,6 @@
 		{$i18n.t('To select filters here, add them to the "Functions" workspace first.')}
 	</div>
 
-	
 	<div class="flex flex-col">
 		{#if filters.length > 0}
 			<div class=" flex items-center mt-2 flex-wrap">

@@ -191,9 +191,5 @@
 
 <!-- Global Floating Preview Modal -->
 {#if showFloatingPreview}
-	<FloatingDocPreview
-		bind:show={showFloatingPreview}
-		url={previewUrl}
-		title={previewTitle}
-	/>
+	<FloatingDocPreview bind:show={showFloatingPreview} url={previewUrl} title={previewTitle} />
 {/if}

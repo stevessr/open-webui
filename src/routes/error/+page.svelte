@@ -68,7 +68,6 @@
 						</button>
 					</div>
 
-					
 					<div class="mt-6 mx-auto relative group w-fit flex flex-col items-center">
 						<input
 							type="text"

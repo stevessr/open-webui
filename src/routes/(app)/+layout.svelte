@@ -94,9 +94,7 @@
 
 				if (DB) {
 					const chats = await DB.getAllFromIndex('chats', 'timestamp');
-					localDBChats = chats.map(
-						(item: any, idx: number) => chats[chats.length - 1 - idx]
-					);
+					localDBChats = chats.map((item: any, idx: number) => chats[chats.length - 1 - idx]);
 
 					if (localDBChats.length === 0) {
 						await deleteDB('Chats');

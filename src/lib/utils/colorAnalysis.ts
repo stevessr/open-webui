@@ -146,11 +146,11 @@ export async function extractDominantColors(imageUrl: string, sampleSize = 10): 
 	return new Promise((resolve, reject) => {
 		const img = new Image();
 		img.crossOrigin = 'anonymous';
-		
+
 		img.onload = () => {
 			const canvas = document.createElement('canvas');
 			const ctx = canvas.getContext('2d');
-			
+
 			if (!ctx) {
 				reject(new Error('Could not get canvas context'));
 				return;
@@ -160,30 +160,30 @@ export async function extractDominantColors(imageUrl: string, sampleSize = 10): 
 			const scale = Math.min(200 / img.width, 200 / img.height);
 			canvas.width = img.width * scale;
 			canvas.height = img.height * scale;
-			
+
 			ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-			
+
 			const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 			const data = imageData.data;
-			
+
 			// Sample pixels and count colors
 			const colorMap = new Map<string, number>();
 			const step = Math.max(1, Math.floor(data.length / (sampleSize * 1000)));
-			
+
 			for (let i = 0; i < data.length; i += step * 4) {
 				const r = data[i];
 				const g = data[i + 1];
 				const b = data[i + 2];
 				const a = data[i + 3];
-				
+
 				// Skip transparent pixels
 				if (a < 128) continue;
-				
+
 				// Group similar colors
 				const key = `${Math.floor(r / 10) * 10},${Math.floor(g / 10) * 10},${Math.floor(b / 10) * 10}`;
 				colorMap.set(key, (colorMap.get(key) || 0) + 1);
 			}
-			
+
 			// Get most frequent colors
 			const sortedColors = Array.from(colorMap.entries())
 				.sort((a, b) => b[1] - a[1])
@@ -192,10 +192,10 @@ export async function extractDominantColors(imageUrl: string, sampleSize = 10): 
 					const [r, g, b] = color.split(',').map(Number);
 					return { r, g, b };
 				});
-			
+
 			resolve(sortedColors);
 		};
-		
+
 		img.onerror = () => reject(new Error('Failed to load image'));
 		img.src = imageUrl;
 	});
@@ -209,27 +209,25 @@ export async function extractVideoColors(videoUrl: string): Promise<RGB[]> {
 		const video = document.createElement('video');
 		video.crossOrigin = 'anonymous';
 		video.muted = true;
-		
+
 		video.onloadeddata = () => {
 			const canvas = document.createElement('canvas');
 			const ctx = canvas.getContext('2d');
-			
+
 			if (!ctx) {
 				reject(new Error('Could not get canvas context'));
 				return;
 			}
-			
+
 			canvas.width = video.videoWidth;
 			canvas.height = video.videoHeight;
 			ctx.drawImage(video, 0, 0);
-			
+
 			// Convert canvas to data URL and extract colors
 			const dataUrl = canvas.toDataURL();
-			extractDominantColors(dataUrl)
-				.then(resolve)
-				.catch(reject);
+			extractDominantColors(dataUrl).then(resolve).catch(reject);
 		};
-		
+
 		video.onerror = () => reject(new Error('Failed to load video'));
 		video.src = videoUrl;
 	});

@@ -26,14 +26,14 @@
 
 		// Map app themes to tippy themes
 		const themeMap: Record<string, string> = {
-			'light': 'light',
-			'dark': 'dark',
+			light: 'light',
+			dark: 'dark',
 			'oled-dark': 'oled',
 			'rose-pine': 'rose-pine',
 			'material-design': 'material',
 			'pink-theme': 'pink',
-			'her': 'her',
-			'system': 'dark' // fallback for system theme
+			her: 'her',
+			system: 'dark' // fallback for system theme
 		};
 
 		return themeMap[appTheme] || 'dark';

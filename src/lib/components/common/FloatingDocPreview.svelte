@@ -113,8 +113,7 @@
 					try {
 						if (
 							iframeElement.contentWindow &&
-							(savedIframeState.scrollPosition.x !== 0 ||
-								savedIframeState.scrollPosition.y !== 0)
+							(savedIframeState.scrollPosition.x !== 0 || savedIframeState.scrollPosition.y !== 0)
 						) {
 							iframeElement.contentWindow.scrollTo(
 								savedIframeState.scrollPosition.x,
@@ -267,8 +266,7 @@
 				newY = minimizedPosition.y;
 
 			if (newX < snapThreshold) newX = 16;
-			else if (newX + trayWidth > windowWidth - snapThreshold)
-				newX = windowWidth - trayWidth - 16;
+			else if (newX + trayWidth > windowWidth - snapThreshold) newX = windowWidth - trayWidth - 16;
 			if (newY < snapThreshold) newY = 16;
 			else if (newY + trayHeight > windowHeight - snapThreshold)
 				newY = windowHeight - trayHeight - 16;
@@ -319,301 +317,299 @@
 {#if show}
 	{#if isMinimized}
 		<!-- Minimized Tray -->
+		<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+		<div
+			class="fixed z-[9998] bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-3 cursor-move hover:bg-white/90 dark:hover:bg-gray-900/90 transition-all duration-200"
+			style="transform: translate({minimizedPosition.x || 0}px, {minimizedPosition.y ||
+				0}px); {minimizedPosition.x === 0 && minimizedPosition.y === 0
+				? 'bottom: 1rem; right: 1rem;'
+				: ''}"
+			on:mousedown={handleMinimizedMouseDown}
+			transition:fly={{ x: 100, duration: 300, easing: quintOut }}
+			aria-label="Draggable minimized preview"
+		>
+			<div class="flex items-center gap-2">
+				<div
+					class="w-8 h-6 bg-gray-200/70 dark:bg-gray-700/70 rounded border border-gray-300/50 dark:border-gray-600/50"
+				></div>
+				<div class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[200px]">
+					{activeDoc?.title ?? 'Documentation'}
+				</div>
+
+				<button
+					on:click={restorePreview}
+					class="p-1 rounded hover:bg-gray-200/70 dark:hover:bg-gray-700/70 transition-colors"
+					aria-label="Restore preview"
+					title="Restore preview"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 20 20"
+						fill="currentColor"
+						class="size-3 text-gray-600 dark:text-gray-400"
+					>
+						<path
+							d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5v-13A1.5 1.5 0 0015.5 2h-11zM4 3.5a.5.5 0 01.5-.5h11a.5.5 0 01.5.5v13a.5.5 0 01-.5.5h-11a.5.5 0 01-.5-.5v-13z"
+						></path>
+					</svg>
+				</button>
+				<button
+					on:click={(e) => {
+						e.stopPropagation();
+						show = false;
+					}}
+					class="p-1 rounded hover:bg-gray-200/70 dark:hover:bg-gray-700/70 transition-colors"
+					aria-label="Close preview"
+				>
+					<XMark className="size-3 text-gray-600 dark:text-gray-400" />
+				</button>
+			</div>
+		</div>
+	{:else}
+		<!-- Full Preview -->
+		<div
+			class="fixed inset-0 z-[9998] flex items-center justify-center p-4 pointer-events-none"
+			transition:fade={{ duration: 200 }}
+		>
+			<!-- Preview Container -->
+			<!-- svelte-ignore a11y-no-static-element-interactions -->
+			<div
+				bind:this={containerElement}
+				class="relative w-full max-w-6xl h-[80vh] bg-white dark:bg-gray-900 rounded-xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col"
+				style="transform: translate({position.x}px, {position.y}px)"
+				transition:fly={{ y: 20, duration: 300, easing: quintOut }}
+				role="dialog"
+				aria-label="Draggable documentation preview"
+				tabindex="-1"
+				on:mousedown={(e) => e.stopPropagation()}
+			>
+				<!-- Header -->
 				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 				<div
-					class="fixed z-[9998] bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-3 cursor-move hover:bg-white/90 dark:hover:bg-gray-900/90 transition-all duration-200"
-					style="transform: translate({minimizedPosition.x || 0}px, {minimizedPosition.y ||
-						0}px); {minimizedPosition.x === 0 && minimizedPosition.y === 0
-						? 'bottom: 1rem; right: 1rem;'
-						: ''}"
-					on:mousedown={handleMinimizedMouseDown}
-					transition:fly={{ x: 100, duration: 300, easing: quintOut }}
-					aria-label="Draggable minimized preview"
+					bind:this={headerElement}
+					class="flex items-center justify-between p-3 border-b border-gray-200/80 dark:border-gray-700/60 bg-gray-50/80 dark:bg-gray-800/80 cursor-move backdrop-blur-sm"
+					on:mousedown={handleMouseDown}
 				>
-					<div class="flex items-center gap-2">
-						<div
-							class="w-8 h-6 bg-gray-200/70 dark:bg-gray-700/70 rounded border border-gray-300/50 dark:border-gray-600/50"
-						></div>
-						<div class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[200px]">
+					<div class="flex flex-col items-center gap-0.5 flex-1 min-w-0">
+						<div class="font-semibold text-gray-800 dark:text-gray-100 truncate text-base">
 							{activeDoc?.title ?? 'Documentation'}
 						</div>
-		
+
+						<!-- Editable URL field -->
+						<div class="flex items-center gap-2">
+							{#if isEditingUrl}
+								<input
+									bind:this={urlInputElement}
+									type="url"
+									bind:value={editableUrl}
+									on:keydown={handleUrlKeyDown}
+									on:blur={cancelEditingUrl}
+									class="flex-1 px-1.5 py-0.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+									placeholder="Enter URL..."
+								/>
+								<button
+									on:click={saveEditedUrl}
+									class="px-2 py-0.5 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
+									title="Save URL"
+								>
+									Save
+								</button>
+								<button
+									on:click={cancelEditingUrl}
+									class="px-2 py-0.5 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors"
+									title="Cancel"
+								>
+									Cancel
+								</button>
+							{:else}
+								<button
+									on:click={startEditingUrl}
+									class="flex-1 text-left text-xs text-blue-600 dark:text-blue-400 hover:underline truncate"
+									title="Click to edit URL"
+								>
+									{activeDoc?.url ?? 'No URL'}
+								</button>
+								{#if activeDoc?.url}
+									<a
+										href={activeDoc.url}
+										target="_blank"
+										rel="noopener noreferrer"
+										class="text-xs text-blue-600 dark:text-blue-400 hover:underline flex-shrink-0"
+										title="Open in new tab"
+									>
+										↗
+									</a>
+								{/if}
+							{/if}
+						</div>
+					</div>
+
+					<div class="header-controls flex items-center gap-1.5 flex-shrink-0 ml-2">
 						<button
-							on:click={restorePreview}
-							class="p-1 rounded hover:bg-gray-200/70 dark:hover:bg-gray-700/70 transition-colors"
-							aria-label="Restore preview"
-							title="Restore preview"
+							on:click={handleReload}
+							class="p-1.5 rounded-md hover:bg-gray-200/70 dark:hover:bg-gray-700/70 transition-colors"
+							aria-label="Reload page"
+							title="Reload page"
+							disabled={!activeDoc}
 						>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								viewBox="0 0 20 20"
 								fill="currentColor"
-								class="size-3 text-gray-600 dark:text-gray-400"
+								class="size-4 text-gray-600 dark:text-gray-300"
 							>
 								<path
-									d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5v-13A1.5 1.5 0 0015.5 2h-11zM4 3.5a.5.5 0 01.5-.5h11a.5.5 0 01.5.5v13a.5.5 0 01-.5.5h-11a.5.5 0 01-.5-.5v-13z"
-								></path>
+									fill-rule="evenodd"
+									d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H3.989a.75.75 0 00-.75.75v4.242a.75.75 0 001.5 0v-2.43l.31.31a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm-3.068-9.93a7 7 0 00-11.712 3.138.75.75 0 101.449.39 5.5 5.5 0 019.201-2.466l.312.311h-2.433a.75.75 0 000 1.5h4.243a.75.75 0 00.75-.75V3.375a.75.75 0 00-1.5 0v2.43l-.31-.31z"
+									clip-rule="evenodd"
+								/>
 							</svg>
 						</button>
+
+						<!-- Actions Menu -->
+						<div class="relative">
+							<button
+								on:click={() => (showActionsMenu = !showActionsMenu)}
+								class="p-1.5 rounded-md hover:bg-gray-200/70 dark:hover:bg-gray-700/70 transition-colors"
+								aria-label="Menu"
+								title="Menu"
+								disabled={!activeDoc}
+							>
+								<svg
+									class="size-4 text-gray-600 dark:text-gray-300"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+									xmlns="http://www.w3.org/2000/svg"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+									></path>
+								</svg>
+							</button>
+
+							{#if showActionsMenu}
+								<div
+									class="absolute top-full right-0 mt-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200/50 dark:border-gray-700/50 py-1.5 min-w-[180px] z-20"
+									transition:fly={{ y: -5, duration: 200, easing: quintOut }}
+								>
+									<button
+										on:click={() => {
+											copyCurrentUrl();
+											showActionsMenu = false;
+										}}
+										class="w-full px-3 py-1.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-gray-700/60 transition-colors flex items-center gap-2"
+									>
+										Copy URL
+									</button>
+									<button
+										on:click={() => {
+											openInNewWindow();
+											showActionsMenu = false;
+										}}
+										class="w-full px-3 py-1.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-gray-700/60 transition-colors flex items-center gap-2"
+									>
+										Open in New Window
+									</button>
+									<button
+										on:click={() => {
+											printPage();
+											showActionsMenu = false;
+										}}
+										class="w-full px-3 py-1.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-gray-700/60 transition-colors flex items-center gap-2"
+									>
+										Print Page
+									</button>
+								</div>
+							{/if}
+						</div>
+
 						<button
-							on:click={(e) => {
-								e.stopPropagation();
-								show = false;
-							}}
-							class="p-1 rounded hover:bg-gray-200/70 dark:hover:bg-gray-700/70 transition-colors"
-							aria-label="Close preview"
+							on:click={minimizePreview}
+							class="p-1.5 rounded-md hover:bg-gray-200/70 dark:hover:bg-gray-700/70 transition-colors"
+							aria-label="Minimize preview"
+							title="Minimize preview"
 						>
-							<XMark className="size-3 text-gray-600 dark:text-gray-400" />
+							<Minus className="size-4 text-gray-600 dark:text-gray-300" />
+						</button>
+						<button
+							on:click={() => (show = false)}
+							class="p-1.5 rounded-md hover:bg-gray-200/70 dark:hover:bg-gray-700/70 transition-colors"
+							aria-label="Close preview"
+							title="Close preview"
+						>
+							<XMark className="size-4 text-gray-600 dark:text-gray-300" />
 						</button>
 					</div>
 				</div>
-			{:else}
-				<!-- Full Preview -->
-				<div
-					class="fixed inset-0 z-[9998] flex items-center justify-center p-4 pointer-events-none"
-					transition:fade={{ duration: 200 }}
-				>
-					<!-- Preview Container -->
-					<!-- svelte-ignore a11y-no-static-element-interactions -->
+
+				<!-- Tab Bar -->
+				{#if docs.length > 0}
 					<div
-						bind:this={containerElement}
-						class="relative w-full max-w-6xl h-[80vh] bg-white dark:bg-gray-900 rounded-xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col"
-						style="transform: translate({position.x}px, {position.y}px)"
-						transition:fly={{ y: 20, duration: 300, easing: quintOut }}
-						role="dialog"
-						aria-label="Draggable documentation preview"
-						tabindex="-1"
-						on:mousedown={(e) => e.stopPropagation()}
+						class="tab-bar flex-shrink-0 flex items-end gap-1 px-3 border-b border-gray-200/80 dark:border-gray-700/60"
 					>
-						<!-- Header -->
-						<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-						<div
-							bind:this={headerElement}
-							class="flex items-center justify-between p-3 border-b border-gray-200/80 dark:border-gray-700/60 bg-gray-50/80 dark:bg-gray-800/80 cursor-move backdrop-blur-sm"
-							on:mousedown={handleMouseDown}
-						>
-							<div class="flex flex-col items-center gap-0.5 flex-1 min-w-0">
-								<div class="font-semibold text-gray-800 dark:text-gray-100 truncate text-base">
-									{activeDoc?.title ?? 'Documentation'}
-								</div>
-		
-								<!-- Editable URL field -->
-								<div class="flex items-center gap-2">
-									{#if isEditingUrl}
-										<input
-											bind:this={urlInputElement}
-											type="url"
-											bind:value={editableUrl}
-											on:keydown={handleUrlKeyDown}
-											on:blur={cancelEditingUrl}
-											class="flex-1 px-1.5 py-0.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-											placeholder="Enter URL..."
-										/>
-										<button
-											on:click={saveEditedUrl}
-											class="px-2 py-0.5 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
-											title="Save URL"
-										>
-											Save
-										</button>
-										<button
-											on:click={cancelEditingUrl}
-											class="px-2 py-0.5 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors"
-											title="Cancel"
-										>
-											Cancel
-										</button>
-									{:else}
-										<button
-											on:click={startEditingUrl}
-											class="flex-1 text-left text-xs text-blue-600 dark:text-blue-400 hover:underline truncate"
-											title="Click to edit URL"
-										>
-											{activeDoc?.url ?? 'No URL'}
-										</button>
-										{#if activeDoc?.url}
-											<a
-												href={activeDoc.url}
-												target="_blank"
-												rel="noopener noreferrer"
-												class="text-xs text-blue-600 dark:text-blue-400 hover:underline flex-shrink-0"
-												title="Open in new tab"
-											>
-												↗
-											</a>
-										{/if}
-									{/if}
-								</div>
-							</div>
-		
-							<div class="header-controls flex items-center gap-1.5 flex-shrink-0 ml-2">
-								<button
-									on:click={handleReload}
-									class="p-1.5 rounded-md hover:bg-gray-200/70 dark:hover:bg-gray-700/70 transition-colors"
-									aria-label="Reload page"
-									title="Reload page"
-									disabled={!activeDoc}
-								>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										viewBox="0 0 20 20"
-										fill="currentColor"
-										class="size-4 text-gray-600 dark:text-gray-300"
-									>
-										<path
-											fill-rule="evenodd"
-											d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H3.989a.75.75 0 00-.75.75v4.242a.75.75 0 001.5 0v-2.43l.31.31a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm-3.068-9.93a7 7 0 00-11.712 3.138.75.75 0 101.449.39 5.5 5.5 0 019.201-2.466l.312.311h-2.433a.75.75 0 000 1.5h4.243a.75.75 0 00.75-.75V3.375a.75.75 0 00-1.5 0v2.43l-.31-.31z"
-											clip-rule="evenodd"
-										/>
-									</svg>
-								</button>
-		
-								<!-- Actions Menu -->
-								<div class="relative">
-									<button
-										on:click={() => (showActionsMenu = !showActionsMenu)}
-										class="p-1.5 rounded-md hover:bg-gray-200/70 dark:hover:bg-gray-700/70 transition-colors"
-										aria-label="Menu"
-										title="Menu"
-										disabled={!activeDoc}
-									>
-										<svg
-											class="size-4 text-gray-600 dark:text-gray-300"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-											xmlns="http://www.w3.org/2000/svg"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-											></path>
-										</svg>
-									</button>
-		
-									{#if showActionsMenu}
-										<div
-											class="absolute top-full right-0 mt-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200/50 dark:border-gray-700/50 py-1.5 min-w-[180px] z-20"
-											transition:fly={{ y: -5, duration: 200, easing: quintOut }}
-										>
-											<button
-												on:click={() => {
-													copyCurrentUrl();
-													showActionsMenu = false;
-												}}
-												class="w-full px-3 py-1.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-gray-700/60 transition-colors flex items-center gap-2"
-											>
-												Copy URL
-											</button>
-											<button
-												on:click={() => {
-													openInNewWindow();
-													showActionsMenu = false;
-												}}
-												class="w-full px-3 py-1.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-gray-700/60 transition-colors flex items-center gap-2"
-											>
-												Open in New Window
-											</button>
-											<button
-												on:click={() => {
-													printPage();
-													showActionsMenu = false;
-												}}
-												class="w-full px-3 py-1.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-gray-700/60 transition-colors flex items-center gap-2"
-											>
-												Print Page
-											</button>
-										</div>
-									{/if}
-								</div>
-		
-								<button
-									on:click={minimizePreview}
-									class="p-1.5 rounded-md hover:bg-gray-200/70 dark:hover:bg-gray-700/70 transition-colors"
-									aria-label="Minimize preview"
-									title="Minimize preview"
-								>
-									<Minus className="size-4 text-gray-600 dark:text-gray-300" />
-								</button>
-								<button
-									on:click={() => (show = false)}
-									class="p-1.5 rounded-md hover:bg-gray-200/70 dark:hover:bg-gray-700/70 transition-colors"
-									aria-label="Close preview"
-									title="Close preview"
-								>
-									<XMark className="size-4 text-gray-600 dark:text-gray-300" />
-								</button>
-							</div>
-						</div>
-		
-						<!-- Tab Bar -->
-						{#if docs.length > 0}
-							<div
-								class="tab-bar flex-shrink-0 flex items-end gap-1 px-3 border-b border-gray-200/80 dark:border-gray-700/60"
+						{#each docs as doc (doc.id)}
+							<button
+								class="tab"
+								class:active={doc.id === activeDocId}
+								on:click={() => docsStore.selectDoc(doc.id)}
 							>
-								{#each docs as doc (doc.id)}
-									<button
-										class="tab"
-										class:active={doc.id === activeDocId}
-										on:click={() => docsStore.selectDoc(doc.id)}
-									>
-										<span class="truncate">{doc.title}</span>
-										<button class="close-tab-btn" on:click={(e) => handleCloseTab(e, doc.id)}>
-											<XMark className="size-3" />
-										</button>
-									</button>
-								{/each}
-
-								<button
-									class="new-tab-btn"
-									on:click={() => docsStore.openNewTab()}
-									title="Open new tab"
-								>
-									+
+								<span class="truncate">{doc.title}</span>
+								<button class="close-tab-btn" on:click={(e) => handleCloseTab(e, doc.id)}>
+									<XMark className="size-3" />
 								</button>
-							</div>
-						{/if}
+							</button>
+						{/each}
 
-						<div class="flex-grow relative">
-							<!-- Loading indicator -->
-							{#if isLoading && activeDoc}
-								<div
-									class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-900 z-[1]"
-								>
-									<div class="flex flex-col items-center gap-3">
-										<div class="breathing-light rounded-full h-8 w-8"></div>
-										<div class="text-sm text-gray-600 dark:text-gray-400">
-											Loading documentation...
-										</div>
-									</div>
-								</div>
-							{/if}
-
-							<!-- Empty State -->
-							{#if docs.length === 0}
-								<div class="w-full h-full flex items-center justify-center">
-									<div class="text-gray-500 dark:text-gray-400">No open documents.</div>
-								</div>
-							{:else if activeDoc}
-								<!-- Iframe -->
-								<iframe
-									bind:this={iframeElement}
-									src={activeDoc.url}
-									title={activeDoc.title}
-									class="w-full h-full border-0"
-									on:load={handleIframeLoad}
-									loading="lazy"
-									allowfullscreen
-									sandbox="allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-presentation allow-same-origin"
-									referrerpolicy="no-referrer"
-								></iframe>
-							{/if}
-						</div>
+						<button
+							class="new-tab-btn"
+							on:click={() => docsStore.openNewTab()}
+							title="Open new tab"
+						>
+							+
+						</button>
 					</div>
+				{/if}
+
+				<div class="flex-grow relative">
+					<!-- Loading indicator -->
+					{#if isLoading && activeDoc}
+						<div
+							class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-900 z-[1]"
+						>
+							<div class="flex flex-col items-center gap-3">
+								<div class="breathing-light rounded-full h-8 w-8"></div>
+								<div class="text-sm text-gray-600 dark:text-gray-400">Loading documentation...</div>
+							</div>
+						</div>
+					{/if}
+
+					<!-- Empty State -->
+					{#if docs.length === 0}
+						<div class="w-full h-full flex items-center justify-center">
+							<div class="text-gray-500 dark:text-gray-400">No open documents.</div>
+						</div>
+					{:else if activeDoc}
+						<!-- Iframe -->
+						<iframe
+							bind:this={iframeElement}
+							src={activeDoc.url}
+							title={activeDoc.title}
+							class="w-full h-full border-0"
+							on:load={handleIframeLoad}
+							loading="lazy"
+							allowfullscreen
+							sandbox="allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-presentation allow-same-origin"
+							referrerpolicy="no-referrer"
+						></iframe>
+					{/if}
 				</div>
-			{/if}
+			</div>
+		</div>
+	{/if}
 {/if}
 
 <style>

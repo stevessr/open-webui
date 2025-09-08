@@ -315,7 +315,11 @@ export const getTaskIdsByChatId = async (
 	return res;
 };
 
-export const getToolServerData = async (token: string, url: string, fetcher: typeof fetch = fetch) => {
+export const getToolServerData = async (
+	token: string,
+	url: string,
+	fetcher: typeof fetch = fetch
+) => {
 	let error = null;
 
 	const res = await fetcher(`${url}`, {
@@ -369,7 +373,9 @@ export const getToolServersData = async (servers: any[] = [], fetcher: any = fet
 				.map(async (server: any) => {
 					let error = null;
 					const data = await getToolServerData(
-						((server?.auth_type ?? 'bearer') === 'bearer' ? server?.key : localStorage.token) as any,
+						((server?.auth_type ?? 'bearer') === 'bearer'
+							? server?.key
+							: localStorage.token) as any,
 						(server?.path ?? '').includes('://')
 							? server?.path
 							: `${server?.url}${(server?.path ?? '').startsWith('/') ? '' : '/'}${server?.path}`,
@@ -1178,7 +1184,11 @@ export const deletePipeline = async (
 	return res;
 };
 
-export const getPipelines = async (token: string, urlIdx?: string, fetcher: typeof fetch = fetch) => {
+export const getPipelines = async (
+	token: string,
+	urlIdx?: string,
+	fetcher: typeof fetch = fetch
+) => {
 	let error = null;
 
 	const searchParams = new URLSearchParams();

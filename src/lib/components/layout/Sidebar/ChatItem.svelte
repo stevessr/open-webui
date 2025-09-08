@@ -150,8 +150,7 @@
 	let y = 0;
 
 	const dragImage = new Image();
-	dragImage.src =
-		'/user.gif';
+	dragImage.src = '/user.gif';
 
 	const onDragStart = (event: DragEvent) => {
 		event.stopPropagation();
@@ -163,12 +162,12 @@
 		// Set the data to be transferred
 		if (event.dataTransfer) {
 			event.dataTransfer.setData(
-			'text/plain',
-			JSON.stringify({
-				type: 'chat',
-				id: id,
-				item: chat
-			})
+				'text/plain',
+				JSON.stringify({
+					type: 'chat',
+					id: id,
+					item: chat
+				})
 			);
 		}
 
@@ -332,7 +331,11 @@
 				on:keydown={chatTitleInputKeydownHandler}
 				on:blur={async (e) => {
 					// check if target is generate button
-					if (e.relatedTarget && 'id' in e.relatedTarget && e.relatedTarget.id === 'generate-title-button') {
+					if (
+						e.relatedTarget &&
+						'id' in e.relatedTarget &&
+						e.relatedTarget.id === 'generate-title-button'
+					) {
 						return;
 					}
 
@@ -371,10 +374,7 @@
 			on:click={() => {
 				dispatch('select');
 
-				if (
-					$selectedFolder &&
-					!isChatInSelectedFolder
-				) {
+				if ($selectedFolder && !isChatInSelectedFolder) {
 					selectedFolder.set(null); // Reset selected folder if the chat is not in it
 				}
 
@@ -406,7 +406,6 @@
 		</a>
 	{/if}
 
-	
 	<div
 		class="
         {id === $chatId || confirmEdit
@@ -516,7 +515,6 @@
 				</ChatMenu>
 
 				{#if id === $chatId}
-					
 					<button
 						id="delete-chat-button"
 						class="hidden"

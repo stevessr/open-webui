@@ -474,19 +474,19 @@
 							}
 							25% {
 								opacity: 0.7;
-								transform: scale(1.0);
+								transform: scale(1);
 								background-position: 100% 50%;
 								box-shadow: 0 0 10px rgba(156, 163, 175, 0.5);
 							}
 							50% {
-								opacity: 1.0;
+								opacity: 1;
 								transform: scale(1.1);
 								background-position: 50% 100%;
 								box-shadow: 0 0 15px rgba(209, 213, 219, 0.7);
 							}
 							75% {
 								opacity: 0.7;
-								transform: scale(1.0);
+								transform: scale(1);
 								background-position: 0% 100%;
 								box-shadow: 0 0 10px rgba(156, 163, 175, 0.5);
 							}

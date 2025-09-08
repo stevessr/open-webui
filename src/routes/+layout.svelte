@@ -215,7 +215,9 @@
 	};
 
 	const executeTool = async (data: any, cb?: any) => {
-		const toolServer = $settings?.toolServers?.find((server: any) => server.url === data.server?.url);
+		const toolServer = $settings?.toolServers?.find(
+			(server: any) => server.url === data.server?.url
+		);
 		const toolServerData = $toolServers?.find((server: any) => server.url === data.server?.url);
 
 		console.log('executeTool', data, toolServer);
@@ -306,7 +308,7 @@
 			} else if (type === 'chat:tags') {
 				tags.set(await getAllTags(localStorage.token));
 			}
-	} else if (data?.session_id === $socket?.id) {
+		} else if (data?.session_id === $socket?.id) {
 			if (type === 'execute:python') {
 				console.log('execute:python', data);
 				executePythonAsWorker(data.id, data.code, cb);
@@ -314,7 +316,7 @@
 				console.log('execute:tool', data);
 				executeTool(data, cb);
 			} else if (type === 'request:chat:completion') {
-					console.log(data, $socket?.id);
+				console.log(data, $socket?.id);
 				const { session_id, channel, form_data, model } = data;
 
 				try {
@@ -380,15 +382,15 @@
 									// Process the stream in the background
 									await processStream();
 								} else {
-				    const data = await res.json();
-				    cb && cb(data);
+									const data = await res.json();
+									cb && cb(data);
 								}
 							} else {
 								throw new Error('An error occurred while fetching the completion');
 							}
 						} catch (error) {
 							console.error('chatCompletion', error);
-			    cb && cb(error);
+							cb && cb(error);
 						}
 					}
 				} catch (error) {
@@ -476,228 +478,228 @@
 
 	onMount(() => {
 		(async () => {
-		let touchstartY = 0;
+			let touchstartY = 0;
 
-		function isNavOrDescendant(el: any) {
-			const nav = document.querySelector('nav'); // change selector if needed
-			return nav && (el === nav || nav.contains(el));
-		}
-
-		document.addEventListener('touchstart', (e) => {
-			if (!isNavOrDescendant(e.target)) return;
-			touchstartY = e.touches[0].clientY;
-		});
-
-		document.addEventListener('touchmove', (e) => {
-			if (!isNavOrDescendant(e.target)) return;
-			const touchY = e.touches[0].clientY;
-			const touchDiff = touchY - touchstartY;
-			if (touchDiff > 50 && window.scrollY === 0) {
-				showRefresh = true;
-				e.preventDefault();
+			function isNavOrDescendant(el: any) {
+				const nav = document.querySelector('nav'); // change selector if needed
+				return nav && (el === nav || nav.contains(el));
 			}
-		});
 
-		document.addEventListener('touchend', (e) => {
-			if (!isNavOrDescendant(e.target)) return;
-			if (showRefresh) {
-				showRefresh = false;
-				location.reload();
-			}
-		});
-
-		if (typeof window !== 'undefined' && window.applyTheme) {
-			window.applyTheme();
-		}
-
-		if (window?.electronAPI) {
-			const info = await window.electronAPI.send({
-				type: 'app:info'
+			document.addEventListener('touchstart', (e) => {
+				if (!isNavOrDescendant(e.target)) return;
+				touchstartY = e.touches[0].clientY;
 			});
 
-			if (info) {
-				isApp.set(true);
-				appInfo.set(info);
+			document.addEventListener('touchmove', (e) => {
+				if (!isNavOrDescendant(e.target)) return;
+				const touchY = e.touches[0].clientY;
+				const touchDiff = touchY - touchstartY;
+				if (touchDiff > 50 && window.scrollY === 0) {
+					showRefresh = true;
+					e.preventDefault();
+				}
+			});
 
-				const data = await window.electronAPI.send({
-					type: 'app:data'
+			document.addEventListener('touchend', (e) => {
+				if (!isNavOrDescendant(e.target)) return;
+				if (showRefresh) {
+					showRefresh = false;
+					location.reload();
+				}
+			});
+
+			if (typeof window !== 'undefined' && window.applyTheme) {
+				window.applyTheme();
+			}
+
+			if (window?.electronAPI) {
+				const info = await window.electronAPI.send({
+					type: 'app:info'
 				});
 
-				if (data) {
-					appData.set(data);
+				if (info) {
+					isApp.set(true);
+					appInfo.set(info);
+
+					const data = await window.electronAPI.send({
+						type: 'app:data'
+					});
+
+					if (data) {
+						appData.set(data);
+					}
 				}
 			}
-		}
 
-		// Listen for messages on the BroadcastChannel
-		bc.onmessage = (event) => {
-			if (event.data === 'active') {
-				isLastActiveTab.set(false); // Another tab became active
-			}
-		};
-
-		// Set yourself as the last active tab when this tab is focused
-		const handleVisibilityChange = () => {
-			if (document.visibilityState === 'visible') {
-				isLastActiveTab.set(true); // This tab is now the active tab
-				bc.postMessage('active'); // Notify other tabs that this tab is active
-
-				// Check token expiry when the tab becomes active
-				checkTokenExpiry();
-			}
-		};
-
-		// Add event listener for visibility state changes
-		document.addEventListener('visibilitychange', handleVisibilityChange);
-
-		// Call visibility change handler initially to set state on load
-		handleVisibilityChange();
-
-		let previousThemeValue = localStorage.theme ?? 'system';
-		theme.set(previousThemeValue);
-
-		theme.subscribe((value) => {
-			if (browser) {
-				if (previousThemeValue) {
-					const oldClasses = previousThemeValue.split(' ');
-					document.documentElement.classList.remove(...oldClasses);
+			// Listen for messages on the BroadcastChannel
+			bc.onmessage = (event) => {
+				if (event.data === 'active') {
+					isLastActiveTab.set(false); // Another tab became active
 				}
+			};
 
-				const newClasses = value.split(' ');
-				document.documentElement.classList.add(...newClasses);
+			// Set yourself as the last active tab when this tab is focused
+			const handleVisibilityChange = () => {
+				if (document.visibilityState === 'visible') {
+					isLastActiveTab.set(true); // This tab is now the active tab
+					bc.postMessage('active'); // Notify other tabs that this tab is active
 
-				document.documentElement.setAttribute('data-theme', value);
-				previousThemeValue = value;
-			}
-		});
-
-		mobile.set(window.innerWidth < BREAKPOINT);
-
-		onResize = () => {
-			if (window.innerWidth < BREAKPOINT) {
-				mobile.set(true);
-			} else {
-				mobile.set(false);
-			}
-		};
-		window.addEventListener('resize', onResize);
-
-		user.subscribe((value) => {
-			if (value) {
-				$socket?.off('chat-events', chatEventHandler);
-				$socket?.off('channel-events', channelEventHandler);
-
-				$socket?.on('chat-events', chatEventHandler);
-				$socket?.on('channel-events', channelEventHandler);
-
-				// Set up the token expiry check
-				if (tokenTimer) {
-					clearInterval(tokenTimer);
+					// Check token expiry when the tab becomes active
+					checkTokenExpiry();
 				}
-				tokenTimer = window.setInterval(checkTokenExpiry, 15000);
-			} else {
-				$socket?.off('chat-events', chatEventHandler);
-				$socket?.off('channel-events', channelEventHandler);
+			};
+
+			// Add event listener for visibility state changes
+			document.addEventListener('visibilitychange', handleVisibilityChange);
+
+			// Call visibility change handler initially to set state on load
+			handleVisibilityChange();
+
+			let previousThemeValue = localStorage.theme ?? 'system';
+			theme.set(previousThemeValue);
+
+			theme.subscribe((value) => {
+				if (browser) {
+					if (previousThemeValue) {
+						const oldClasses = previousThemeValue.split(' ');
+						document.documentElement.classList.remove(...oldClasses);
+					}
+
+					const newClasses = value.split(' ');
+					document.documentElement.classList.add(...newClasses);
+
+					document.documentElement.setAttribute('data-theme', value);
+					previousThemeValue = value;
+				}
+			});
+
+			mobile.set(window.innerWidth < BREAKPOINT);
+
+			onResize = () => {
+				if (window.innerWidth < BREAKPOINT) {
+					mobile.set(true);
+				} else {
+					mobile.set(false);
+				}
+			};
+			window.addEventListener('resize', onResize);
+
+			user.subscribe((value) => {
+				if (value) {
+					$socket?.off('chat-events', chatEventHandler);
+					$socket?.off('channel-events', channelEventHandler);
+
+					$socket?.on('chat-events', chatEventHandler);
+					$socket?.on('channel-events', channelEventHandler);
+
+					// Set up the token expiry check
+					if (tokenTimer) {
+						clearInterval(tokenTimer);
+					}
+					tokenTimer = window.setInterval(checkTokenExpiry, 15000);
+				} else {
+					$socket?.off('chat-events', chatEventHandler);
+					$socket?.off('channel-events', channelEventHandler);
+				}
+			});
+
+			let backendConfig = null;
+			try {
+				backendConfig = await getBackendConfig();
+				console.log('Backend config:', backendConfig);
+			} catch (error) {
+				console.error('Error loading backend config:', error);
 			}
-		});
+			// Initialize i18n even if we didn't get a backend config,
+			// so `/error` can show something that's not `undefined`.
 
-		let backendConfig = null;
-		try {
-			backendConfig = await getBackendConfig();
-			console.log('Backend config:', backendConfig);
-		} catch (error) {
-			console.error('Error loading backend config:', error);
-		}
-		// Initialize i18n even if we didn't get a backend config,
-		// so `/error` can show something that's not `undefined`.
-
-		initI18n(localStorage?.locale);
-		if (!localStorage.locale) {
-			const languages = await getLanguages();
+			initI18n(localStorage?.locale);
+			if (!localStorage.locale) {
+				const languages = await getLanguages();
 				const browserLanguages = navigator.languages
 					? navigator.languages
 					: [navigator.language || navigator.language];
-			const lang = backendConfig.default_locale
-				? backendConfig.default_locale
-				: bestMatchingLanguage(languages, browserLanguages, 'en-US');
-			changeLanguage(lang);
-		}
+				const lang = backendConfig.default_locale
+					? backendConfig.default_locale
+					: bestMatchingLanguage(languages, browserLanguages, 'en-US');
+				changeLanguage(lang);
+			}
 
-		if (backendConfig) {
-			// Save Backend Status to Store
-			await config.set(backendConfig);
-			await WEBUI_NAME.set(backendConfig.name);
+			if (backendConfig) {
+				// Save Backend Status to Store
+				await config.set(backendConfig);
+				await WEBUI_NAME.set(backendConfig.name);
 
 				if ($config) {
-					await setupSocket((($config.features as any)?.enable_websocket) ?? true);
+					await setupSocket(($config.features as any)?.enable_websocket ?? true);
 
-				const currentUrl = `${window.location.pathname}${window.location.search}`;
-				const encodedUrl = encodeURIComponent(currentUrl);
+					const currentUrl = `${window.location.pathname}${window.location.search}`;
+					const encodedUrl = encodeURIComponent(currentUrl);
 
-				if (localStorage.token) {
-					// Get Session User Info
-					const sessionUser = await getSessionUser(localStorage.token).catch((error) => {
-						toast.error(`${error}`);
-						return null;
-					});
+					if (localStorage.token) {
+						// Get Session User Info
+						const sessionUser = await getSessionUser(localStorage.token).catch((error) => {
+							toast.error(`${error}`);
+							return null;
+						});
 
-					if (sessionUser) {
-						// Save Session User to Store
-						$socket?.emit('user-join', { auth: { token: sessionUser.token } });
+						if (sessionUser) {
+							// Save Session User to Store
+							$socket?.emit('user-join', { auth: { token: sessionUser.token } });
 
-						await user.set(sessionUser);
-						await config.set(await getBackendConfig());
+							await user.set(sessionUser);
+							await config.set(await getBackendConfig());
+						} else {
+							// Redirect Invalid Session User to /auth Page
+							localStorage.removeItem('token');
+							await goto(`/auth?redirect=${encodedUrl}`);
+						}
 					} else {
-						// Redirect Invalid Session User to /auth Page
-						localStorage.removeItem('token');
-						await goto(`/auth?redirect=${encodedUrl}`);
-					}
-				} else {
-					// Don't redirect if we're already on the auth page
-					// Needed because we pass in tokens from OAuth logins via URL fragments
-					if ($page.url.pathname !== '/auth') {
-						await goto(`/auth?redirect=${encodedUrl}`);
+						// Don't redirect if we're already on the auth page
+						// Needed because we pass in tokens from OAuth logins via URL fragments
+						if ($page.url.pathname !== '/auth') {
+							await goto(`/auth?redirect=${encodedUrl}`);
+						}
 					}
 				}
+			} else {
+				// Redirect to /error when Backend Not Detected
+				await goto(`/error`);
 			}
-		} else {
-			// Redirect to /error when Backend Not Detected
-			await goto(`/error`);
-		}
 
-		await tick();
+			await tick();
 
-		if (
-			document.documentElement.classList.contains('her') &&
-			document.getElementById('progress-bar')
-		) {
-			loadingProgress.subscribe((value) => {
-				const progressBar = document.getElementById('progress-bar');
+			if (
+				document.documentElement.classList.contains('her') &&
+				document.getElementById('progress-bar')
+			) {
+				loadingProgress.subscribe((value) => {
+					const progressBar = document.getElementById('progress-bar');
 
-				if (progressBar) {
-					progressBar.style.width = `${value}%`;
-				}
-			});
+					if (progressBar) {
+						progressBar.style.width = `${value}%`;
+					}
+				});
 
-			await loadingProgress.set(100);
+				await loadingProgress.set(100);
 
-			document.getElementById('splash-screen')?.remove();
+				document.getElementById('splash-screen')?.remove();
 
-			const audio = new Audio(`/audio/greeting.mp3`);
-			const playAudio = () => {
-				audio.play();
-				document.removeEventListener('click', playAudio);
-			};
+				const audio = new Audio(`/audio/greeting.mp3`);
+				const playAudio = () => {
+					audio.play();
+					document.removeEventListener('click', playAudio);
+				};
 
-			document.addEventListener('click', playAudio);
+				document.addEventListener('click', playAudio);
 
-			loaded = true;
-		} else {
-			document.getElementById('splash-screen')?.remove();
-			loaded = true;
-		}
+				loaded = true;
+			} else {
+				document.getElementById('splash-screen')?.remove();
+				loaded = true;
+			}
 
-		mounted = true;
+			mounted = true;
 
 			return;
 		})();
@@ -712,8 +714,6 @@
 	<title>{$WEBUI_NAME}</title>
 	<link crossorigin="anonymous" rel="icon" href="{WEBUI_BASE_URL}/static/favicon.png" />
 
-	
-	
 	<!-- <link rel="stylesheet" type="text/css" href="/themes/rosepine.css" />
 	<link rel="stylesheet" type="text/css" href="/themes/rosepine-dawn.css" /> -->
 </svelte:head>

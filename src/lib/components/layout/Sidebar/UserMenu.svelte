@@ -5,7 +5,6 @@
 	import { flyAndScale } from '$lib/utils/transitions';
 	import { goto } from '$app/navigation';
 
-
 	import { getUsage } from '$lib/apis';
 	import { userSignOut } from '$lib/apis/auths';
 

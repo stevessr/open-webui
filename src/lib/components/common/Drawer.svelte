@@ -52,9 +52,6 @@
 	});
 </script>
 
-
-
-
 <div
 	bind:this={modalElement}
 	class="modal fixed right-0 {$isApp

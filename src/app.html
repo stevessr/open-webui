@@ -43,13 +43,13 @@
 
 				// Enhanced theme system with CSS if() support
 				const themeColors = {
-					'light': '#ffffff',
-					'dark': '#171717',
+					light: '#ffffff',
+					dark: '#171717',
 					'oled-dark': '#000000',
 					'rose-pine': '#1f1d2e',
 					'material-design': '#ffffff',
 					'pink-theme': '#f8bbd0',
-					'her': '#983724'
+					her: '#983724'
 				};
 
 				if (localStorage.theme === 'system') {
@@ -116,18 +116,18 @@
 				}
 				25% {
 					opacity: 0.8;
-					transform: scale(1.0);
-					filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.4)) brightness(1.0);
+					transform: scale(1);
+					filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.4)) brightness(1);
 				}
 				50% {
-					opacity: 1.0;
+					opacity: 1;
 					transform: scale(1.05);
 					filter: drop-shadow(0 0 25px rgba(6, 182, 212, 0.6)) brightness(1.1);
 				}
 				75% {
 					opacity: 0.8;
-					transform: scale(1.0);
-					filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.4)) brightness(1.0);
+					transform: scale(1);
+					filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.4)) brightness(1);
 				}
 				100% {
 					opacity: 0.6;
@@ -153,18 +153,18 @@
 				}
 				25% {
 					opacity: 0.85;
-					transform: scale(1.0);
-					filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)) brightness(1.0);
+					transform: scale(1);
+					filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)) brightness(1);
 				}
 				50% {
-					opacity: 1.0;
+					opacity: 1;
 					transform: scale(1.05);
 					filter: drop-shadow(0 0 30px rgba(6, 182, 212, 0.7)) brightness(1.2);
 				}
 				75% {
 					opacity: 0.85;
-					transform: scale(1.0);
-					filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.5)) brightness(1.0);
+					transform: scale(1);
+					filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.5)) brightness(1);
 				}
 				100% {
 					opacity: 0.7;
@@ -184,7 +184,6 @@
 			id="splash-screen"
 			style="position: fixed; z-index: 100; top: 0; left: 0; width: 100%; height: 100%"
 		>
-
 			<img
 				id="logo"
 				style="
@@ -212,16 +211,10 @@
 					align-items: center;
 				"
 			>
-				<img
-					id="logo-her"
-					src="/static/splash.png"
-					class="breathing-light"
-				/>
+				<img id="logo-her" src="/static/splash.png" class="breathing-light" />
 
 				<div style="position: relative; width: 24rem; margin-top: 0.5rem">
-					<div
-						id="progress-background"
-					></div>
+					<div id="progress-background"></div>
 
 					<div
 						id="progress-bar"

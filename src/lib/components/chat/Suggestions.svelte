@@ -69,8 +69,6 @@
 		<Bolt />
 		{$i18n.t('Suggested')}
 	{:else}
-		
-
 		<div
 			class="flex w-full {$settings?.landingPageMode === 'chat'
 				? ' -mt-1'

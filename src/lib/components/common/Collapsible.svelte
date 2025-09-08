@@ -88,8 +88,6 @@
 
 <div {id} class={className}>
 	{#if title !== null}
-		
-		
 		<div
 			class="{buttonClassName} cursor-pointer"
 			on:pointerup={() => {
@@ -165,8 +163,6 @@
 			</div>
 		</div>
 	{:else}
-		
-		
 		<div
 			class="{buttonClassName} cursor-pointer"
 			on:pointerup={() => {

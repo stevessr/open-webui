@@ -135,7 +135,6 @@
 				dispatch('change', state);
 			}}
 		>
-			
 			<div
 				class="w-full group rounded-md relative flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-900 text-gray-500 dark:text-gray-500 transition"
 			>

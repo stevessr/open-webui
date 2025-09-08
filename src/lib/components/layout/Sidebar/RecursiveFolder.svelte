@@ -4,7 +4,7 @@
 	import { get } from 'svelte/store';
 	import type { i18n as i18nInstance } from 'i18next';
 	import type { Folder } from '$lib/types';
-	
+
 	const i18n = getContext<Writable<i18nInstance>>('i18n');
 	const dispatch = createEventDispatcher();
 
@@ -199,8 +199,7 @@
 	};
 
 	const dragImage = new Image();
-	dragImage.src =
-		'/user.gif';
+	dragImage.src = '/user.gif';
 
 	let x: number;
 	let y: number;
@@ -451,7 +450,6 @@
 			(folders[folderId].items?.chats ?? []).length === 0}
 		on:change={(e) => handleCollapsibleChange(e.detail)}
 	>
-		
 		<div class="w-full group">
 			<button
 				id="folder-{folderId}-button"
@@ -544,7 +542,7 @@
 						</div>
 					</FolderMenu>
 				</div>
-			
+			</button>
 		</div>
 
 		<div slot="content" class="w-full">

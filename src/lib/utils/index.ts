@@ -622,11 +622,11 @@ export const calculateSHA256 = async (file) => {
 	reader.readAsArrayBuffer(file);
 
 	try {
-	// Wait for the FileReader to finish reading the file
-	const buffer = (await readFile) as ArrayBuffer | ArrayBufferLike | null;
+		// Wait for the FileReader to finish reading the file
+		const buffer = (await readFile) as ArrayBuffer | ArrayBufferLike | null;
 
-	// Convert the ArrayBuffer to a Uint8Array safely
-	const uint8Array = buffer ? new Uint8Array(buffer as ArrayBuffer) : new Uint8Array();
+		// Convert the ArrayBuffer to a Uint8Array safely
+		const uint8Array = buffer ? new Uint8Array(buffer as ArrayBuffer) : new Uint8Array();
 
 		// Calculate the SHA-256 hash using Web Crypto API
 		const hashBuffer = await crypto.subtle.digest('SHA-256', uint8Array);
@@ -656,8 +656,8 @@ export const getUserPosition = async (raw = false) => {
 		navigator.geolocation.getCurrentPosition(resolve, reject);
 	}).catch((error) => {
 		console.error('Error getting user location:', error);
- 		throw error;
- 	});
+		throw error;
+	});
 
 	if (!position) {
 		return 'Location not available';
@@ -1271,7 +1271,7 @@ export const getLineCount = (text) => {
 // Helper function to recursively resolve OpenAPI schema into JSON schema format
 function resolveSchema(schemaRef: any, components: any, resolvedSchemas = new Set()) {
 	if (!schemaRef) return {};
-    
+
 	// Rest of function continues...
 
 	if (schemaRef['$ref']) {

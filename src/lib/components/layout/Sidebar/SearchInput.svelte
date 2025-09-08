@@ -17,7 +17,7 @@
 	let selectedIdx: number = 0;
 
 	let lastWord = '';
-	$: lastWord = value ? value.split(' ').at(-1) ?? '' : value;
+	$: lastWord = value ? (value.split(' ').at(-1) ?? '') : value;
 
 	let options = [
 		{

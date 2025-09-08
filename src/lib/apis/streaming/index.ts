@@ -4,9 +4,9 @@ import type { ParsedEvent } from 'eventsource-parser';
 type TextStreamUpdate = {
 	done: boolean;
 	value: string;
-	 
+
 	sources?: any;
-	 
+
 	selectedModelId?: any;
 	error?: any;
 	usage?: ResponseUsage;
@@ -39,7 +39,10 @@ export async function createOpenAITextStream(
 	// Defensive casts: TextDecoderStream / EventSourceParserStream typings sometimes mismatch DOM lib generics
 	const eventStreamReader =
 		(responseBody as any) && typeof (responseBody as any).pipeThrough === 'function'
-			? (responseBody as any).pipeThrough(new (TextDecoderStream as any)()).pipeThrough(new (EventSourceParserStream as any)()).getReader()
+			? (responseBody as any)
+					.pipeThrough(new (TextDecoderStream as any)())
+					.pipeThrough(new (EventSourceParserStream as any)())
+					.getReader()
 			: null;
 
 	if (!eventStreamReader) {

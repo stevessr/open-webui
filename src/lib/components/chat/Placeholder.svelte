@@ -124,19 +124,19 @@
 											selectedModelIdx = modelIdx;
 										}}
 									>
-									{#if model?.info?.meta?.profile_image_url?.toLowerCase().endsWith('.mp4')}
-										<video
-											src={model.info.meta.profile_image_url}
-											class=" size-9 @sm:size-10 w-auto rounded-full border-[1px] border-gray-100 dark:border-none"
-											autoplay
-											muted
-											loop
-											playsinline
-											draggable="false"
-										>
-											<track kind="captions" />
-										</video>
-									{:else}
+										{#if model?.info?.meta?.profile_image_url?.toLowerCase().endsWith('.mp4')}
+											<video
+												src={model.info.meta.profile_image_url}
+												class=" size-9 @sm:size-10 w-auto rounded-full border-[1px] border-gray-100 dark:border-none"
+												autoplay
+												muted
+												loop
+												playsinline
+												draggable="false"
+											>
+												<track kind="captions" />
+											</video>
+										{:else}
 											<img
 												crossorigin="anonymous"
 												src={model?.info?.meta?.profile_image_url ??
@@ -147,7 +147,7 @@
 												aria-hidden="true"
 												draggable="false"
 											/>
-									{/if}
+										{/if}
 									</button>
 								</Tooltip>
 							{/each}

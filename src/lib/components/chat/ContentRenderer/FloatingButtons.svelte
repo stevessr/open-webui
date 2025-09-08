@@ -142,8 +142,11 @@
 		});
 
 		if (res && res.ok) {
-				// guard against missing body / non-stream responses
-				const reader = (res.body && typeof (res.body as any).getReader === 'function') ? (res.body as any).getReader() : null;
+			// guard against missing body / non-stream responses
+			const reader =
+				res.body && typeof (res.body as any).getReader === 'function'
+					? (res.body as any).getReader()
+					: null;
 			if (!reader) {
 				toast.error($i18n.t('An error occurred while fetching the explanation'));
 				return;

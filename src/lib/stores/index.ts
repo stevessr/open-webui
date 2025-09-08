@@ -199,7 +199,7 @@ type Settings = {
 	ctrlEnterToSend?: boolean;
 	backgroundImageUrl?: string | null;
 	materialThemeEnabled?: boolean;
-showUserGravatar?: boolean;
+	showUserGravatar?: boolean;
 
 	system?: string;
 	seed?: number;

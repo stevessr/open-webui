@@ -36,14 +36,18 @@ export const uploadFile = async (token: string, file: File, metadata?: object | 
 		const status = await getFileProcessStatus(token, res.id);
 
 		if (status && status.ok) {
-				const reader = (status.body && typeof (status.body as any).pipeThrough === 'function')
-					? (status.body as any).pipeThrough(new (TextDecoderStream as any)()).pipeThrough((splitStream as any)('\n')).getReader()
+			const reader =
+				status.body && typeof (status.body as any).pipeThrough === 'function'
+					? (status.body as any)
+							.pipeThrough(new (TextDecoderStream as any)())
+							.pipeThrough((splitStream as any)('\n'))
+							.getReader()
 					: null;
 
-				if (!reader) {
-					// No stream available; skip streaming processing
-					return res;
-				}
+			if (!reader) {
+				// No stream available; skip streaming processing
+				return res;
+			}
 
 			while (true) {
 				const { value, done } = await reader.read();
