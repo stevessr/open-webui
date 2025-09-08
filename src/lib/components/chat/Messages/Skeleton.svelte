@@ -9,8 +9,7 @@
 			? 'size-1.5 my-1'
 			: 'size-2 my-1'} mx-1"
 >
-	<span
-		class="absolute inline-flex h-full w-full breathing-light-skeleton rounded-full opacity-75"
+	<span class="absolute inline-flex h-full w-full breathing-light-skeleton rounded-full opacity-75"
 	></span>
 	<span
 		class="relative inline-flex {size === 'md'

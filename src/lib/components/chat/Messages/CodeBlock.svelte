@@ -442,7 +442,11 @@
 						class="flex gap-1 items-center bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
 						on:click={collapseCodeBlock}
 					>
-						<div class=" -translate-y-[0.5px] transition-transform duration-300 ease-out {collapsed ? 'rotate-180' : ''}">
+						<div
+							class=" -translate-y-[0.5px] transition-transform duration-300 ease-out {collapsed
+								? 'rotate-180'
+								: ''}"
+						>
 							<ChevronUpDown className="size-3" />
 						</div>
 

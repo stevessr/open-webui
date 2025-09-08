@@ -138,6 +138,21 @@
 		}
 	};
 
+	const setProfileImageFromUrl = () => {
+		if (profileImageUrlInput.trim()) {
+			profileImageUrl = profileImageUrlInput.trim();
+			profileImageUrlInput = '';
+			showUrlInput = false;
+		}
+	};
+
+	const toggleUrlInput = () => {
+		showUrlInput = !showUrlInput;
+		if (!showUrlInput) {
+			profileImageUrlInput = '';
+		}
+	};
+
 	onMount(async () => {
 		const user = await getSessionUser(localStorage.token).catch((error) => {
 			toast.error(`${error}`);

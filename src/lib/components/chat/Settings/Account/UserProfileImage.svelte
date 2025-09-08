@@ -9,7 +9,7 @@
 
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
-	export let profileImageUrl;
+	export let profileImageUrl: string;
 	export let user = null;
 
 	export let imageClassName = 'size-14 md:size-18';
@@ -88,11 +88,24 @@
 				profileImageInputElement.click();
 			}}
 		>
-			<img
-				src={profileImageUrl !== '' ? profileImageUrl : generateInitialsImage(user?.name)}
-				alt="profile"
-				class=" rounded-full {imageClassName} object-cover"
-			/>
+			{#if profileImageUrl?.toLowerCase().endsWith('.mp4')}
+				<video
+					src={profileImageUrl}
+					class=" max-w-[55px] object-cover rounded-full"
+					autoplay
+					muted
+					loop
+					playsinline
+				>
+					<track kind="captions" />
+				</video>
+			{:else}
+				<img
+					src={profileImageUrl !== '' ? profileImageUrl : generateInitialsImage(user?.name)}
+					alt="profile"
+					class=" rounded-full {imageClassName} object-cover"
+				/>
+			{/if}
 
 			<div class="absolute bottom-0 right-0 opacity-0 group-hover:opacity-100 transition">
 				<div class="p-1 rounded-full bg-white text-black border-gray-100 shadow">
@@ -115,7 +128,7 @@
 			class=" text-xs text-center text-gray-500 rounded-lg py-0.5 opacity-0 group-hover:opacity-100 transition-all"
 			type="button"
 			on:click={async () => {
-				profileImageUrl = `${WEBUI_BASE_URL}/user.png`;
+				profileImageUrl = `${WEBUI_BASE_URL}/user.gif`;
 			}}>{$i18n.t('Remove')}</button
 		>
 

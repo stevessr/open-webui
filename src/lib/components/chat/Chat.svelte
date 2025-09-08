@@ -2317,97 +2317,30 @@
 >
 	{#if !loading}
 		<div in:fade={{ duration: 50 }} class="w-full h-full flex flex-col">
-			<!-- 首先判断是否有来自 selectedFolder 的背景URL -->
-			{#if selectedFolder && selectedFolder.meta && selectedFolder.meta.background_image_url}
-				<!-- 如果有，判断这个URL是否是视频 -->
-				{#if selectedFolder.meta.background_image_url
-					.toLowerCase()
-					.endsWith('.mp4') || selectedFolder.meta.background_image_url
-						.toLowerCase()
-						.endsWith('.webm') || selectedFolder.meta.background_image_url
-						.toLowerCase()
-						.endsWith('.ogg')}
-					<!-- 如果是视频，渲染 <video> 标签 -->
-					<video
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full object-cover z-0"
-						src={selectedFolder.meta.background_image_url}
-						autoplay
-						loop
-						muted
-						playsinline
-						preload="auto"
-					/>
-				{:else}
-					<!-- 如果是图片，渲染 <div> 标签作为图片背景 -->
-					<div
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
-						style="background-image: url({selectedFolder.meta.background_image_url})"
+			{#if $selectedFolder && $selectedFolder?.meta?.background_image_url}
+				<div
+					class="absolute {$showSidebar
+						? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
+						: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
+					style="background-image: url({$selectedFolder?.meta?.background_image_url})  "
+				/>
+
+				<div
+					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90 z-0"
+				/>
+			{:else if $settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url ?? null}
+				<div
+					class="absolute {$showSidebar
+						? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
+						: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
+					style="background-image: url({$settings?.backgroundImageUrl ??
+						$config?.license_metadata?.background_image_url})  "
 					/>
 				{/if}
-				<!-- 否则，判断是否有来自 settings 的背景URL -->
-			{:else if settings?.backgroundImageUrl}
-				<!-- 如果有，判断这个URL是否是视频 -->
-				{#if settings.backgroundImageUrl
-					.toLowerCase()
-					.endsWith('.mp4') || settings.backgroundImageUrl
-						.toLowerCase()
-						.endsWith('.webm') || settings.backgroundImageUrl.toLowerCase().endsWith('.ogg')}
-					<!-- 如果是视频，渲染 <video> 标签 -->
-					<video
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full object-cover z-0"
-						src={settings.backgroundImageUrl}
-						autoplay
-						loop
-						muted
-						playsinline
-						preload="auto"
-					/>
-				{:else}
-					<!-- 如果是图片，渲染 <div> 标签作为图片背景 -->
-					<div
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
-						style="background-image: url({settings.backgroundImageUrl})"
-					/>
-				{/if}
-				<!-- 否则，判断是否有来自 config 的背景URL -->
-			{:else if config?.license_metadata?.background_image_url}
-				<!-- 如果有，判断这个URL是否是视频 -->
-				{#if config.license_metadata.background_image_url
-					.toLowerCase()
-					.endsWith('.mp4') || config.license_metadata.background_image_url
-						.toLowerCase()
-						.endsWith('.webm') || config.license_metadata.background_image_url
-						.toLowerCase()
-						.endsWith('.ogg')}
-					<!-- 如果是视频，渲染 <video> 标签 -->
-					<video
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full object-cover z-0"
-						src={config.license_metadata.background_image_url}
-						autoplay
-						loop
-						muted
-						playsinline
-						preload="auto"
-					/>
-				{:else}
-					<!-- 如果是图片，渲染 <div> 标签作为图片背景 -->
-					<div
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
-						style="background-image: url({config.license_metadata.background_image_url})"
-					/>
-				{/if}
+
+				<div
+					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90 z-0"
+				/>
 			{/if}
 
 			<PaneGroup direction="horizontal" class="w-full h-full">
