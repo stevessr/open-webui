@@ -35,7 +35,7 @@
 
 	export let onClose: Function;
 
-	let tools = null;
+	let tools = {};
 	let show = false;
 	let showAllTools = false;
 

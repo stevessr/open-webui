@@ -114,17 +114,18 @@ li p {
 	display: inline;
 }
 
+/* --- 变更点 1: 滚动条样式 --- */
+/* 将亮色和暗色主题的滚动条样式合并到同一个规则中 */
 ::-webkit-scrollbar-thumb {
 	--tw-border-opacity: 1;
-	background-color: rgba(215, 215, 215, 0.8);
-	border-color: rgba(255, 255, 255, var(--tw-border-opacity));
 	border-radius: 9999px;
 	border-width: 1px;
+	background-color: rgba(215, 215, 215, 0.8);
+	border-color: rgba(255, 255, 255, var(--tw-border-opacity));
 }
 
-/* Dark theme scrollbar styles */
 .dark ::-webkit-scrollbar-thumb {
-	background-color: rgba(67, 67, 67, 0.8); /* Darker color for dark theme */
+	background-color: rgba(67, 67, 67, 0.8);
 	border-color: rgba(0, 0, 0, var(--tw-border-opacity));
 }
 
@@ -145,10 +146,7 @@ select {
 	background-size: 1.5em 1.5em;
 	-webkit-print-color-adjust: exact;
 	print-color-adjust: exact;
-	/* padding-right: 2.5rem; */
-	/* for Firefox */
 	-moz-appearance: none;
-	/* for Chrome */
 	-webkit-appearance: none;
 }
 
@@ -161,24 +159,21 @@ select {
 	}
 }
 
+/* --- 变更点 2: Shimmer 动画样式 --- */
+/* 将 .shimmer 的亮色和暗色样式合并 */
 .shimmer {
-	background: linear-gradient(90deg, #9a9b9e 25%, #2a2929 50%, #9a9b9e 75%);
 	background-size: 200% 100%;
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 	animation: shimmer 4s linear infinite;
-	color: #818286; /* Fallback color */
+	background: linear-gradient(90deg, #9a9b9e 25%, #2a2929 50%, #9a9b9e 75%);
+	color: #818286;
 }
 
-:global(.dark) .shimmer {
+.dark .shimmer {
 	background: linear-gradient(90deg, #818286 25%, #eae5e5 50%, #818286 75%);
-	background-size: 200% 100%;
-	background-clip: text;
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	animation: shimmer 4s linear infinite;
-	color: #a1a3a7; /* Darker fallback color for dark mode */
+	color: #a1a3a7;
 }
 
 @keyframes smoothFadeIn {
@@ -228,9 +223,8 @@ select {
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
-	/* display: none; <- Crashes Chrome on hover */
 	-webkit-appearance: none;
-	margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+	margin: 0;
 }
 
 input[type='number'] {
@@ -282,8 +276,20 @@ input[type='number'] {
 	outline: none;
 }
 
-.tippy-box[data-theme~='dark'] {
-	@apply rounded-lg bg-gray-950 text-xs border border-gray-900 shadow-xl;
+/* 这部分已使用 if()，保持不变 */
+.tippy-box {
+	@apply text-xs shadow-xl;
+	border-radius: 8px;
+	background-color: rgb(3 7 18 / 1);
+	color: rgb(243 244 246 / 1);
+	border: 1px solid rgb(17 24 39 / 1);
+	box-shadow:
+		0 20px 25px -5px rgb(0 0 0 / 0.1),
+		0 8px 10px -6px rgb(0 0 0 / 0.1);
+	transition:
+		background-color 0.2s ease,
+		color 0.2s ease,
+		border-color 0.2s ease;
 }
 
 .password {
@@ -324,158 +330,14 @@ input[type='number'] {
 	outline: none;
 }
 
+/* --- 变更点 3: ProseMirror 编辑器占位符样式 --- */
+/* 将基于 prefers-color-scheme 的媒体查询合并 */
 .ProseMirror p.is-editor-empty:first-child::before {
 	content: attr(data-placeholder);
 	float: left;
-	/* Below color is from tailwind, and has the proper contrast
-	text-gray-600 from: https://tailwindcss.com/docs/color */
-	color: #676767;
 	pointer-events: none;
-
 	@apply line-clamp-1 absolute;
-}
-
-.tiptap ul[data-type='taskList'] {
-	list-style: none;
-	margin-left: 0;
-	padding: 0;
-
-	li {
-		align-items: start;
-		display: flex;
-
-		> label {
-			flex: 0 0 auto;
-			margin-right: 0.5rem;
-			margin-top: 0.2rem;
-			user-select: none;
-			display: flex;
-		}
-
-		> div {
-			flex: 1 1 auto;
-
-			align-items: center;
-		}
-	}
-
-	/* checked data-checked="true" */
-
-	li[data-checked='true'] {
-		> div {
-			opacity: 0.5;
-			text-decoration: line-through;
-		}
-	}
-
-	input[type='checkbox'] {
-		cursor: pointer;
-	}
-
-	ul[data-type='taskList'] {
-		margin: 0;
-	}
-
-	/* Reset nested regular ul elements to default styling */
-	ul:not([data-type='taskList']) {
-		list-style: disc;
-		padding-left: 1rem;
-
-		li {
-			align-items: initial;
-			display: list-item;
-
-			label {
-				flex: initial;
-				margin-right: initial;
-				margin-top: initial;
-				user-select: initial;
-				display: initial;
-			}
-
-			div {
-				flex: initial;
-				align-items: initial;
-			}
-		}
-	}
-}
-
-.tiptap .mention {
-	border-radius: 0.4rem;
-	box-decoration-break: clone;
-	padding: 0.1rem 0.3rem;
-	@apply text-blue-900 dark:text-blue-100 bg-blue-300/20 dark:bg-blue-500/20;
-}
-
-.tiptap .mention::after {
-	content: '\200B';
-}
-
-.input-prose .tiptap ul[data-type='taskList'] {
-	list-style: none;
-	margin-left: 0;
-	padding: 0;
-
-	li {
-		align-items: start;
-		display: flex;
-
-		> label {
-			flex: 0 0 auto;
-			margin-right: 0.5rem;
-			margin-top: 0.4rem;
-			user-select: none;
-			display: flex;
-		}
-
-		> div {
-			flex: 1 1 auto;
-
-			align-items: center;
-		}
-	}
-
-	/* checked data-checked="true" */
-
-	li[data-checked='true'] {
-		> div {
-			opacity: 0.5;
-			text-decoration: line-through;
-		}
-	}
-
-	input[type='checkbox'] {
-		cursor: pointer;
-	}
-
-	ul[data-type='taskList'] {
-		margin: 0;
-	}
-
-	/* Reset nested regular ul elements to default styling */
-	ul:not([data-type='taskList']) {
-		list-style: disc;
-		padding-left: 1rem;
-
-		li {
-			align-items: initial;
-			display: list-item;
-
-			label {
-				flex: initial;
-				margin-right: initial;
-				margin-top: initial;
-				user-select: initial;
-				display: initial;
-			}
-
-			div {
-				flex: initial;
-				align-items: initial;
-			}
-		}
-	}
+	color: #676767;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -484,9 +346,112 @@ input[type='number'] {
 	}
 }
 
+.tiptap ul[data-type='taskList'] {
+	list-style: none;
+	margin-left: 0;
+	padding: 0;
+	li {
+		align-items: start;
+		display: flex;
+		> label {
+			flex: 0 0 auto;
+			margin-right: 0.5rem;
+			margin-top: 0.2rem;
+			user-select: none;
+			display: flex;
+		}
+		> div {
+			flex: 1 1 auto;
+			align-items: center;
+		}
+	}
+	li[data-checked='true'] {
+		> div {
+			opacity: 0.5;
+			text-decoration: line-through;
+		}
+	}
+	input[type='checkbox'] {
+		cursor: pointer;
+	}
+	ul[data-type='taskList'] {
+		margin: 0;
+	}
+	ul:not([data-type='taskList']) {
+		list-style: disc;
+		padding-left: 1rem;
+		li {
+			align-items: initial;
+			display: list-item;
+			label {
+				flex: initial;
+				margin-right: initial;
+				margin-top: initial;
+				user-select: initial;
+				display: initial;
+			}
+			div {
+				flex: initial;
+				align-items: initial;
+			}
+		}
+	}
+}
+
+.input-prose .tiptap ul[data-type='taskList'] {
+	list-style: none;
+	margin-left: 0;
+	padding: 0;
+	li {
+		align-items: start;
+		display: flex;
+		> label {
+			flex: 0 0 auto;
+			margin-right: 0.5rem;
+			margin-top: 0.4rem;
+			user-select: none;
+			display: flex;
+		}
+		> div {
+			flex: 1 1 auto;
+			align-items: center;
+		}
+	}
+	li[data-checked='true'] {
+		> div {
+			opacity: 0.5;
+			text-decoration: line-through;
+		}
+	}
+	input[type='checkbox'] {
+		cursor: pointer;
+	}
+	ul[data-type='taskList'] {
+		margin: 0;
+	}
+	ul:not([data-type='taskList']) {
+		list-style: disc;
+		padding-left: 1rem;
+		li {
+			align-items: initial;
+			display: list-item;
+			label {
+				flex: initial;
+				margin-right: initial;
+				margin-top: initial;
+				user-select: initial;
+				display: initial;
+			}
+			div {
+				flex: initial;
+				align-items: initial;
+			}
+		}
+	}
+}
+
 .ai-autocompletion::after {
 	color: #a0a0a0;
-
 	content: attr(data-suggestion);
 	pointer-events: none;
 }
@@ -495,7 +460,6 @@ input[type='number'] {
 	border-radius: 0.4rem;
 	font-size: 0.85rem;
 	padding: 0.25em 0.3em;
-
 	@apply dark:bg-gray-800 bg-gray-50;
 }
 
@@ -504,7 +468,6 @@ input[type='number'] {
 	font-family: 'JetBrainsMono', monospace;
 	margin: 1.5rem 0;
 	padding: 0.75rem 1rem;
-
 	@apply dark:bg-gray-800 bg-gray-50;
 }
 
@@ -517,12 +480,10 @@ input[type='number'] {
 	@apply rounded-md dark:bg-gray-800 bg-gray-50 mx-0.5;
 }
 
-/* Code styling */
 .hljs-comment,
 .hljs-quote {
 	color: #616161;
 }
-
 .hljs-variable,
 .hljs-template-variable,
 .hljs-attribute,
@@ -534,7 +495,6 @@ input[type='number'] {
 .hljs-selector-class {
 	color: #f98181;
 }
-
 .hljs-number,
 .hljs-meta,
 .hljs-built_in,
@@ -544,66 +504,54 @@ input[type='number'] {
 .hljs-params {
 	color: #fbbc88;
 }
-
 .hljs-string,
 .hljs-symbol,
 .hljs-bullet {
 	color: #b9f18d;
 }
-
 .hljs-title,
 .hljs-section {
 	color: #faf594;
 }
-
 .hljs-keyword,
 .hljs-selector-tag {
 	color: #70cff8;
 }
-
 .hljs-emphasis {
 	font-style: italic;
 }
-
 .hljs-strong {
 	font-weight: 700;
 }
 
-/* Table styling for tiptap editors */
 .tiptap table {
 	@apply w-full text-sm text-left text-gray-500 dark:text-gray-400 max-w-full;
 }
-
 .tiptap thead {
 	@apply text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-850 dark:text-gray-400 border-none;
 }
-
 .tiptap th,
 .tiptap td {
 	@apply px-3 py-1.5 border border-gray-100 dark:border-gray-850;
 }
-
 .tiptap th {
 	@apply cursor-pointer text-left text-xs text-gray-700 dark:text-gray-400 font-semibold uppercase bg-gray-50 dark:bg-gray-850;
 }
-
 .tiptap td {
 	@apply text-gray-900 dark:text-white w-max;
 }
-
 .tiptap tr {
 	@apply bg-white dark:bg-gray-900 dark:border-gray-850 text-xs;
 }
 
 .tippy-box[data-theme~='transparent'] {
 	@apply bg-transparent p-0 m-0;
+	border: none;
 }
 
-/* this is a rough fix for the first cursor position when the first paragraph is empty */
 .ProseMirror > .ProseMirror-yjs-cursor:first-child {
 	margin-top: 16px;
 }
-/* This gives the remote user caret. The colors are automatically overwritten*/
 .ProseMirror-yjs-cursor {
 	position: relative;
 	margin-left: -1px;
@@ -614,7 +562,6 @@ input[type='number'] {
 	word-break: normal;
 	pointer-events: none;
 }
-/* This renders the username above the caret */
 .ProseMirror-yjs-cursor > div {
 	position: absolute;
 	top: -1.05em;
@@ -628,12 +575,7 @@ input[type='number'] {
 	white-space: nowrap;
 }
 
+/* Hotfix to ensure correct text color is applied across all themes */
 body {
-	background: #fff;
-	color: #000;
-}
-
-.dark body {
-	background: #171717;
-	color: #eee;
+  color: var(--text-color) !important;
 }

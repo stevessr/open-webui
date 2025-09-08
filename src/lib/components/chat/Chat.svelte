@@ -2184,14 +2184,26 @@
 >
 	{#if !loading}
 		<div in:fade={{ duration: 50 }} class="w-full h-full flex flex-col">
-			{#if $settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url ?? null}
-				<div
-					class="absolute {$showSidebar
-						? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-						: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
-					style="background-image: url({$settings?.backgroundImageUrl ??
+			{#if $settings?.backgroundImageUrl ?? null}
+				{#if $settings?.backgroundImageUrl.endsWith('.mp4')}
+					<!-- Video background -->
+					<video
+						class="absolute top-0 left-0 w-full h-full object-cover"
+						src={$settings.backgroundImageUrl}
+						autoplay
+						muted
+						loop
+						playsinline
+					>
+						<track kind="captions" />
+					</video>
+				{:else}
+					<div
+						class="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
+						style="background-image: url({$settings?.backgroundImageUrl ??
 						$config?.license_metadata?.background_image_url})  "
-				/>
+					/>
+				{/if}
 
 				<div
 					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90 z-0"

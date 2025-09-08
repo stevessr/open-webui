@@ -153,9 +153,7 @@
 		<Spinner className="size-5" />
 	</div>
 {:else}
-	<div
-		class="pt-0.5 pb-2 gap-1 flex flex-col md:flex-row justify-between sticky top-0 z-10 bg-white dark:bg-gray-900"
-	>
+	<div class="mt-0.5 mb-2 gap-1 flex flex-col md:flex-row justify-between">
 		<div class="flex md:self-center text-lg font-medium px-0.5">
 			<div class="flex-shrink-0">
 				{$i18n.t('Users')}
@@ -391,15 +389,29 @@
 						</td>
 						<td class="px-3 py-1 font-medium text-gray-900 dark:text-white w-max">
 							<div class="flex flex-row w-max">
-								<img
-									class=" rounded-full w-6 h-6 object-cover mr-2.5"
-									src={user?.profile_image_url?.startsWith(WEBUI_BASE_URL) ||
-									user.profile_image_url.startsWith('https://www.gravatar.com/avatar/') ||
-									user.profile_image_url.startsWith('data:')
-										? user.profile_image_url
-										: `${WEBUI_BASE_URL}/user.png`}
-									alt="user"
-								/>
+								{#if user.profile_image_url.toLowerCase().endsWith('.mp4')}
+									<video
+										class=" rounded-full w-6 h-6 object-cover mr-2.5"
+										src={user.profile_image_url}
+										autoplay
+										muted
+										loop
+										playsinline
+									>
+										<track kind="captions" />
+									</video>
+								{:else}
+									<img
+										class=" rounded-full w-6 h-6 object-cover mr-2.5"
+										src={user?.profile_image_url?.startsWith(WEBUI_BASE_URL) ||
+										(user.profile_image_url.startsWith('https://www.gravatar.com/avatar/') &&
+											$settings.showUserGravatar) ||
+										user.profile_image_url.startsWith('data:')
+											? user.profile_image_url
+											: `/user.gif`}
+										alt="user"
+									/>
+								{/if}
 
 								<div class=" font-medium self-center">{user.name}</div>
 							</div>

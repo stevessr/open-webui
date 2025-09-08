@@ -123,16 +123,30 @@
 											selectedModelIdx = modelIdx;
 										}}
 									>
-										<img
-											crossorigin="anonymous"
-											src={model?.info?.meta?.profile_image_url ??
-												($i18n.language === 'dg-DG'
-													? `${WEBUI_BASE_URL}/doge.png`
-													: `${WEBUI_BASE_URL}/static/favicon.png`)}
-											class=" size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
-											aria-hidden="true"
+									{#if model?.info?.meta?.profile_image_url?.toLowerCase().endsWith('.mp4')}
+										<video
+											src={model.info.meta.profile_image_url}
+											class=" size-9 @sm:size-10 w-auto rounded-full border-[1px] border-gray-100 dark:border-none"
+											autoplay
+											muted
+											loop
+											playsinline
 											draggable="false"
-										/>
+										>
+											<track kind="captions" />
+										</video>
+									{:else}
+											<img
+												crossorigin="anonymous"
+												src={model?.info?.meta?.profile_image_url ??
+													($i18n.language === 'dg-DG'
+														? `${WEBUI_BASE_URL}/doge.png`
+														: `${WEBUI_BASE_URL}/static/favicon.png`)}
+												class="h-9 @sm:h-10 w-auto rounded-md border-[1px] border-gray-100 dark:border-none"
+												aria-hidden="true"
+												draggable="false"
+											/>
+									{/if}
 									</button>
 								</Tooltip>
 							{/each}

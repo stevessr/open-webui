@@ -76,12 +76,24 @@
 		<div class="flex items-center gap-2">
 			<div class="flex items-center min-w-fit">
 				<Tooltip content={$user?.role === 'admin' ? (item?.value ?? '') : ''} placement="top-start">
-					<img
-						src={item.model?.info?.meta?.profile_image_url ??
-							`${WEBUI_BASE_URL}/static/favicon.png`}
-						alt="Model"
-						class="rounded-full size-5 flex items-center"
-					/>
+					{#if item.model?.info?.meta?.profile_image_url?.endsWith('.mp4')}
+						<video
+							src={item.model?.info?.meta?.profile_image_url}
+							class="rounded-full size-5 flex items-center"
+							autoplay
+							muted
+							loop
+							playsinline
+						>
+							<track kind="captions" />
+						</video>
+					{:else}
+						<img
+							src={item.model?.info?.meta?.profile_image_url ?? '/static/favicon.png'}
+							alt="Model"
+							class="rounded-full size-5 flex items-center"
+						/>
+					{/if}
 				</Tooltip>
 			</div>
 
