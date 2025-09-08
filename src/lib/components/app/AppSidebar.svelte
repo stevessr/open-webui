@@ -26,7 +26,7 @@
 				}}
 			>
 				<img
-					src="{WEBUI_BASE_URL}/static/splash.png"
+					src="{WEBUI_BASE_URL}/static/favicon.png"
 					class="size-11 dark:invert p-0.5"
 					alt="logo"
 					draggable="false"
