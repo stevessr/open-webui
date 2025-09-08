@@ -238,7 +238,7 @@
 
 	{#if focused && (filteredOptions.length > 0 || filteredTags.length > 0)}
 		<div
-			class="absolute top-0 mt-8 left-0 right-1 border border-gray-100 dark:border-gray-900 bg-gray-50 dark:bg-gray-950 rounded-lg z-10 shadow-lg trans"
+			class="absolute top-0 mt-8 left-0 right-1 border border-gray-100 dark:border-gray-900 bg-gray-50 dark:bg-gray-950 rounded-2xl z-10 shadow-lg trans"
 			id="search-options-container"
 			role="listbox"
 			tabindex="0"
@@ -268,7 +268,7 @@
 									const words = value.split(' ');
 
 									words.pop();
-									words.push(`${item.type}:${item.id} `);
+									words.push(`tag:${tag.id} `);
 
 									value = words.join(' ');
 

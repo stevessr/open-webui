@@ -10,7 +10,7 @@ export const getModels = async (
 	connections: any | null = null,
 	base: boolean = false,
 	refresh: boolean = false,
-	fetcher: typeof fetch = fetch
+	fetcher: any = fetch
 ) => {
 	const searchParams = new URLSearchParams();
 	if (refresh) {

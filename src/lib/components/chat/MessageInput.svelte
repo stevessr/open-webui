@@ -1062,32 +1062,18 @@
 									<div class="px-3 pt-3 text-left w-full flex flex-col z-10">
 										<div class="flex items-center justify-between w-full">
 											<div class="pl-[1px] flex items-center gap-2 text-sm dark:text-gray-500">
-												{#if // 检查 URL 是否存在且是视频文件类型
-												($models.find((model) => model.id === atSelectedModel.id)?.info?.meta?.profile_image_url ?? ($i18n.language === 'dg-DG' ? `${WEBUI_BASE_URL}/doge.png` : `${WEBUI_BASE_URL}/static/favicon.png`))
-													?.toLowerCase()
-													.endsWith('.mp4') || ($models.find((model) => model.id === atSelectedModel.id)?.info?.meta?.profile_image_url ?? ($i18n.language === 'dg-DG' ? `${WEBUI_BASE_URL}/doge.png` : `${WEBUI_BASE_URL}/static/favicon.png`))
-														?.toLowerCase()
-														.endsWith('.webm') || ($models.find((model) => model.id === atSelectedModel.id)?.info?.meta?.profile_image_url ?? ($i18n.language === 'dg-DG' ? `${WEBUI_BASE_URL}/doge.png` : `${WEBUI_BASE_URL}/static/favicon.png`))
-														?.toLowerCase()
-														.endsWith('.ogg')}
-													<!-- 如果是视频URL，渲染 <video> 标签 -->
+												{#if $models
+													.find((model) => model.id === atSelectedModel.id)
+													?.info?.meta?.profile_image_url?.endsWith('.mp4')}
 													<video
-														crossorigin="anonymous"
-														alt="model profile"
 														class="size-3.5 max-w-[28px] object-cover rounded-full"
-														src={$models.find((model) => model.id === atSelectedModel.id)?.info
-															?.meta?.profile_image_url ??
-															($i18n.language === 'dg-DG'
-																? `${WEBUI_BASE_URL}/doge.png`
-																: `${WEBUI_BASE_URL}/static/favicon.png`)}
 														autoplay
-														loop
 														muted
-														playsinline
-														preload="auto"
-													/>
+														loop
+														src={$models.find((model) => model.id === atSelectedModel.id)?.info
+															?.meta?.profile_image_url}
+													></video>
 												{:else}
-													<!-- 否则（是图片URL或未知类型），渲染 <img> 标签 -->
 													<img
 														crossorigin="anonymous"
 														alt="model profile"

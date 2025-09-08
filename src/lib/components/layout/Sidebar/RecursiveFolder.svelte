@@ -398,6 +398,28 @@
 		setFolderItems();
 	}
 
+	let sortedChildren: Folder[] = [];
+	$: {
+		if (folders[folderId]?.childrenIds) {
+			sortedChildren = folders[folderId]?.childrenIds
+				.map((id: string) => folders[id])
+				.sort((a: Folder, b: Folder) =>
+					a.name.localeCompare(b.name, undefined, {
+						numeric: true,
+						sensitivity: 'base'
+					})
+				);
+		}
+	}
+
+	const handleCollapsibleChange = (state: boolean) => {
+		dispatch('open', state);
+	};
+
+	const handleInputFocus = (e: FocusEvent & { currentTarget: EventTarget & HTMLInputElement }) => {
+		e.currentTarget.select();
+	};
+
 	const renameHandler = async () => {
 		console.log('Edit');
 		await tick();
