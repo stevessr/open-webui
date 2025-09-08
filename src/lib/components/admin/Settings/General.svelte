@@ -75,21 +75,6 @@
 		ciphers: ''
 	};
 
-	const checkForVersionUpdates = async () => {
-		updateAvailable = null;
-		version = await getVersionUpdates(localStorage.token).catch((error) => {
-			return {
-				current: WEBUI_VERSION,
-				latest: WEBUI_VERSION
-			};
-		});
-
-		console.info(version);
-
-		updateAvailable = compareVersion(version.latest, version.current);
-		console.info(updateAvailable);
-	};
-
 	const updateLdapServerHandler = async () => {
 		if (!ENABLE_LDAP) return;
 		const res = await updateLdapServer(localStorage.token, LDAP_SERVER).catch((error) => {

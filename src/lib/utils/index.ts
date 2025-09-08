@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import sha256 from 'js-sha256';
+import * as sha256 from 'js-sha256';
 import { WEBUI_BASE_URL } from '$lib/constants';
 
 import dayjs from 'dayjs';
@@ -37,7 +37,7 @@ export const replaceTokens = (content, sourceIds, char, user) => {
 		{
 			regex: /{{VIDEO_FILE_ID_([a-f0-9-]+)}}/gi,
 			replacement: (_, fileId) =>
-				`<video src="${WEBUI_BASE_URL}/api/v1/files/${fileId}/content" controls></video>`
+				`<video src="${WEBUI_BASE_URL}/api/v1/files/${fileId}/content" controls><track kind="captions"></video>`
 		},
 		{
 			regex: /{{HTML_FILE_ID_([a-f0-9-]+)}}/gi,
@@ -221,14 +221,15 @@ export const convertMessagesToHistory = (messages) => {
 	return history;
 };
 
-export const getGravatarURL = (email) => {
+export const getGravatarURL = (email: any) => {
 	// Trim leading and trailing whitespace from
 	// an email address and force all characters
 	// to lower case
 	const address = String(email).trim().toLowerCase();
 
 	// Create a SHA256 hash of the final string
-	const hash = sha256(address);
+	const hashFn: any = (sha256 as any).default || (sha256 as any);
+	const hash = hashFn(address);
 
 	// Grab the actual image URL
 	return `https://www.gravatar.com/avatar/${hash}`;
@@ -346,7 +347,7 @@ export const generateInitialsImage = (name) => {
 		console.log(
 			'generateInitialsImage: failed pixel test, fingerprint evasion is likely. Using default image.'
 		);
-		return `${WEBUI_BASE_URL}/user.png`;
+		return `${WEBUI_BASE_URL}/user.gif`;
 	}
 
 	ctx.fillStyle = '#F39C12';
@@ -388,15 +389,16 @@ export const copyToClipboard = async (text, html = null, formatted = false) => {
 	if (formatted) {
 		let styledHtml = '';
 		if (!html) {
-			const options = {
+			const options: any = {
 				throwOnError: false,
-				highlight: function (code, lang) {
-					const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-					return hljs.highlight(code, { language }).value;
+				highlight: function (code: string, lang: string) {
+					const language = (hljs as any).getLanguage(lang) ? lang : 'plaintext';
+					return (hljs as any).highlight(code, { language }).value;
 				}
 			};
-			marked.use(markedKatexExtension(options));
-			marked.use(markedExtension(options));
+			// Ensure compatibility with different module export shapes
+			marked.use((markedKatexExtension as any)(options));
+			marked.use((markedExtension as any)(options));
 			// DEVELOPER NOTE: Go to `$lib/components/chat/Messages/Markdown.svelte` to add extra markdown extensions for rendering.
 
 			const htmlContent = marked.parse(text);
@@ -620,11 +622,11 @@ export const calculateSHA256 = async (file) => {
 	reader.readAsArrayBuffer(file);
 
 	try {
-		// Wait for the FileReader to finish reading the file
-		const buffer = await readFile;
+	// Wait for the FileReader to finish reading the file
+	const buffer = (await readFile) as ArrayBuffer | ArrayBufferLike | null;
 
-		// Convert the ArrayBuffer to a Uint8Array
-		const uint8Array = new Uint8Array(buffer);
+	// Convert the ArrayBuffer to a Uint8Array safely
+	const uint8Array = buffer ? new Uint8Array(buffer as ArrayBuffer) : new Uint8Array();
 
 		// Calculate the SHA-256 hash using Web Crypto API
 		const hashBuffer = await crypto.subtle.digest('SHA-256', uint8Array);
@@ -654,15 +656,17 @@ export const getUserPosition = async (raw = false) => {
 		navigator.geolocation.getCurrentPosition(resolve, reject);
 	}).catch((error) => {
 		console.error('Error getting user location:', error);
-		throw error;
-	});
+ 		throw error;
+ 	});
 
 	if (!position) {
 		return 'Location not available';
 	}
 
-	// Extract the latitude and longitude from the position
-	const { latitude, longitude } = position.coords;
+	// Extract the latitude and longitude from the position safely
+	const coords: any = (position as any).coords || {};
+	const latitude: number = typeof coords.latitude === 'number' ? coords.latitude : 0;
+	const longitude: number = typeof coords.longitude === 'number' ? coords.longitude : 0;
 
 	if (raw) {
 		return { latitude, longitude };
@@ -861,7 +865,7 @@ export const processDetails = (content) => {
 	if (matches) {
 		for (const match of matches) {
 			const attributesRegex = /(\w+)="([^"]*)"/g;
-			const attributes = {};
+			const attributes: Record<string, any> = {};
 			let attributeMatch;
 			while ((attributeMatch = attributesRegex.exec(match)) !== null) {
 				attributes[attributeMatch[1]] = attributeMatch[2];
@@ -981,6 +985,77 @@ export const getPromptVariables = (user_name, user_location) => {
 };
 
 /**
+ * @param {string} template - The template string containing placeholders.
+ * @returns {string} The template string with the placeholders replaced by the prompt.
+ */
+export const promptTemplate = (
+	template: string,
+	user_name?: string,
+	user_location?: string
+): string => {
+	// Get the current date
+	const currentDate = new Date();
+
+	// Format the date to YYYY-MM-DD
+	const formattedDate =
+		currentDate.getFullYear() +
+		'-' +
+		String(currentDate.getMonth() + 1).padStart(2, '0') +
+		'-' +
+		String(currentDate.getDate()).padStart(2, '0');
+
+	// Format the time to HH:MM:SS AM/PM
+	const currentTime = currentDate.toLocaleTimeString('en-US', {
+		hour: 'numeric',
+		minute: 'numeric',
+		second: 'numeric',
+		hour12: true
+	});
+
+	// Get the current weekday
+	const currentWeekday = getWeekday();
+
+	// Get the user's timezone
+	const currentTimezone = getUserTimezone();
+
+	// Get the user's language
+	const userLanguage = localStorage.getItem('locale') || 'en-US';
+
+	// Replace {{CURRENT_DATETIME}} in the template with the formatted datetime
+	template = template.replace('{{CURRENT_DATETIME}}', `${formattedDate} ${currentTime}`);
+
+	// Replace {{CURRENT_DATE}} in the template with the formatted date
+	template = template.replace('{{CURRENT_DATE}}', formattedDate);
+
+	// Replace {{CURRENT_TIME}} in the template with the formatted time
+	template = template.replace('{{CURRENT_TIME}}', currentTime);
+
+	// Replace {{CURRENT_WEEKDAY}} in the template with the current weekday
+	template = template.replace('{{CURRENT_WEEKDAY}}', currentWeekday);
+
+	// Replace {{CURRENT_TIMEZONE}} in the template with the user's timezone
+	template = template.replace('{{CURRENT_TIMEZONE}}', currentTimezone);
+
+	// Replace {{USER_LANGUAGE}} in the template with the user's language
+	template = template.replace('{{USER_LANGUAGE}}', userLanguage);
+
+	if (user_name) {
+		// Replace {{USER_NAME}} in the template with the user's name
+		template = template.replace('{{USER_NAME}}', user_name);
+	}
+
+	if (user_location) {
+		// Replace {{USER_LOCATION}} in the template with the current location
+		template = template.replace('{{USER_LOCATION}}', user_location);
+	} else {
+		// Replace {{USER_LOCATION}} in the template with 'Unknown' if no location is provided
+		template = template.replace('{{USER_LOCATION}}', 'LOCATION_UNKNOWN');
+	}
+
+	return template;
+};
+
+/**
  * This function is used to replace placeholders in a template string with the provided prompt.
  * The placeholders can be in the following formats:
  * - `{{prompt}}`: This will be replaced with the entire prompt.
@@ -1013,6 +1088,8 @@ export const titleGenerationTemplate = (template: string, prompt: string): strin
 			return '';
 		}
 	);
+
+	template = promptTemplate(template);
 
 	return template;
 };
@@ -1192,8 +1269,10 @@ export const getLineCount = (text) => {
 };
 
 // Helper function to recursively resolve OpenAPI schema into JSON schema format
-function resolveSchema(schemaRef, components, resolvedSchemas = new Set()) {
+function resolveSchema(schemaRef: any, components: any, resolvedSchemas = new Set()) {
 	if (!schemaRef) return {};
+    
+	// Rest of function continues...
 
 	if (schemaRef['$ref']) {
 		const refPath = schemaRef['$ref'];
@@ -1209,7 +1288,7 @@ function resolveSchema(schemaRef, components, resolvedSchemas = new Set()) {
 	}
 
 	if (schemaRef.type) {
-		const schemaObj = { type: schemaRef.type };
+		const schemaObj: any = { type: schemaRef.type };
 
 		if (schemaRef.description) {
 			schemaObj.description = schemaRef.description;
@@ -1247,6 +1326,7 @@ export const convertOpenApiToToolPayload = (openApiSpec) => {
 		for (const [method, operation] of Object.entries(methods)) {
 			if (operation?.operationId) {
 				const tool = {
+					type: 'function',
 					name: operation.operationId,
 					description: operation.description || operation.summary || 'No description available.',
 					parameters: {
@@ -1279,7 +1359,7 @@ export const convertOpenApiToToolPayload = (openApiSpec) => {
 					const content = operation.requestBody.content;
 					if (content && content['application/json']) {
 						const requestSchema = content['application/json'].schema;
-						const resolvedRequestSchema = resolveSchema(requestSchema, openApiSpec.components);
+						const resolvedRequestSchema: any = resolveSchema(requestSchema, openApiSpec.components);
 
 						if (resolvedRequestSchema.properties) {
 							tool.parameters.properties = {
@@ -1315,8 +1395,8 @@ export const slugify = (str: string): string => {
 			.replace(/[\u0300-\u036f]/g, '')
 			// 3. Replace any sequence of whitespace with a single hyphen
 			.replace(/\s+/g, '-')
-			// 4. Remove all characters except alphanumeric characters, hyphens, and underscores
-			.replace(/[^a-zA-Z0-9-_]/g, '')
+			// 4. Remove all characters except alphanumeric characters and hyphens
+			.replace(/[^a-zA-Z0-9-]/g, '')
 			// 5. Convert to lowercase
 			.toLowerCase()
 	);
@@ -1337,7 +1417,7 @@ export const extractInputVariables = (text: string): Record<string, any> => {
 	while ((match = regularRegex.exec(text)) !== null) {
 		const varName = match[1].trim();
 		// Only add if not already processed as custom variable
-		if (!variables.hasOwnProperty(varName)) {
+		if (!Object.prototype.hasOwnProperty.call(variables, varName)) {
 			variables[varName] = { type: 'text' }; // Default type for regular variables
 		}
 	}

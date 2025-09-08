@@ -214,7 +214,7 @@
 	});
 </script>
 
-<Modal size="xl" bind:show>
+<Modal size="xl" bind:show draggable={false}>
 	<div class="py-2.5 dark:text-gray-300 text-gray-700">
 		<div class="px-3.5 pb-1.5">
 			<SearchInput
@@ -251,7 +251,7 @@
 			/>
 		</div>
 
-		<!-- <hr class="border-gray-100 dark:border-gray-850 my-1" /> -->
+		
 
 		<div class="flex px-3 pb-1">
 			<div

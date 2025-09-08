@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { getContext, onMount } from 'svelte';
-	const i18n = getContext('i18n');
+	import type { i18n as i18nType } from 'i18next';
+	import type { Writable } from 'svelte/store';
+	const i18n = getContext<Writable<i18nType>>('i18n');
 
 	import { settings } from '$lib/stores';
 	import { verifyOpenAIConnection } from '$lib/apis/openai';
@@ -18,8 +20,22 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 
-	export let onSubmit: Function = () => {};
-	export let onDelete: Function = () => {};
+	interface Connection {
+		url: string;
+		key: string;
+		config?: {
+			enable?: boolean;
+			tags?: { name: string }[];
+			prefix_id?: string;
+			model_ids?: string[];
+			connection_type?: string;
+			azure?: boolean;
+			api_version?: string;
+		};
+	}
+
+	export let onSubmit: (connection: any) => Promise<void> = async () => {};
+	export let onDelete: () => void = () => {};
 
 	export let show = false;
 	export let edit = false;
@@ -27,7 +43,7 @@
 	export let ollama = false;
 	export let direct = false;
 
-	export let connection = null;
+	export let connection: Connection | null = null;
 
 	let url = '';
 	let key = '';
@@ -41,10 +57,10 @@
 	let enable = true;
 	let apiVersion = '';
 
-	let tags = [];
+	let tags: { name: string }[] = [];
 
 	let modelId = '';
-	let modelIds = [];
+	let modelIds: string[] = [];
 
 	let loading = false;
 
@@ -448,9 +464,6 @@
 										})}
 									{:else if azure}
 										{$i18n.t('Deployment names are required for Azure OpenAI')}
-										<!-- {$i18n.t('Leave empty to include all models from "{{url}}" endpoint', {
-											url: `${url}/openai/deployments`
-										})} -->
 									{:else}
 										{$i18n.t('Leave empty to include all models from "{{url}}/models" endpoint', {
 											url: url

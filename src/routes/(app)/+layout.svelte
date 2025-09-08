@@ -12,15 +12,13 @@
 
 	import { getKnowledgeBases } from '$lib/apis/knowledge';
 	import { getFunctions } from '$lib/apis/functions';
-	import { getModels, getToolServersData, getVersionUpdates } from '$lib/apis';
+	import { getToolServersData } from '$lib/apis';
 	import { getAllTags } from '$lib/apis/chats';
 	import { getPrompts } from '$lib/apis/prompts';
-	import { getTools } from '$lib/apis/tools';
-	import { getBanners } from '$lib/apis/configs';
-	import { getUserSettings } from '$lib/apis/users';
 
 	import { WEBUI_VERSION } from '$lib/constants';
 	import { compareVersion } from '$lib/utils';
+	import { checkForVersionUpdates } from '$lib/utils/version';
 
 	import {
 		config,
@@ -48,14 +46,43 @@
 	import AccountPending from '$lib/components/layout/Overlay/AccountPending.svelte';
 	import UpdateInfoToast from '$lib/components/layout/UpdateInfoToast.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import type { LayoutData } from './$types';
+	import type { i18n as i18nType } from 'i18next';
+	import type { Writable } from 'svelte/store';
 
-	const i18n = getContext('i18n');
+	const i18n = getContext<Writable<i18nType>>('i18n');
+
+	export let data: LayoutData;
+	export const params: any = undefined;
+	import type { IDBPDatabase } from 'idb';
+	import type { Banner, ToolServer } from '$lib/types';
+	import type { Chat } from '$lib/stores';
 
 	let loaded = false;
-	let DB = null;
-	let localDBChats = [];
+	let DB: IDBPDatabase | null = null;
+	let localDBChats: Chat[] = [];
 
-	let version;
+	$: if (data) {
+		if (data.userSettings) {
+			settings.set(data.userSettings.ui);
+		} else {
+			let localStorageSettings = {} as Parameters<(typeof settings)['set']>[0];
+			try {
+				localStorageSettings = JSON.parse(localStorage.getItem('settings') ?? '{}');
+			} catch (e: unknown) {
+				console.error('Failed to parse settings from localStorage', e);
+			}
+			settings.set(localStorageSettings);
+		}
+
+		models.set(data.models ?? []);
+		banners.set(data.banners ?? []);
+		tools.set(data.tools ?? []);
+
+		getToolServersData(i18n, data.userSettings?.ui?.toolServers ?? []).then((res) => {
+			toolServers.set((res.filter(Boolean) as ToolServer[]) ?? []);
+		});
+	}
 
 	onMount(async () => {
 		if ($user === undefined || $user === null) {
@@ -67,7 +94,9 @@
 
 				if (DB) {
 					const chats = await DB.getAllFromIndex('chats', 'timestamp');
-					localDBChats = chats.map((item, idx) => chats[chats.length - 1 - idx]);
+					localDBChats = chats.map(
+						(item: any, idx: number) => chats[chats.length - 1 - idx]
+					);
 
 					if (localDBChats.length === 0) {
 						await deleteDB('Chats');
@@ -155,11 +184,20 @@
 					document.getElementById('chat-input')?.focus();
 				}
 
+				// Check if Ctrl + Shift + S is pressed (Custom Styles)
+				if (isCtrlPressed && isShiftPressed && event.key.toLowerCase() === 's') {
+					event.preventDefault();
+					console.log('customStyles');
+					window.dispatchEvent(new CustomEvent('openCustomStyles'));
+				}
+
 				// Check if Ctrl + Shift + ; is pressed
 				if (isCtrlPressed && isShiftPressed && event.key === ';') {
 					event.preventDefault();
 					console.log('copyLastCodeBlock');
-					const button = [...document.getElementsByClassName('copy-code-button')]?.at(-1);
+					const button = [...document.getElementsByClassName('copy-code-button')]?.at(
+						-1
+					) as HTMLElement;
 					button?.click();
 				}
 
@@ -167,7 +205,9 @@
 				if (isCtrlPressed && isShiftPressed && event.key.toLowerCase() === 'c') {
 					event.preventDefault();
 					console.log('copyLastResponse');
-					const button = [...document.getElementsByClassName('copy-response-button')]?.at(-1);
+					const button = [...document.getElementsByClassName('copy-response-button')]?.at(
+						-1
+					) as HTMLElement;
 					console.log(button);
 					button?.click();
 				}
@@ -228,7 +268,9 @@
 			});
 
 			if ($user?.role === 'admin' && ($settings?.showChangelog ?? true)) {
-				showChangelog.set($settings?.version !== $config.version);
+				if ($config && data.version) {
+					showChangelog.set(data.version.current !== $config.version);
+				}
 			}
 
 			if ($user?.role === 'admin' || ($user?.permissions?.chat?.temporary ?? true)) {
@@ -242,49 +284,18 @@
 			}
 
 			// Check for version updates
-			if ($user?.role === 'admin' && $config?.features?.enable_version_update_check) {
-				// Check if the user has dismissed the update toast in the last 24 hours
-				if (localStorage.dismissedUpdateToast) {
-					const dismissedUpdateToast = new Date(Number(localStorage.dismissedUpdateToast));
-					const now = new Date();
-
-					if (now - dismissedUpdateToast > 24 * 60 * 60 * 1000) {
-						checkForVersionUpdates();
-					}
-				} else {
-					checkForVersionUpdates();
-				}
+			if ($user?.role === 'admin') {
+				checkForVersionUpdates();
 			}
 			await tick();
 		}
 
 		loaded = true;
 	});
-
-	const checkForVersionUpdates = async () => {
-		version = await getVersionUpdates(localStorage.token).catch((error) => {
-			return {
-				current: WEBUI_VERSION,
-				latest: WEBUI_VERSION
-			};
-		});
-	};
 </script>
 
 <SettingsModal bind:show={$showSettings} />
 <ChangelogModal bind:show={$showChangelog} />
-
-{#if version && compareVersion(version.latest, version.current) && ($settings?.showUpdateToast ?? true)}
-	<div class=" absolute bottom-8 right-8 z-50" in:fade={{ duration: 100 }}>
-		<UpdateInfoToast
-			{version}
-			on:close={() => {
-				localStorage.setItem('dismissedUpdateToast', Date.now().toString());
-				version = null;
-			}}
-		/>
-	</div>
-{/if}
 
 {#if $user}
 	<div class="app relative">
@@ -326,9 +337,11 @@
 												});
 												saveAs(blob, `chat-export-${Date.now()}.json`);
 
-												const tx = DB.transaction('chats', 'readwrite');
-												await Promise.all([tx.store.clear(), tx.done]);
-												await deleteDB('Chats');
+												if (DB) {
+													const tx = DB.transaction('chats', 'readwrite');
+													await Promise.all([tx.store.clear(), tx.done]);
+													await deleteDB('Chats');
+												}
 
 												localDBChats = [];
 											}}
@@ -368,45 +381,5 @@
 {/if}
 
 <style>
-	.loading {
-		display: inline-block;
-		clip-path: inset(0 1ch 0 0);
-		animation: l 1s steps(3) infinite;
-		letter-spacing: -0.5px;
-	}
-
-	@keyframes l {
-		to {
-			clip-path: inset(0 -1ch 0 0);
-		}
-	}
-
-	pre[class*='language-'] {
-		position: relative;
-		overflow: auto;
-
-		/* make space  */
-		margin: 5px 0;
-		padding: 1.75rem 0 1.75rem 1rem;
-		border-radius: 10px;
-	}
-
-	pre[class*='language-'] button {
-		position: absolute;
-		top: 5px;
-		right: 5px;
-
-		font-size: 0.9rem;
-		padding: 0.15rem;
-		background-color: #828282;
-
-		border: ridge 1px #7b7b7c;
-		border-radius: 5px;
-		text-shadow: #c4c4c4 0 0 2px;
-	}
-
-	pre[class*='language-'] button:hover {
-		cursor: pointer;
-		background-color: #bcbabb;
-	}
+	/* Styles removed - unused CSS selectors */
 </style>

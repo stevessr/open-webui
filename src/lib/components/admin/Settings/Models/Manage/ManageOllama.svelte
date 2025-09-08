@@ -77,10 +77,24 @@
 			);
 
 			if (res) {
-				const reader = res.body
-					.pipeThrough(new TextDecoderStream())
-					.pipeThrough(splitStream('\n'))
-					.getReader();
+				const stream: any = (res as any).body;
+				let reader: any = null;
+
+				try {
+					if (stream && typeof stream.pipeThrough === 'function') {
+						reader = stream
+							.pipeThrough(new (TextDecoderStream as any)())
+							.pipeThrough(splitStream('\n'))
+							.getReader();
+					}
+				} catch (err) {
+					console.error('Failed to create reader for updateModelsHandler:', err);
+					reader = null;
+				}
+
+				if (!reader) {
+					console.log('No stream reader available for updateModelsHandler, skipping.');
+				}
 
 				while (true) {
 					try {
@@ -150,23 +164,37 @@
 			}
 		);
 
-		if (res) {
-			const reader = res.body
-				.pipeThrough(new TextDecoderStream())
-				.pipeThrough(splitStream('\n'))
-				.getReader();
+			if (res) {
+				const stream: any = (res as any).body;
+				let reader: any = null;
 
-			MODEL_DOWNLOAD_POOL.set({
-				...$MODEL_DOWNLOAD_POOL,
-				[sanitizedModelTag]: {
-					...$MODEL_DOWNLOAD_POOL[sanitizedModelTag],
-					abortController: controller,
-					reader,
-					done: false
+				try {
+					if (stream && typeof stream.pipeThrough === 'function') {
+						reader = stream
+							.pipeThrough(new (TextDecoderStream as any)())
+							.pipeThrough(splitStream('\n'))
+							.getReader();
+					}
+				} catch (err) {
+					console.error('Failed to create reader for pullModelHandler:', err);
+					reader = null;
 				}
-			});
 
-			while (true) {
+				MODEL_DOWNLOAD_POOL.set({
+					...$MODEL_DOWNLOAD_POOL,
+					[sanitizedModelTag]: {
+						...$MODEL_DOWNLOAD_POOL[sanitizedModelTag],
+						abortController: controller,
+						reader,
+						done: false
+					}
+				});
+
+				if (!reader) {
+					console.log('No stream reader available for pullModelHandler, skipping read loop.');
+				}
+
+				while (true) {
 				try {
 					const { value, done } = await reader.read();
 					if (done) break;
@@ -285,12 +313,27 @@
 		}
 
 		if (fileResponse && fileResponse.ok) {
-			const reader = fileResponse.body
-				.pipeThrough(new TextDecoderStream())
-				.pipeThrough(splitStream('\n'))
-				.getReader();
+			const stream: any = (fileResponse as any).body;
+			let reader: any = null;
+
+			try {
+				if (stream && typeof stream.pipeThrough === 'function') {
+					reader = stream
+						.pipeThrough(new (TextDecoderStream as any)())
+						.pipeThrough(splitStream('\n'))
+						.getReader();
+				}
+			} catch (err) {
+				console.error('Failed to create reader for fileResponse:', err);
+				reader = null;
+			}
+
+			if (!reader) {
+				console.log('No stream reader available for fileResponse, skipping read loop.');
+			}
 
 			while (true) {
+				if (!reader) break;
 				const { value, done } = await reader.read();
 				if (done) break;
 
@@ -336,12 +379,27 @@
 			);
 
 			if (res && res.ok) {
-				const reader = res.body
-					.pipeThrough(new TextDecoderStream())
-					.pipeThrough(splitStream('\n'))
-					.getReader();
+				const stream: any = (res as any).body;
+				let reader: any = null;
+
+				try {
+					if (stream && typeof stream.pipeThrough === 'function') {
+						reader = stream
+							.pipeThrough(new (TextDecoderStream as any)())
+							.pipeThrough(splitStream('\n'))
+							.getReader();
+					}
+				} catch (err) {
+					console.error('Failed to create reader for createModel response:', err);
+					reader = null;
+				}
+
+				if (!reader) {
+					console.log('No stream reader available for createModel response, skipping read loop.');
+				}
 
 				while (true) {
+					if (!reader) break;
 					const { value, done } = await reader.read();
 					if (done) break;
 
@@ -466,15 +524,30 @@
 			return null;
 		});
 
-		if (res && res.ok) {
-			const reader = res.body
-				.pipeThrough(new TextDecoderStream())
-				.pipeThrough(splitStream('\n'))
-				.getReader();
+			if (res && res.ok) {
+				const stream: any = (res as any).body;
+				let reader: any = null;
 
-			while (true) {
-				const { value, done } = await reader.read();
-				if (done) break;
+				try {
+					if (stream && typeof stream.pipeThrough === 'function') {
+						reader = stream
+							.pipeThrough(new (TextDecoderStream as any)())
+							.pipeThrough(splitStream('\n'))
+							.getReader();
+					}
+				} catch (err) {
+					console.error('Failed to create reader:', err);
+					reader = null;
+				}
+
+				if (!reader) {
+					console.log('No readable stream available; skipping read loop.');
+				}
+
+				while (true) {
+					if (!reader) break;
+					const { value, done } = await reader.read();
+					if (done) break;
 
 				try {
 					let lines = value.split('\n');

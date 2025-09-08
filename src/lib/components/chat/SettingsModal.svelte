@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext, onMount, tick } from 'svelte';
+	import { getContext, tick } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { config, models, settings, user } from '$lib/stores';
 	import { updateUserSettings } from '$lib/apis/users';
@@ -24,19 +24,13 @@
 
 	export let show = false;
 
-	$: if (show) {
-		addScrollListener();
-	} else {
-		removeScrollListener();
-	}
-
 	interface SettingsTab {
 		id: string;
 		title: string;
 		keywords: string[];
 	}
 
-	const allSettings: SettingsTab[] = [
+	const searchData: SettingsTab[] = [
 		{
 			id: 'general',
 			title: 'General',
@@ -197,32 +191,42 @@
 				'web search in chat'
 			]
 		},
-		{
-			id: 'connections',
-			title: 'Connections',
-			keywords: [
-				'addconnection',
-				'add connection',
-				'manageconnections',
-				'manage connections',
-				'manage direct connections',
-				'managedirectconnections',
-				'settings'
-			]
-		},
-		{
-			id: 'tools',
-			title: 'Tools',
-			keywords: [
-				'addconnection',
-				'add connection',
-				'managetools',
-				'manage tools',
-				'manage tool servers',
-				'managetoolservers',
-				'settings'
-			]
-		},
+		...($user?.role === 'admin' || $user?.role === 'user'
+			? [
+					{
+						id: 'connections',
+						title: 'Connections',
+						keywords: [
+							'addconnection',
+							'add connection',
+							'manageconnections',
+							'manage connections',
+							'manage direct connections',
+							'managedirectconnections',
+							'settings'
+						]
+					}
+				]
+			: []),
+
+		...($user?.role === 'admin' ||
+		($user?.role === 'user' && $user?.permissions?.features?.direct_tool_servers)
+			? [
+					{
+						id: 'tools',
+						title: 'Tools',
+						keywords: [
+							'addconnection',
+							'add connection',
+							'managetools',
+							'manage tools',
+							'manage tool servers',
+							'managetoolservers',
+							'settings'
+						]
+					}
+				]
+			: []),
 
 		{
 			id: 'personalization',
@@ -459,52 +463,28 @@
 		}
 	];
 
-	let availableSettings = [];
-	let filteredSettings = [];
-
 	let search = '';
+	let visibleTabs = searchData.map((tab) => tab.id);
 	let searchDebounceTimeout;
 
-	const getAvailableSettings = () => {
-		return allSettings.filter((tab) => {
-			if (tab.id === 'connections') {
-				return $config?.features?.enable_direct_connections;
-			}
-
-			if (tab.id === 'tools') {
-				return (
-					$user?.role === 'admin' ||
-					($user?.role === 'user' && $user?.permissions?.features?.direct_tool_servers)
-				);
-			}
-
-			return true;
-		});
-	};
-
-	const setFilteredSettings = () => {
-		filteredSettings = availableSettings
-			.filter((tab) => {
-				return (
-					search === '' ||
-					tab.title.toLowerCase().includes(search.toLowerCase().trim()) ||
-					tab.keywords.some((keyword) => keyword.includes(search.toLowerCase().trim()))
-				);
-			})
+	const searchSettings = (query: string): string[] => {
+		const lowerCaseQuery = query.toLowerCase().trim();
+		return searchData
+			.filter(
+				(tab) =>
+					tab.title.toLowerCase().includes(lowerCaseQuery) ||
+					tab.keywords.some((keyword) => keyword.includes(lowerCaseQuery))
+			)
 			.map((tab) => tab.id);
-
-		if (filteredSettings.length > 0 && !filteredSettings.includes(selectedTab)) {
-			selectedTab = filteredSettings[0];
-		}
 	};
 
 	const searchDebounceHandler = () => {
-		if (searchDebounceTimeout) {
-			clearTimeout(searchDebounceTimeout);
-		}
-
+		clearTimeout(searchDebounceTimeout);
 		searchDebounceTimeout = setTimeout(() => {
-			setFilteredSettings();
+			visibleTabs = searchSettings(search);
+			if (visibleTabs.length > 0 && !visibleTabs.includes(selectedTab)) {
+				selectedTab = visibleTabs[0];
+			}
 		}, 100);
 	};
 
@@ -549,18 +529,14 @@
 		}
 	};
 
-	onMount(() => {
-		availableSettings = getAvailableSettings();
-		setFilteredSettings();
-
-		config.subscribe((configData) => {
-			availableSettings = getAvailableSettings();
-			setFilteredSettings();
-		});
-	});
+	$: if (show) {
+		addScrollListener();
+	} else {
+		removeScrollListener();
+	}
 </script>
 
-<Modal size="lg" bind:show>
+<Modal size="lg" bind:show draggable={false}>
 	<div class="text-gray-700 dark:text-gray-100">
 		<div class=" flex justify-between dark:text-gray-300 px-5 pt-4 pb-1">
 			<div class=" text-lg font-medium self-center">{$i18n.t('Settings')}</div>
@@ -598,8 +574,8 @@
 						placeholder={$i18n.t('Search')}
 					/>
 				</div>
-				{#if filteredSettings.length > 0}
-					{#each filteredSettings as tabId (tabId)}
+				{#if visibleTabs.length > 0}
+					{#each visibleTabs as tabId (tabId)}
 						{#if tabId === 'general'}
 							<button
 								role="tab"
@@ -673,12 +649,11 @@
 								<div class=" self-center">{$i18n.t('Interface')}</div>
 							</button>
 						{:else if tabId === 'connections'}
-							{#if $user?.role === 'admin' || ($user?.role === 'user' && $config?.features?.enable_direct_connections)}
-								<button
-									role="tab"
-									aria-controls="tab-connections"
-									aria-selected={selectedTab === 'connections'}
-									class={`px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition
+							<button
+								role="tab"
+								aria-controls="tab-connections"
+								aria-selected={selectedTab === 'connections'}
+								class={`px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition
 								${
 									selectedTab === 'connections'
 										? ($settings?.highContrastMode ?? false)
@@ -688,26 +663,25 @@
 											? 'hover:bg-gray-200 dark:hover:bg-gray-800'
 											: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'
 								}`}
-									on:click={() => {
-										selectedTab = 'connections';
-									}}
-								>
-									<div class=" self-center mr-2">
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											aria-hidden="true"
-											viewBox="0 0 16 16"
-											fill="currentColor"
-											class="w-4 h-4"
-										>
-											<path
-												d="M1 9.5A3.5 3.5 0 0 0 4.5 13H12a3 3 0 0 0 .917-5.857 2.503 2.503 0 0 0-3.198-3.019 3.5 3.5 0 0 0-6.628 2.171A3.5 3.5 0 0 0 1 9.5Z"
-											/>
-										</svg>
-									</div>
-									<div class=" self-center">{$i18n.t('Connections')}</div>
-								</button>
-							{/if}
+								on:click={() => {
+									selectedTab = 'connections';
+								}}
+							>
+								<div class=" self-center mr-2">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										aria-hidden="true"
+										viewBox="0 0 16 16"
+										fill="currentColor"
+										class="w-4 h-4"
+									>
+										<path
+											d="M1 9.5A3.5 3.5 0 0 0 4.5 13H12a3 3 0 0 0 .917-5.857 2.503 2.503 0 0 0-3.198-3.019 3.5 3.5 0 0 0-6.628 2.171A3.5 3.5 0 0 0 1 9.5Z"
+										/>
+									</svg>
+								</div>
+								<div class=" self-center">{$i18n.t('Connections')}</div>
+							</button>
 						{:else if tabId === 'tools'}
 							{#if $user?.role === 'admin' || ($user?.role === 'user' && $user?.permissions?.features?.direct_tool_servers)}
 								<button

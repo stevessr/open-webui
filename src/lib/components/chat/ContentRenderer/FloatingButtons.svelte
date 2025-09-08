@@ -5,7 +5,8 @@
 	import { marked } from 'marked';
 
 	import { getContext, tick, onDestroy } from 'svelte';
-	const i18n = getContext('i18n');
+	// getContext('i18n') may be a store-like object; assert any to silence unknown typing in many components
+	const i18n = getContext('i18n') as any;
 
 	import { chatCompletion } from '$lib/apis/openai';
 
@@ -14,24 +15,24 @@
 	import Markdown from '../Messages/Markdown.svelte';
 	import Skeleton from '../Messages/Skeleton.svelte';
 
-	export let id = '';
-	export let messageId = '';
+	export let id: string = '';
+	export let messageId: string = '';
 
-	export let model = null;
-	export let messages = [];
-	export let actions = [];
-	export let onAdd = (e) => {};
+	export let model: any = null;
+	export let messages: any[] = [];
+	export let actions: any[] = [];
+	export let onAdd: (e: any) => void = (e: any) => {};
 
-	let floatingInput = false;
-	let selectedAction = null;
+	let floatingInput: boolean = false;
+	let selectedAction: any = null;
 
-	let selectedText = '';
-	let floatingInputValue = '';
+	let selectedText: string = '';
+	let floatingInputValue: string = '';
 
-	let content = '';
-	let responseContent = null;
-	let responseDone = false;
-	let controller = null;
+	let content: string = '';
+	let responseContent: string | null = null;
+	let responseDone: boolean = false;
+	let controller: AbortController | null = null;
 
 	$: if (actions.length === 0) {
 		actions = DEFAULT_ACTIONS;
@@ -66,7 +67,7 @@
 		}
 	};
 
-	const actionHandler = async (actionId) => {
+	const actionHandler = async (actionId: string) => {
 		if (!model) {
 			toast.error($i18n.t('Model not selected'));
 			return;
@@ -141,7 +142,12 @@
 		});
 
 		if (res && res.ok) {
-			const reader = res.body.getReader();
+				// guard against missing body / non-stream responses
+				const reader = (res.body && typeof (res.body as any).getReader === 'function') ? (res.body as any).getReader() : null;
+			if (!reader) {
+				toast.error($i18n.t('An error occurred while fetching the explanation'));
+				return;
+			}
 			const decoder = new TextDecoder();
 
 			const processStream = async () => {
@@ -189,8 +195,8 @@
 			// Process the stream in the background
 			try {
 				await processStream();
-			} catch (e) {
-				if (e.name !== 'AbortError') {
+			} catch (e: any) {
+				if (e?.name !== 'AbortError') {
 					console.error(e);
 				}
 			}

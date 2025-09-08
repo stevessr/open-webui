@@ -7,10 +7,10 @@ import { toast } from 'svelte-sonner';
 
 export const getModels = async (
 	token: string = '',
-	connections: object | null = null,
+	connections: any | null = null,
 	base: boolean = false,
 	refresh: boolean = false,
-	fetcher: typeof fetch = fetch
+	fetcher: any = fetch
 ) => {
 	const searchParams = new URLSearchParams();
 	if (refresh) {
@@ -46,12 +46,12 @@ export const getModels = async (
 	let models = res?.data ?? [];
 
 	if (connections && !base) {
-		let localModels = [];
+		let localModels: any[] = [];
 
 		if (connections) {
-			const OPENAI_API_BASE_URLS = connections.OPENAI_API_BASE_URLS;
-			const OPENAI_API_KEYS = connections.OPENAI_API_KEYS;
-			const OPENAI_API_CONFIGS = connections.OPENAI_API_CONFIGS;
+			const OPENAI_API_BASE_URLS = (connections as any)?.OPENAI_API_BASE_URLS ?? {};
+			const OPENAI_API_KEYS = (connections as any)?.OPENAI_API_KEYS ?? {};
+			const OPENAI_API_CONFIGS = (connections as any)?.OPENAI_API_CONFIGS ?? {};
 
 			const requests = [];
 			for (const idx in OPENAI_API_BASE_URLS) {
@@ -119,7 +119,7 @@ export const getModels = async (
 				const apiConfig = OPENAI_API_CONFIGS[idx.toString()] ?? {};
 
 				let models = Array.isArray(response) ? response : (response?.data ?? []);
-				models = models.map((model) => ({ ...model, openai: { id: model.id }, urlIdx: idx }));
+				models = models.map((model: any) => ({ ...model, openai: { id: model.id }, urlIdx: idx }));
 
 				const prefixId = apiConfig.prefix_id;
 				if (prefixId) {
@@ -140,7 +140,7 @@ export const getModels = async (
 		}
 
 		models = models.concat(
-			localModels.map((model) => ({
+			localModels.map((model: any) => ({
 				...model,
 				name: model?.name ?? model?.id,
 				direct: true
@@ -361,20 +361,20 @@ export const getToolServerData = async (token: string, url: string, fetcher: typ
 	return data;
 };
 
-export const getToolServersData = async (servers: object[]) => {
+export const getToolServersData = async (servers: any[] = [], fetcher: any = fetch) => {
 	return (
 		await Promise.all(
 			servers
-				.filter((server) => server?.config?.enable)
-				.map(async (server) => {
+				.filter((server: any) => (server as any)?.config?.enable)
+				.map(async (server: any) => {
 					let error = null;
 					const data = await getToolServerData(
-						(server?.auth_type ?? 'bearer') === 'bearer' ? server?.key : localStorage.token,
+						((server?.auth_type ?? 'bearer') === 'bearer' ? server?.key : localStorage.token) as any,
 						(server?.path ?? '').includes('://')
 							? server?.path
 							: `${server?.url}${(server?.path ?? '').startsWith('/') ? '' : '/'}${server?.path}`,
 						fetcher
-					).catch((err) => {
+					).catch((err: any) => {
 						error = err;
 						return null;
 					});

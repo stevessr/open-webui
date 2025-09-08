@@ -185,10 +185,10 @@
 		);
 
 		if (res) {
-			const reader = res.body
-				.pipeThrough(new TextDecoderStream())
-				.pipeThrough(splitStream('\n'))
-				.getReader();
+			const stream = res.body as any;
+			const reader = stream && typeof stream.pipeThrough === 'function'
+				? (stream as any).pipeThrough(new (TextDecoderStream as any)()).pipeThrough((splitStream as any)('\n')).getReader()
+				: null;
 
 			MODEL_DOWNLOAD_POOL.set({
 				...$MODEL_DOWNLOAD_POOL,
@@ -200,8 +200,13 @@
 				}
 			});
 
+			if (!reader) {
+				console.log('No readable stream available for pullModelHandler in Selector.svelte; skipping read loop.');
+			}
+
 			while (true) {
 				try {
+					if (!reader) break;
 					const { value, done } = await reader.read();
 					if (done) break;
 
