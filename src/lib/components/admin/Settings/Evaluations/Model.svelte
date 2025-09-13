@@ -26,11 +26,24 @@
 	<div class="flex justify-between items-center mb-1">
 		<div class="flex flex-col flex-1">
 			<div class="flex gap-2.5 items-center">
-				<img
-					src={model.meta.profile_image_url}
-					alt={model.name}
-					class="size-8 rounded-full object-cover shrink-0"
-				/>
+				{#if model?.meta?.profile_image_url?.endsWith('.mp4')}
+					<video
+						src={model?.meta?.profile_image_url}
+						class="size-8 rounded-full object-cover shrink-0"
+						autoplay
+						muted
+						loop
+						playsinline
+					>
+						<track kind="captions" />
+					</video>
+				{:else}
+					<img
+						src={model?.meta?.profile_image_url ?? '/static/favicon.png'}
+						alt={model?.name}
+						class="size-8 rounded-full object-cover shrink-0"
+					/>
+				{/if}
 
 				<div class="w-full flex flex-col">
 					<div class="flex items-center gap-1">

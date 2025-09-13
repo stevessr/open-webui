@@ -460,18 +460,18 @@
 						<div class="grid lg:grid-cols-2 flex-col gap-1.5">
 							{#each promptSuggestions as prompt, promptIdx}
 								<div
-									class=" flex border rounded-xl border-gray-50 dark:border-none dark:bg-gray-850 py-1.5"
+									class=" flex border border-gray-100 dark:border-none dark:bg-gray-850 rounded-xl py-1.5"
 								>
 									<div class="flex flex-col flex-1 pl-1">
-										<div class="py-1 gap-1">
+										<div class="flex border-b border-gray-100 dark:border-gray-850 w-full">
 											<input
-												class="px-3 text-sm font-medium w-full bg-transparent outline-hidden"
+												class="px-3 py-1.5 text-xs w-full bg-transparent outline-hidden border-r border-gray-100 dark:border-gray-850"
 												placeholder={$i18n.t('Title (e.g. Tell me a fun fact)')}
 												bind:value={prompt.title[0]}
 											/>
 
 											<input
-												class="px-3 text-xs w-full bg-transparent outline-hidden text-gray-600 dark:text-gray-400"
+												class="px-3 py-1.5 text-xs w-full bg-transparent outline-hidden border-r border-gray-100 dark:border-gray-850"
 												placeholder={$i18n.t('Subtitle (e.g. about the Roman Empire)')}
 												bind:value={prompt.title[1]}
 											/>
@@ -480,7 +480,7 @@
 										<hr class="border-gray-50 dark:border-gray-850 my-1" />
 
 										<textarea
-											class="px-3 py-1.5 text-xs w-full bg-transparent outline-hidden resize-none"
+											class="px-3 py-1.5 text-xs w-full bg-transparent outline-hidden border-r border-gray-100 dark:border-gray-850 resize-none"
 											placeholder={$i18n.t(
 												'Prompt (e.g. Tell me a fun fact about the Roman Empire)'
 											)}

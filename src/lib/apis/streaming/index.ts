@@ -4,9 +4,9 @@ import type { ParsedEvent } from 'eventsource-parser';
 type TextStreamUpdate = {
 	done: boolean;
 	value: string;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	 
 	sources?: any;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	 
 	selectedModelId?: any;
 	error?: any;
 	usage?: ResponseUsage;
@@ -26,14 +26,30 @@ type ResponseUsage = {
 // createOpenAITextStream takes a responseBody with a SSE response,
 // and returns an async generator that emits delta updates with large deltas chunked into random sized chunks
 export async function createOpenAITextStream(
-	responseBody: ReadableStream<Uint8Array>,
+	responseBody: ReadableStream<Uint8Array> | null | undefined,
 	splitLargeDeltas: boolean
 ): Promise<AsyncGenerator<TextStreamUpdate>> {
-	const eventStream = responseBody
-		.pipeThrough(new TextDecoderStream())
-		.pipeThrough(new EventSourceParserStream())
-		.getReader();
-	let iterator = openAIStreamToIterator(eventStream);
+	if (!responseBody || typeof (responseBody as any).getReader !== 'function') {
+		// Return an iterator that immediately finishes
+		async function* empty() {
+			yield { done: true, value: '' };
+		}
+		return empty();
+	}
+	// Defensive casts: TextDecoderStream / EventSourceParserStream typings sometimes mismatch DOM lib generics
+	const eventStreamReader =
+		(responseBody as any) && typeof (responseBody as any).pipeThrough === 'function'
+			? (responseBody as any).pipeThrough(new (TextDecoderStream as any)()).pipeThrough(new (EventSourceParserStream as any)()).getReader()
+			: null;
+
+	if (!eventStreamReader) {
+		async function* empty() {
+			yield { done: true, value: '' } as TextStreamUpdate;
+		}
+		return empty();
+	}
+
+	let iterator = openAIStreamToIterator(eventStreamReader as any);
 	if (splitLargeDeltas) {
 		iterator = streamLargeDeltasAsRandomChunks(iterator);
 	}

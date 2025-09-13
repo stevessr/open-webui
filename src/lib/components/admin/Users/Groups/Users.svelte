@@ -57,7 +57,7 @@
 		</div>
 	</div>
 
-	<div class="mt-3 scrollbar-hidden">
+	<div class="mt-3 max-h-[22rem] overflow-y-auto scrollbar-hidden">
 		<div class="flex flex-col gap-2.5">
 			{#if filteredUsers.length > 0}
 				{#each filteredUsers as user, userIdx (user.id)}
@@ -78,6 +78,31 @@
 						<div class="flex w-full items-center justify-between">
 							<Tooltip content={user.email} placement="top-start">
 								<div class="flex">
+									{#if (user.profile_image_url.startsWith(WEBUI_BASE_URL) || user.profile_image_url.startsWith('https://www.gravatar.com/avatar/') || user.profile_image_url.startsWith('data:') ? user.profile_image_url : `/user.gif`).toLowerCase().endsWith('.mp4')}
+										<video
+											class=" rounded-full size-5 object-cover mr-2.5"
+											src={user.profile_image_url.startsWith(WEBUI_BASE_URL) ||
+											user.profile_image_url.startsWith('https://www.gravatar.com/avatar/') ||
+											user.profile_image_url.startsWith('data:')
+												? user.profile_image_url
+												: `/user.gif`}
+											autoplay
+											muted
+											loop
+											playsinline
+										></video>
+									{:else}
+										<img
+											class=" rounded-full size-5 object-cover mr-2.5"
+											src={user.profile_image_url.startsWith(WEBUI_BASE_URL) ||
+											user.profile_image_url.startsWith('https://www.gravatar.com/avatar/') ||
+											user.profile_image_url.startsWith('data:')
+												? user.profile_image_url
+												: `/user.gif`}
+											alt="user"
+										/>
+									{/if}
+
 									<div class=" font-medium self-center">{user.name}</div>
 								</div>
 							</Tooltip>

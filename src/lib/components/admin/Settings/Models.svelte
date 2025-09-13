@@ -63,7 +63,7 @@
 				// 	return (b.is_active ?? true) - (a.is_active ?? true);
 				// }
 				// If both models' active states are the same, sort alphabetically
-				return (a?.name ?? a?.id ?? '').localeCompare(b?.name ?? b?.id ?? '');
+				return a.name.localeCompare(b.name);
 			});
 	}
 
@@ -332,11 +332,24 @@
 										? ''
 										: 'opacity-50 dark:opacity-50'} "
 								>
-									<img
-										src={model?.meta?.profile_image_url ?? `${WEBUI_BASE_URL}/static/favicon.png`}
-										alt="modelfile profile"
-										class=" rounded-full w-full h-auto object-cover"
-									/>
+									{#if model?.meta?.profile_image_url?.endsWith('.mp4')}
+										<video
+											src={model?.meta?.profile_image_url}
+											class=" rounded-full w-full h-auto object-cover"
+											autoplay
+											muted
+											loop
+											playsinline
+										>
+											<track kind="captions" />
+										</video>
+									{:else}
+										<img
+											src={model?.meta?.profile_image_url ?? '/static/favicon.png'}
+											alt="modelfile profile"
+											class=" rounded-full w-full h-auto object-cover"
+										/>
+									{/if}
 								</div>
 							</div>
 

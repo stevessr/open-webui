@@ -1669,5 +1669,10 @@
 	"Your entire contribution will go directly to the plugin developer; Open WebUI does not take any percentage. However, the chosen funding platform might have its own fees.": "您的全部捐款将直接给到插件开发者，Open WebUI 不会收取任何分成。但众筹平台可能会有服务费。",
 	"Youtube": "YouTube",
 	"Youtube Language": "Youtube 语言",
-	"Youtube Proxy URL": "Youtube 代理 URL"
+	"Youtube Proxy URL": "Youtube 代理 URL",
+	"Unmute all videos": "解除所有视频静音",
+	"Unmuted {{count}} video(s)": "已解除 {{count}} 个视频的静音",
+	"No muted videos found": "未找到静音的视频",
+	"Failed to unmute videos": "解除视频静音失败",
+	"Click": "点击"
 }

@@ -132,7 +132,7 @@ export const Image = Node.create<ImageOptions>({
 
 			img.classList.add('rounded-md', 'max-h-72', 'w-fit', 'object-contain');
 
-			const editorFiles = editor.storage?.files || [];
+			const editorFiles: any[] = (editor.storage && (editor.storage as any).files) || [];
 
 			if (editorFiles && node.attrs.src.startsWith('data://')) {
 				const file = editorFiles.find((f) => f.id === fileId);
@@ -148,7 +148,7 @@ export const Image = Node.create<ImageOptions>({
 			img.setAttribute('alt', node.attrs.alt || '');
 			img.setAttribute('title', node.attrs.title || '');
 
-			img.addEventListener('data', (e) => {
+			img.addEventListener('data', (e: any) => {
 				const files = e?.files || [];
 				if (files && node.attrs.src.startsWith('data://')) {
 					const file = editorFiles.find((f) => f.id === fileId);

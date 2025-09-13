@@ -704,10 +704,33 @@ Provide the enhanced notes in markdown format. Use markdown syntax for headings,
 		streaming = true;
 
 		if (res && res.ok) {
-			const reader = res.body
-				.pipeThrough(new TextDecoderStream())
-				.pipeThrough(splitStream('\n'))
-				.getReader();
+			// Defensive: ensure response body and pipeThrough/getReader are available
+			const stream: any = (res as any).body;
+			let reader: any = null;
+
+			try {
+				if (stream && typeof stream.pipeThrough === 'function') {
+					// TextDecoderStream may not be available in some environments; cast to any
+					reader = stream
+						.pipeThrough(new (TextDecoderStream as any)())
+						.pipeThrough(splitStream('\n'))
+						.getReader();
+				}
+			} catch (err) {
+				console.log('Failed to create stream reader for note enhancement:', err);
+				reader = null;
+			}
+
+			// If we couldn't get a reader, stop streaming and exit gracefully
+			if (!reader) {
+				console.log('No readable stream available from response; aborting enhancement stream.');
+				streaming = false;
+				editing = false;
+				try {
+					controller?.abort('No stream available');
+				} catch (e) {}
+				return;
+			}
 
 			while (true) {
 				const { value, done } = await reader.read();

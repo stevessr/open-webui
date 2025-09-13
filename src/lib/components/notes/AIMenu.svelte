@@ -3,7 +3,7 @@
 	import { createEventDispatcher, getContext, onMount } from 'svelte';
 
 	import { showSettings, mobile, showSidebar, user } from '$lib/stores';
-	import { fade, slide } from 'svelte/transition';
+	import { flyAndScale } from '$lib/utils/transitions';
 
 	import PencilSquare from '../icons/PencilSquare.svelte';
 	import ChatBubbleOval from '../icons/ChatBubbleOval.svelte';
@@ -31,7 +31,7 @@
 			sideOffset={8}
 			side="bottom"
 			align="end"
-			transition={(e) => fade(e, { duration: 100 })}
+			transition={flyAndScale}
 		>
 			<button
 				class="flex rounded-md py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"

@@ -77,10 +77,24 @@
 			);
 
 			if (res) {
-				const reader = res.body
-					.pipeThrough(new TextDecoderStream())
-					.pipeThrough(splitStream('\n'))
-					.getReader();
+				const stream: any = (res as any).body;
+				let reader: any = null;
+
+				try {
+					if (stream && typeof stream.pipeThrough === 'function') {
+						reader = stream
+							.pipeThrough(new (TextDecoderStream as any)())
+							.pipeThrough(splitStream('\n'))
+							.getReader();
+					}
+				} catch (err) {
+					console.error('Failed to create reader for updateModelsHandler:', err);
+					reader = null;
+				}
+
+				if (!reader) {
+					console.log('No stream reader available for updateModelsHandler, skipping.');
+				}
 
 				while (true) {
 					try {
@@ -150,23 +164,37 @@
 			}
 		);
 
-		if (res) {
-			const reader = res.body
-				.pipeThrough(new TextDecoderStream())
-				.pipeThrough(splitStream('\n'))
-				.getReader();
+			if (res) {
+				const stream: any = (res as any).body;
+				let reader: any = null;
 
-			MODEL_DOWNLOAD_POOL.set({
-				...$MODEL_DOWNLOAD_POOL,
-				[sanitizedModelTag]: {
-					...$MODEL_DOWNLOAD_POOL[sanitizedModelTag],
-					abortController: controller,
-					reader,
-					done: false
+				try {
+					if (stream && typeof stream.pipeThrough === 'function') {
+						reader = stream
+							.pipeThrough(new (TextDecoderStream as any)())
+							.pipeThrough(splitStream('\n'))
+							.getReader();
+					}
+				} catch (err) {
+					console.error('Failed to create reader for pullModelHandler:', err);
+					reader = null;
 				}
-			});
 
-			while (true) {
+				MODEL_DOWNLOAD_POOL.set({
+					...$MODEL_DOWNLOAD_POOL,
+					[sanitizedModelTag]: {
+						...$MODEL_DOWNLOAD_POOL[sanitizedModelTag],
+						abortController: controller,
+						reader,
+						done: false
+					}
+				});
+
+				if (!reader) {
+					console.log('No stream reader available for pullModelHandler, skipping read loop.');
+				}
+
+				while (true) {
 				try {
 					const { value, done } = await reader.read();
 					if (done) break;
@@ -285,12 +313,27 @@
 		}
 
 		if (fileResponse && fileResponse.ok) {
-			const reader = fileResponse.body
-				.pipeThrough(new TextDecoderStream())
-				.pipeThrough(splitStream('\n'))
-				.getReader();
+			const stream: any = (fileResponse as any).body;
+			let reader: any = null;
+
+			try {
+				if (stream && typeof stream.pipeThrough === 'function') {
+					reader = stream
+						.pipeThrough(new (TextDecoderStream as any)())
+						.pipeThrough(splitStream('\n'))
+						.getReader();
+				}
+			} catch (err) {
+				console.error('Failed to create reader for fileResponse:', err);
+				reader = null;
+			}
+
+			if (!reader) {
+				console.log('No stream reader available for fileResponse, skipping read loop.');
+			}
 
 			while (true) {
+				if (!reader) break;
 				const { value, done } = await reader.read();
 				if (done) break;
 
@@ -336,12 +379,27 @@
 			);
 
 			if (res && res.ok) {
-				const reader = res.body
-					.pipeThrough(new TextDecoderStream())
-					.pipeThrough(splitStream('\n'))
-					.getReader();
+				const stream: any = (res as any).body;
+				let reader: any = null;
+
+				try {
+					if (stream && typeof stream.pipeThrough === 'function') {
+						reader = stream
+							.pipeThrough(new (TextDecoderStream as any)())
+							.pipeThrough(splitStream('\n'))
+							.getReader();
+					}
+				} catch (err) {
+					console.error('Failed to create reader for createModel response:', err);
+					reader = null;
+				}
+
+				if (!reader) {
+					console.log('No stream reader available for createModel response, skipping read loop.');
+				}
 
 				while (true) {
+					if (!reader) break;
 					const { value, done } = await reader.read();
 					if (done) break;
 
@@ -466,15 +524,30 @@
 			return null;
 		});
 
-		if (res && res.ok) {
-			const reader = res.body
-				.pipeThrough(new TextDecoderStream())
-				.pipeThrough(splitStream('\n'))
-				.getReader();
+			if (res && res.ok) {
+				const stream: any = (res as any).body;
+				let reader: any = null;
 
-			while (true) {
-				const { value, done } = await reader.read();
-				if (done) break;
+				try {
+					if (stream && typeof stream.pipeThrough === 'function') {
+						reader = stream
+							.pipeThrough(new (TextDecoderStream as any)())
+							.pipeThrough(splitStream('\n'))
+							.getReader();
+					}
+				} catch (err) {
+					console.error('Failed to create reader:', err);
+					reader = null;
+				}
+
+				if (!reader) {
+					console.log('No readable stream available; skipping read loop.');
+				}
+
+				while (true) {
+					if (!reader) break;
+					const { value, done } = await reader.read();
+					if (done) break;
 
 				try {
 					let lines = value.split('\n');
@@ -613,35 +686,7 @@
 							disabled={modelTransferring}
 						>
 							{#if modelTransferring}
-								<div class="self-center">
-									<svg
-										class=" w-4 h-4"
-										viewBox="0 0 24 24"
-										fill="currentColor"
-										xmlns="http://www.w3.org/2000/svg"
-									>
-										<style>
-											.spinner_ajPY {
-												transform-origin: center;
-												animation: spinner_AtaB 0.75s infinite linear;
-											}
-
-											@keyframes spinner_AtaB {
-												100% {
-													transform: rotate(360deg);
-												}
-											}
-										</style>
-										<path
-											d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z"
-											opacity=".25"
-										/>
-										<path
-											d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z"
-											class="spinner_ajPY"
-										/>
-									</svg>
-								</div>
+								<Spinner className="size-4" />
 							{:else}
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
@@ -942,35 +987,7 @@
 									disabled={modelTransferring}
 								>
 									{#if modelTransferring}
-										<div class="self-center">
-											<svg
-												class=" w-4 h-4"
-												viewBox="0 0 24 24"
-												fill="currentColor"
-												xmlns="http://www.w3.org/2000/svg"
-											>
-												<style>
-													.spinner_ajPY {
-														transform-origin: center;
-														animation: spinner_AtaB 0.75s infinite linear;
-													}
-
-													@keyframes spinner_AtaB {
-														100% {
-															transform: rotate(360deg);
-														}
-													}
-												</style>
-												<path
-													d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z"
-													opacity=".25"
-												/>
-												<path
-													d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z"
-													class="spinner_ajPY"
-												/>
-											</svg>
-										</div>
+										<Spinner className="size-4" />
 									{:else}
 										<svg
 											xmlns="http://www.w3.org/2000/svg"

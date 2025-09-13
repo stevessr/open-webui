@@ -1,4 +1,7 @@
-<script>
+<script lang="ts">
+	// layout `data` is not used in this top-level layout; keep a const to avoid unused-export error
+	export const data = undefined as any;
+
 	import { io } from 'socket.io-client';
 	import { spring } from 'svelte/motion';
 	import PyodideWorker from '$lib/workers/pyodide.worker?worker';
@@ -24,11 +27,13 @@
 		isLastActiveTab,
 		isApp,
 		appInfo,
+		appData,
 		toolServers,
 		playingNotificationSound
 	} from '$lib/stores';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { browser } from '$app/environment';
 	import { Toaster, toast } from 'svelte-sonner';
 
 	import { executeToolServer, getBackendConfig } from '$lib/apis';
@@ -45,6 +50,7 @@
 	import { getAllTags, getChatList } from '$lib/apis/chats';
 	import NotificationToast from '$lib/components/NotificationToast.svelte';
 	import AppSidebar from '$lib/components/app/AppSidebar.svelte';
+	import CustomStyles from '$lib/components/common/CustomStyles.svelte';
 	import { chatCompletion } from '$lib/apis/openai';
 
 	import { beforeNavigate } from '$app/navigation';
@@ -63,13 +69,14 @@
 	const bc = new BroadcastChannel('active-tab-channel');
 
 	let loaded = false;
-	let tokenTimer = null;
+	let mounted = false;
+	let tokenTimer: number | null = null;
 
 	let showRefresh = false;
 
 	const BREAKPOINT = 768;
 
-	const setupSocket = async (enableWebsocket) => {
+	const setupSocket = async (enableWebsocket: any) => {
 		const _socket = io(`${WEBUI_BASE_URL}` || undefined, {
 			reconnection: true,
 			reconnectionDelay: 1000,
@@ -88,12 +95,6 @@
 
 		_socket.on('connect', () => {
 			console.log('connected', _socket.id);
-			if (localStorage.getItem('token')) {
-				// Emit user-join event with auth token
-				_socket.emit('user-join', { auth: { token: localStorage.token } });
-			} else {
-				console.warn('No token found in localStorage, user-join event not emitted');
-			}
 		});
 
 		_socket.on('reconnect_attempt', (attempt) => {
@@ -112,10 +113,10 @@
 		});
 	};
 
-	const executePythonAsWorker = async (id, code, cb) => {
-		let result = null;
-		let stdout = null;
-		let stderr = null;
+	const executePythonAsWorker = async (id: any, code: any, cb?: any) => {
+		let result: any = null;
+		let stdout: any = null;
+		let stderr: any = null;
 
 		let executing = true;
 		let packages = [
@@ -214,9 +215,9 @@
 		};
 	};
 
-	const executeTool = async (data, cb) => {
-		const toolServer = $settings?.toolServers?.find((server) => server.url === data.server?.url);
-		const toolServerData = $toolServers?.find((server) => server.url === data.server?.url);
+	const executeTool = async (data: any, cb?: any) => {
+		const toolServer = $settings?.toolServers?.find((server: any) => server.url === data.server?.url);
+		const toolServerData = $toolServers?.find((server: any) => server.url === data.server?.url);
 
 		console.log('executeTool', data, toolServer);
 
@@ -238,7 +239,7 @@
 				toolServer.url,
 				data?.name,
 				data?.params,
-				toolServerData
+				(toolServerData as any) ?? {}
 			);
 
 			console.log('executeToolServer', res);
@@ -258,7 +259,7 @@
 		}
 	};
 
-	const chatEventHandler = async (event, cb) => {
+	const chatEventHandler = async (event: any, cb?: any) => {
 		const chat = $page.url.pathname.includes(`/c/${event.chat_id}`);
 
 		let isFocused = document.visibilityState !== 'visible';
@@ -292,7 +293,7 @@
 
 					if ($isLastActiveTab) {
 						if ($settings?.notificationEnabled ?? false) {
-							new Notification(`${title} • Open WebUI`, {
+							new Notification(`${title} • `, {
 								body: content,
 								icon: `${WEBUI_BASE_URL}/static/favicon.png`
 							});
@@ -317,7 +318,7 @@
 			} else if (type === 'chat:tags') {
 				tags.set(await getAllTags(localStorage.token));
 			}
-		} else if (data?.session_id === $socket.id) {
+	} else if (data?.session_id === $socket?.id) {
 			if (type === 'execute:python') {
 				console.log('execute:python', data);
 				executePythonAsWorker(data.id, data.code, cb);
@@ -325,18 +326,18 @@
 				console.log('execute:tool', data);
 				executeTool(data, cb);
 			} else if (type === 'request:chat:completion') {
-				console.log(data, $socket.id);
+					console.log(data, $socket?.id);
 				const { session_id, channel, form_data, model } = data;
 
 				try {
-					const directConnections = $settings?.directConnections ?? {};
+					const directConnections: any = ($settings as any)?.directConnections ?? {};
 
 					if (directConnections) {
 						const urlIdx = model?.urlIdx;
 
-						const OPENAI_API_URL = directConnections.OPENAI_API_BASE_URLS[urlIdx];
-						const OPENAI_API_KEY = directConnections.OPENAI_API_KEYS[urlIdx];
-						const API_CONFIG = directConnections.OPENAI_API_CONFIGS[urlIdx];
+						const OPENAI_API_URL = directConnections?.OPENAI_API_BASE_URLS?.[urlIdx];
+						const OPENAI_API_KEY = directConnections?.OPENAI_API_KEYS?.[urlIdx];
+						const API_CONFIG = directConnections?.OPENAI_API_CONFIGS?.[urlIdx];
 
 						try {
 							if (API_CONFIG?.prefix_id) {
@@ -363,7 +364,8 @@
 									console.log({ status: true });
 
 									// res will either be SSE or JSON
-									const reader = res.body.getReader();
+									const reader = res.body?.getReader ? res.body.getReader() : null;
+									if (!reader) throw new Error('Stream body is null');
 									const decoder = new TextDecoder();
 
 									const processStream = async () => {
@@ -390,22 +392,22 @@
 									// Process the stream in the background
 									await processStream();
 								} else {
-									const data = await res.json();
-									cb(data);
+				    const data = await res.json();
+				    cb && cb(data);
 								}
 							} else {
 								throw new Error('An error occurred while fetching the completion');
 							}
 						} catch (error) {
 							console.error('chatCompletion', error);
-							cb(error);
+			    cb && cb(error);
 						}
 					}
 				} catch (error) {
 					console.error('chatCompletion', error);
 					cb(error);
 				} finally {
-					$socket.emit(channel, {
+					$socket?.emit(channel, {
 						done: true
 					});
 				}
@@ -415,7 +417,7 @@
 		}
 	};
 
-	const channelEventHandler = async (event) => {
+	const channelEventHandler = async (event: any) => {
 		if (event.data?.type === 'typing') {
 			return;
 		}
@@ -441,7 +443,7 @@
 			if (type === 'message') {
 				if ($isLastActiveTab) {
 					if ($settings?.notificationEnabled ?? false) {
-						new Notification(`${data?.user?.name} (#${event?.channel?.name}) • Open WebUI`, {
+						new Notification(`${data?.user?.name} (#${event?.channel?.name}) • `, {
 							body: data?.content,
 							icon: data?.user?.profile_image_url ?? `${WEBUI_BASE_URL}/static/favicon.png`
 						});
@@ -465,7 +467,7 @@
 
 	const TOKEN_EXPIRY_BUFFER = 60; // seconds
 	const checkTokenExpiry = async () => {
-		const exp = $user?.expires_at; // token expiry time in unix timestamp
+		const exp = ($user as any)?.expires_at; // token expiry time in unix timestamp
 		const now = Math.floor(Date.now() / 1000); // current time in unix timestamp
 
 		if (!exp) {
@@ -475,17 +477,20 @@
 
 		if (now >= exp - TOKEN_EXPIRY_BUFFER) {
 			const res = await userSignOut();
-			user.set(null);
+			user.set(undefined);
 			localStorage.removeItem('token');
 
 			location.href = res?.redirect_url ?? '/auth';
 		}
 	};
 
-	onMount(async () => {
+	let onResize: any = null;
+
+	onMount(() => {
+		(async () => {
 		let touchstartY = 0;
 
-		function isNavOrDescendant(el) {
+		function isNavOrDescendant(el: any) {
 			const nav = document.querySelector('nav'); // change selector if needed
 			return nav && (el === nav || nav.contains(el));
 		}
@@ -560,11 +565,27 @@
 		// Call visibility change handler initially to set state on load
 		handleVisibilityChange();
 
-		theme.set(localStorage.theme);
+		let previousThemeValue = localStorage.theme ?? 'system';
+		theme.set(previousThemeValue);
+
+		theme.subscribe((value) => {
+			if (browser) {
+				if (previousThemeValue) {
+					const oldClasses = previousThemeValue.split(' ');
+					document.documentElement.classList.remove(...oldClasses);
+				}
+
+				const newClasses = value.split(' ');
+				document.documentElement.classList.add(...newClasses);
+
+				document.documentElement.setAttribute('data-theme', value);
+				previousThemeValue = value;
+			}
+		});
 
 		mobile.set(window.innerWidth < BREAKPOINT);
 
-		const onResize = () => {
+		onResize = () => {
 			if (window.innerWidth < BREAKPOINT) {
 				mobile.set(true);
 			} else {
@@ -585,7 +606,7 @@
 				if (tokenTimer) {
 					clearInterval(tokenTimer);
 				}
-				tokenTimer = setInterval(checkTokenExpiry, 15000);
+				tokenTimer = window.setInterval(checkTokenExpiry, 15000);
 			} else {
 				$socket?.off('chat-events', chatEventHandler);
 				$socket?.off('channel-events', channelEventHandler);
@@ -605,9 +626,9 @@
 		initI18n(localStorage?.locale);
 		if (!localStorage.locale) {
 			const languages = await getLanguages();
-			const browserLanguages = navigator.languages
-				? navigator.languages
-				: [navigator.language || navigator.userLanguage];
+				const browserLanguages = navigator.languages
+					? navigator.languages
+					: [navigator.language || navigator.language];
 			const lang = backendConfig.default_locale
 				? backendConfig.default_locale
 				: bestMatchingLanguage(languages, browserLanguages, 'en-US');
@@ -619,8 +640,8 @@
 			await config.set(backendConfig);
 			await WEBUI_NAME.set(backendConfig.name);
 
-			if ($config) {
-				await setupSocket($config.features?.enable_websocket ?? true);
+				if ($config) {
+					await setupSocket((($config.features as any)?.enable_websocket) ?? true);
 
 				const currentUrl = `${window.location.pathname}${window.location.search}`;
 				const encodedUrl = encodeURIComponent(currentUrl);
@@ -633,6 +654,9 @@
 					});
 
 					if (sessionUser) {
+						// Save Session User to Store
+						$socket?.emit('user-join', { auth: { token: sessionUser.token } });
+
 						await user.set(sessionUser);
 						await config.set(await getBackendConfig());
 					} else {
@@ -685,6 +709,11 @@
 			loaded = true;
 		}
 
+		mounted = true;
+
+			return;
+		})();
+
 		return () => {
 			window.removeEventListener('resize', onResize);
 		};
@@ -694,6 +723,11 @@
 <svelte:head>
 	<title>{$WEBUI_NAME}</title>
 	<link crossorigin="anonymous" rel="icon" href="{WEBUI_BASE_URL}/static/favicon.png" />
+
+	
+	
+	<!-- <link rel="stylesheet" type="text/css" href="/themes/rosepine.css" />
+	<link rel="stylesheet" type="text/css" href="/themes/rosepine-dawn.css" /> -->
 </svelte:head>
 
 {#if showRefresh}
@@ -703,6 +737,7 @@
 {/if}
 
 {#if loaded}
+	<CustomStyles />
 	{#if $isApp}
 		<div class="flex flex-row h-screen">
 			<AppSidebar />
@@ -714,17 +749,8 @@
 	{:else}
 		<slot />
 	{/if}
-{/if}
 
-<Toaster
-	theme={$theme.includes('dark')
-		? 'dark'
-		: $theme === 'system'
-			? window.matchMedia('(prefers-color-scheme: dark)').matches
-				? 'dark'
-				: 'light'
-			: 'light'}
-	richColors
-	position="top-right"
-	closeButton
-/>
+	{#if browser}
+		<Toaster richColors position="top-right" closeButton />
+	{/if}
+{/if}

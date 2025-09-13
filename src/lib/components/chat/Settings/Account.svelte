@@ -40,6 +40,54 @@
 	let APIKeyCopied = false;
 	let profileImageInputElement: HTMLInputElement;
 
+	let showUrlInput = false;
+	let imageUrl = '';
+
+	const handleImageUrl = (url) => {
+		const img = new Image();
+		img.crossOrigin = 'anonymous';
+		img.src = url;
+
+		img.onload = function () {
+			const canvas = document.createElement('canvas');
+			const ctx = canvas.getContext('2d');
+
+			// Calculate the aspect ratio of the image
+			const aspectRatio = img.width / img.height;
+
+			// Calculate the new width and height to fit within 250x250
+			let newWidth, newHeight;
+			if (aspectRatio > 1) {
+				newWidth = 250 * aspectRatio;
+				newHeight = 250;
+			} else {
+				newWidth = 250;
+				newHeight = 250 / aspectRatio;
+			}
+
+			// Set the canvas size
+			canvas.width = 250;
+			canvas.height = 250;
+
+			// Calculate the position to center the image
+			const offsetX = (250 - newWidth) / 2;
+			const offsetY = (250 - newHeight) / 2;
+
+			// Draw the image on the canvas
+			ctx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
+
+			// Get the base64 representation of the compressed image
+			const compressedSrc = canvas.toDataURL('image/jpeg');
+
+			// Display the compressed image
+			profileImageUrl = compressedSrc;
+		};
+
+		img.onerror = function () {
+			toast.error(i18n.t('Failed to load image from URL.'));
+		};
+	};
+
 	const submitHandler = async () => {
 		if (name !== $user?.name) {
 			if (profileImageUrl === generateInitialsImage($user?.name) || profileImageUrl === '') {
@@ -201,12 +249,22 @@
 								profileImageInputElement.click();
 							}}
 						>
-							<img
-								src={profileImageUrl !== '' ? profileImageUrl : generateInitialsImage(name)}
-								alt="profile"
-								class=" rounded-full size-14 md:size-18 object-cover"
-							/>
-
+							{#if profileImageUrl.endsWith('.mp4')}
+								<video
+									src={profileImageUrl}
+									alt="profile"
+									class=" rounded-full size-14 md:size-18 object-cover"
+									autoplay
+									muted
+									loop
+								></video>
+							{:else}
+								<img
+									src={profileImageUrl !== '' ? profileImageUrl : generateInitialsImage(name)}
+									alt="profile"
+									class=" rounded-full size-14 md:size-18 object-cover"
+								/>
+							{/if}
 							<div class="absolute bottom-0 right-0 opacity-0 group-hover:opacity-100 transition">
 								<div class="p-1 rounded-full bg-white text-black border-gray-100 shadow">
 									<svg
@@ -227,7 +285,7 @@
 						<button
 							class=" text-xs text-center text-gray-500 rounded-lg py-0.5 opacity-0 group-hover:opacity-100 transition-all"
 							on:click={async () => {
-								profileImageUrl = `${WEBUI_BASE_URL}/user.png`;
+								profileImageUrl = `${WEBUI_BASE_URL}/user.gif`;
 							}}>{$i18n.t('Remove')}</button
 						>
 
@@ -257,7 +315,35 @@
 								profileImageUrl = url;
 							}}>{$i18n.t('Gravatar')}</button
 						>
+						<button
+							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-lg py-0.5 opacity-0 group-hover:opacity-100 transition-all"
+							on:click={() => {
+								showUrlInput = !showUrlInput;
+							}}>{$i18n.t('From URL')}</button
+						>
 					</div>
+					{#if showUrlInput}
+						<div class="flex mt-2">
+							<input
+								class=" w-full text-sm dark:text-gray-300 bg-transparent outline-none border-b dark:border-gray-700"
+								type="url"
+								bind:value={imageUrl}
+								placeholder={$i18n.t('Enter image URL')}
+							/>
+							<button
+								class="ml-2 px-2 py-1 text-xs font-medium bg-black hover:bg-gray-900 text-white dark:bg-white dark:text-black dark:hover:bg-gray-100 transition rounded-full"
+								on:click={() => {
+									if (imageUrl) {
+										handleImageUrl(imageUrl);
+										showUrlInput = false;
+										imageUrl = '';
+									}
+								}}
+							>
+								{$i18n.t('Set')}
+							</button>
+						</div>
+					{/if}
 				</div>
 				<div class="flex flex-1 flex-col">
 					<div class=" flex-1">

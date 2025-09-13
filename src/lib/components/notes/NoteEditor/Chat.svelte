@@ -201,10 +201,31 @@ Based on the user's instruction, update and enhance the existing notes or select
 		let messageContent = '';
 
 		if (res && res.ok) {
-			const reader = res.body
-				.pipeThrough(new TextDecoderStream())
-				.pipeThrough(splitStream('\n'))
-				.getReader();
+			const stream: any = (res as any).body;
+			let reader: any = null;
+
+			try {
+				if (stream && typeof stream.pipeThrough === 'function') {
+					reader = stream
+						.pipeThrough(new (TextDecoderStream as any)())
+						.pipeThrough(splitStream('\n'))
+						.getReader();
+				}
+			} catch (err) {
+				console.error('Failed to create reader for chatCompletionHandler:', err);
+				reader = null;
+			}
+
+			if (!reader) {
+				console.log('No readable stream available from response; aborting chat completion stream.');
+				streaming = false;
+				if (stopResponseFlag) {
+					try {
+						controller.abort('No stream available');
+					} catch (e) {}
+				}
+				return;
+			}
 
 			while (true) {
 				const { value, done } = await reader.read();

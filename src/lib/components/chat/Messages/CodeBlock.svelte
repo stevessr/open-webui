@@ -440,7 +440,7 @@
 						class="flex gap-1 items-center bg-none border-none bg-gray-50 dark:bg-black transition rounded-md px-1.5 py-0.5"
 						on:click={collapseCodeBlock}
 					>
-						<div class=" -translate-y-[0.5px]">
+						<div class=" -translate-y-[0.5px] transition-transform duration-300 ease-out {collapsed ? 'rotate-180' : ''}">
 							<ChevronUpDown className="size-3" />
 						</div>
 
@@ -543,6 +543,8 @@
 				{:else}
 					<div
 						class="bg-gray-50 dark:bg-black dark:text-white rounded-b-xl! pt-2 pb-2 px-4 flex flex-col gap-2 text-xs"
+						class="bg-gray-50 dark:bg-black dark:text-white rounded-b-lg! pt-2 pb-2 px-4 flex flex-col gap-2 text-xs"
+						transition:slide={{ duration: 250, easing: quintOut, axis: 'y' }}
 					>
 						<span class="text-gray-500 italic">
 							{$i18n.t('{{COUNT}} hidden lines', {
@@ -556,12 +558,14 @@
 			{#if !collapsed}
 				<div
 					id="plt-canvas-{id}"
-					class="bg-gray-50 dark:bg-black dark:text-white max-w-full overflow-x-auto scrollbar-hidden"
+					class="bg-gray-50 dark:bg-[#202123] dark:text-white max-w-full overflow-x-auto scrollbar-hidden"
+					transition:slide={{ duration: 400, easing: cubicOut, axis: 'y' }}
 				/>
 
 				{#if executing || stdout || stderr || result || files}
 					<div
-						class="bg-gray-50 dark:bg-black dark:text-white rounded-b-xl! py-4 px-4 flex flex-col gap-2"
+						class="bg-gray-50 dark:bg-[#202123] dark:text-white rounded-b-lg! py-4 px-4 flex flex-col gap-2"
+						transition:slide={{ duration: 400, easing: cubicOut, axis: 'y' }}
 					>
 						{#if executing}
 							<div class=" ">

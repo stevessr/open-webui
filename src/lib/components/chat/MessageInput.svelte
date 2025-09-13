@@ -931,16 +931,29 @@
 						>
 							<div class="flex items-center justify-between w-full">
 								<div class="pl-[1px] flex items-center gap-2 text-sm dark:text-gray-500">
-									<img
-										crossorigin="anonymous"
-										alt="model profile"
-										class="size-3.5 max-w-[28px] object-cover rounded-full"
-										src={$models.find((model) => model.id === atSelectedModel.id)?.info?.meta
-											?.profile_image_url ??
-											($i18n.language === 'dg-DG'
-												? `${WEBUI_BASE_URL}/doge.png`
-												: `${WEBUI_BASE_URL}/static/favicon.png`)}
-									/>
+									{#if $models
+										.find((model) => model.id === atSelectedModel.id)
+										?.info?.meta?.profile_image_url?.endsWith('.mp4')}
+										<video
+											class="size-3.5 max-w-[28px] object-cover rounded-full"
+											autoplay
+											muted
+											loop
+											src={$models.find((model) => model.id === atSelectedModel.id)?.info?.meta
+												?.profile_image_url}
+										></video>
+									{:else}
+										<img
+											crossorigin="anonymous"
+											alt="model profile"
+											class="size-3.5 max-w-[28px] object-cover rounded-full"
+											src={$models.find((model) => model.id === atSelectedModel.id)?.info?.meta
+												?.profile_image_url ??
+												($i18n.language === 'dg-DG'
+													? `${WEBUI_BASE_URL}/doge.png`
+													: `${WEBUI_BASE_URL}/static/favicon.png`)}
+										/>
+									{/if}
 									<div class="translate-y-[0.5px]">
 										{$i18n.t('Talk to model')}:
 										<span class=" font-medium">{atSelectedModel.name}</span>

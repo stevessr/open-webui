@@ -536,7 +536,7 @@
 						<div class=" self-center flex items-center justify-center size-9">
 							<img
 								crossorigin="anonymous"
-								src="{WEBUI_BASE_URL}/static/favicon.png"
+								src="{WEBUI_BASE_URL}/static/favicon.gif"
 								class="sidebar-new-chat-icon size-6 rounded-full group-hover:hidden"
 								alt=""
 							/>
@@ -669,12 +669,26 @@
 								class=" cursor-pointer flex rounded-lg hover:bg-gray-100 dark:hover:bg-gray-850 transition group"
 							>
 								<div class=" self-center flex items-center justify-center size-9">
-									<img
-										src={$user?.profile_image_url}
-										class=" size-6 object-cover rounded-full"
-										alt={$i18n.t('Open User Profile Menu')}
-										aria-label={$i18n.t('Open User Profile Menu')}
-									/>
+									{#if user?.profile_image_url?.endsWith('.mp4')}
+										<video
+											src={user?.profile_image_url}
+											class="size-5 w-auto rounded-full -translate-x-[0.5px]"
+											autoplay
+											muted
+											loop
+											playsinline
+										>
+											<track kind="captions" />
+										</video>
+									{:else}
+										<img
+											crossorigin="anonymous"
+											src={user?.profile_image_url ?? '/static/favicon.png'}
+											class="size-5 w-auto rounded-full -translate-x-[0.5px]"
+											alt="logo"
+											draggable="false"
+										/>
+									{/if}
 								</div>
 							</div>
 						</UserMenu>
@@ -714,7 +728,7 @@
 				>
 					<img
 						crossorigin="anonymous"
-						src="{WEBUI_BASE_URL}/static/favicon.png"
+						src="{WEBUI_BASE_URL}/static/favicon.gif"
 						class="sidebar-new-chat-icon size-6 rounded-full"
 						alt=""
 					/>

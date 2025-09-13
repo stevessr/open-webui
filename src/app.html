@@ -37,11 +37,11 @@
 		/>
 		<meta name="theme-color" content="#171717" />
 		<meta name="robots" content="noindex,nofollow" />
-		<meta name="description" content="Open WebUI" />
+		<meta name="description" content="" />
 		<link
 			rel="search"
 			type="application/opensearchdescription+xml"
-			title="Open WebUI"
+			title=""
 			href="/opensearch.xml"
 			crossorigin="use-credentials"
 		/>
@@ -64,6 +64,17 @@
 					localStorage.theme = 'system';
 				}
 
+				// Enhanced theme system with CSS if() support
+				const themeColors = {
+					'light': '#ffffff',
+					'dark': '#171717',
+					'oled-dark': '#000000',
+					'rose-pine': '#1f1d2e',
+					'material-design': '#ffffff',
+					'pink-theme': '#f8bbd0',
+					'her': '#983724'
+				};
+
 				if (localStorage.theme === 'system') {
 					document.documentElement.classList.add(prefersDarkTheme ? 'dark' : 'light');
 					metaThemeColorTag.setAttribute('content', prefersDarkTheme ? '#171717' : '#ffffff');
@@ -72,15 +83,13 @@
 					document.documentElement.style.setProperty('--color-gray-850', '#050505');
 					document.documentElement.style.setProperty('--color-gray-900', '#000000');
 					document.documentElement.style.setProperty('--color-gray-950', '#000000');
-					document.documentElement.classList.add('dark');
+					document.documentElement.classList.add('oled-dark');
 					metaThemeColorTag.setAttribute('content', '#000000');
-				} else if (localStorage.theme === 'light') {
-					document.documentElement.classList.add('light');
-					metaThemeColorTag.setAttribute('content', '#ffffff');
-				} else if (localStorage.theme === 'her') {
-					document.documentElement.classList.add('her');
-					metaThemeColorTag.setAttribute('content', '#983724');
+				} else if (localStorage.theme && themeColors[localStorage.theme]) {
+					document.documentElement.classList.add(localStorage.theme);
+					metaThemeColorTag.setAttribute('content', themeColors[localStorage.theme]);
 				} else {
+					// Default to dark theme
 					document.documentElement.classList.add('dark');
 					metaThemeColorTag.setAttribute('content', '#171717');
 				}
@@ -108,16 +117,85 @@
 
 				document.addEventListener('DOMContentLoaded', function () {
 					const splash = document.getElementById('splash-screen');
-					if (document.documentElement.classList.contains('her')) {
-						return;
-					}
-
 					if (splash) splash.prepend(logo);
 				});
 			})();
 		</script>
 
-		<title>Open WebUI</title>
+		<title>加载中</title>
+		<link rel="stylesheet" type="text/css" href="/assets/inject.css" />
+
+		<style>
+			.breathing-light {
+				animation: breathe 2.5s ease-in-out infinite;
+				filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5));
+			}
+
+			@keyframes breathe {
+				0% {
+					opacity: 0.6;
+					transform: scale(0.95);
+					filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3)) brightness(0.9);
+				}
+				25% {
+					opacity: 0.8;
+					transform: scale(1.0);
+					filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.4)) brightness(1.0);
+				}
+				50% {
+					opacity: 1.0;
+					transform: scale(1.05);
+					filter: drop-shadow(0 0 25px rgba(6, 182, 212, 0.6)) brightness(1.1);
+				}
+				75% {
+					opacity: 0.8;
+					transform: scale(1.0);
+					filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.4)) brightness(1.0);
+				}
+				100% {
+					opacity: 0.6;
+					transform: scale(0.95);
+					filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3)) brightness(0.9);
+				}
+			}
+
+			/* Dark mode adjustments */
+			html.dark .breathing-light {
+				filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.6));
+			}
+
+			html.dark .breathing-light {
+				animation: breathe-dark 2.5s ease-in-out infinite;
+			}
+
+			@keyframes breathe-dark {
+				0% {
+					opacity: 0.7;
+					transform: scale(0.95);
+					filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.4)) brightness(0.9);
+				}
+				25% {
+					opacity: 0.85;
+					transform: scale(1.0);
+					filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)) brightness(1.0);
+				}
+				50% {
+					opacity: 1.0;
+					transform: scale(1.05);
+					filter: drop-shadow(0 0 30px rgba(6, 182, 212, 0.7)) brightness(1.2);
+				}
+				75% {
+					opacity: 0.85;
+					transform: scale(1.0);
+					filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.5)) brightness(1.0);
+				}
+				100% {
+					opacity: 0.7;
+					transform: scale(0.95);
+					filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.4)) brightness(0.9);
+				}
+			}
+		</style>
 
 		%sveltekit.head%
 	</head>
@@ -129,11 +207,19 @@
 			id="splash-screen"
 			style="position: fixed; z-index: 100; top: 0; left: 0; width: 100%; height: 100%"
 		>
-			<style type="text/css" nonce="">
-				html {
-					overflow-y: scroll !important;
-				}
-			</style>
+
+			<img
+				id="logo"
+				style="
+					position: absolute;
+					width: auto;
+					height: 6rem;
+					top: 44%;
+					left: 50%;
+					transform: translateX(-50%);
+				"
+				src="/static/splash.png"
+			/>
 
 			<div
 				style="
@@ -151,22 +237,13 @@
 			>
 				<img
 					id="logo-her"
-					style="width: auto; height: 13rem"
 					src="/static/splash.png"
-					class="animate-pulse-fast"
+					class="breathing-light"
 				/>
 
 				<div style="position: relative; width: 24rem; margin-top: 0.5rem">
 					<div
 						id="progress-background"
-						style="
-							position: absolute;
-							width: 100%;
-							height: 0.75rem;
-
-							border-radius: 9999px;
-							background-color: #fafafa9a;
-						"
 					></div>
 
 					<div
@@ -182,78 +259,6 @@
 					></div>
 				</div>
 			</div>
-
-			<!-- <span style="position: absolute; bottom: 32px; left: 50%; margin: -36px 0 0 -36px">
-				Footer content
-			</span> -->
 		</div>
 	</body>
 </html>
-
-<style type="text/css" nonce="">
-	html {
-		overflow-y: hidden !important;
-		overscroll-behavior-y: none;
-	}
-
-	#splash-screen {
-		background: #fff;
-	}
-
-	html.dark #splash-screen {
-		background: #000;
-	}
-
-	html.her #splash-screen {
-		background: #983724;
-	}
-
-	#logo-her {
-		display: none;
-	}
-
-	#progress-background {
-		display: none;
-	}
-
-	#progress-bar {
-		display: none;
-	}
-
-	html.her #logo {
-		display: none;
-	}
-
-	html.her #logo-her {
-		display: block;
-		filter: invert(1);
-	}
-
-	html.her #progress-background {
-		display: block;
-	}
-
-	html.her #progress-bar {
-		display: block;
-	}
-
-	@media (max-width: 24rem) {
-		html.her #progress-background {
-			display: none;
-		}
-
-		html.her #progress-bar {
-			display: none;
-		}
-	}
-
-	@keyframes pulse {
-		50% {
-			opacity: 0.65;
-		}
-	}
-
-	.animate-pulse-fast {
-		animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-	}
-</style>

@@ -54,12 +54,25 @@
 			{#if user}
 				<div class=" flex flex-col gap-2 w-full rounded-lg">
 					<div class="py-8 relative bg-gray-900 rounded-t-lg">
-						<img
-							crossorigin="anonymous"
-							src={user?.profile_image_url ?? `${WEBUI_BASE_URL}/static/favicon.png`}
-							class=" absolute -bottom-5 left-3 size-12 ml-0.5 object-cover rounded-full -translate-y-[1px]"
-							alt="profile"
-						/>
+						{#if $user?.profile_image_url.toLowerCase().endsWith('.mp4')}
+							<video
+								src={user.profile_image_url}
+								class=" absolute -bottom-5 left-3 size-12 ml-0.5 object-cover rounded-full -translate-y-[1px]"
+								autoplay
+								muted
+								loop
+								playsinline
+							>
+								<track kind="captions" />
+							</video>
+						{:else}
+							<img
+								crossorigin="anonymous"
+								src={user?.profile_image_url ?? `${WEBUI_BASE_URL}/static/favicon.png`}
+								class=" absolute -bottom-5 left-3 size-12 ml-0.5 object-cover rounded-full -translate-y-[1px]"
+								alt="profile"
+							/>
+						{/if}
 					</div>
 
 					<div class=" flex flex-col pt-4 pb-2.5 px-4">

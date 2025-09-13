@@ -185,10 +185,10 @@
 		);
 
 		if (res) {
-			const reader = res.body
-				.pipeThrough(new TextDecoderStream())
-				.pipeThrough(splitStream('\n'))
-				.getReader();
+			const stream = res.body as any;
+			const reader = stream && typeof stream.pipeThrough === 'function'
+				? (stream as any).pipeThrough(new (TextDecoderStream as any)()).pipeThrough((splitStream as any)('\n')).getReader()
+				: null;
 
 			MODEL_DOWNLOAD_POOL.set({
 				...$MODEL_DOWNLOAD_POOL,
@@ -200,8 +200,13 @@
 				}
 			});
 
+			if (!reader) {
+				console.log('No readable stream available for pullModelHandler in Selector.svelte; skipping read loop.');
+			}
+
 			while (true) {
 				try {
+					if (!reader) break;
 					const { value, done } = await reader.read();
 					if (done) break;
 
@@ -376,7 +381,7 @@
 	<DropdownMenu.Content
 		class=" z-40 {$mobile
 			? `w-full`
-			: `${className}`} max-w-[calc(100vw-1rem)] justify-start rounded-xl  bg-white dark:bg-gray-850 dark:text-white shadow-lg  outline-hidden"
+			: `${className}`} max-w-[calc(100vw-1rem)] justify-start rounded-xl  bg-white dark:bg-gray-850 dark:text-white shadow-lg  outline-hidden model-menu"
 		transition={flyAndScale}
 		side={$mobile ? 'bottom' : 'bottom-start'}
 		sideOffset={3}
@@ -419,7 +424,7 @@
 			<div class="px-3">
 				{#if tags && items.filter((item) => !(item.model?.info?.meta?.hidden ?? false)).length > 0}
 					<div
-						class=" flex w-full bg-white dark:bg-gray-850 overflow-x-auto scrollbar-none mb-0.5"
+						class=" flex w-full bg-white dark:bg-gray-850 overflow-x-auto scrollbar-none tag-selcetor"
 						on:wheel={(e) => {
 							if (e.deltaY !== 0) {
 								e.preventDefault();

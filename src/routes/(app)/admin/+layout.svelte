@@ -2,11 +2,9 @@
 	import { onMount, getContext } from 'svelte';
 	import { goto } from '$app/navigation';
 
-	import { WEBUI_NAME, mobile, showSidebar, user } from '$lib/stores';
+	import { WEBUI_NAME, showSidebar, user, settings } from '$lib/stores';
+	import MenuLines from '$lib/components/icons/MenuLines.svelte';
 	import { page } from '$app/stores';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-
-	import Sidebar from '$lib/components/icons/Sidebar.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -28,32 +26,46 @@
 
 {#if loaded}
 	<div
-		class=" flex flex-col h-screen max-h-[100dvh] flex-1 transition-width duration-200 ease-in-out {$showSidebar
-			? 'md:max-w-[calc(100%-260px)]'
-			: ' md:max-w-[calc(100%-49px)]'}  w-full max-w-full"
+		class="static left-0 flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out max-w-full relative"
 	>
-		<nav class="   px-2.5 pt-1.5 backdrop-blur-xl drag-region">
+		<!-- Custom Background Support -->
+		{#if $settings?.backgroundImageUrl ?? null}
+			{#if $settings?.backgroundImageUrl?.endsWith('.mp4')}
+				<!-- Video background -->
+				<video
+					class="absolute top-0 left-0 w-full h-full object-cover z-[-1]"
+					src={$settings.backgroundImageUrl}
+					autoplay
+					muted
+					loop
+					playsinline
+				>
+					<track kind="captions" />
+				</video>
+			{:else}
+				<!-- Image background -->
+				<div
+					class="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat z-[-1]"
+					style="background-image: url({$settings.backgroundImageUrl})"
+				/>
+			{/if}
+		{/if}
+		<nav class="   px-2.5 pt-1 backdrop-blur-xl drag-region">
 			<div class=" flex items-center gap-1">
-				{#if $mobile}
-					<div class="{$showSidebar ? 'md:hidden' : ''} flex flex-none items-center self-end">
-						<Tooltip
-							content={$showSidebar ? $i18n.t('Close Sidebar') : $i18n.t('Open Sidebar')}
-							interactive={true}
-						>
-							<button
-								id="sidebar-toggle-button"
-								class=" cursor-pointer flex rounded-lg hover:bg-gray-100 dark:hover:bg-gray-850 transition cursor-"
-								on:click={() => {
-									showSidebar.set(!$showSidebar);
-								}}
-							>
-								<div class=" self-center p-1.5">
-									<Sidebar />
-								</div>
-							</button>
-						</Tooltip>
-					</div>
-				{/if}
+				<div class="{$showSidebar ? 'md:hidden' : ''} flex flex-none items-center self-end">
+					<button
+						id="sidebar-toggle-button"
+						class="cursor-pointer p-1.5 flex rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition"
+						on:click={() => {
+							showSidebar.set(!$showSidebar);
+						}}
+						aria-label="Toggle Sidebar"
+					>
+						<div class=" m-auto self-center">
+							<MenuLines />
+						</div>
+					</button>
+				</div>
 
 				<div class=" flex w-full">
 					<div
@@ -65,13 +77,6 @@
 								: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition"
 							href="/admin">{$i18n.t('Users')}</a
 						>
-
-						<!-- <a
-							class="min-w-fit p-1.5 {$page.url.pathname.includes('/admin/analytics')
-								? ''
-								: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition"
-							href="/admin/analytics">{$i18n.t('Analytics')}</a
-						> -->
 
 						<a
 							class="min-w-fit p-1.5 {$page.url.pathname.includes('/admin/evaluations')

@@ -16,13 +16,16 @@
 	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
 	import { config, showChangelog } from '$lib/stores';
 	import { compareVersion } from '$lib/utils';
+	import { checkForVersionUpdates } from '$lib/utils/version';
 	import { onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Textarea from '$lib/components/common/Textarea.svelte';
+	import type { i18n as i18nType } from 'i18next';
+	import type { Writable } from 'svelte/store';
 
-	const i18n = getContext('i18n');
+	const i18n = getContext<Writable<i18nType>>('i18n');
 
-	export let saveHandler: Function;
+	export let saveHandler: () => void;
 
 	let updateAvailable = null;
 	let version = {
@@ -30,8 +33,29 @@
 		latest: ''
 	};
 
-	let adminConfig = null;
+	interface AdminConfig {
+		DEFAULT_USER_ROLE: string;
+		ENABLE_SIGNUP: boolean;
+		SHOW_ADMIN_DETAILS: boolean;
+		PENDING_USER_OVERLAY_TITLE: string;
+		PENDING_USER_OVERLAY_CONTENT: string;
+		ENABLE_API_KEY: boolean;
+		ENABLE_API_KEY_ENDPOINT_RESTRICTIONS: boolean;
+		API_KEY_ALLOWED_ENDPOINTS: string;
+		JWT_EXPIRES_IN: string;
+		ENABLE_COMMUNITY_SHARING: boolean;
+		ENABLE_MESSAGE_RATING: boolean;
+		ENABLE_NOTES: boolean;
+		ENABLE_CHANNELS: boolean;
+		ENABLE_USER_WEBHOOKS: boolean;
+		RESPONSE_WATERMARK: string;
+		WEBUI_URL: string;
+	}
+
+	let adminConfig: AdminConfig | null = null;
 	let webhookUrl = '';
+	let showDocPreview = false;
+	let showReleasesPreview = false;
 
 	// LDAP
 	let ENABLE_LDAP = false;
@@ -46,23 +70,9 @@
 		search_base: '',
 		search_filters: '',
 		use_tls: false,
+		validate_cert: false,
 		certificate_path: '',
 		ciphers: ''
-	};
-
-	const checkForVersionUpdates = async () => {
-		updateAvailable = null;
-		version = await getVersionUpdates(localStorage.token).catch((error) => {
-			return {
-				current: WEBUI_VERSION,
-				latest: WEBUI_VERSION
-			};
-		});
-
-		console.info(version);
-
-		updateAvailable = compareVersion(version.latest, version.current);
-		console.info(updateAvailable);
 	};
 
 	const updateLdapServerHandler = async () => {
@@ -718,3 +728,4 @@
 		</button>
 	</div>
 </form>
+

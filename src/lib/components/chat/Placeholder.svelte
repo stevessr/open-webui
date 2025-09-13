@@ -29,6 +29,8 @@
 
 	const i18n = getContext('i18n');
 
+	export let transparentBackground = false;
+
 	export let createMessagePair: Function;
 	export let stopResponse: Function;
 
@@ -53,7 +55,6 @@
 	export let webSearchEnabled = false;
 
 	export let onSelect = (e) => {};
-	export let onChange = (e) => {};
 
 	export let toolServers = [];
 
@@ -77,8 +78,8 @@
 			className="w-full flex justify-center mb-0.5"
 			placement="top"
 		>
-			<div class="flex items-center gap-2 text-gray-500 font-medium text-base my-2 w-fit">
-				<EyeSlash strokeWidth="2.5" className="size-4" />{$i18n.t('Temporary Chat')}
+			<div class="flex items-center gap-2 text-gray-500 font-medium text-lg my-2 w-fit">
+				<EyeSlash strokeWidth="2.5" className="size-5" />{$i18n.t('Temporary Chat')}
 			</div>
 		</Tooltip>
 	{/if}
@@ -123,16 +124,30 @@
 											selectedModelIdx = modelIdx;
 										}}
 									>
-										<img
-											crossorigin="anonymous"
-											src={model?.info?.meta?.profile_image_url ??
-												($i18n.language === 'dg-DG'
-													? `${WEBUI_BASE_URL}/doge.png`
-													: `${WEBUI_BASE_URL}/static/favicon.png`)}
-											class=" size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
-											aria-hidden="true"
+									{#if model?.info?.meta?.profile_image_url?.toLowerCase().endsWith('.mp4')}
+										<video
+											src={model.info.meta.profile_image_url}
+											class=" size-9 @sm:size-10 w-auto rounded-full border-[1px] border-gray-100 dark:border-none"
+											autoplay
+											muted
+											loop
+											playsinline
 											draggable="false"
-										/>
+										>
+											<track kind="captions" />
+										</video>
+									{:else}
+											<img
+												crossorigin="anonymous"
+												src={model?.info?.meta?.profile_image_url ??
+													($i18n.language === 'dg-DG'
+														? `${WEBUI_BASE_URL}/doge.png`
+														: `${WEBUI_BASE_URL}/static/favicon.png`)}
+												class="h-9 @sm:h-10 w-auto rounded-md border-[1px] border-gray-100 dark:border-none"
+												aria-hidden="true"
+												draggable="false"
+											/>
+									{/if}
 									</button>
 								</Tooltip>
 							{/each}
@@ -219,10 +234,19 @@
 					bind:atSelectedModel
 					bind:showCommands
 					{toolServers}
+					{transparentBackground}
 					{stopResponse}
 					{createMessagePair}
 					placeholder={$i18n.t('How can I help you today?')}
-					{onChange}
+					onChange={(input) => {
+						if (!$temporaryChatEnabled) {
+							if (input.prompt !== null) {
+								sessionStorage.setItem(`chat-input`, JSON.stringify(input));
+							} else {
+								sessionStorage.removeItem(`chat-input`);
+							}
+						}
+					}}
 					on:upload={(e) => {
 						dispatch('upload', e.detail);
 					}}

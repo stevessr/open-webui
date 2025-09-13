@@ -12,6 +12,7 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Search from '$lib/components/icons/Search.svelte';
+	import MagnifyingGlass from '$lib/components/icons/MagnifyingGlass.svelte';
 
 	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
@@ -509,8 +510,8 @@
 			<tbody class="">
 				{#each sortedModels as model, modelIdx (model.id)}
 					<tr
-						class="bg-white dark:bg-gray-900 dark:border-gray-850 text-xs group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-850/50 transition"
-						on:click={() => openLeaderboardModelModal(model)}
+						class="bg-white dark:bg-gray-900 dark:border-gray-850 text-xs group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+						on:click={() => openFeedbackModal(model)}
 					>
 						<td class="px-3 py-1.5 text-left font-medium text-gray-900 dark:text-white w-fit">
 							<div class=" line-clamp-1">
@@ -520,11 +521,24 @@
 						<td class="px-3 py-1.5 flex flex-col justify-center">
 							<div class="flex items-center gap-2">
 								<div class="shrink-0">
-									<img
-										src={model?.info?.meta?.profile_image_url ?? `${WEBUI_BASE_URL}/favicon.png`}
-										alt={model.name}
-										class="size-5 rounded-full object-cover shrink-0"
-									/>
+									{#if model?.info?.meta?.profile_image_url?.endsWith('.mp4')}
+										<video
+											src={model?.info?.meta?.profile_image_url}
+											class="size-5 rounded-full object-cover shrink-0"
+											autoplay
+											muted
+											loop
+											playsinline
+										>
+											<track kind="captions" />
+										</video>
+									{:else}
+										<img
+											src={model?.info?.meta?.profile_image_url ?? '/favicon.png'}
+											alt={model.name}
+											class="size-5 rounded-full object-cover shrink-0"
+										/>
+									{/if}
 								</div>
 
 								<div class="font-medium text-gray-800 dark:text-gray-200 pr-4">

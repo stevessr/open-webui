@@ -534,10 +534,10 @@ class OAuthManager:
             access_token: Optional OAuth access token for authenticated requests
 
         Returns:
-            A data URL containing the base64 encoded picture, or "/user.png" if processing fails
+            A data URL containing the base64 encoded picture, or "/user.gif" if processing fails
         """
         if not picture_url:
-            return "/user.png"
+            return "/user.gif"
 
         try:
             get_kwargs = {}
@@ -564,10 +564,10 @@ class OAuthManager:
                         log.warning(
                             f"Failed to fetch profile picture from {picture_url}"
                         )
-                        return "/user.png"
+                        return "/user.gif"
         except Exception as e:
             log.error(f"Error processing profile picture '{picture_url}': {e}")
-            return "/user.png"
+            return "/user.gif"
 
     async def handle_login(self, request, provider):
         if provider not in OAUTH_PROVIDERS:
@@ -727,7 +727,7 @@ class OAuthManager:
                             picture_url, token.get("access_token")
                         )
                     else:
-                        picture_url = "/user.png"
+                        picture_url = "/user.gif"
                     username_claim = auth_manager_config.OAUTH_USERNAME_CLAIM
 
                     name = user_data.get(username_claim)
