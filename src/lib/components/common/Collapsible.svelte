@@ -169,7 +169,10 @@
 		
 		<div
 			class="{buttonClassName} cursor-pointer"
-			on:pointerup={() => {
+			on:click={(e) => {
+				e.stopPropagation();
+			}}
+			on:pointerup={(e) => {
 				if (!disabled) {
 					open = !open;
 				}

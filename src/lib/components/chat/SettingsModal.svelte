@@ -191,43 +191,32 @@
 				'web search in chat'
 			]
 		},
-		...($user?.role === 'admin' || $user?.role === 'user'
-			? [
-					{
-						id: 'connections',
-						title: 'Connections',
-						keywords: [
-							'addconnection',
-							'add connection',
-							'manageconnections',
-							'manage connections',
-							'manage direct connections',
-							'managedirectconnections',
-							'settings'
-						]
-					}
-				]
-			: []),
-
-		...($user?.role === 'admin' ||
-		($user?.role === 'user' && $user?.permissions?.features?.direct_tool_servers)
-			? [
-					{
-						id: 'tools',
-						title: 'Tools',
-						keywords: [
-							'addconnection',
-							'add connection',
-							'managetools',
-							'manage tools',
-							'manage tool servers',
-							'managetoolservers',
-							'settings'
-						]
-					}
-				]
-			: []),
-
+		{
+			id: 'connections',
+			title: 'Connections',
+			keywords: [
+				'addconnection',
+				'add connection',
+				'manageconnections',
+				'manage connections',
+				'manage direct connections',
+				'managedirectconnections',
+				'settings'
+			]
+		},
+		{
+			id: 'tools',
+			title: 'External Tools',
+			keywords: [
+				'addconnection',
+				'add connection',
+				'managetools',
+				'manage tools',
+				'manage tool servers',
+				'managetoolservers',
+				'settings'
+			]
+		},
 		{
 			id: 'personalization',
 			title: 'Personalization',
@@ -717,7 +706,7 @@
 											/>
 										</svg>
 									</div>
-									<div class=" self-center">{$i18n.t('Tools')}</div>
+									<div class=" self-center">{$i18n.t('External Tools')}</div>
 								</button>
 							{/if}
 						{:else if tabId === 'personalization'}

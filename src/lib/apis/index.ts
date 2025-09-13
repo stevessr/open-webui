@@ -368,8 +368,19 @@ export const getToolServersData = async (servers: any[] = [], fetcher: any = fet
 				.filter((server: any) => (server as any)?.config?.enable)
 				.map(async (server: any) => {
 					let error = null;
+
+					let toolServerToken = null;
+					const auth_type = server?.auth_type ?? 'bearer';
+					if (auth_type === 'bearer') {
+						toolServerToken = server?.key;
+					} else if (auth_type === 'none') {
+						// No authentication
+					} else if (auth_type === 'session') {
+						toolServerToken = localStorage.token;
+					}
+
 					const data = await getToolServerData(
-						((server?.auth_type ?? 'bearer') === 'bearer' ? server?.key : localStorage.token) as any,
+						toolServerToken,
 						(server?.path ?? '').includes('://')
 							? server?.path
 							: `${server?.url}${(server?.path ?? '').startsWith('/') ? '' : '/'}${server?.path}`,

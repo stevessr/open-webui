@@ -172,43 +172,31 @@
 					<div class="flex items-center">{$i18n.t('Documentation')}</div>
 				</DropdownMenu.Item>
 
-				<!-- Releases -->
-				<DropdownMenu.Item
-					class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition"
-					id="menu-item-releases"
-					on:click={() => {
-						docs.openDoc({
-							id: 'releases',
-							url: 'https://github.com/open-webui/open-webui/releases',
-							title: 'Open WebUI Releases'
-						});
-						show = false;
-					}}
-				>
-					<Map className="size-5" />
-					<div class="flex items-center">{$i18n.t('Releases')}</div>
-				</DropdownMenu.Item>
+				{#if $user?.role === 'admin'}
+					<DropdownMenu.Item
+						as="a"
+						target="_blank"
+						class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition"
+						id="chat-share-button"
+						on:click={() => {
+							show = false;
+						}}
+						href="https://docs.openwebui.com"
+					>
+						<QuestionMarkCircle className="size-5" />
+						<div class="flex items-center">{$i18n.t('Documentation')}</div>
+					</DropdownMenu.Item>
 
-				<!-- Current Page Preview -->
-				<DropdownMenu.Item
-					class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition"
-					id="current-page-preview-button"
-					on:click={() => {
-						if (typeof window !== 'undefined') {
-							docs.openDoc({
-								id: window.location.href,
-								url: window.location.href,
-								title: 'Current Page Preview'
-							});
-						}
-						show = false;
-					}}
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 20 20"
-						fill="currentColor"
-						class="size-5"
+					<!-- Releases -->
+					<DropdownMenu.Item
+						as="a"
+						target="_blank"
+						class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition"
+						id="chat-share-button"
+						on:click={() => {
+							show = false;
+						}}
+						href="https://github.com/open-webui/open-webui/releases"
 					>
 						<path
 							fill-rule="evenodd"

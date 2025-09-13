@@ -276,6 +276,18 @@ input[type='number'] {
 	outline: none;
 }
 
+.cm-gutters {
+	@apply !bg-white dark:!bg-black !border-none;
+}
+
+.cm-editor {
+	@apply bg-white dark:bg-black;
+}
+
+.tippy-box[data-theme~='dark'] {
+	@apply rounded-lg bg-gray-950 text-xs border border-gray-900 shadow-xl;
+}
+
 /* 这部分已使用 if()，保持不变 */
 .tippy-box {
 	@apply text-xs shadow-xl;
