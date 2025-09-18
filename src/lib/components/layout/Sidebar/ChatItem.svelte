@@ -237,7 +237,10 @@
 
 		setTimeout(() => {
 			const input = document.getElementById(`chat-title-input-${id}`);
-			if (input) input.focus();
+			if (input) {
+				input.focus();
+				input.select();
+			}
 		}, 0);
 	};
 
@@ -371,11 +374,8 @@
 			on:click={() => {
 				dispatch('select');
 
-				if (
-					$selectedFolder &&
-					!isChatInSelectedFolder
-				) {
-					selectedFolder.set(null); // Reset selected folder if the chat is not in it
+				if ($selectedFolder) {
+					selectedFolder.set(null);
 				}
 
 				if ($mobile) {
@@ -399,7 +399,7 @@
 			draggable="false"
 		>
 			<div class=" flex self-center flex-1 w-full">
-				<div dir="auto" class="text-left self-center overflow-hidden w-full h-[20px]">
+				<div dir="auto" class="text-left self-center overflow-hidden w-full h-[20px] truncate">
 					{title}
 				</div>
 			</div>

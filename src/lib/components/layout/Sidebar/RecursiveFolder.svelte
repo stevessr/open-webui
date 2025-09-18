@@ -64,6 +64,8 @@
 	let draggedOver = false;
 	let dragged = false;
 
+	let clickTimer = null;
+
 	let name = '';
 
 	const onDragOver = (e: DragEvent) => {
@@ -289,7 +291,7 @@
 		}
 	};
 
-	const updateHandler = async ({ name, data }: { name: string; data?: any }) => {
+	const updateHandler = async ({ name, meta, data }) => {
 		if (name === '') {
 			toast.error(get(i18n).t('Folder name cannot be empty.'));
 			return;
@@ -302,6 +304,7 @@
 
 		const res = await updateFolderById(localStorage.token, folderId, {
 			name,
+			...(meta ? { meta } : {}),
 			...(data ? { data } : {})
 		}).catch((error) => {
 			toast.error(`${error}`);
@@ -373,14 +376,15 @@
 		console.log('Edit');
 		await tick();
 		name = folders[folderId].name;
-
 		edit = true;
+
+		await tick();
 		await tick();
 
 		const input = document.getElementById(`folder-${folderId}-input`);
-
 		if (input) {
 			input.focus();
+			input.select();
 		}
 	};
 
@@ -456,47 +460,64 @@
 		<div class="w-full group">
 			<button
 				id="folder-{folderId}-button"
-				class="relative w-full py-1.5 px-2 rounded-lg flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-500 font-medium hover:bg-gray-100 dark:hover:bg-gray-900 transition {$selectedFolder?.id ===
+				class="relative w-full py-1 px-1.5 rounded-lg flex items-center gap-1.5 hover:bg-gray-100 dark:hover:bg-gray-900 transition {$selectedFolder?.id ===
 				folderId
 					? 'bg-gray-100 dark:bg-gray-900'
 					: ''}"
-				on:dblclick={() => {
+				on:dblclick={(e) => {
+					if (clickTimer) {
+						clearTimeout(clickTimer); // cancel the single-click action
+						clickTimer = null;
+					}
 					renameHandler();
 				}}
 				on:click={async (e) => {
-					await goto('/');
-
-					selectedFolder.set(folders[folderId]);
-
-					if ($mobile) {
-						showSidebar.set(!$showSidebar);
+					(e) => e.stopPropagation();
+					if (clickTimer) {
+						clearTimeout(clickTimer);
+						clickTimer = null;
 					}
+
+					clickTimer = setTimeout(async () => {
+						await goto('/');
+
+						selectedFolder.set(folders[folderId]);
+
+						if ($mobile) {
+							showSidebar.set(!$showSidebar);
+						}
+						clickTimer = null;
+					}, 100); // 100ms delay (typical double-click threshold)
+				}}
+				on:pointerup={(e) => {
+					e.stopPropagation();
 				}}
 			>
 				<button
-					class="text-gray-300 dark:text-gray-600 transition-all"
+					class="text-gray-500 dark:text-gray-500 transition-all p-1 hover:bg-gray-200 dark:hover:bg-gray-850 rounded-lg"
 					on:click={(e) => {
 						e.stopPropagation();
+						open = !open;
 					}}
 				>
 					{#if folders[folderId]?.meta?.icon}
 						<div class="flex group-hover:hidden transition-all">
-							<Emoji className="size-4" shortCode={folders[folderId].meta.icon} />
+							<Emoji className="size-3.5" shortCode={folders[folderId].meta.icon} />
 						</div>
 
 						<div class="hidden group-hover:flex transition-all p-[1px]">
 							{#if open}
-								<ChevronDown className=" size-3.5" strokeWidth="2.5" />
+								<ChevronDown className=" size-3" strokeWidth="2.5" />
 							{:else}
-								<ChevronRight className=" size-3.5" strokeWidth="2.5" />
+								<ChevronRight className=" size-3" strokeWidth="2.5" />
 							{/if}
 						</div>
 					{:else}
 						<div class="p-[1px]">
 							{#if open}
-								<ChevronDown className=" size-3.5" strokeWidth="2.5" />
+								<ChevronDown className=" size-3" strokeWidth="2.5" />
 							{:else}
-								<ChevronRight className=" size-3.5" strokeWidth="2.5" />
+								<ChevronRight className=" size-3" strokeWidth="2.5" />
 							{/if}
 						</div>
 					{/if}
@@ -508,8 +529,8 @@
 							id="folder-{folderId}-input"
 							type="text"
 							bind:value={name}
-							on:focus={handleInputFocus}
 							on:blur={() => {
+								console.log('Blur');
 								updateHandler({ name });
 								edit = false;
 							}}
@@ -527,7 +548,7 @@
 									edit = false;
 								}
 							}}
-							class="w-full h-full bg-transparent text-gray-500 dark:text-gray-500 outline-hidden"
+							class="w-full h-full bg-transparent outline-hidden"
 						/>
 					{:else}
 						{folders[folderId].name}
@@ -536,10 +557,6 @@
 
 				<div
 					class="absolute z-10 right-2 invisible group-hover:visible self-center flex items-center dark:text-gray-300"
-					on:pointerup={(e) => {
-						e.stopPropagation();
-					}}
-					on:click={(e) => e.stopPropagation()}
 				>
 					<FolderMenu
 						{i18n}
@@ -553,10 +570,7 @@
 							exportHandler();
 						}}
 					>
-						<div
-							class="p-0.5 dark:text-gray-300 dark:hover:bg-gray-850 rounded-lg touch-auto"
-							on:click|stopPropagation
-						>
+						<div class="p-1 dark:hover:bg-gray-850 rounded-lg touch-auto">
 							<EllipsisHorizontal className="size-4" strokeWidth="2.5" />
 						</div>
 					</FolderMenu>

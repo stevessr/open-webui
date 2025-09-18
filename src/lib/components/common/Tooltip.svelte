@@ -6,17 +6,23 @@
 
 	import tippy from 'tippy.js';
 
+	export let elementId = '';
+
+	export let as = 'div';
+	export let className = 'flex';
+
 	export let placement = 'top';
 	export let content = `I'm a tooltip!`;
 	export let touch = true;
-	export let className = 'flex';
 	export let theme = '';
 	export let offset = [0, 4];
 	export let allowHTML = true;
 	export let tippyOptions = {};
 
-	let tooltipElement: any;
-	let tooltipInstance: any;
+	export let onClick = () => {};
+
+	let tooltipElement;
+	let tooltipInstance;
 
 	// Function to get the appropriate tippy theme based on current app theme
 	const getTippyTheme = (appTheme: string, customTheme: string): string => {
@@ -76,6 +82,9 @@
 	});
 </script>
 
-<div bind:this={tooltipElement} class={className}>
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<svelte:element this={as} bind:this={tooltipElement} class={className} on:click={onClick}>
 	<slot />
-</div>
+</svelte:element>
+
+<slot name="tooltip"></slot>

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { v4 as uuidv4 } from 'uuid';
 	import { toast } from 'svelte-sonner';
-	import mermaid from 'mermaid';
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge';
 
 	import { getContext, onDestroy, onMount, tick } from 'svelte';
@@ -37,6 +36,7 @@
 		showArtifacts,
 		tools,
 		toolServers,
+		functions,
 		selectedFolder,
 		pinnedChats
 	} from '$lib/stores';
@@ -88,6 +88,8 @@
 	import Spinner from '../common/Spinner.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
+	import { getFunctions } from '$lib/apis/functions';
+	import Image from '../common/Image.svelte';
 
 	export let chatIdProp = '';
 
@@ -236,33 +238,58 @@
 	};
 
 	const resetInput = () => {
-		console.debug('resetInput');
-		setToolIds();
-
+		selectedToolIds = [];
 		selectedFilterIds = [];
 		webSearchEnabled = false;
 		imageGenerationEnabled = false;
 		codeInterpreterEnabled = false;
+
+		setDefaults();
 	};
 
-	const setToolIds = async () => {
+	const setDefaults = async () => {
 		if (!$tools) {
 			tools.set(await getTools(localStorage.token));
 		}
-
+		if (!$functions) {
+			functions.set(await getFunctions(localStorage.token));
+		}
 		if (selectedModels.length !== 1 && !atSelectedModel) {
 			return;
 		}
 
 		const model = atSelectedModel ?? $models.find((m) => m.id === selectedModels[0]);
-		if (model && model?.info?.meta?.toolIds) {
-			selectedToolIds = [
-				...new Set(
-					[...(model?.info?.meta?.toolIds ?? [])].filter((id) => $tools.find((t) => t.id === id))
-				)
-			];
-		} else {
-			selectedToolIds = [];
+		if (model) {
+			// Set Default Tools
+			if (model?.info?.meta?.toolIds) {
+				selectedToolIds = [
+					...new Set(
+						[...(model?.info?.meta?.toolIds ?? [])].filter((id) => $tools.find((t) => t.id === id))
+					)
+				];
+			}
+
+			// Set Default Filters (Toggleable only)
+			if (model?.info?.meta?.defaultFilterIds) {
+				selectedFilterIds = model.info.meta.defaultFilterIds.filter((id) =>
+					model?.filters?.find((f) => f.id === id)
+				);
+			}
+
+			// Set Default Features
+			if (model?.info?.meta?.defaultFeatureIds) {
+				if (model.info?.meta?.capabilities?.['image_generation']) {
+					imageGenerationEnabled = model.info.meta.defaultFeatureIds.includes('image_generation');
+				}
+
+				if (model.info?.meta?.capabilities?.['web_search']) {
+					webSearchEnabled = model.info.meta.defaultFeatureIds.includes('web_search');
+				}
+
+				if (model.info?.meta?.capabilities?.['code_interpreter']) {
+					codeInterpreterEnabled = model.info.meta.defaultFeatureIds.includes('code_interpreter');
+				}
+			}
 		}
 	};
 
@@ -1464,19 +1491,11 @@
 		prompt = '';
 
 		const messages = createMessagesList(history, history.currentId);
-
-		// Reset chat input textarea
-		if (!($settings?.richTextInput ?? true)) {
-			const chatInputElement = document.getElementById('chat-input');
-
-			if (chatInputElement) {
-				await tick();
-				chatInputElement.style.height = '';
-			}
-		}
-
 		const _files = JSON.parse(JSON.stringify(files));
-		chatFiles.push(..._files.filter((item) => ['doc', 'file', 'collection'].includes(item.type)));
+
+		chatFiles.push(
+			..._files.filter((item) => ['doc', 'text', 'file', 'collection'].includes(item.type))
+		);
 		chatFiles = chatFiles.filter(
 			// Remove duplicates
 			(item, index, array) =>
@@ -1667,7 +1686,7 @@
 				(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.web_search ?? true
 			).length === currentModels.length
 		) {
-			if (($settings?.webSearch ?? false) === 'always') {
+			if ($config?.features?.enable_web_search && ($settings?.webSearch ?? false) === 'always') {
 				features = { ...features, web_search: true };
 			}
 		}
@@ -1696,7 +1715,7 @@
 		let files = JSON.parse(JSON.stringify(chatFiles));
 		files.push(
 			...(userMessage?.files ?? []).filter((item) =>
-				['doc', 'text', 'file', 'note', 'collection'].includes(item.type)
+				['doc', 'text', 'file', 'note', 'chat', 'collection'].includes(item.type)
 			)
 		);
 		// Remove duplicates
@@ -1769,6 +1788,23 @@
 			}))
 			.filter((message) => message?.role === 'user' || message?.content?.trim());
 
+		const toolIds = [];
+		const toolServerIds = [];
+
+		for (const toolId of selectedToolIds) {
+			if (toolId.startsWith('direct_server:')) {
+				let serverId = toolId.replace('direct_server:', '');
+				// Check if serverId is a number
+				if (!isNaN(parseInt(serverId))) {
+					toolServerIds.push(parseInt(serverId));
+				} else {
+					toolServerIds.push(serverId);
+				}
+			} else {
+				toolIds.push(toolId);
+			}
+		}
+
 		const res = await generateOpenAIChatCompletion(
 			localStorage.token,
 			{
@@ -1789,8 +1825,10 @@
 				files: (files?.length ?? 0) > 0 ? files : undefined,
 
 				filter_ids: selectedFilterIds.length > 0 ? selectedFilterIds : undefined,
-				tool_ids: selectedToolIds.length > 0 ? selectedToolIds : undefined,
-				tool_servers: $toolServers,
+				tool_ids: toolIds.length > 0 ? toolIds : undefined,
+				tool_servers: ($toolServers ?? []).filter(
+					(server, idx) => toolServerIds.includes(idx) || toolServerIds.includes(server?.id)
+				),
 				features: getFeatures(),
 				variables: {
 					...getPromptVariables($user?.name, $settings?.userLocation ? userLocation : undefined)
@@ -2225,34 +2263,101 @@
 >
 	{#if !loading}
 		<div in:fade={{ duration: 50 }} class="w-full h-full flex flex-col">
-			{#if $settings?.backgroundImageUrl ?? null}
-				{#if $settings?.backgroundImageUrl.endsWith('.mp4')}
-					<!-- Video background -->
+			<!-- 首先判断是否有来自 selectedFolder 的背景URL -->
+			{#if selectedFolder && selectedFolder.meta && selectedFolder.meta.background_image_url}
+				<!-- 如果有，判断这个URL是否是视频 -->
+				{#if selectedFolder.meta.background_image_url
+					.toLowerCase()
+					.endsWith('.mp4') || selectedFolder.meta.background_image_url
+						.toLowerCase()
+						.endsWith('.webm') || selectedFolder.meta.background_image_url
+						.toLowerCase()
+						.endsWith('.ogg')}
+					<!-- 如果是视频，渲染 <video> 标签 -->
 					<video
-						class="absolute top-0 left-0 w-full h-full object-cover"
-						src={$settings.backgroundImageUrl}
+						class="absolute {$showSidebar
+							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
+							: ''} top-0 left-0 w-full h-full object-cover z-0"
+						src={selectedFolder.meta.background_image_url}
 						autoplay
-						muted
 						loop
+						muted
 						playsinline
-					>
-						<track kind="captions" />
-					</video>
+						preload="auto"
+					/>
 				{:else}
+					<!-- 如果是图片，渲染 <div> 标签作为图片背景 -->
 					<div
-						class="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
-						style="background-image: url({$settings?.backgroundImageUrl ??
-						$config?.license_metadata?.background_image_url})  "
+						class="absolute {$showSidebar
+							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
+							: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
+						style="background-image: url({selectedFolder.meta.background_image_url})"
 					/>
 				{/if}
-
-				<div
-					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90 z-0"
-				/>
+				<!-- 否则，判断是否有来自 settings 的背景URL -->
+			{:else if settings?.backgroundImageUrl}
+				<!-- 如果有，判断这个URL是否是视频 -->
+				{#if settings.backgroundImageUrl
+					.toLowerCase()
+					.endsWith('.mp4') || settings.backgroundImageUrl
+						.toLowerCase()
+						.endsWith('.webm') || settings.backgroundImageUrl.toLowerCase().endsWith('.ogg')}
+					<!-- 如果是视频，渲染 <video> 标签 -->
+					<video
+						class="absolute {$showSidebar
+							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
+							: ''} top-0 left-0 w-full h-full object-cover z-0"
+						src={settings.backgroundImageUrl}
+						autoplay
+						loop
+						muted
+						playsinline
+						preload="auto"
+					/>
+				{:else}
+					<!-- 如果是图片，渲染 <div> 标签作为图片背景 -->
+					<div
+						class="absolute {$showSidebar
+							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
+							: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
+						style="background-image: url({settings.backgroundImageUrl})"
+					/>
+				{/if}
+				<!-- 否则，判断是否有来自 config 的背景URL -->
+			{:else if config?.license_metadata?.background_image_url}
+				<!-- 如果有，判断这个URL是否是视频 -->
+				{#if config.license_metadata.background_image_url
+					.toLowerCase()
+					.endsWith('.mp4') || config.license_metadata.background_image_url
+						.toLowerCase()
+						.endsWith('.webm') || config.license_metadata.background_image_url
+						.toLowerCase()
+						.endsWith('.ogg')}
+					<!-- 如果是视频，渲染 <video> 标签 -->
+					<video
+						class="absolute {$showSidebar
+							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
+							: ''} top-0 left-0 w-full h-full object-cover z-0"
+						src={config.license_metadata.background_image_url}
+						autoplay
+						loop
+						muted
+						playsinline
+						preload="auto"
+					/>
+				{:else}
+					<!-- 如果是图片，渲染 <div> 标签作为图片背景 -->
+					<div
+						class="absolute {$showSidebar
+							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
+							: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
+						style="background-image: url({config.license_metadata.background_image_url})"
+					/>
+				{/if}
 			{/if}
 
 			<PaneGroup direction="horizontal" class="w-full h-full">
-				<Pane defaultSize={50} class="h-full flex relative max-w-full flex-col">
+				<Pane defaultSize={50} minSize={30} class="h-full flex relative max-w-full flex-col">
 					<Navbar
 						bind:this={navbarElement}
 						chat={{
@@ -2271,7 +2376,6 @@
 						bind:selectedModels
 						shareEnabled={!!history.currentId}
 						{initNewChat}
-						showBanners={!showCommands}
 						archiveChatHandler={() => {}}
 						{moveChatHandler}
 						onSaveTempChat={async () => {
@@ -2391,11 +2495,7 @@
 										if (e.detail || files.length > 0) {
 											await tick();
 
-											submitPrompt(
-												($settings?.richTextInput ?? true)
-													? e.detail.replaceAll('\n\n', '\n')
-													: e.detail
-											);
+											submitPrompt(e.detail.replaceAll('\n\n', '\n'));
 										}
 									}}
 								/>
@@ -2444,11 +2544,7 @@
 										clearDraft();
 										if (e.detail || files.length > 0) {
 											await tick();
-											submitPrompt(
-												($settings?.richTextInput ?? true)
-													? e.detail.replaceAll('\n\n', '\n')
-													: e.detail
-											);
+											submitPrompt(e.detail.replaceAll('\n\n', '\n'));
 										}
 									}}
 								/>

@@ -217,19 +217,13 @@
 		</div>
 	</div>
 
-	<div
-		class="scrollbar-hidden relative whitespace-nowrap overflow-x-auto max-w-full rounded-sm pt-0.5"
-	>
-		<table
-			class="w-full text-sm text-left text-gray-500 dark:text-gray-400 table-auto max-w-full rounded-sm"
-		>
-			<thead
-				class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-850 dark:text-gray-400 -translate-y-0.5"
-			>
-				<tr class="">
+	<div class="scrollbar-hidden relative whitespace-nowrap overflow-x-auto max-w-full">
+		<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 table-auto max-w-full">
+			<thead class="text-xs text-gray-800 uppercase bg-transparent dark:text-gray-200">
+				<tr class=" border-b-2 border-gray-100 dark:border-gray-800">
 					<th
 						scope="col"
-						class="px-3 py-1.5 cursor-pointer select-none"
+						class="px-2.5 py-2 cursor-pointer select-none"
 						on:click={() => setSortKey('role')}
 					>
 						<div class="flex gap-1.5 items-center">
@@ -252,7 +246,7 @@
 					</th>
 					<th
 						scope="col"
-						class="px-3 py-1.5 cursor-pointer select-none"
+						class="px-2.5 py-2 cursor-pointer select-none"
 						on:click={() => setSortKey('name')}
 					>
 						<div class="flex gap-1.5 items-center">
@@ -275,7 +269,7 @@
 					</th>
 					<th
 						scope="col"
-						class="px-3 py-1.5 cursor-pointer select-none"
+						class="px-2.5 py-2 cursor-pointer select-none"
 						on:click={() => setSortKey('email')}
 					>
 						<div class="flex gap-1.5 items-center">
@@ -299,7 +293,7 @@
 
 					<th
 						scope="col"
-						class="px-3 py-1.5 cursor-pointer select-none"
+						class="px-2.5 py-2 cursor-pointer select-none"
 						on:click={() => setSortKey('last_active_at')}
 					>
 						<div class="flex gap-1.5 items-center">
@@ -322,7 +316,7 @@
 					</th>
 					<th
 						scope="col"
-						class="px-3 py-1.5 cursor-pointer select-none"
+						class="px-2.5 py-2 cursor-pointer select-none"
 						on:click={() => setSortKey('created_at')}
 					>
 						<div class="flex gap-1.5 items-center">
@@ -345,7 +339,7 @@
 
 					<th
 						scope="col"
-						class="px-3 py-1.5 cursor-pointer select-none"
+						class="px-2.5 py-2 cursor-pointer select-none"
 						on:click={() => setSortKey('oauth_sub')}
 					>
 						<div class="flex gap-1.5 items-center">
@@ -367,7 +361,7 @@
 						</div>
 					</th>
 
-					<th scope="col" class="px-3 py-2 text-right" />
+					<th scope="col" class="px-2.5 py-2 text-right" />
 				</tr>
 			</thead>
 			<tbody class="">
@@ -520,11 +514,11 @@
 > [!NOTE]
 > # **Hey there! 👋**
 >
-> It looks like you have over 50 users — that usually falls under organizational usage.
+> It looks like you have over 50 users, that usually falls under organizational usage.
 > 
-> Open WebUI is proudly open source and completely free, with no hidden limits — and we'd love to keep it that way. 🌱  
+> Open WebUI is completely free to use as-is, with no restrictions or hidden limits, and we'd love to keep it that way. 🌱  
 >
-> By supporting the project through sponsorship or an enterprise license, you’re not only helping us stay independent, you’re also helping us ship new features faster, improve stability, and grow the project for the long haul. With an *enterprise license*, you also get additional perks like dedicated support, customization options, and more — all at a fraction of what it would cost to build and maintain internally.  
+> By supporting the project through sponsorship or an enterprise license, you’re not only helping us stay independent, you’re also helping us ship new features faster, improve stability, and grow the project for the long haul. With an *enterprise license*, you also get additional perks like dedicated support, customization options, and more, all at a fraction of what it would cost to build and maintain internally.  
 > 
 > Your support helps us stay independent and continue building great tools for everyone. 💛
 > 

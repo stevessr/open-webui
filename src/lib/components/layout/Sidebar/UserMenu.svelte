@@ -77,15 +77,15 @@
 
 	<slot name="content">
 		<DropdownMenu.Content
-			id="user-menu"
-			class="w-full {className} text-sm rounded-xl px-1 py-1.5 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg font-primary"
+					id="user-menu"
+			class="w-full {className}  rounded-2xl px-1 py-1  border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg text-sm"
 			sideOffset={4}
 			side="bottom"
 			align="start"
 			transition={flyAndScale}
 		>
 			<DropdownMenu.Item
-				class="flex rounded-md py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+				class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer"
 				on:click={async () => {
 					await showSettings.set(true);
 					show = false;
@@ -102,9 +102,8 @@
 			</DropdownMenu.Item>
 
 			<DropdownMenu.Item
-				class="flex rounded-md py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
-				on:click={() => {
-					dispatch('show', 'archived-chat');
+				class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer"
+				on:click={async () => {
 					show = false;
 
 					if ($mobile) {
@@ -120,8 +119,10 @@
 
 			{#if role === 'admin'}
 				<DropdownMenu.Item
-					class="flex rounded-md py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition select-none"
-					on:click={() => {
+					as="a"
+					href="/playground"
+					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition select-none"
+					on:click={async () => {
 						show = false;
 						if ($mobile) {
 							showSidebar.set(false);
@@ -136,8 +137,10 @@
 				</DropdownMenu.Item>
 
 				<DropdownMenu.Item
-					class="flex rounded-md py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition select-none"
-					on:click={() => {
+					as="a"
+					href="/admin"
+					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition select-none"
+					on:click={async () => {
 						show = false;
 						if ($mobile) {
 							showSidebar.set(false);
@@ -176,7 +179,7 @@
 					<DropdownMenu.Item
 						as="a"
 						target="_blank"
-						class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition"
+						class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition"
 						id="chat-share-button"
 						on:click={() => {
 							show = false;
@@ -191,7 +194,7 @@
 					<DropdownMenu.Item
 						as="a"
 						target="_blank"
-						class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition"
+						class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition"
 						id="chat-share-button"
 						on:click={() => {
 							show = false;
@@ -213,7 +216,7 @@
 				</DropdownMenu.Item>
 
 				<DropdownMenu.Item
-					class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition"
+					class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full  hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition cursor-pointer"
 					id="chat-share-button"
 					on:click={() => {
 						showShortcuts.set(!$showShortcuts);
@@ -239,7 +242,7 @@
 			<hr class=" border-gray-100 dark:border-gray-800 my-1 p-0" />
 
 			<DropdownMenu.Item
-				class="flex rounded-md py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+				class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
 				on:click={async () => {
 					const res = await userSignOut();
 					user.set(undefined);
@@ -265,7 +268,7 @@
 							: ''}
 					>
 						<div
-							class="flex rounded-md py-1 px-3 text-xs gap-2.5 items-center"
+							class="flex rounded-xl py-1 px-3 text-xs gap-2.5 items-center"
 							on:mouseenter={() => {
 								getUsageInfo();
 							}}

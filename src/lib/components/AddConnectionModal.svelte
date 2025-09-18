@@ -138,7 +138,7 @@
 				return;
 			}
 
-			if (!key) {
+			if (!key && !['azure_ad', 'microsoft_entra_id'].includes(auth_type)) {
 				loading = false;
 
 				toast.error($i18n.t('Key is required'));
@@ -347,6 +347,9 @@
 												<option value="session">{$i18n.t('Session')}</option>
 												{#if !direct}
 													<option value="system_oauth">{$i18n.t('OAuth')}</option>
+													{#if azure}
+														<option value="microsoft_entra_id">{$i18n.t('Entra ID')}</option>
+													{/if}
 												{/if}
 											{/if}
 										</select>
@@ -376,6 +379,12 @@
 												class={`text-xs self-center translate-y-[1px] ${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500'}`}
 											>
 												{$i18n.t('Forwards system user OAuth access token to authenticate')}
+											</div>
+										{:else if ['azure_ad', 'microsoft_entra_id'].includes(auth_type)}
+											<div
+												class={`text-xs self-center translate-y-[1px] ${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500'}`}
+											>
+												{$i18n.t('Uses DefaultAzureCredential to authenticate')}
 											</div>
 										{/if}
 									</div>
@@ -459,7 +468,7 @@
 							</div>
 						{/if}
 
-						<div class="flex flex-col w-full">
+						<div class="flex flex-col w-full mt-2">
 							<div class="mb-1 flex justify-between">
 								<div
 									class={`mb-0.5 text-xs text-gray-500
@@ -512,8 +521,6 @@
 							{/if}
 						</div>
 
-						<hr class=" border-gray-100 dark:border-gray-700/10 my-1.5 w-full" />
-
 						<div class="flex items-center">
 							<label class="sr-only" for="add-model-id-input">{$i18n.t('Add a model ID')}</label>
 							<input
@@ -541,9 +548,7 @@
 						</div>
 					</div>
 
-					<hr class=" border-gray-50 dark:border-gray-850 my-2.5 w-full" />
-
-					<div class="flex gap-2">
+					<div class="flex gap-2 mt-2">
 						<div class="flex flex-col w-full">
 							<div
 								class={`mb-0.5 text-xs text-gray-500

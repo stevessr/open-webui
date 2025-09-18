@@ -456,7 +456,7 @@
 							goto(`/channels/${event.channel_id}`);
 						},
 						content: data?.content,
-						title: event?.channel?.name
+						title: `#${event?.channel?.name}`
 					},
 					duration: 15000,
 					unstyled: true
@@ -724,10 +724,15 @@
 	<title>{$WEBUI_NAME}</title>
 	<link crossorigin="anonymous" rel="icon" href="{WEBUI_BASE_URL}/static/favicon.png" />
 
-	
-	
-	<!-- <link rel="stylesheet" type="text/css" href="/themes/rosepine.css" />
-	<link rel="stylesheet" type="text/css" href="/themes/rosepine-dawn.css" /> -->
+	<meta name="apple-mobile-web-app-title" content={$WEBUI_NAME} />
+	<meta name="description" content={$WEBUI_NAME} />
+	<link
+		rel="search"
+		type="application/opensearchdescription+xml"
+		title={$WEBUI_NAME}
+		href="/opensearch.xml"
+		crossorigin="use-credentials"
+	/>
 </svelte:head>
 
 {#if showRefresh}

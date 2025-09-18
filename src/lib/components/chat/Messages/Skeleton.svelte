@@ -2,14 +2,22 @@
 	export let size = 'md';
 </script>
 
-<span class="relative flex {size === 'md' ? 'size-3 my-2' : 'size-2 my-1'} mx-1">
+<span
+	class="relative flex {size === 'md'
+		? 'size-3 my-2'
+		: size === 'xs'
+			? 'size-1.5 my-1'
+			: 'size-2 my-1'} mx-1"
+>
 	<span
 		class="absolute inline-flex h-full w-full breathing-light-skeleton rounded-full opacity-75"
 	></span>
 	<span
 		class="relative inline-flex {size === 'md'
 			? 'size-3'
-			: 'size-2'} rounded-full breathing-light-core"
+			: size === 'xs'
+				? 'size-1.5'
+				: 'size-2'} rounded-full breathing-light-core animate-size"
 	></span>
 </span>
 
