@@ -348,7 +348,9 @@
 		}, 500);
 	};
 
-	$: isExpandedUpdateDebounceHandler(open);
+	$: if (open) {
+		isExpandedUpdateDebounceHandler();
+	}
 
 	let sortedChildren: Folder[] = [];
 	$: {
