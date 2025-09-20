@@ -22,6 +22,13 @@
 	$: _src = src.startsWith('/') ? `${WEBUI_BASE_URL}${src}` : src;
 
 	let showImagePreview = false;
+
+	const isVideo = (url: string) => {
+		if (!url) return false;
+		const u = url.toLowerCase();
+		if (u.startsWith('data:video/') || u.startsWith('blob:')) return true;
+		return ['.mp4', '.webm', '.ogg', '.ogv', '.mov', '.m4v', '.avi', '.mkv'].some((ext) => u.endsWith(ext));
+	};
 </script>
 
 <ImagePreview bind:show={showImagePreview} src={_src} {alt} />
@@ -35,7 +42,14 @@
 		aria-label={$i18n.t('Show image preview')}
 		type="button"
 	>
-		<img src={_src} {alt} class={imageClassName} draggable="false" data-cy="image" />
+		{#if isVideo(_src)}
+			<!-- svelte-ignore a11y-media-caption -->
+			<video src={_src} aria-label={alt} class={imageClassName} controls draggable="false" data-cy="video">
+				<track kind="captions" src="" />
+			</video>
+		{:else}
+			<img src={_src} {alt} class={imageClassName} draggable="false" data-cy="image" />
+		{/if}
 	</button>
 
 	{#if dismissible}

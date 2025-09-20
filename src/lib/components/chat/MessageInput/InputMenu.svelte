@@ -82,7 +82,7 @@
 <input
 	id="camera-input"
 	type="file"
-	accept="image/*"
+	accept="image/*,video/*"
 	capture="environment"
 	on:change={handleFileChange}
 	style="display: none;"

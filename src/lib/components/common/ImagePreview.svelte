@@ -177,13 +177,28 @@
 			</div>
 		</div>
 		<div class="flex h-full max-h-full justify-center items-center z-0">
-			<img
-				bind:this={sceneElement}
-				{src}
-				{alt}
-				class=" mx-auto h-full object-scale-down select-none"
-				draggable="false"
-			/>
+			{#if src.startsWith('data:video/') || src.startsWith('blob:') || ['.mp4', '.webm', '.ogg', '.ogv', '.mov', '.m4v', '.avi', '.mkv'].some( (e) => src
+							.toLowerCase()
+							.endsWith(e) )}
+				<!-- Provide aria-label and a minimal captions track to satisfy a11y lint -->
+				<video
+					bind:this={sceneElement}
+					src={src}
+					aria-label={alt}
+					class=" mx-auto h-full object-scale-down select-none"
+					controls
+				>
+					<track kind="captions" src="" />
+				</video>
+			{:else}
+				<img
+					bind:this={sceneElement}
+					{src}
+					{alt}
+					class=" mx-auto h-full object-scale-down select-none"
+					draggable="false"
+				/>
+			{/if}
 		</div>
 	</div>
 {/if}

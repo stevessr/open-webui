@@ -139,7 +139,7 @@
 						id="folder-background-image-input"
 						type="file"
 						hidden
-						accept="image/*"
+						accept="image/*,video/*"
 						on:change={(e) => {
 							const inputFiles = e.target.files;
 
@@ -149,12 +149,11 @@
 								meta.background_image_url = originalImageUrl;
 							};
 
+
 							if (
 								inputFiles &&
 								inputFiles.length > 0 &&
-								['image/gif', 'image/webp', 'image/jpeg', 'image/png'].includes(
-									inputFiles[0]['type']
-								)
+								(inputFiles[0]['type'].startsWith('image/') || inputFiles[0]['type'].startsWith('video/'))
 							) {
 								reader.readAsDataURL(inputFiles[0]);
 							} else {

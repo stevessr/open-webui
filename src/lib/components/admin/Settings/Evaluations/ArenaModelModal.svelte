@@ -162,7 +162,7 @@
 								bind:this={imageInputElement}
 								type="file"
 								hidden
-								accept="image/*"
+								accept="image/*,video/*"
 								on:change={(e) => {
 									const files = e.target.files ?? [];
 									let reader = new FileReader();
@@ -210,12 +210,8 @@
 										};
 									};
 
-									if (
-										files.length > 0 &&
-										['image/gif', 'image/webp', 'image/jpeg', 'image/png'].includes(
-											files[0]['type']
-										)
-									) {
+
+									if (files.length > 0 && (files[0]['type'].startsWith('image/') || files[0]['type'].startsWith('video/'))) {
 										reader.readAsDataURL(files[0]);
 									}
 								}}

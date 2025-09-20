@@ -347,7 +347,7 @@
 			bind:files={inputFiles}
 			type="file"
 			hidden
-			accept="image/*"
+			accept="image/*,video/*"
 			on:change={() => {
 				let reader = new FileReader();
 				reader.onload = (event) => {
@@ -395,13 +395,7 @@
 					};
 				};
 
-				if (
-					inputFiles &&
-					inputFiles.length > 0 &&
-					['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'image/svg+xml'].includes(
-						inputFiles[0]['type']
-					)
-				) {
+				if (inputFiles && inputFiles.length > 0 && (inputFiles[0]['type'].startsWith('image/') || inputFiles[0]['type'].startsWith('video/'))) {
 					reader.readAsDataURL(inputFiles[0]);
 				} else {
 					console.log(`Unsupported File Type '${inputFiles[0]['type']}'.`);
