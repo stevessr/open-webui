@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext, tick } from 'svelte';
+	import { getContext, onMount, tick } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { config, models, settings, user } from '$lib/stores';
 	import { updateUserSettings } from '$lib/apis/users';
@@ -33,13 +33,19 @@
 
 	export let show = false;
 
+	$: if (show) {
+		addScrollListener();
+	} else {
+		removeScrollListener();
+	}
+
 	interface SettingsTab {
 		id: string;
 		title: string;
 		keywords: string[];
 	}
 
-	const searchData: SettingsTab[] = [
+	const allSettings: SettingsTab[] = [
 		{
 			id: 'general',
 			title: 'General',
@@ -226,6 +232,7 @@
 				'settings'
 			]
 		},
+
 		{
 			id: 'personalization',
 			title: 'Personalization',
@@ -461,28 +468,52 @@
 		}
 	];
 
+	let availableSettings = [];
+	let filteredSettings = [];
+
 	let search = '';
-	let visibleTabs = searchData.map((tab) => tab.id);
 	let searchDebounceTimeout;
 
-	const searchSettings = (query: string): string[] => {
-		const lowerCaseQuery = query.toLowerCase().trim();
-		return searchData
-			.filter(
-				(tab) =>
-					tab.title.toLowerCase().includes(lowerCaseQuery) ||
-					tab.keywords.some((keyword) => keyword.includes(lowerCaseQuery))
-			)
+	const getAvailableSettings = () => {
+		return allSettings.filter((tab) => {
+			if (tab.id === 'connections') {
+				return $config?.features?.enable_direct_connections;
+			}
+
+			if (tab.id === 'tools') {
+				return (
+					$user?.role === 'admin' ||
+					($user?.role === 'user' && $user?.permissions?.features?.direct_tool_servers)
+				);
+			}
+
+			return true;
+		});
+	};
+
+	const setFilteredSettings = () => {
+		filteredSettings = availableSettings
+			.filter((tab) => {
+				return (
+					search === '' ||
+					tab.title.toLowerCase().includes(search.toLowerCase().trim()) ||
+					tab.keywords.some((keyword) => keyword.includes(search.toLowerCase().trim()))
+				);
+			})
 			.map((tab) => tab.id);
+
+		if (filteredSettings.length > 0 && !filteredSettings.includes(selectedTab)) {
+			selectedTab = filteredSettings[0];
+		}
 	};
 
 	const searchDebounceHandler = () => {
-		clearTimeout(searchDebounceTimeout);
+		if (searchDebounceTimeout) {
+			clearTimeout(searchDebounceTimeout);
+		}
+
 		searchDebounceTimeout = setTimeout(() => {
-			visibleTabs = searchSettings(search);
-			if (visibleTabs.length > 0 && !visibleTabs.includes(selectedTab)) {
-				selectedTab = visibleTabs[0];
-			}
+			setFilteredSettings();
 		}, 100);
 	};
 
@@ -527,11 +558,15 @@
 		}
 	};
 
-	$: if (show) {
-		addScrollListener();
-	} else {
-		removeScrollListener();
-	}
+	onMount(() => {
+		availableSettings = getAvailableSettings();
+		setFilteredSettings();
+
+		config.subscribe((configData) => {
+			availableSettings = getAvailableSettings();
+			setFilteredSettings();
+		});
+	});
 </script>
 
 <Modal size="lg" bind:show>
@@ -572,8 +607,8 @@
 						placeholder={$i18n.t('Search')}
 					/>
 				</div>
-				{#if visibleTabs.length > 0}
-					{#each visibleTabs as tabId (tabId)}
+				{#if filteredSettings.length > 0}
+					{#each filteredSettings as tabId (tabId)}
 						{#if tabId === 'general'}
 							<button
 								role="tab"
@@ -623,11 +658,12 @@
 								<div class=" self-center">{$i18n.t('Interface')}</div>
 							</button>
 						{:else if tabId === 'connections'}
-							<button
-								role="tab"
-								aria-controls="tab-connections"
-								aria-selected={selectedTab === 'connections'}
-								class={`px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition
+							{#if $user?.role === 'admin' || ($user?.role === 'user' && $config?.features?.enable_direct_connections)}
+								<button
+									role="tab"
+									aria-controls="tab-connections"
+									aria-selected={selectedTab === 'connections'}
+									class={`px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition
 								${
 									selectedTab === 'connections'
 										? ($settings?.highContrastMode ?? false)

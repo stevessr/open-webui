@@ -18,13 +18,13 @@
 
 	import { slide } from 'svelte/transition';
 	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 
 	import ShareChatModal from '../chat/ShareChatModal.svelte';
 	import ModelSelector from '../chat/ModelSelector.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import Menu from '$lib/components/layout/Navbar/Menu.svelte';
 	import UserMenu from '$lib/components/layout/Sidebar/UserMenu.svelte';
-	import MenuLines from '../icons/MenuLines.svelte';
 	import AdjustmentsHorizontal from '../icons/AdjustmentsHorizontal.svelte';
 
 	import PencilSquare from '../icons/PencilSquare.svelte';
@@ -75,25 +75,36 @@
 			class=" bg-linear-to-b via-40% to-97% from-white via-white to-transparent dark:from-gray-900 dark:via-gray-900 dark:to-transparent pointer-events-none absolute inset-0 -bottom-7 z-[-1]"
 		></div>
 
-		<div class=" flex max-w-full w-full mx-auto px-1 pt-0.5 bg-transparent">
+		<div class=" flex max-w-full w-full mx-auto px-1.5 md:px-2 pt-0.5 bg-transparent">
 			<div class="flex items-center w-full max-w-full">
-				<div
-					class="{$showSidebar
-						? 'md:hidden'
-						: ''} mr-1 self-start flex flex-none items-center text-gray-600 dark:text-gray-400"
-				>
-					<button
-						id="sidebar-toggle-button"
-						class="cursor-pointer px-2 py-2 flex rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition"
-						on:click={() => {
-							showSidebar.set(!$showSidebar);
-						}}
-						aria-label="Toggle Sidebar"
+				{#if $mobile && !$showSidebar}
+					<div
+						class="-translate-x-0.5 mr-1 mt-1 self-start flex flex-none items-center text-gray-600 dark:text-gray-400"
 					>
-						<div class=" m-auto self-center">
-							<MenuLines />
-						</div>
-					</button>
+						<Tooltip content={$showSidebar ? $i18n.t('Close Sidebar') : $i18n.t('Open Sidebar')}>
+							<button
+								class=" cursor-pointer flex rounded-lg hover:bg-gray-100 dark:hover:bg-gray-850 transition"
+								on:click={() => {
+									showSidebar.set(!$showSidebar);
+								}}
+							>
+								<div class=" self-center p-1.5">
+									<Sidebar />
+								</div>
+							</button>
+						</Tooltip>
+					</div>
+				{/if}
+
+				<div
+					class="flex-1 overflow-hidden max-w-full py-0.5
+			{$showSidebar ? 'ml-1' : ''}
+			"
+				>
+					{#if showModelSelector}
+						<ModelSelector bind:selectedModels showSetDefault={!shareEnabled} />
+					{/if}
+				</div>
 
 				<div class="self-start flex flex-none items-center text-gray-600 dark:text-gray-400">
 					<!-- <div class="md:hidden flex self-center w-[1px] h-5 mx-2 bg-gray-300 dark:bg-stone-700" /> -->
@@ -165,6 +176,7 @@
 							</button>
 						</Tooltip>
 					{/if}
+
 					{#if shareEnabled && chat && (chat.id || $temporaryChatEnabled)}
 						<Menu
 							{chat}
@@ -215,11 +227,12 @@
 								}
 							}}
 						>
-							<button
+							<div
 								class="select-none flex rounded-xl p-1.5 w-full hover:bg-gray-50 dark:hover:bg-gray-850 transition"
 								aria-label="User Menu"
 							>
 								<div class=" self-center">
+									<span class="sr-only">{$i18n.t('User menu')}</span>
 									{#if $user.profile_image_url.toLowerCase().endsWith('.mp4')}
 										<video
 											src={$user?.profile_image_url}
@@ -238,7 +251,7 @@
 										/>
 									{/if}
 								</div>
-							</button>
+							</div>
 						</UserMenu>
 					{/if}
 				</div>
@@ -304,6 +317,6 @@
 					{/each}
 				</div>
 			</div>
-		</div>
-	{/if}
+		{/if}
+	</div>
 </nav>

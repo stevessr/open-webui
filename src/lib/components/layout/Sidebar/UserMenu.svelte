@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
-	import { createEventDispatcher, getContext, onMount, onDestroy } from 'svelte';
+	import { createEventDispatcher, getContext, onMount, tick } from 'svelte';
 
 	import { flyAndScale } from '$lib/utils/transitions';
 	import { goto } from '$app/navigation';
-
+	import { fade, slide } from 'svelte/transition';
 
 	import { getUsage } from '$lib/apis';
 	import { userSignOut } from '$lib/apis/auths';
 
-	import { showSettings, mobile, showSidebar, showShortcuts, user, docs } from '$lib/stores';
+	import { showSettings, mobile, showSidebar, showShortcuts, user } from '$lib/stores';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import ArchiveBox from '$lib/components/icons/ArchiveBox.svelte';
@@ -29,6 +29,10 @@
 	export let role = '';
 	export let help = false;
 	export let className = 'max-w-[240px]';
+
+	const dispatch = createEventDispatcher();
+
+	let usage = null;
 	let showCustomStyles = false;
 	const getUsageInfo = async () => {
 		const res = await getUsage(localStorage.token).catch((error) => {
@@ -77,20 +81,22 @@
 
 	<slot name="content">
 		<DropdownMenu.Content
-					id="user-menu"
+			id="user-menu"
 			class="w-full {className}  rounded-2xl px-1 py-1  border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg text-sm"
 			sideOffset={4}
 			side="bottom"
 			align="start"
-			transition={flyAndScale}
+			transition={(e) => fade(e, { duration: 100 })}
 		>
 			<DropdownMenu.Item
 				class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer"
 				on:click={async () => {
-					await showSettings.set(true);
 					show = false;
 
+					await showSettings.set(true);
+
 					if ($mobile) {
+						await tick();
 						showSidebar.set(false);
 					}
 				}}
@@ -106,7 +112,11 @@
 				on:click={async () => {
 					show = false;
 
+					dispatch('show', 'archived-chat');
+
 					if ($mobile) {
+						await tick();
+
 						showSidebar.set(false);
 					}
 				}}
@@ -125,9 +135,9 @@
 					on:click={async () => {
 						show = false;
 						if ($mobile) {
+							await tick();
 							showSidebar.set(false);
 						}
-						goto('/playground');
 					}}
 				>
 					<div class=" self-center mr-3">
@@ -135,7 +145,6 @@
 					</div>
 					<div class=" self-center truncate">{$i18n.t('Playground')}</div>
 				</DropdownMenu.Item>
-
 				<DropdownMenu.Item
 					as="a"
 					href="/admin"
@@ -143,9 +152,9 @@
 					on:click={async () => {
 						show = false;
 						if ($mobile) {
+							await tick();
 							showSidebar.set(false);
 						}
-						goto('/admin');
 					}}
 				>
 					<div class=" self-center mr-3">
@@ -156,24 +165,9 @@
 			{/if}
 
 			{#if help}
-				<hr class=" border-gray-100 dark:border-gray-800 my-1 p-0" />
+				<hr class=" border-gray-50 dark:border-gray-800 my-1 p-0" />
 
 				<!-- {$i18n.t('Help')} -->
-				<DropdownMenu.Item
-					class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition"
-					id="chat-share-button"
-					on:click={() => {
-						docs.openDoc({
-							id: 'documentation',
-							url: 'https://docs.openwebui.com',
-							title: 'Open WebUI Documentation'
-						});
-						show = false;
-					}}
-				>
-					<QuestionMarkCircle className="size-5" />
-					<div class="flex items-center">{$i18n.t('Documentation')}</div>
-				</DropdownMenu.Item>
 
 				{#if $user?.role === 'admin'}
 					<DropdownMenu.Item
@@ -201,26 +195,22 @@
 						}}
 						href="https://github.com/open-webui/open-webui/releases"
 					>
-						<path
-							fill-rule="evenodd"
-							d="M4.25 5.5a.75.75 0 00-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 00.75-.75v-4a.75.75 0 011.5 0v4A2.25 2.25 0 0112.75 17h-8.5A2.25 2.25 0 012 14.75v-8.5A2.25 2.25 0 014.25 4h5a.75.75 0 010 1.5h-5z"
-							clip-rule="evenodd"
-						/>
-						<path
-							fill-rule="evenodd"
-							d="M6.194 12.753a.75.75 0 001.06.053L16.5 4.44v2.81a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.553l-9.056 8.194a.75.75 0 00-.053 1.06z"
-							clip-rule="evenodd"
-						/>
-					</svg>
-					<div class="flex items-center">{$i18n.t('Preview Current Page')}</div>
-				</DropdownMenu.Item>
+						<Map className="size-5" />
+						<div class="flex items-center">{$i18n.t('Releases')}</div>
+					</DropdownMenu.Item>
+				{/if}
 
 				<DropdownMenu.Item
 					class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full  hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition cursor-pointer"
 					id="chat-share-button"
-					on:click={() => {
-						showShortcuts.set(!$showShortcuts);
+					on:click={async () => {
 						show = false;
+						showShortcuts.set(!$showShortcuts);
+
+						if ($mobile) {
+							await tick();
+							showSidebar.set(false);
+						}
 					}}
 				>
 					<Keyboard className="size-5" />
@@ -239,13 +229,13 @@
 				</DropdownMenu.Item>
 			{/if}
 
-			<hr class=" border-gray-100 dark:border-gray-800 my-1 p-0" />
+			<hr class=" border-gray-50 dark:border-gray-800 my-1 p-0" />
 
 			<DropdownMenu.Item
 				class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
 				on:click={async () => {
 					const res = await userSignOut();
-					user.set(undefined);
+					user.set(null);
 					localStorage.removeItem('token');
 
 					location.href = res?.redirect_url ?? '/auth';
@@ -260,7 +250,7 @@
 
 			{#if usage}
 				{#if usage?.user_ids?.length > 0}
-					<hr class=" border-gray-100 dark:border-gray-800 my-1 p-0" />
+					<hr class=" border-gray-50 dark:border-gray-800 my-1 p-0" />
 
 					<Tooltip
 						content={usage?.model_ids && usage?.model_ids.length > 0
