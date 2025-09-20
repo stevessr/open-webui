@@ -185,9 +185,11 @@
 				selectedIdx = 0;
 			}}
 		>
-			<div class="px-2 py-2 text-xs group">
-				{#if filteredTags.length > 0}
-					<div class="px-1 font-medium dark:text-gray-300 text-gray-700 mb-1">Tags</div>
+			<div class="px-3 py-2.5 text-xs group">
+				{#if filteredItems.length > 0}
+					<div class="px-1 font-medium dark:text-gray-300 text-gray-700 mb-1 capitalize">
+						{selectedOption}
+					</div>
 
 					<div class="max-h-60 overflow-auto">
 						{#each filteredTags as tag, tagIdx}
@@ -201,7 +203,7 @@
 									const words = value.split(' ');
 
 									words.pop();
-									words.push(`tag:${tag.id} `);
+									words.push(`${item.type}:${item.id}`);
 
 									value = words.join(' ');
 
