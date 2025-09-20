@@ -28,40 +28,13 @@
 
 	let showImagePreview = false;
 	let containerElement: HTMLElement;
-	let isInView = false;
 
-	// Lazy loading with Intersection Observer
-	onMount(() => {
-		if (!lazy) {
-			isInView = true;
-			return;
-		}
-
-		if (!containerElement) return;
-
-		const observer = new IntersectionObserver(
-			(entries) => {
-				entries.forEach((entry) => {
-					if (entry.isIntersecting) {
-						isInView = true;
-						observer.unobserve(containerElement);
-					}
-				});
-			},
-			{
-				rootMargin: '50px' // Start loading 50px before the image comes into view
-			}
-		);
-
-		observer.observe(containerElement);
-
-		return () => {
-			observer.disconnect();
-		};
-	});
-
-	// Determine the actual src to use
-	$: actualSrc = lazy ? (isInView ? _src : '') : _src;
+	const isVideo = (url: string) => {
+		if (!url) return false;
+		const u = url.toLowerCase();
+		if (u.startsWith('data:video/') || u.startsWith('blob:')) return true;
+		return ['.mp4', '.webm', '.ogg', '.ogv', '.mov', '.m4v', '.avi', '.mkv'].some((ext) => u.endsWith(ext));
+	};
 </script>
 
 <ImagePreview bind:show={showImagePreview} src={_src} {alt} />
@@ -75,23 +48,13 @@
 		aria-label={showImagePreviewLabel}
 		type="button"
 	>
-		{#if actualSrc}
-			<img
-				src={actualSrc}
-				{alt}
-				class={imageClassName}
-				draggable="false"
-				data-cy="image"
-			/>
+		{#if isVideo(_src)}
+			<!-- svelte-ignore a11y-media-caption -->
+			<video src={_src} aria-label={alt} class={imageClassName} controls draggable="false" data-cy="video">
+				<track kind="captions" src="" />
+			</video>
 		{:else}
-			<!-- Placeholder while lazy loading -->
-			<div
-				class="{imageClassName} bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center min-h-[100px]"
-			>
-				<svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-					<path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
-				</svg>
-			</div>
+			<img src={_src} {alt} class={imageClassName} draggable="false" data-cy="image" />
 		{/if}
 	</button>
 

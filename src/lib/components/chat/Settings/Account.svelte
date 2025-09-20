@@ -171,7 +171,7 @@
 			bind:this={profileImageInputElement}
 			type="file"
 			hidden
-			accept="image/*"
+			accept="image/*,video/*"
 			on:change={(e) => {
 				const files = profileImageInputElement.files ?? [];
 				let reader = new FileReader();
@@ -219,10 +219,7 @@
 					};
 				};
 
-				if (
-					files.length > 0 &&
-					['image/gif', 'image/webp', 'image/jpeg', 'image/png'].includes(files[0]['type'])
-				) {
+				if (files.length > 0 && (files[0]['type'].startsWith('image/') || files[0]['type'].startsWith('video/'))) {
 					reader.readAsDataURL(files[0]);
 				}
 			}}
@@ -344,6 +341,25 @@
 							</button>
 						</div>
 					{/if}
+				</div>
+
+				<!-- Allow paste/url input for profile image -->
+				<div class="mt-2">
+					<div class=" mb-1 text-xs font-medium">{$i18n.t('Profile Image URL')}</div>
+					<input
+						class="w-full text-sm outline-hidden"
+						type="url"
+						placeholder={$i18n.t('Paste an image or video URL')}
+						bind:value={profileImageUrl}
+						on:change={() => {
+							// If the URL is an http(s) URL, just use it directly and skip canvas compression
+							if (profileImageUrl && (profileImageUrl.startsWith('http://') || profileImageUrl.startsWith('https://') || profileImageUrl.startsWith('blob:') || profileImageUrl.startsWith('data:'))) {
+								// leave as is; if needed, more validation could be added
+							} else {
+								profileImageUrl = '';
+							}
+						}}
+					/>
 				</div>
 				<div class="flex flex-1 flex-col">
 					<div class=" flex-1">

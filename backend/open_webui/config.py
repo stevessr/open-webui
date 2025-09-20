@@ -2475,7 +2475,10 @@ RAG_ALLOWED_FILE_EXTENSIONS = PersistentConfig(
     "rag.file.allowed_extensions",
     [
         ext.strip()
-        for ext in os.environ.get("RAG_ALLOWED_FILE_EXTENSIONS", "").split(",")
+        for ext in os.environ.get("RAG_ALLOWED_FILE_EXTENSIONS", ",".join([
+            'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg',
+            'mp4', 'webm', 'mov', 'ogg', 'ogv', 'mkv', 'm4v', 'avi'
+        ])).split(",")
         if ext.strip()
     ],
 )
