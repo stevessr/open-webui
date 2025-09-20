@@ -14,6 +14,12 @@
 
 	let show = false;
 	let inputValue = '';
+
+	$: regenerateActive = inputValue !== '';
+
+	$: regenerateClass = regenerateActive
+		? 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-100'
+		: 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-300 cursor-not-allowed';
 </script>
 
 <Dropdown
@@ -53,13 +59,12 @@
 
 				<div class="ml-2 self-center flex items-center">
 					<button
-						class="{inputValue !== ''
-							? 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-100 '
-							: 'text-white bg-gray-200 dark:text-gray-900 dark:bg-gray-700 disabled'} transition rounded-full p-1 self-center"
+						class="{regenerateClass} transition rounded-full p-1 self-center"
 						on:click={() => {
 							onRegenerate(inputValue);
 							show = false;
 						}}
+						disabled={!regenerateActive}
 					>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"

@@ -404,6 +404,12 @@
 	let user = null;
 	export let placeholder = '';
 
+$: sendButtonActive = !(prompt === '' && files.length === 0);
+
+$: sendButtonClass = sendButtonActive
+	? 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-100'
+	: 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-300 cursor-not-allowed';
+
 	let visionCapableModels = [];
 	$: visionCapableModels = (atSelectedModel?.id ? [atSelectedModel.id] : selectedModels).filter(
 		(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.vision ?? true
@@ -1754,11 +1760,9 @@
 												<Tooltip content={$i18n.t('Send message')}>
 													<button
 														id="send-message-button"
-														class="{!(prompt === '' && files.length === 0)
-															? 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-100 '
-															: 'text-white bg-gray-200 dark:text-gray-900 dark:bg-gray-700 disabled'} transition rounded-full p-1.5 self-center"
+														class="{sendButtonClass} transition rounded-full p-1.5 self-center"
 														type="submit"
-														disabled={prompt === '' && files.length === 0}
+														disabled={!sendButtonActive}
 													>
 														<svg
 															xmlns="http://www.w3.org/2000/svg"

@@ -29,6 +29,12 @@
 	let selectedText: string = '';
 	let floatingInputValue: string = '';
 
+$: floatingSendActive = floatingInputValue !== '';
+
+$: floatingSendClass = floatingSendActive
+	? 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-100'
+	: 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-300 cursor-not-allowed';
+
 	let content: string = '';
 	let responseContent: string | null = null;
 	let responseDone: boolean = false;
@@ -302,14 +308,13 @@
 				/>
 
 				<div class="ml-1 mr-2">
-					<button
-						class="{floatingInputValue !== ''
-							? 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-100 '
-							: 'text-white bg-gray-200 dark:text-gray-900 dark:bg-gray-700 disabled'} transition rounded-full p-1.5 m-0.5 self-center"
-						on:click={() => {
-							actionHandler(selectedAction?.id);
-						}}
-					>
+							<button
+								class="{floatingSendClass} transition rounded-full p-1.5 m-0.5 self-center"
+								on:click={() => {
+									actionHandler(selectedAction?.id);
+								}}
+								disabled={!floatingSendActive}
+							>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							viewBox="0 0 16 16"
