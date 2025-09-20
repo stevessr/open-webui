@@ -8,6 +8,7 @@
 	export let size = 'md';
 	export let containerClassName = 'p-3';
 	export let className = 'bg-white dark:bg-gray-900 rounded-3xl';
+	export let draggable: boolean = true;
 
 	let modalElement: HTMLDivElement | null = null;
 	let contentElement: HTMLDivElement | null = null;

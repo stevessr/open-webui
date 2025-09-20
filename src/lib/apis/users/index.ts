@@ -222,7 +222,7 @@ export const searchUsers = async (token: string, query: string) => {
 	return res;
 };
 
-export const getUserSettings = async (token: string) => {
+export const getUserSettings = async (token: string, fetcher: typeof fetch = fetch) => {
 	let error = null;
 	const res = await fetcher(`${WEBUI_API_BASE_URL}/users/user/settings`, {
 		method: 'GET',

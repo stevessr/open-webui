@@ -11,7 +11,10 @@
 
 	import { getKnowledgeBases } from '$lib/apis/knowledge';
 	import { getFunctions } from '$lib/apis/functions';
-	import { getToolServersData } from '$lib/apis';
+	import { getToolServersData, getModels } from '$lib/apis';
+	import { getUserSettings } from '$lib/apis/users';
+	import { getBanners } from '$lib/apis/configs';
+	import { getTools } from '$lib/apis/tools';
 	import { getAllTags } from '$lib/apis/chats';
 	import { getPrompts } from '$lib/apis/prompts';
 
@@ -78,8 +81,8 @@
 		banners.set(data.banners ?? []);
 		tools.set(data.tools ?? []);
 
-		getToolServersData(i18n, data.userSettings?.ui?.toolServers ?? []).then((res) => {
-			toolServers.set((res.filter(Boolean) as ToolServer[]) ?? []);
+		getToolServersData(data.userSettings?.ui?.toolServers ?? []).then((res) => {
+			toolServers.set((res.filter((s: any) => s && !s.error) as ToolServer[]) ?? []);
 		});
 	}
 
@@ -155,7 +158,7 @@
 				}
 				return true;
 			});
-			toolServers.set(toolServersData);
+			toolServers.set((toolServersData as ToolServer[]) ?? []);
 
 			document.addEventListener('keydown', async function (event) {
 				const isCtrlPressed = event.ctrlKey || event.metaKey; // metaKey is for Cmd key on Mac
