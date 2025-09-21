@@ -2264,24 +2264,56 @@
 	{#if !loading}
 		<div in:fade={{ duration: 50 }} class="w-full h-full flex flex-col">
 			{#if $selectedFolder && $selectedFolder?.meta?.background_image_url}
-				<div
-					class="absolute {$showSidebar
-						? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-						: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
-					style="background-image: url({$selectedFolder?.meta?.background_image_url})  "
-				/>
-
+				{#if selectedFolder?.meta?.background_image_url.endsWith('.mp4') || selectedFolder?.meta?.background_image_url.endsWith('.webm')}
+					<video
+						class="absolute {$showSidebar
+							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
+							: ''} top-0 left-0 w-full h-full object-cover"
+						autoplay
+						muted
+						loop
+						playsinline
+					>
+						<source src={$selectedFolder?.meta?.background_image_url} type="video/mp4" />
+						Your browser does not support the video tag.
+					</video>
+				{:else}
+					<div
+						class="absolute {$showSidebar
+							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
+							: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
+						style="background-image: url({$selectedFolder?.meta?.background_image_url})  "
+					/>
+				{/if}
 				<div
 					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90 z-0"
 				/>
 			{:else if $settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url ?? null}
-				<div
-					class="absolute {$showSidebar
-						? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-						: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
-					style="background-image: url({$settings?.backgroundImageUrl ??
-						$config?.license_metadata?.background_image_url})  "
-				/>
+				{#if ($settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url).endsWith('.mp4') || ($settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url).endsWith('.webm')}
+					<video
+						class="absolute {$showSidebar
+							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
+							: ''} top-0 left-0 w-full h-full object-cover"
+						autoplay
+						muted
+						loop
+						playsinline
+					>
+						<source
+							src={$settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url}
+							type="video/mp4"
+						/>
+						Your browser does not support the video tag.
+					</video>
+				{:else}
+					<div
+						class="absolute {$showSidebar
+							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
+							: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
+						style="background-image: url({$settings?.backgroundImageUrl ??
+							$config?.license_metadata?.background_image_url})  "
+					/>
+				{/if}
 
 				<div
 					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90 z-0"
