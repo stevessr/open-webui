@@ -143,7 +143,7 @@
 					<div class="flex-1">
 						<div class=" text-xs mb-1">{$i18n.t('Local Task Model')}</div>
 						<select
-							class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+							class="w-full rounded-lg py-2 px-4 text-sm dark:text-gray-300 outline-hidden"
 							bind:value={taskConfig.TASK_MODEL}
 							placeholder={$i18n.t('Select a model')}
 							on:change={() => {
@@ -178,7 +178,7 @@
 					<div class="flex-1">
 						<div class=" text-xs mb-1">{$i18n.t('External Task Model')}</div>
 						<select
-							class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+							class="w-full rounded-lg py-2 px-4 text-sm dark:text-gray-300 outline-hidden"
 							bind:value={taskConfig.TASK_MODEL_EXTERNAL}
 							placeholder={$i18n.t('Select a model')}
 							on:change={() => {
@@ -460,7 +460,8 @@
 						<div class="grid lg:grid-cols-2 flex-col gap-1.5">
 							{#each promptSuggestions as prompt, promptIdx}
 								<div
-									class=" flex border rounded-xl border-gray-50 dark:border-none dark:bg-gray-850 py-1.5"
+									class=" flex border rounded-xl border-gray-50 dark:border-none py-1.5"
+									id="glass"
 								>
 									<div class="flex flex-col flex-1 pl-1">
 										<div class="py-1 gap-1">
@@ -563,7 +564,7 @@
 							/>
 
 							<button
-								class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100  dark:hover:bg-gray-700 dark:text-gray-200 transition"
+								class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl hover:bg-gray-100  dark:hover:bg-gray-700 dark:text-gray-200 transition"
 								type="button"
 								on:click={() => {
 									const input = document.getElementById('prompt-suggestions-import-input');
@@ -594,7 +595,7 @@
 
 							{#if promptSuggestions.length}
 								<button
-									class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100  dark:hover:bg-gray-700 dark:text-gray-200 transition"
+									class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl hover:bg-gray-100  dark:hover:bg-gray-700 dark:text-gray-200 transition"
 									type="button"
 									on:click={async () => {
 										let blob = new Blob([JSON.stringify(promptSuggestions)], {
