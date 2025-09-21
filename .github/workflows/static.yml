@@ -25,9 +25,7 @@ jobs:
           version: latest # Or specify your pnpm version
 
       - name: Install Dependencies
-        run: pnpm install
-        # The 'pnpm update' command is usually for updating your lockfile,
-        # typically done locally. 'pnpm install' is for CI.
+        run: pnpm install -no-frozen-lockfile
 
       - name: Fix missing Dependencies
         run: |
