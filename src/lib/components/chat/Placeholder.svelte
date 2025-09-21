@@ -131,6 +131,10 @@
 												autoplay
 												muted
 												loop
+												playsinline
+												draggable="false"
+												aria-hidden="true"
+												DisablePictureInPicture
 											/>
 										{:else if model?.info?.meta?.profile_image_url}
 											<img
@@ -139,7 +143,16 @@
 													($i18n.language === 'dg-DG'
 														? `${WEBUI_BASE_URL}/doge.png`
 														: `${WEBUI_BASE_URL}/static/favicon.png`)}
-												class=" size-9 @sm:size-10 object-cover rounded-full border-[1px] border-gray-100 dark:border-none"
+												class=" h-9 @sm:h-10 w-auto object-contain rounded-full border-[1px] border-gray-100 dark:border-none"
+												aria-hidden="true"
+												draggable="false"
+												alt="model"
+											/>
+										{:else}
+											<img
+												crossorigin="anonymous"
+												src="/user.gif"
+												class=" h-9 @sm:h-10 w-auto object-contain rounded-full border-[1px] border-gray-100 dark:border-none"
 												aria-hidden="true"
 												draggable="false"
 												alt="model"
