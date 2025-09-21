@@ -265,14 +265,6 @@
 						type="url"
 						placeholder={$i18n.t('Paste an image or video URL')}
 						bind:value={profileImageUrl}
-						on:change={() => {
-							// If the URL is an http(s) URL, just use it directly and skip canvas compression
-							if (profileImageUrl && (profileImageUrl.startsWith('http://') || profileImageUrl.startsWith('https://') || profileImageUrl.startsWith('blob:') || profileImageUrl.startsWith('data:'))) {
-								// leave as is; if needed, more validation could be added
-							} else {
-								profileImageUrl = '';
-							}
-						}}
 					/>
 				</div>
 				<div class="flex flex-1 flex-col">
