@@ -18,6 +18,9 @@
   --tw-duration: 0.5;
   --tw-ease: cubic-bezier(0.3, 0.3, 0.2, 1);
 }
+#chat-controls-pane{
+  background: transparent !important;
+}
 
 #sidebar,
 #user-menu {
@@ -25,6 +28,10 @@
 }
 #transparent-modal{
   background: transparent !important;
+}
+#usermenu-dropdown{
+  background: transparent !important;
+  backdrop-filter: blur(10px);
 }
 
 #sidebar[data-state='true'] {

@@ -237,6 +237,7 @@
 			}}
 			collapsible={true}
 			class=" z-10 bg-white dark:bg-gray-850"
+			id="chat-controls-pane"
 		>
 			{#if $showControls}
 				<div class="flex max-h-full min-h-full">

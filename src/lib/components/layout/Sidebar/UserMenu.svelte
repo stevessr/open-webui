@@ -68,6 +68,7 @@
 			sideOffset={4}
 			side="bottom"
 			align="start"
+			id="usermenu-dropdown"
 			transition={(e) => fade(e, { duration: 100 })}
 		>
 			<DropdownMenu.Item

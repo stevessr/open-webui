@@ -2264,24 +2264,20 @@
 	{#if !loading}
 		<div in:fade={{ duration: 50 }} class="w-full h-full flex flex-col">
 			{#if $selectedFolder && $selectedFolder?.meta?.background_image_url}
-				{#if selectedFolder?.meta?.background_image_url.endsWith('.mp4') || selectedFolder?.meta?.background_image_url.endsWith('.webm')}
+				{#if $selectedFolder?.meta?.background_image_url?.toLowerCase().endsWith('.mp4') || $selectedFolder?.meta?.background_image_url?.toLowerCase().endsWith('.webm')}
 					<video
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full object-cover"
+						class="absolute top-0 left-0 w-full h-full object-cover"
 						autoplay
 						muted
 						loop
 						playsinline
 					>
-						<source src={$selectedFolder?.meta?.background_image_url} type="video/mp4" />
+						<source src={$selectedFolder?.meta?.background_image_url} type={$selectedFolder?.meta?.background_image_url?.toLowerCase().endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
 						Your browser does not support the video tag.
 					</video>
 				{:else}
 					<div
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
+						class="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
 						style="background-image: url({$selectedFolder?.meta?.background_image_url})  "
 					/>
 				{/if}
@@ -2289,29 +2285,22 @@
 					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90 z-0"
 				/>
 			{:else if $settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url ?? null}
-				{#if ($settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url).endsWith('.mp4') || ($settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url).endsWith('.webm')}
+				{@const bgUrl = $settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url}
+				{#if bgUrl?.toLowerCase().endsWith('.mp4') || bgUrl?.toLowerCase().endsWith('.webm')}
 					<video
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full object-cover"
+						class="absolute top-0 left-0 w-full h-full object-cover"
 						autoplay
 						muted
 						loop
 						playsinline
 					>
-						<source
-							src={$settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url}
-							type="video/mp4"
-						/>
+						<source src={bgUrl} type={bgUrl?.toLowerCase().endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
 						Your browser does not support the video tag.
 					</video>
 				{:else}
 					<div
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
-						style="background-image: url({$settings?.backgroundImageUrl ??
-							$config?.license_metadata?.background_image_url})  "
+						class="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
+						style="background-image: url({bgUrl})  "
 					/>
 				{/if}
 
