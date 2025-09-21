@@ -88,6 +88,7 @@
 										muted
 										loop
 										draggable="false"
+										disablePictureInPicture
 									/>
 								{:else if $user?.profile_image_url}
 									<img

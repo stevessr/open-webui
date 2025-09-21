@@ -10,6 +10,7 @@
 			muted
 			loop
 			playsinline
+			disablePictureInPicture
 		>
 			<source src={$selectedFolder?.meta?.background_image_url} type={$selectedFolder?.meta?.background_image_url?.toLowerCase().endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
 			Your browser does not support the video tag.
@@ -29,6 +30,7 @@
 			muted
 			loop
 			playsinline
+			disablePictureInPicture
 		>
 			<source src={bgUrl} type={bgUrl?.toLowerCase().endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
 			Your browser does not support the video tag.

@@ -186,7 +186,7 @@
 					src={src}
 					aria-label={alt}
 					class=" mx-auto h-full object-scale-down select-none"
-					controls
+					disablePictureInPicture
 				>
 					<track kind="captions" src="" />
 				</video>

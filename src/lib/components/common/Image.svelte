@@ -44,7 +44,7 @@
 	>
 		{#if isVideo(_src)}
 			<!-- svelte-ignore a11y-media-caption -->
-			<video src={_src} aria-label={alt} class={imageClassName} controls draggable="false" data-cy="video">
+			<video src={_src} aria-label={alt} class={imageClassName} draggable="false" data-cy="video" disablePictureInPicture>
 				<track kind="captions" src="" />
 			</video>
 		{:else}
