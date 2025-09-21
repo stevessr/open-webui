@@ -5,7 +5,7 @@
 	import { WEBUI_NAME, mobile, showSidebar, user } from '$lib/stores';
 	import { page } from '$app/stores';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
-
+	import Background from '$lib/components/common/Background.svelte';
 	import Sidebar from '$lib/components/icons/Sidebar.svelte';
 
 	const i18n = getContext('i18n');
@@ -32,7 +32,8 @@
 			? 'md:max-w-[calc(100%-260px)]'
 			: ' md:max-w-[calc(100%-49px)]'}  w-full max-w-full"
 	>
-		<nav class="   px-2.5 pt-1.5 backdrop-blur-xl drag-region">
+		<Background />
+		<nav class="   px-2.5 pt-1.5 backdrop-blur-xl drag-region relative z-10">
 			<div class=" flex items-center gap-1">
 				{#if $mobile}
 					<div class="{$showSidebar ? 'md:hidden' : ''} flex flex-none items-center self-end">

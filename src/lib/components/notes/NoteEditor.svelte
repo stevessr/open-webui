@@ -1383,7 +1383,7 @@ Provide the enhanced notes in markdown format. Use markdown syntax for headings,
 					>
 						<Tooltip content={$i18n.t('Record')} placement="top">
 							<div
-								class="cursor-pointer p-2.5 flex rounded-full border border-gray-50 bg-white dark:border-none dark:bg-gray-850 hover:bg-gray-50 dark:hover:bg-gray-800 transition shadow-xl"
+								class="cursor-pointer p-2.5 flex rounded-full border border-gray-50 dark:border-none hover:bg-gray-50 dark:hover:bg-gray-800 transition shadow-xl"
 							>
 								<MicSolid className="size-4.5" />
 							</div>
@@ -1415,7 +1415,8 @@ Provide the enhanced notes in markdown format. Use markdown syntax for headings,
 									}}
 								>
 									<div
-										class="cursor-pointer p-2.5 flex rounded-full border border-gray-50 bg-white dark:border-none dark:bg-gray-850 hover:bg-gray-50 dark:hover:bg-gray-800 transition shadow-xl"
+										class="cursor-pointer p-2.5 flex rounded-full border border-gray-50 dark:border-none hover:bg-gray-50 dark:hover:bg-gray-800 transition shadow-xl"
+										id="glass"
 									>
 										<SparklesSolid />
 									</div>

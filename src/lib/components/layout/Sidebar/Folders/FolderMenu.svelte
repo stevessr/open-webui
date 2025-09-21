@@ -41,7 +41,8 @@
 
 	<div slot="content">
 		<DropdownMenu.Content
-			class="w-full max-w-[170px] rounded-2xl px-1 py-1 border border-gray-100  dark:border-gray-800   z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg"
+			class="w-full max-w-[170px] rounded-2xl px-1 py-1 border border-gray-100  dark:border-gray-800 z-50 dark:text-white shadow-lg"
+			id="glass"
 			sideOffset={-2}
 			side="bottom"
 			{align}

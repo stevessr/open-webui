@@ -38,6 +38,10 @@
   background: transparent !important;
   backdrop-filter: blur(10px);
 }
+.sidebar{
+  background: transparent !important;
+  backdrop-filter: blur(10px);
+}
 
 #sidebar[data-state='true'] {
   animation: 0.4s ease-in forwards fade-in !important;

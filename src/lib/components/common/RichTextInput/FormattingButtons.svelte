@@ -22,7 +22,8 @@
 </script>
 
 <div
-	class="flex gap-0.5 p-0.5 rounded-xl shadow-lg bg-white text-gray-800 dark:text-white dark:bg-gray-850 min-w-fit border border-gray-100 dark:border-gray-800"
+	class="flex gap-0.5 p-0.5 rounded-xl shadow-lg text-gray-800 dark:text-white min-w-fit border border-gray-100 dark:border-gray-800"
+	id="glass"
 >
 	<Tooltip placement="top" content={$i18n.t('H1')}>
 		<button
