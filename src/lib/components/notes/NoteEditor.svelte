@@ -66,6 +66,7 @@
 	import MicSolid from '../icons/MicSolid.svelte';
 	import VoiceRecording from '../chat/MessageInput/VoiceRecording.svelte';
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
+	import Background from '../common/Background.svelte';
 	import ChatBubbleOval from '../icons/ChatBubbleOval.svelte';
 
 	import Calendar from '../icons/Calendar.svelte';
@@ -914,6 +915,8 @@ Provide the enhanced notes in markdown format. Use markdown syntax for headings,
 		}}
 	/>
 {/if}
+
+<Background />
 
 <FilesOverlay show={dragged} />
 

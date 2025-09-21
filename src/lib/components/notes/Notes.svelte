@@ -42,6 +42,7 @@
 	import Tooltip from '../common/Tooltip.svelte';
 	import NoteMenu from './Notes/NoteMenu.svelte';
 	import FilesOverlay from '../chat/MessageInput/FilesOverlay.svelte';
+	import Background from '../common/Background.svelte';
 	import { marked } from 'marked';
 	import XMark from '../icons/XMark.svelte';
 
@@ -322,6 +323,8 @@
 
 <div id="notes-container" class="w-full min-h-full h-full">
 	{#if loaded}
+		<Background />
+
 		<DeleteConfirmDialog
 			bind:show={showDeleteConfirm}
 			title={$i18n.t('Delete note?')}
