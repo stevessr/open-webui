@@ -563,7 +563,7 @@
 							/>
 
 							<button
-								class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 transition"
+								class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100  dark:hover:bg-gray-700 dark:text-gray-200 transition"
 								type="button"
 								on:click={() => {
 									const input = document.getElementById('prompt-suggestions-import-input');
@@ -594,7 +594,7 @@
 
 							{#if promptSuggestions.length}
 								<button
-									class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 transition"
+									class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100  dark:hover:bg-gray-700 dark:text-gray-200 transition"
 									type="button"
 									on:click={async () => {
 										let blob = new Blob([JSON.stringify(promptSuggestions)], {
@@ -631,7 +631,7 @@
 
 		<div class="flex justify-end text-sm font-medium">
 			<button
-				class="px-3.5 py-1.5 text-sm font-medium bg-black hover:bg-gray-900 text-white dark:bg-white dark:text-black dark:hover:bg-gray-100 transition rounded-full"
+				class="px-3.5 py-1.5 text-sm font-medium hover:bg-gray-900 text-white dark:text-black dark:hover:bg-gray-100 transition rounded-full"
 				type="submit"
 			>
 				{$i18n.t('Save')}

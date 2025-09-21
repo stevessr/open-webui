@@ -547,7 +547,7 @@
 				/>
 
 				<button
-					class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 transition"
+					class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100  dark:hover:bg-gray-700 dark:text-gray-200 transition"
 					on:click={() => {
 						modelsImportInputElement.click();
 					}}
@@ -572,7 +572,7 @@
 
 				{#if models.length}
 					<button
-						class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 transition"
+						class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100  dark:hover:bg-gray-700 dark:text-gray-200 transition"
 						on:click={async () => {
 							downloadModels(models);
 						}}

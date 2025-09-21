@@ -226,7 +226,7 @@
 	<div class="flex justify-between items-center mb-1">
 		<div class="flex md:self-center text-xl items-center font-medium px-0.5">
 			{$i18n.t('Functions')}
-			<div class="flex self-center w-[1px] h-6 mx-2.5 bg-gray-50 dark:bg-gray-850" />
+			<div class="flex self-center w-[1px] h-6 mx-2.5" />
 			<span class="text-base font-lg text-gray-500 dark:text-gray-300">{filteredItems.length}</span>
 		</div>
 	</div>
@@ -330,14 +330,14 @@
 					<div class=" flex-1 self-center pl-1">
 						<div class=" font-semibold flex items-center gap-1.5">
 							<div
-								class=" text-xs font-semibold px-1 rounded-sm uppercase line-clamp-1 bg-gray-500/20 text-gray-700 dark:text-gray-200"
+								class=" text-xs font-semibold px-1 rounded-sm uppercase line-clamp-1 text-gray-700 dark:text-gray-200"
 							>
 								{func.type}
 							</div>
 
 							{#if func?.meta?.manifest?.version}
 								<div
-									class="text-xs font-semibold px-1 rounded-sm line-clamp-1 bg-gray-500/20 text-gray-700 dark:text-gray-200"
+									class="text-xs font-semibold px-1 rounded-sm line-clamp-1 text-gray-700 dark:text-gray-200"
 								>
 									v{func?.meta?.manifest?.version ?? ''}
 								</div>
@@ -498,7 +498,7 @@
 		/>
 
 		<button
-			class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 transition"
+			class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-200 transition"
 			on:click={() => {
 				functionsImportInputElement.click();
 			}}
@@ -523,7 +523,7 @@
 
 		{#if $functions.length}
 			<button
-				class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 transition"
+				class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl hover:bg-gray-100  dark:hover:bg-gray-700 dark:text-gray-200 transition"
 				on:click={async () => {
 					const _functions = await exportFunctions(localStorage.token).catch((error) => {
 						toast.error(`${error}`);
