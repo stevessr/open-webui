@@ -6,7 +6,9 @@
 	export let className = 'size-4';
 </script>
 
-{#if $shortCodesToEmojis[shortCode]}
+{#if shortCode.startsWith('/') || shortCode.startsWith('http')}
+	<img src={shortCode} alt={shortCode} class={className} loading="lazy" />
+{:else if $shortCodesToEmojis[shortCode]}
 	<img
 		src="{WEBUI_BASE_URL}/assets/emojis/{$shortCodesToEmojis[shortCode].toLowerCase()}.svg"
 		alt={shortCode}

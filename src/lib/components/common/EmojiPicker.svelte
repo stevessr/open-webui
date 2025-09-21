@@ -11,6 +11,7 @@
 
 	import emojiGroups from '$lib/emoji-groups.json';
 	import emojiShortCodes from '$lib/emoji-shortcodes.json';
+	import customEmojis from '$lib/custom-emojis.json';
 
 	const i18n = getContext('i18n');
 
@@ -21,7 +22,15 @@
 	export let user = null;
 
 	let show = false;
-	let emojis = emojiShortCodes;
+	let customEmojiShortCodes = {};
+	let customEmojiGroups = {};
+	for (let code in customEmojis.emojis) {
+		customEmojiShortCodes[code] = customEmojis.emojis[code].shortcode;
+		let group = customEmojis.emojis[code].group;
+		if (!customEmojiGroups[group]) customEmojiGroups[group] = [];
+		customEmojiGroups[group].push(code);
+	}
+	let emojis = { ...emojiShortCodes, ...customEmojiShortCodes };
 	let search = '';
 	let flattenedEmojis = [];
 	let emojiRows = [];
@@ -29,34 +38,35 @@
 	// Reactive statement to filter the emojis based on search query
 	$: {
 		if (search) {
-			emojis = Object.keys(emojiShortCodes).reduce((acc, key) => {
+			emojis = Object.keys({ ...emojiShortCodes, ...customEmojiShortCodes }).reduce((acc, key) => {
 				if (key.includes(search.toLowerCase())) {
-					acc[key] = emojiShortCodes[key];
+					acc[key] = emojiShortCodes[key] || customEmojiShortCodes[key];
 				} else {
-					if (Array.isArray(emojiShortCodes[key])) {
-						const filtered = emojiShortCodes[key].filter((emoji) =>
+					let value = emojiShortCodes[key] || customEmojiShortCodes[key];
+					if (Array.isArray(value)) {
+						const filtered = value.filter((emoji) =>
 							emoji.includes(search.toLowerCase())
 						);
 						if (filtered.length) {
 							acc[key] = filtered;
 						}
-					} else {
-						if (emojiShortCodes[key].includes(search.toLowerCase())) {
-							acc[key] = emojiShortCodes[key];
+					} else if (typeof value === 'string') {
+						if (value.includes(search.toLowerCase())) {
+							acc[key] = value;
 						}
 					}
 				}
 				return acc;
 			}, {});
 		} else {
-			emojis = emojiShortCodes;
+			emojis = { ...emojiShortCodes, ...customEmojiShortCodes };
 		}
 	}
 	// Flatten emoji groups and group them into rows of 8 for virtual scrolling
 	$: {
 		flattenedEmojis = [];
-		Object.keys(emojiGroups).forEach((group) => {
-			const groupEmojis = emojiGroups[group].filter((emoji) => emojis[emoji]);
+		Object.keys({ ...emojiGroups, ...customEmojiGroups }).forEach((group) => {
+			const groupEmojis = ((emojiGroups[group] || []).concat(customEmojiGroups[group] || [])).filter((emoji) => emojis[emoji]);
 			if (groupEmojis.length > 0) {
 				flattenedEmojis.push({ type: 'group', label: group });
 				flattenedEmojis.push(
@@ -64,9 +74,9 @@
 						type: 'emoji',
 						name: emoji,
 						shortCodes:
-							typeof emojiShortCodes[emoji] === 'string'
-								? [emojiShortCodes[emoji]]
-								: emojiShortCodes[emoji]
+							typeof (emojiShortCodes[emoji] || customEmojiShortCodes[emoji]) === 'string'
+								? [(emojiShortCodes[emoji] || customEmojiShortCodes[emoji])]
+								: (emojiShortCodes[emoji] || customEmojiShortCodes[emoji])
 					}))
 				);
 			}
@@ -117,7 +127,8 @@
 		<slot />
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Content
-		class="max-w-full w-80 bg-gray-50 dark:bg-gray-850 rounded-lg z-9999 shadow-lg dark:text-white"
+		class="max-w-full w-80 rounded-lg z-9999 shadow-lg dark:text-white"
+		id="glass"
 		sideOffset={8}
 		{side}
 		{align}
@@ -158,12 +169,21 @@
 												class="p-1.5 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition"
 												on:click={() => selectEmoji(emojiItem)}
 											>
+											{#if emojiItem.shortCodes[0].startsWith('/') || emojiItem.shortCodes[0].startsWith('http')}
+												<img
+													src={emojiItem.shortCodes[0]}
+													alt={emojiItem.name}
+													class="size-5"
+													loading="lazy"
+												/>
+											{:else}
 												<img
 													src="{WEBUI_BASE_URL}/assets/emojis/{emojiItem.name.toLowerCase()}.svg"
 													alt={emojiItem.name}
 													class="size-5"
 													loading="lazy"
 												/>
+												{/if}
 											</button>
 										</Tooltip>
 									{/each}

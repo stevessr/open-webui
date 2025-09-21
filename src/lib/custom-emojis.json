@@ -1,0 +1,8 @@
+{
+  "emojis": {
+    "CUSTOM_STAR": {
+      "shortcode": "/assets/emojis/custom_star.svg",
+      "group": "Symbols"
+    }
+  }
+}
