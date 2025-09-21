@@ -179,6 +179,15 @@
 		saveSettings({ webSearch: webSearch });
 	};
 
+	const handleUrlConfirm = () => {
+		saveSettings({ backgroundImageUrl });
+		showBackgroundUrlInput = false;
+	};
+
+	const handleUrlCancel = () => {
+		showBackgroundUrlInput = false;
+	};
+
 	onMount(async () => {
 		titleAutoGenerate = $settings?.title?.auto ?? true;
 		autoTags = $settings?.autoTags ?? true;
@@ -546,35 +555,45 @@
 							aria-labelledby="chat-background-label background-image-url-toggle"
 							class="p-1 px-3 text-xs flex rounded-sm transition"
 							on:click={() => {
-								showBackgroundUrlInput = !showBackgroundUrlInput;
-								// if opening the URL input and there's no url, initialize as empty string
-								if (showBackgroundUrlInput && backgroundImageUrl === null) {
+								// Open modal for URL input
+								showBackgroundUrlInput = true;
+								// Initialize backgroundImageUrl if it's null
+								if (backgroundImageUrl === null) {
 									backgroundImageUrl = '';
 								}
 							}}
 							type="button"
 						>
-							<span class="ml-2 self-center" id="background-image-url-toggle"
-								>{showBackgroundUrlInput ? $i18n.t('Hide URL') : $i18n.t('URL')}</span
-							>
+							<span class="ml-2 self-center" id="background-image-url-toggle">URL</span>
 						</button>
 					</div>
 				</div>
 			</div>
-
-			<!-- Allow paste/url input for background image -->
-			<div class="mt-2">
-				<div class=" mb-1 text-xs font-medium">{$i18n.t('Background Image URL')}</div>
-				<input
-					class="w-full text-sm outline-hidden"
-					type="url"
-					placeholder={$i18n.t('Paste an image or video URL')}
-					bind:value={backgroundImageUrl}
-					on:change={() => {
-						saveSettings({ backgroundImageUrl });
-					}}
-				/>
-			</div>
+			{#if showBackgroundUrlInput}
+					<div class="mb-3 text-sm font-medium">{$i18n.t('Background Image URL')}</div>
+					<div class="flex gap-2">
+						<input
+							class="flex-1 text-sm outline-hidden px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+							type="url"
+							placeholder={$i18n.t('Paste an image or video URL')}
+							bind:value={backgroundImageUrl}
+						/>
+						<button
+							class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition"
+							on:click={handleUrlConfirm}
+							type="button"
+						>
+							{$i18n.t('Confirm')}
+						</button>
+						<button
+							class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition"
+							on:click={handleUrlCancel}
+							type="button"
+						>
+							{$i18n.t('Cancel')}
+						</button>
+					</div>
+			{/if}
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
