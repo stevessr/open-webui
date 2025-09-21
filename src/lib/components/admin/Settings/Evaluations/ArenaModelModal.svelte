@@ -238,6 +238,15 @@
 									</div>
 								</div>
 							</button>
+
+							<div class="mt-2 w-full">
+								<input
+									type="url"
+									bind:value={profileImageUrl}
+									placeholder="Enter image URL"
+									class="w-full text-sm bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-700 outline-hidden"
+								/>
+							</div>
 						</div>
 						<div class="flex gap-2">
 							<div class="flex flex-col w-full">

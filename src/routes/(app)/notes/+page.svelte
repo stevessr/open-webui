@@ -66,12 +66,24 @@
 								aria-label="User Menu"
 							>
 								<div class=" self-center">
-									<img
-										src={$user?.profile_image_url}
-										class="size-6 object-cover rounded-full"
-										alt="User profile"
-										draggable="false"
-									/>
+									{#if $user?.profile_image_url.endsWith('mp4') || $user?.profile_image_url.endsWith('webm')}
+										<video
+											src={$user?.profile_image_url}
+											class="size-6 object-cover rounded-full"
+											alt="User profile"
+											draggable="false"
+											autoplay
+											muted
+											loop
+										/>
+									{:else if $user?.profile_image_url}
+										<img
+											src={$user?.profile_image_url}
+											class="size-6 object-cover rounded-full"
+											alt="User profile"
+											draggable="false"
+										/>
+									{/if}
 								</div>
 							</button>
 						</UserMenu>

@@ -486,7 +486,7 @@
 	<div
 		class=" {$isApp
 			? ' ml-[4.5rem] md:ml-0'
-			: ''} fixed md:hidden z-40 top-0 right-0 left-0 bottom-0 bg-black/60 w-full min-h-screen h-screen flex justify-center overflow-hidden overscroll-contain"
+			: ''} fixed md:hidden z-40 top-0 right-0 left-0 bottom-0 w-full min-h-screen h-screen flex justify-center overflow-hidden overscroll-contain"
 		on:mousedown={() => {
 			showSidebar.set(!$showSidebar);
 		}}
@@ -669,12 +669,24 @@
 								class=" cursor-pointer flex rounded-lg hover:bg-gray-100 dark:hover:bg-gray-850 transition group"
 							>
 								<div class=" self-center flex items-center justify-center size-9">
-									<img
-										src={$user?.profile_image_url}
-										class=" size-6 object-cover rounded-full"
-										alt={$i18n.t('Open User Profile Menu')}
-										aria-label={$i18n.t('Open User Profile Menu')}
-									/>
+									{#if $user?.profile_image_url.endsWith('mp4') || $user?.profile_image_url.endsWith('webm')}
+										<video
+											src={$user?.profile_image_url}
+											class=" size-6 object-cover rounded-full"
+											alt="User profile"
+											autoplay
+											muted
+											loop
+											draggable="false"
+										/>
+									{:else if $user?.profile_image_url}
+										<img
+											src={$user?.profile_image_url}
+											class=" size-6 object-cover rounded-full"
+											alt={$i18n.t('Open User Profile Menu')}
+											aria-label={$i18n.t('Open User Profile Menu')}
+										/>
+									{/if}
 								</div>
 							</div>
 						</UserMenu>
@@ -1172,12 +1184,24 @@
 								class=" flex items-center rounded-xl py-2 px-1.5 w-full hover:bg-gray-100 dark:hover:bg-gray-900 transition"
 							>
 								<div class=" self-center mr-3">
-									<img
-										src={$user?.profile_image_url}
-										class=" size-6 object-cover rounded-full"
-										alt={$i18n.t('Open User Profile Menu')}
-										aria-label={$i18n.t('Open User Profile Menu')}
-									/>
+									{#if $user?.profile_image_url.endsWith('mp4') || $user?.profile_image_url.endsWith('webm')}
+										<video
+											src={$user?.profile_image_url}
+											class=" size-6 object-cover rounded-full"
+											alt="User profile"
+											autoplay
+											muted
+											loop
+											draggable="false"
+										/>
+									{:else if $user?.profile_image_url}
+										<img
+											src={$user?.profile_image_url}
+											class=" size-6 object-cover rounded-full"
+											alt={$i18n.t('Open User Profile Menu')}
+											aria-label={$i18n.t('Open User Profile Menu')}
+										/>
+									{/if}
 								</div>
 								<div class=" self-center font-medium">{$user?.name}</div>
 							</div>

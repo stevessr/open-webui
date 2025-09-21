@@ -395,7 +395,11 @@
 					};
 				};
 
-				if (inputFiles && inputFiles.length > 0 && (inputFiles[0]['type'].startsWith('image/') || inputFiles[0]['type'].startsWith('video/'))) {
+				if (
+					inputFiles &&
+					inputFiles.length > 0 &&
+					(inputFiles[0]['type'].startsWith('image/') || inputFiles[0]['type'].startsWith('video/'))
+				) {
 					reader.readAsDataURL(inputFiles[0]);
 				} else {
 					console.log(`Unsupported File Type '${inputFiles[0]['type']}'.`);
@@ -424,14 +428,25 @@
 							}}
 						>
 							{#if info.meta.profile_image_url}
-								<img
-									src={info.meta.profile_image_url}
-									alt="model profile"
-									class="rounded-xl size-72 md:size-60 object-cover shrink-0"
-								/>
+								{#if info.meta.profile_image_url.endsWith('mp4') || info.meta.profile_image_url.endsWith('webm')}
+									<video
+										src={info.meta.profile_image_url}
+										alt="model profile"
+										class="rounded-xl size-72 md:size-60 object-cover shrink-0"
+										autoplay
+										muted
+										loop
+									/>
+								{:else}
+									<img
+										src={info.meta.profile_image_url}
+										alt="model profile"
+										class="rounded-xl size-72 md:size-60 object-cover shrink-0"
+									/>
+								{/if}
 							{:else}
 								<img
-									src="{WEBUI_BASE_URL}/static/favicon.png"
+									src="{WEBUI_BASE_URL}/static/splash.png"
 									alt="model profile"
 									class=" rounded-xl size-72 md:size-60 object-cover shrink-0"
 								/>
@@ -457,10 +472,6 @@
 									</div>
 								</div>
 							</div>
-
-							<div
-								class="absolute top-0 bottom-0 left-0 right-0 bg-white dark:bg-black rounded-lg opacity-0 group-hover:opacity-20 transition"
-							></div>
 						</button>
 
 						<div class="flex w-full mt-1 justify-end">
@@ -473,6 +484,15 @@
 							>
 								{$i18n.t('Reset Image')}</button
 							>
+						</div>
+
+						<div class="flex w-full mt-2">
+							<input
+								class="w-full px-2 py-1 text-sm bg-transparent outline-hidden border border-gray-300 dark:border-gray-600 rounded"
+								placeholder={$i18n.t('Enter image or video URL')}
+								bind:value={info.meta.profile_image_url}
+								type="url"
+							/>
 						</div>
 					</div>
 				</div>

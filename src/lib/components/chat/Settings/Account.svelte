@@ -171,7 +171,10 @@
 					};
 				};
 
-				if (files.length > 0 && (files[0]['type'].startsWith('image/') || files[0]['type'].startsWith('video/'))) {
+				if (
+					files.length > 0 &&
+					(files[0]['type'].startsWith('image/') || files[0]['type'].startsWith('video/'))
+				) {
 					reader.readAsDataURL(files[0]);
 				}
 			}}
@@ -198,12 +201,22 @@
 								profileImageInputElement.click();
 							}}
 						>
-							<img
-								src={profileImageUrl !== '' ? profileImageUrl : generateInitialsImage(name)}
-								alt="profile"
-								class=" rounded-full size-14 md:size-18 object-cover"
-							/>
-
+							{#if profileImageUrl.endsWith('mp4') || profileImageUrl.endsWith('webm')}
+								<video
+									src={profileImageUrl !== '' ? profileImageUrl : generateInitialsImage(name)}
+									alt="profile"
+									class="rounded-full size-14 md:size-18 object-cover"
+									autoplay
+									muted
+									loop
+								/>
+							{:else}
+								<img
+									src={profileImageUrl !== '' ? profileImageUrl : generateInitialsImage(name)}
+									alt="profile"
+									class=" rounded-full size-14 md:size-18 object-cover"
+								/>
+							{/if}
 							<div class="absolute bottom-0 right-0 opacity-0 group-hover:opacity-100 transition">
 								<div class="p-1 rounded-full bg-white text-black border-gray-100 shadow">
 									<svg

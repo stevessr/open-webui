@@ -11,6 +11,7 @@
 	import PencilSquare from '../icons/PencilSquare.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
+	import ProfileImage from '../chat/Messages/ProfileImage.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -78,12 +79,24 @@
 							aria-label="User Menu"
 						>
 							<div class=" self-center">
-								<img
-									src={$user?.profile_image_url}
-									class="size-6 object-cover rounded-full"
-									alt="User profile"
-									draggable="false"
-								/>
+								{#if $user?.profile_image_url.endsWith('mp4') || $user?.profile_image_url.endsWith('webm')}
+									<video
+										src={$user?.profile_image_url}
+										class="size-6 object-cover rounded-full"
+										alt="User profile"
+										autoplay
+										muted
+										loop
+										draggable="false"
+									/>
+								{:else if $user?.profile_image_url}
+									<img
+										src={$user?.profile_image_url}
+										class="size-6 object-cover rounded-full"
+										alt="User profile"
+										draggable="false"
+									/>
+								{/if}
 							</div>
 						</button>
 					</UserMenu>
