@@ -16,9 +16,10 @@
 
 	export let saveSettings: Function;
 
-	let backgroundImageUrl = null;
-	let inputFiles = null;
-	let filesInputElement;
+	let backgroundImageUrl: string | null = null;
+	let inputFiles: FileList | null = null;
+	let filesInputElement: HTMLInputElement | null = null;
+	let showBackgroundUrlInput: boolean = false;
 
 	// Addons
 	let titleAutoGenerate = true;
@@ -249,6 +250,8 @@
 		}
 
 		backgroundImageUrl = $settings?.backgroundImageUrl ?? null;
+		// Open the URL input if there is already a background image/url set
+		showBackgroundUrlInput = !!backgroundImageUrl;
 		webSearch = $settings?.webSearch ?? null;
 	});
 </script>
@@ -516,23 +519,46 @@
 						{$i18n.t('Chat Background Image')}
 					</div>
 
-					<button
-						aria-labelledby="chat-background-label background-image-url-state"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
-							if (backgroundImageUrl !== null) {
-								backgroundImageUrl = null;
-								saveSettings({ backgroundImageUrl });
-							} else {
-								filesInputElement.click();
-							}
-						}}
-						type="button"
-					>
-						<span class="ml-2 self-center" id="background-image-url-state"
-							>{backgroundImageUrl !== null ? $i18n.t('Reset') : $i18n.t('Upload')}</span
+					<div class="flex items-center gap-2">
+						<!-- Upload / Reset button -->
+						<button
+							aria-labelledby="chat-background-label background-image-upload-reset"
+							class="p-1 px-3 text-xs flex rounded-sm transition"
+							on:click={() => {
+								if (backgroundImageUrl !== null) {
+									backgroundImageUrl = null;
+									// hide url input when resetting
+									showBackgroundUrlInput = false;
+									saveSettings({ backgroundImageUrl });
+								} else {
+									filesInputElement.click();
+								}
+							}}
+							type="button"
 						>
-					</button>
+							<span class="ml-2 self-center" id="background-image-upload-reset"
+								>{backgroundImageUrl !== null ? $i18n.t('Reset') : $i18n.t('Upload')}</span
+							>
+						</button>
+
+						<!-- URL toggle button -->
+						<button
+							aria-labelledby="chat-background-label background-image-url-toggle"
+							class="p-1 px-3 text-xs flex rounded-sm transition"
+							on:click={() => {
+								showBackgroundUrlInput = !showBackgroundUrlInput;
+								// if opening the URL input and there's no url, initialize as empty string
+								if (showBackgroundUrlInput && backgroundImageUrl === null) {
+									backgroundImageUrl = '';
+								}
+							}}
+							type="button"
+						>
+							<span class="ml-2 self-center" id="background-image-url-toggle"
+								>{showBackgroundUrlInput ? $i18n.t('Hide URL') : $i18n.t('URL')}</span
+							>
+						</button>
+					</div>
 				</div>
 			</div>
 
