@@ -173,6 +173,7 @@
 												<img
 													src={emojiItem.shortCodes[0]}
 													alt={emojiItem.name}
+													title={emojiItem.name}
 													class="size-5"
 													loading="lazy"
 												/>
