@@ -89,6 +89,7 @@
 			const res = await verifyToolServerConnection(localStorage.token, {
 				url,
 				path,
+				type,
 				auth_type,
 				key,
 				config: {
@@ -120,6 +121,7 @@
 		const connection = {
 			url,
 			path,
+			type,
 			auth_type,
 			key,
 			config: {
@@ -138,8 +140,11 @@
 		loading = false;
 		show = false;
 
+		// reset form
 		url = '';
 		path = 'openapi.json';
+		type = 'openapi';
+
 		key = '';
 		auth_type = 'bearer';
 
