@@ -4,7 +4,7 @@ import { browser, dev } from '$app/environment';
 export const APP_NAME = 'Neko UI';
 
 export const WEBUI_HOSTNAME = browser ? (dev ? `${location.hostname}:8080` : ``) : '';
-export const WEBUI_BASE_URL = browser ? (dev ? `http://${WEBUI_HOSTNAME}` : ``) : ``;
+export const WEBUI_BASE_URL = browser ? (localStorage.getItem('custom_webui_base_url') || (dev ? `http://${WEBUI_HOSTNAME}` : ``)) : ``;
 export const WEBUI_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1`;
 
 export const OLLAMA_API_BASE_URL = `${WEBUI_BASE_URL}/ollama`;
@@ -13,8 +13,12 @@ export const AUDIO_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1/audio`;
 export const IMAGES_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1/images`;
 export const RETRIEVAL_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1/retrieval`;
 
-export const WEBUI_VERSION = APP_VERSION;
-export const WEBUI_BUILD_HASH = APP_BUILD_HASH;
+// These are build-time constants that should be defined by the build process
+declare const APP_VERSION: string;
+declare const APP_BUILD_HASH: string;
+
+export const WEBUI_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'dev';
+export const WEBUI_BUILD_HASH = typeof APP_BUILD_HASH !== 'undefined' ? APP_BUILD_HASH : 'dev';
 export const REQUIRED_OLLAMA_VERSION = '0.1.16';
 
 export const SUPPORTED_FILE_TYPE = [
