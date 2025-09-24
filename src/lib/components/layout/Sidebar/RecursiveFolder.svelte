@@ -348,7 +348,7 @@
 		}, 500);
 	};
 
-	$: if (open) {
+	$: if (open !== null) {
 		isExpandedUpdateDebounceHandler();
 	}
 
