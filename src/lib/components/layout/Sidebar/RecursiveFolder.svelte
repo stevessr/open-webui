@@ -348,32 +348,6 @@
 		}, 500);
 	};
 
-	$: if (open !== null) {
-		isExpandedUpdateDebounceHandler();
-	}
-
-	let sortedChildren: Folder[] = [];
-	$: {
-		if (folders[folderId]?.childrenIds) {
-			sortedChildren = folders[folderId]?.childrenIds
-				.map((id: string) => folders[id])
-				.sort((a: Folder, b: Folder) =>
-					a.name.localeCompare(b.name, undefined, {
-						numeric: true,
-						sensitivity: 'base'
-					})
-				);
-		}
-	}
-
-	const handleCollapsibleChange = (state: boolean) => {
-		dispatch('open', state);
-	};
-
-	const handleInputFocus = (e: FocusEvent & { currentTarget: EventTarget & HTMLInputElement }) => {
-		e.currentTarget.select();
-	};
-
 	const renameHandler = async () => {
 		console.log('Edit');
 		await tick();
@@ -456,7 +430,10 @@
 		buttonClassName="w-full"
 		hide={(folders[folderId]?.childrenIds ?? []).length === 0 &&
 			(folders[folderId].items?.chats ?? []).length === 0}
-		on:change={(e) => handleCollapsibleChange(e.detail)}
+		onChange={(state) => {
+			dispatch('open', state);
+			isExpandedUpdateDebounceHandler();
+		}}
 	>
 		
 		<div class="w-full group">
