@@ -432,7 +432,6 @@
 			(folders[folderId].items?.chats ?? []).length === 0}
 		onChange={(state) => {
 			dispatch('open', state);
-			isExpandedUpdateDebounceHandler();
 		}}
 	>
 		
@@ -477,6 +476,7 @@
 					on:click={(e) => {
 						e.stopPropagation();
 						open = !open;
+						isExpandedUpdateDebounceHandler();
 					}}
 				>
 					{#if folders[folderId]?.meta?.icon}
