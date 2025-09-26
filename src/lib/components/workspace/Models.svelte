@@ -262,6 +262,48 @@
 		</div>
 	</div>
 
+	{#if tags.length > 0}
+		<div
+			class=" flex w-full bg-transparent overflow-x-auto scrollbar-none"
+			on:wheel={(e) => {
+				if (e.deltaY !== 0) {
+					e.preventDefault();
+					e.currentTarget.scrollLeft += e.deltaY;
+				}
+			}}
+		>
+			<div
+				class="flex gap-1 w-fit text-center text-sm font-medium rounded-full"
+				bind:this={tagsContainerElement}
+			>
+				<button
+					class="min-w-fit outline-none p-1.5 {selectedTag === ''
+						? ''
+						: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition capitalize"
+					on:click={() => {
+						selectedTag = '';
+					}}
+				>
+					{$i18n.t('All')}
+				</button>
+
+				{#each tags as tag}
+					<Tooltip content={tag}>
+						<button
+							class="min-w-fit outline-none p-1.5 {selectedTag === tag
+								? ''
+								: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition capitalize"
+							on:click={() => {
+								selectedTag = tag;
+							}}
+						>
+							{tag.length > 32 ? `${tag.slice(0, 32)}...` : tag}
+						</button>
+					</Tooltip>
+				{/each}
+			</div>
+		</div>
+	{/if}
 	<div class=" my-2 mb-5 gap-2 grid lg:grid-cols-2 xl:grid-cols-3" id="model-list">
 		{#each filteredModels as model (model.id)}
 			<div
