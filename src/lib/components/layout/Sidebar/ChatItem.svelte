@@ -51,7 +51,9 @@
 	export let selected = false;
 	export let shiftKey = false;
 
-	let chat: Chat | null = null;
+	export let onDragEnd = () => {};
+
+	let chat = null;
 
 	let mouseOver = false;
 	let draggable = false;
@@ -185,11 +187,20 @@
 		y = event.clientY;
 	};
 
-	const onDragEnd = (event: DragEvent) => {
+	const onDragEndHandler = (event) => {
 		event.stopPropagation();
 
-		if (itemElement) {
-			itemElement.style.opacity = '1'; // Reset visual cue after drag
+		itemElement.style.opacity = '1'; // Reset visual cue after drag
+		dragged = false;
+
+		onDragEnd(event);
+	};
+
+	const onClickOutside = (event) => {
+		if (confirmEdit && !event.target.closest(`#chat-title-input-${id}`)) {
+			confirmEdit = false;
+			ignoreBlur = false;
+			chatTitle = '';
 		}
 		dragged = false;
 	};
@@ -201,7 +212,7 @@
 			// Event listener for when dragging occurs (optional)
 			itemElement.addEventListener('drag', onDrag);
 			// Event listener for when dragging ends
-			itemElement.addEventListener('dragend', onDragEnd);
+			itemElement.addEventListener('dragend', onDragEndHandler);
 		}
 	});
 
@@ -209,7 +220,7 @@
 		if (itemElement) {
 			itemElement.removeEventListener('dragstart', onDragStart);
 			itemElement.removeEventListener('drag', onDrag);
-			itemElement.removeEventListener('dragend', onDragEnd);
+			itemElement.removeEventListener('dragend', onDragEndHandler);
 		}
 	});
 

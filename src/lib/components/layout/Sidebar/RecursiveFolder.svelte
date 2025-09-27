@@ -12,6 +12,7 @@
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
 
+	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 
 	import { chatId, mobile, selectedFolder, showSidebar } from '$lib/stores';
@@ -25,6 +26,7 @@
 	import {
 		getChatById,
 		getChatsByFolderId,
+		getChatListByFolderId,
 		importChat,
 		updateChatFolderIdById
 	} from '$lib/apis/chats';
@@ -41,9 +43,10 @@
 	import FolderMenu from './Folders/FolderMenu.svelte';
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 	import FolderModal from './Folders/FolderModal.svelte';
-	import { goto } from '$app/navigation';
 	import Emoji from '$lib/components/common/Emoji.svelte';
+	import Spinner from '$lib/components/common/Spinner.svelte';
 
+	export let folderRegistry = {};
 	export let open = false;
 
 	export let folders;
@@ -54,7 +57,8 @@
 
 	export let parentDragged = false;
 
-	export let onDelete = (e: string) => {};
+	export let onDelete = (e) => {};
+	export let onItemMove = (e) => {};
 
 	let folderElement: HTMLDivElement;
 
@@ -177,6 +181,12 @@
 									return null;
 								});
 
+								onItemMove({
+									originFolderId: chat.folder_id,
+									targetFolderId: folderId,
+									e
+								});
+
 								if (res) {
 									dispatch('update');
 								}
@@ -188,6 +198,7 @@
 				}
 			}
 
+			setFolderItems();
 			draggedOver = false;
 		}
 	};
@@ -243,6 +254,10 @@
 	};
 
 	onMount(async () => {
+		folderRegistry[folderId] = {
+			setFolderItems: () => setFolderItems()
+		};
+
 		open = folders[folderId].is_expanded;
 		if (folderElement) {
 			folderElement.addEventListener('dragover', onDragOver);
@@ -259,7 +274,6 @@
 
 		if (folders[folderId]?.new) {
 			delete folders[folderId].new;
-
 			await tick();
 			renameHandler();
 		}
@@ -348,6 +362,21 @@
 		}, 500);
 	};
 
+	let chats = null;
+	export const setFolderItems = async () => {
+		await tick();
+		if (open) {
+			chats = await getChatListByFolderId(localStorage.token, folderId).catch((error) => {
+				toast.error(`${error}`);
+				return [];
+			});
+		} else {
+			chats = null;
+		}
+	};
+
+	$: setFolderItems(open);
+
 	const renameHandler = async () => {
 		console.log('Edit');
 		await tick();
@@ -428,8 +457,6 @@
 		bind:open
 		className="w-full"
 		buttonClassName="w-full"
-		hide={(folders[folderId]?.childrenIds ?? []).length === 0 &&
-			(folders[folderId].items?.chats ?? []).length === 0}
 		onChange={(state) => {
 			dispatch('open', state);
 		}}
@@ -475,6 +502,7 @@
 					class="text-gray-500 dark:text-gray-500 transition-all p-1 hover:bg-gray-200 dark:hover:bg-gray-850 rounded-lg"
 					on:click={(e) => {
 						e.stopPropagation();
+						e.stopImmediatePropagation();
 						open = !open;
 						isExpandedUpdateDebounceHandler();
 					}}
@@ -558,17 +586,19 @@
 		</div>
 
 		<div slot="content" class="w-full">
-			{#if (folders[folderId]?.childrenIds ?? []).length > 0 || (folders[folderId].items?.chats ?? []).length > 0}
+			{#if (folders[folderId]?.childrenIds ?? []).length > 0 || (chats ?? []).length > 0}
 				<div
 					class="ml-3 pl-1 mt-[1px] flex flex-col overflow-y-auto scrollbar-hidden border-s border-gray-100 dark:border-gray-900"
 				>
 					{#if sortedChildren.length > 0}
 						{#each sortedChildren as childFolder (`${folderId}-${childFolder.id}`)}
 							<svelte:self
+								bind:folderRegistry
 								{folders}
 								folderId={childFolder.id}
 								{shiftKey}
 								parentDragged={dragged}
+								{onItemMove}
 								{onDelete}
 								on:import={(e) => {
 									dispatch('import', e.detail);
@@ -583,18 +613,22 @@
 						{/each}
 					{/if}
 
-					{#if folders[folderId].items?.chats}
-						{#each folders[folderId].items.chats as chat (chat.id)}
-							<ChatItem
-								id={chat.id}
-								title={chat.title}
-								{shiftKey}
-								on:change={(e) => {
-									dispatch('change', e.detail);
-								}}
-							/>
-						{/each}
-					{/if}
+					{#each chats ?? [] as chat (chat.id)}
+						<ChatItem
+							id={chat.id}
+							title={chat.title}
+							{shiftKey}
+							on:change={(e) => {
+								dispatch('change', e.detail);
+							}}
+						/>
+					{/each}
+				</div>
+			{/if}
+
+			{#if chats === null}
+				<div class="flex justify-center items-center p-2">
+					<Spinner className="size-4 text-gray-500" />
 				</div>
 			{/if}
 		</div>
