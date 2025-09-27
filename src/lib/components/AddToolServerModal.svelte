@@ -223,7 +223,7 @@
 			type: 'application/json'
 		});
 
-		saveAs(blob, `tool-server-${name || id || 'export'}.json`);
+		saveAs(blob, `tool-server-${id || name || 'export'}.json`);
 	};
 
 	const submitHandler = async () => {
