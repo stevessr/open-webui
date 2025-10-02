@@ -344,7 +344,7 @@
 				});
 
 				if (folder) {
-					selectedFolder.set(folder);
+					await selectedFolder.set(folder);
 				}
 			}
 			dispatch('update');
@@ -385,7 +385,7 @@
 				});
 
 				if (folder) {
-					selectedFolder.set(folder);
+					await selectedFolder.set(folder);
 				}
 			}
 		} else {
@@ -497,16 +497,16 @@
 					}
 
 					clickTimer = setTimeout(async () => {
-						await goto('/');
-
 						const folder = await getFolderById(localStorage.token, folderId).catch((error) => {
 							toast.error(`${error}`);
 							return null;
 						});
 
 						if (folder) {
-							selectedFolder.set(folder);
+							await selectedFolder.set(folder);
 						}
+
+						await goto('/');
 
 						if ($mobile) {
 							showSidebar.set(!$showSidebar);
