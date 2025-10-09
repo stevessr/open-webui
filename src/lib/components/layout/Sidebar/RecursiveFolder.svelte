@@ -394,7 +394,9 @@
 		}
 	};
 
-	$: setFolderItems(open);
+	$: if (open) {
+		setFolderItems();
+	}
 
 	const renameHandler = async () => {
 		console.log('Edit');
