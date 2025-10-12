@@ -103,6 +103,11 @@ async fn main() {
                 state.clone(),
                 middleware::auth::auth_middleware
             )))
+        .nest("/openai", routers::openai::router()
+            .layer(axum::middleware::from_fn_with_state(
+                state.clone(),
+                middleware::auth::auth_middleware
+            )))
         // .nest("/api/models", routers::models::router())
         
         .with_state(state)
