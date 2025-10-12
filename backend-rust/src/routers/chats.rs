@@ -4,11 +4,15 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Json},
     extract::{State, Path},
+    Extension,
 };
 use serde_json::json;
+use uuid::Uuid;
 
 use crate::AppState;
-use crate::models::chats::{NewChat, UpdateChat};
+use crate::models::chats::{NewChat, UpdateChat, Chat};
+use crate::utils::jwt::Claims;
+use crate::utils::errors::AppError;
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -22,112 +26,106 @@ pub fn router() -> Router<AppState> {
 
 /// Get all chats for current user
 async fn get_chats(
-    State(_state): State<AppState>,
-) -> impl IntoResponse {
-    // TODO: Implement chat listing
-    // 1. Get current user from auth
-    // 2. Query database for user's chats
-    // 3. Return list
-    
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(json!({
-            "detail": "Chat listing not yet implemented"
-        }))
-    )
+    State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
+) -> Result<Json<Vec<Chat>>, AppError> {
+    let chats = Chat::get_by_user(&state.db, &claims.sub).await?;
+    Ok(Json(chats))
 }
 
 /// Create new chat
 async fn create_chat(
-    State(_state): State<AppState>,
-    Json(_payload): Json<NewChat>,
-) -> impl IntoResponse {
-    // TODO: Implement chat creation
-    // 1. Get current user from auth
-    // 2. Create chat in database
-    // 3. Return created chat
+    State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
+    Json(payload): Json<NewChat>,
+) -> Result<Json<Chat>, AppError> {
+    // Ensure user_id matches authenticated user
+    if payload.user_id != claims.sub {
+        return Err(AppError::Forbidden("Cannot create chat for another user".to_string()));
+    }
     
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(json!({
-            "detail": "Chat creation not yet implemented"
-        }))
-    )
+    let chat = Chat::create(&state.db, payload).await?;
+    Ok(Json(chat))
 }
 
 /// Get chat by ID
 async fn get_chat_by_id(
-    State(_state): State<AppState>,
-    Path(_id): Path<String>,
-) -> impl IntoResponse {
-    // TODO: Implement chat retrieval
-    // 1. Get current user from auth
-    // 2. Query database for chat
-    // 3. Verify ownership
-    // 4. Return chat or 404
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Extension(claims): Extension<Claims>,
+) -> Result<Json<Chat>, AppError> {
+    let chat = Chat::get_by_id(&state.db, &id)
+        .await?
+        .ok_or(AppError::NotFound("Chat not found".to_string()))?;
     
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(json!({
-            "detail": "Chat retrieval not yet implemented"
-        }))
-    )
+    // Verify ownership
+    if chat.user_id != claims.sub && claims.role != "admin" {
+        return Err(AppError::Forbidden("Access denied".to_string()));
+    }
+    
+    Ok(Json(chat))
 }
 
 /// Update chat by ID
 async fn update_chat_by_id(
-    State(_state): State<AppState>,
-    Path(_id): Path<String>,
-    Json(_payload): Json<UpdateChat>,
-) -> impl IntoResponse {
-    // TODO: Implement chat update
-    // 1. Get current user from auth
-    // 2. Verify ownership
-    // 3. Update chat in database
-    // 4. Return updated chat
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Extension(claims): Extension<Claims>,
+    Json(payload): Json<UpdateChat>,
+) -> Result<Json<Chat>, AppError> {
+    // Verify ownership
+    let existing = Chat::get_by_id(&state.db, &id)
+        .await?
+        .ok_or(AppError::NotFound("Chat not found".to_string()))?;
     
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(json!({
-            "detail": "Chat update not yet implemented"
-        }))
-    )
+    if existing.user_id != claims.sub && claims.role != "admin" {
+        return Err(AppError::Forbidden("Access denied".to_string()));
+    }
+    
+    let chat = Chat::update(&state.db, &id, payload).await?;
+    Ok(Json(chat))
 }
 
 /// Delete chat by ID
 async fn delete_chat_by_id(
-    State(_state): State<AppState>,
-    Path(_id): Path<String>,
-) -> impl IntoResponse {
-    // TODO: Implement chat deletion
-    // 1. Get current user from auth
-    // 2. Verify ownership
-    // 3. Delete chat from database
-    // 4. Return success message
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Extension(claims): Extension<Claims>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    // Verify ownership
+    let existing = Chat::get_by_id(&state.db, &id)
+        .await?
+        .ok_or(AppError::NotFound("Chat not found".to_string()))?;
     
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(json!({
-            "detail": "Chat deletion not yet implemented"
-        }))
-    )
+    if existing.user_id != claims.sub && claims.role != "admin" {
+        return Err(AppError::Forbidden("Access denied".to_string()));
+    }
+    
+    Chat::delete(&state.db, &id).await?;
+    
+    Ok(Json(json!({
+        "message": "Chat deleted successfully"
+    })))
 }
 
 /// Archive chat
 async fn archive_chat(
-    State(_state): State<AppState>,
-    Path(_id): Path<String>,
-) -> impl IntoResponse {
-    // TODO: Implement chat archival
-    // 1. Get current user from auth
-    // 2. Verify ownership
-    // 3. Update archived status
-    // 4. Return success message
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Extension(claims): Extension<Claims>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    // Verify ownership
+    let existing = Chat::get_by_id(&state.db, &id)
+        .await?
+        .ok_or(AppError::NotFound("Chat not found".to_string()))?;
     
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(json!({
-            "detail": "Chat archival not yet implemented"
-        }))
-    )
+    if existing.user_id != claims.sub && claims.role != "admin" {
+        return Err(AppError::Forbidden("Access denied".to_string()));
+    }
+    
+    Chat::set_archived(&state.db, &id, true).await?;
+    
+    Ok(Json(json!({
+        "message": "Chat archived successfully"
+    })))
 }

@@ -93,7 +93,11 @@ async fn main() {
                 state.clone(),
                 middleware::auth::auth_middleware
             )))
-        // .nest("/api/chats", routers::chats::router())
+        .nest("/api/chats", routers::chats::router()
+            .layer(axum::middleware::from_fn_with_state(
+                state.clone(),
+                middleware::auth::auth_middleware
+            )))
         // .nest("/api/models", routers::models::router())
         
         .with_state(state)
