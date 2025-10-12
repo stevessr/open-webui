@@ -143,7 +143,26 @@ async fn main() {
                 state.clone(),
                 middleware::auth::auth_middleware
             )))
-        // .nest("/api/models", routers::models::router())
+        .nest("/api/models", routers::models::router()
+            .layer(axum::middleware::from_fn_with_state(
+                state.clone(),
+                middleware::auth::auth_middleware
+            )))
+        .nest("/api/evaluations", routers::evaluations::router()
+            .layer(axum::middleware::from_fn_with_state(
+                state.clone(),
+                middleware::auth::auth_middleware
+            )))
+        .nest("/api/pipelines", routers::pipelines::router()
+            .layer(axum::middleware::from_fn_with_state(
+                state.clone(),
+                middleware::auth::auth_middleware
+            )))
+        .nest("/api/functions", routers::functions::router()
+            .layer(axum::middleware::from_fn_with_state(
+                state.clone(),
+                middleware::auth::auth_middleware
+            )))
         
         .with_state(state)
         .layer(CorsLayer::permissive()); // Configure CORS properly in production

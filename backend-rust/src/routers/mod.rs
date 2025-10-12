@@ -12,6 +12,9 @@ pub mod rag;
 pub mod knowledge;
 pub mod tasks;
 pub mod memory;
+pub mod evaluations;
+pub mod pipelines;
+pub mod functions;
 
 // Re-export routers
 pub use auth::router as auth_router;
@@ -27,3 +30,6 @@ pub use rag::router as rag_router;
 pub use knowledge::router as knowledge_router;
 pub use tasks::router as tasks_router;
 pub use memory::router as memory_router;
+pub use evaluations::router as evaluations_router;
+pub use pipelines::router as pipelines_router;
+pub use functions::router as functions_router;
