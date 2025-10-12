@@ -22,6 +22,16 @@ impl Default for UserRole {
     }
 }
 
+impl UserRole {
+    pub fn to_string(&self) -> String {
+        match self {
+            UserRole::Admin => "admin".to_string(),
+            UserRole::User => "user".to_string(),
+            UserRole::Pending => "pending".to_string(),
+        }
+    }
+}
+
 /// User model matching Python backend's User model
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct User {

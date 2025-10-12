@@ -12,18 +12,19 @@ use tracing::{info, error};
 use tracing_subscriber;
 
 mod config;
+mod database;
 mod models;
 mod routers;
 mod utils;
 mod middleware;
 
 use config::AppConfig;
+use database::Database;
 
 #[derive(Clone)]
 pub struct AppState {
     config: Arc<AppConfig>,
-    // Database pool will be added here
-    // db: sqlx::PgPool,
+    db: Database,
 }
 
 #[tokio::main]
@@ -45,9 +46,31 @@ async fn main() {
         }
     };
 
+    // Initialize database
+    info!("Connecting to database...");
+    let db = match Database::new(&config).await {
+        Ok(database) => {
+            info!("Database connected successfully");
+            database
+        }
+        Err(e) => {
+            error!("Failed to connect to database: {}", e);
+            std::process::exit(1);
+        }
+    };
+
+    // Run migrations
+    info!("Running database migrations...");
+    if let Err(e) = db.migrate().await {
+        error!("Failed to run migrations: {}", e);
+        std::process::exit(1);
+    }
+    info!("Database migrations completed");
+
     // Initialize application state
     let state = AppState {
         config: config.clone(),
+        db,
     };
 
     // Build the application router
@@ -63,8 +86,8 @@ async fn main() {
         // Config endpoint
         .route("/api/config", get(get_config))
         
-        // Mount sub-routers (to be implemented)
-        // .nest("/api/auth", routers::auth::router())
+        // Mount sub-routers
+        .nest("/api/auth", routers::auth::router())
         // .nest("/api/users", routers::users::router())
         // .nest("/api/chats", routers::chats::router())
         // .nest("/api/models", routers::models::router())
