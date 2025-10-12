@@ -10,6 +10,8 @@ pub mod images;
 pub mod audio;
 pub mod rag;
 pub mod knowledge;
+pub mod tasks;
+pub mod memory;
 
 // Re-export routers
 pub use auth::router as auth_router;
@@ -23,3 +25,5 @@ pub use images::router as images_router;
 pub use audio::router as audio_router;
 pub use rag::router as rag_router;
 pub use knowledge::router as knowledge_router;
+pub use tasks::router as tasks_router;
+pub use memory::router as memory_router;
