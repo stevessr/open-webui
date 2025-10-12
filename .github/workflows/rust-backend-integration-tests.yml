@@ -1,0 +1,238 @@
+name: Rust Backend Integration Tests
+
+on:
+  push:
+    branches: [ main, dev, copilot/rewrite-backend-in-rust ]
+    paths:
+      - 'backend-rust/**'
+  pull_request:
+    branches: [ main, dev ]
+    paths:
+      - 'backend-rust/**'
+  schedule:
+    # Run integration tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  integration-tests-postgres:
+    name: Integration Tests (PostgreSQL)
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: openwebui_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          backend-rust/target
+        key: ${{ runner.os }}-cargo-integration-${{ hashFiles('backend-rust/Cargo.lock') }}
+
+    - name: Run integration tests
+      working-directory: backend-rust
+      env:
+        DATABASE_URL: postgres://testuser:testpass@localhost:5432/openwebui_test
+        JWT_SECRET: test_jwt_secret_key_for_integration_tests
+      run: cargo test --test '*' --verbose
+
+  integration-tests-sqlite:
+    name: Integration Tests (SQLite)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          backend-rust/target
+        key: ${{ runner.os }}-cargo-integration-sqlite-${{ hashFiles('backend-rust/Cargo.lock') }}
+
+    - name: Run integration tests
+      working-directory: backend-rust
+      env:
+        DATABASE_URL: sqlite://./test.db
+        JWT_SECRET: test_jwt_secret_key_for_integration_tests
+      run: cargo test --test '*' --verbose
+
+    - name: Cleanup
+      run: rm -f backend-rust/test.db
+
+  api-tests:
+    name: API Endpoint Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: openwebui_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Build backend
+      working-directory: backend-rust
+      run: cargo build --release
+
+    - name: Start backend server
+      working-directory: backend-rust
+      env:
+        DATABASE_URL: postgres://testuser:testpass@localhost:5432/openwebui_test
+        JWT_SECRET: test_jwt_secret_key_for_api_tests
+        PORT: 8080
+      run: |
+        ./target/release/open-webui-backend &
+        echo $! > backend.pid
+        # Wait for server to start
+        sleep 5
+
+    - name: Install curl and jq
+      run: sudo apt-get update && sudo apt-get install -y curl jq
+
+    - name: Test health endpoint
+      run: |
+        response=$(curl -s http://localhost:8080/health)
+        echo "Health response: $response"
+        if [ "$response" != "OK" ]; then
+          echo "Health check failed"
+          exit 1
+        fi
+
+    - name: Test version endpoint
+      run: |
+        response=$(curl -s http://localhost:8080/api/version)
+        echo "Version response: $response"
+        # Check if response contains version field
+        if ! echo "$response" | jq -e '.version' > /dev/null; then
+          echo "Version endpoint failed"
+          exit 1
+        fi
+
+    - name: Test signup endpoint
+      run: |
+        response=$(curl -s -X POST http://localhost:8080/api/auth/signup \
+          -H "Content-Type: application/json" \
+          -d '{"name":"Test User","email":"test@example.com","password":"testpass123"}')
+        echo "Signup response: $response"
+        # Extract token if successful
+        token=$(echo "$response" | jq -r '.token // empty')
+        if [ -z "$token" ]; then
+          echo "Signup failed"
+          exit 1
+        fi
+        echo "TOKEN=$token" >> $GITHUB_ENV
+
+    - name: Test authenticated endpoint
+      run: |
+        response=$(curl -s http://localhost:8080/api/users \
+          -H "Authorization: Bearer $TOKEN")
+        echo "Users response: $response"
+
+    - name: Stop backend server
+      if: always()
+      run: |
+        if [ -f backend-rust/backend.pid ]; then
+          kill $(cat backend-rust/backend.pid) || true
+        fi
+
+  load-tests:
+    name: Load Testing
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: openwebui_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Build backend
+      working-directory: backend-rust
+      run: cargo build --release
+
+    - name: Start backend server
+      working-directory: backend-rust
+      env:
+        DATABASE_URL: postgres://testuser:testpass@localhost:5432/openwebui_test
+        JWT_SECRET: test_jwt_secret_key_for_load_tests
+        PORT: 8080
+      run: |
+        ./target/release/open-webui-backend &
+        echo $! > backend.pid
+        sleep 5
+
+    - name: Install Apache Bench
+      run: sudo apt-get update && sudo apt-get install -y apache2-utils
+
+    - name: Run load test on health endpoint
+      run: |
+        ab -n 10000 -c 100 -g results.tsv http://localhost:8080/health
+        cat results.tsv
+
+    - name: Stop backend server
+      if: always()
+      run: |
+        if [ -f backend-rust/backend.pid ]; then
+          kill $(cat backend-rust/backend.pid) || true
+        fi
