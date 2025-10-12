@@ -8,6 +8,8 @@ pub mod openai;
 pub mod files;
 pub mod images;
 pub mod audio;
+pub mod rag;
+pub mod knowledge;
 
 // Re-export routers
 pub use auth::router as auth_router;
@@ -19,3 +21,5 @@ pub use openai::router as openai_router;
 pub use files::router as files_router;
 pub use images::router as images_router;
 pub use audio::router as audio_router;
+pub use rag::router as rag_router;
+pub use knowledge::router as knowledge_router;
