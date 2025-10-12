@@ -37,7 +37,7 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.6", features = ["v4", "serde"] }
 
 # HTTP client
-reqwest = { version = "0.11", features = ["json", "stream"] }
+reqwest = { version = "0.11", features = ["json", "stream", "multipart"] }
 
 # Async utilities
 async-trait = "0.1"
@@ -58,6 +58,9 @@ envy = "0.4"
 
 # File type detection
 mime_guess = "2.0"
+
+# Base64 encoding
+base64 = "0.21"
 
 [dev-dependencies]
 tokio-test = "0.4"
