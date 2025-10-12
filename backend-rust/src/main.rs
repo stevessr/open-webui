@@ -98,6 +98,11 @@ async fn main() {
                 state.clone(),
                 middleware::auth::auth_middleware
             )))
+        .nest("/api/files", routers::files::router()
+            .layer(axum::middleware::from_fn_with_state(
+                state.clone(),
+                middleware::auth::auth_middleware
+            )))
         .nest("/ollama", routers::ollama::router()
             .layer(axum::middleware::from_fn_with_state(
                 state.clone(),
