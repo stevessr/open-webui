@@ -4,11 +4,14 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Json},
     extract::{State, Path},
+    Extension,
 };
 use serde_json::json;
 
 use crate::AppState;
-use crate::models::users::{UpdateUser, UserResponse};
+use crate::models::users::{UpdateUser, UserResponse, User};
+use crate::utils::jwt::Claims;
+use crate::utils::errors::AppError;
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -18,74 +21,76 @@ pub fn router() -> Router<AppState> {
         .route("/:id", delete(delete_user_by_id))
 }
 
-/// Get all users
+/// Get all users (admin only)
 async fn get_users(
-    State(_state): State<AppState>,
-) -> impl IntoResponse {
-    // TODO: Implement user listing
-    // 1. Query database for all users
-    // 2. Convert to UserResponse
-    // 3. Return list
+    State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
+) -> Result<Json<Vec<UserResponse>>, AppError> {
+    // Check if user is admin
+    if claims.role != "admin" {
+        return Err(AppError::Forbidden("Admin access required".to_string()));
+    }
     
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(json!({
-            "detail": "User listing not yet implemented"
-        }))
-    )
+    let users = User::get_all(&state.db).await?;
+    let response: Vec<UserResponse> = users.into_iter().map(|u| u.into()).collect();
+    
+    Ok(Json(response))
 }
 
 /// Get user by ID
 async fn get_user_by_id(
-    State(_state): State<AppState>,
-    Path(_id): Path<String>,
-) -> impl IntoResponse {
-    // TODO: Implement user retrieval
-    // 1. Query database for user by id
-    // 2. Convert to UserResponse
-    // 3. Return user or 404
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Extension(claims): Extension<Claims>,
+) -> Result<Json<UserResponse>, AppError> {
+    // Users can only view their own profile unless they're admin
+    if claims.sub != id && claims.role != "admin" {
+        return Err(AppError::Forbidden("Access denied".to_string()));
+    }
     
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(json!({
-            "detail": "User retrieval not yet implemented"
-        }))
-    )
+    let user = User::get_by_id(&state.db, &id)
+        .await?
+        .ok_or(AppError::NotFound("User not found".to_string()))?;
+    
+    Ok(Json(user.into()))
 }
 
 /// Update user by ID
 async fn update_user_by_id(
-    State(_state): State<AppState>,
-    Path(_id): Path<String>,
-    Json(_payload): Json<UpdateUser>,
-) -> impl IntoResponse {
-    // TODO: Implement user update
-    // 1. Validate authorization
-    // 2. Update user in database
-    // 3. Return updated user
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Extension(claims): Extension<Claims>,
+    Json(payload): Json<UpdateUser>,
+) -> Result<Json<UserResponse>, AppError> {
+    // Users can only update their own profile unless they're admin
+    if claims.sub != id && claims.role != "admin" {
+        return Err(AppError::Forbidden("Access denied".to_string()));
+    }
     
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(json!({
-            "detail": "User update not yet implemented"
-        }))
-    )
+    let user = User::update(&state.db, &id, payload).await?;
+    
+    Ok(Json(user.into()))
 }
 
-/// Delete user by ID
+/// Delete user by ID (admin only)
 async fn delete_user_by_id(
-    State(_state): State<AppState>,
-    Path(_id): Path<String>,
-) -> impl IntoResponse {
-    // TODO: Implement user deletion
-    // 1. Validate authorization (admin only)
-    // 2. Delete user from database
-    // 3. Return success message
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Extension(claims): Extension<Claims>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    // Only admins can delete users
+    if claims.role != "admin" {
+        return Err(AppError::Forbidden("Admin access required".to_string()));
+    }
     
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(json!({
-            "detail": "User deletion not yet implemented"
-        }))
-    )
+    // Don't allow deleting yourself
+    if claims.sub == id {
+        return Err(AppError::ValidationError("Cannot delete your own account".to_string()));
+    }
+    
+    User::delete(&state.db, &id).await?;
+    
+    Ok(Json(json!({
+        "message": "User deleted successfully"
+    })))
 }

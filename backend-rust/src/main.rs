@@ -88,7 +88,11 @@ async fn main() {
         
         // Mount sub-routers
         .nest("/api/auth", routers::auth::router())
-        // .nest("/api/users", routers::users::router())
+        .nest("/api/users", routers::users::router()
+            .layer(axum::middleware::from_fn_with_state(
+                state.clone(),
+                middleware::auth::auth_middleware
+            )))
         // .nest("/api/chats", routers::chats::router())
         // .nest("/api/models", routers::models::router())
         
