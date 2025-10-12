@@ -163,6 +163,11 @@ async fn main() {
                 state.clone(),
                 middleware::auth::auth_middleware
             )))
+        .nest("/scim/v2", routers::scim::router()
+            .layer(axum::middleware::from_fn_with_state(
+                state.clone(),
+                middleware::auth::auth_middleware
+            )))
         
         .with_state(state)
         .layer(CorsLayer::permissive()); // Configure CORS properly in production
