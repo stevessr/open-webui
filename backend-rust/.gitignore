@@ -5,6 +5,9 @@
 # Environment files
 .env
 
+# Frontend build artifacts (bundled)
+/static
+
 # IDE
 .idea/
 .vscode/

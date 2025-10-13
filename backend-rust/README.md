@@ -64,6 +64,8 @@ backend-rust/
 
 ### Installation
 
+#### Option 1: API-Only Mode (Backend Only)
+
 1. Install Rust from [rustup.rs](https://rustup.rs/)
 
 2. Clone the repository and navigate to the backend-rust directory:
@@ -78,6 +80,55 @@ cp ../.env.example .env
 
 4. Build the project:
 ```bash
+cargo build --release
+```
+
+5. Run the backend:
+```bash
+./target/release/open-webui-backend
+```
+
+The server will start on `http://localhost:8080` (API endpoints only).
+
+#### Option 2: Full Stack Mode (Backend + Frontend)
+
+To build the backend with the frontend bundled (serves the complete web UI):
+
+1. Install Node.js 20+ and npm from [nodejs.org](https://nodejs.org/)
+
+2. Use the provided build script:
+```bash
+./build-with-frontend.sh
+```
+
+This script will:
+- Build the frontend (Vite/Svelte)
+- Copy frontend files to `backend-rust/static/`
+- Build the Rust backend
+
+3. Run the full stack backend:
+```bash
+cd backend-rust
+STATIC_DIR=./static ./target/release/open-webui-backend
+```
+
+The server will start on `http://localhost:8080` with the full web UI.
+
+#### Option 3: Docker (Recommended for Production)
+
+Build and run with Docker:
+
+```bash
+# Build from repository root
+docker build -f backend-rust/Dockerfile -t open-webui-backend .
+
+# Run
+docker run -p 8080:8080 -v $(pwd)/data:/app/data open-webui-backend
+```
+
+The Docker image automatically includes the frontend.
+
+### Configuration
 cargo build --release
 ```
 

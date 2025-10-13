@@ -71,6 +71,25 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Build Frontend
+      run: |
+        npm ci --force
+        npm run build
+      env:
+        APP_BUILD_HASH: ${{ github.sha }}
+
+    - name: Copy frontend build to backend
+      run: |
+        mkdir -p backend-rust/static
+        cp -r build/* backend-rust/static/
+      shell: bash
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
 

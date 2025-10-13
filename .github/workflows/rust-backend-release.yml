@@ -60,6 +60,19 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Build Frontend
+      run: |
+        npm ci --force
+        npm run build
+      env:
+        APP_BUILD_HASH: ${{ github.sha }}
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
@@ -70,6 +83,11 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y gcc-aarch64-linux-gnu
+
+    - name: Copy frontend build to backend
+      run: |
+        mkdir -p backend-rust/static
+        cp -r build/* backend-rust/static/
 
     - name: Build release binary
       working-directory: backend-rust
@@ -133,7 +151,7 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: ./backend-rust
+        context: .
         file: ./backend-rust/Dockerfile
         push: true
         tags: |
@@ -142,3 +160,5 @@ jobs:
         platforms: linux/amd64,linux/arm64
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        build-args: |
+          BUILD_HASH=${{ github.sha }}

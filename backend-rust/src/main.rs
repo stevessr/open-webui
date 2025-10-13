@@ -8,6 +8,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
+use tower_http::services::ServeDir;
 use tracing::{info, error};
 use tracing_subscriber;
 
@@ -171,6 +172,16 @@ async fn main() {
         
         .with_state(state)
         .layer(CorsLayer::permissive()); // Configure CORS properly in production
+
+    // Serve static frontend files if directory exists
+    let static_dir = std::env::var("STATIC_DIR").unwrap_or_else(|_| "./static".to_string());
+    let app = if std::path::Path::new(&static_dir).exists() {
+        info!("Serving static files from: {}", static_dir);
+        app.fallback_service(ServeDir::new(static_dir))
+    } else {
+        info!("Static directory not found, API-only mode");
+        app
+    };
 
     let addr = format!("{}:{}", config.host, config.port);
     let listener = tokio::net::TcpListener::bind(&addr)
