@@ -1,4 +1,4 @@
-@reference "./tailwind.css";
+@import "./tailwind.css";
 
 @font-face {
 	font-family: 'Inter';
@@ -286,7 +286,7 @@ input[type='number'] {
 }
 
 .cm-gutters {
-	@apply !bg-white dark: !bg-black !border-none;
+	@apply !bg-white dark:!bg-black !border-none;
 }
 
 .cm-editor {
