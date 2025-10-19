@@ -42,54 +42,6 @@
 	let APIKeyCopied = false;
 	let profileImageInputElement: HTMLInputElement;
 
-	let showUrlInput = false;
-	let imageUrl = '';
-
-	const handleImageUrl = (url) => {
-		const img = new Image();
-		img.crossOrigin = 'anonymous';
-		img.src = url;
-
-		img.onload = function () {
-			const canvas = document.createElement('canvas');
-			const ctx = canvas.getContext('2d');
-
-			// Calculate the aspect ratio of the image
-			const aspectRatio = img.width / img.height;
-
-			// Calculate the new width and height to fit within 250x250
-			let newWidth, newHeight;
-			if (aspectRatio > 1) {
-				newWidth = 250 * aspectRatio;
-				newHeight = 250;
-			} else {
-				newWidth = 250;
-				newHeight = 250 / aspectRatio;
-			}
-
-			// Set the canvas size
-			canvas.width = 250;
-			canvas.height = 250;
-
-			// Calculate the position to center the image
-			const offsetX = (250 - newWidth) / 2;
-			const offsetY = (250 - newHeight) / 2;
-
-			// Draw the image on the canvas
-			ctx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
-
-			// Get the base64 representation of the compressed image
-			const compressedSrc = canvas.toDataURL('image/jpeg');
-
-			// Display the compressed image
-			profileImageUrl = compressedSrc;
-		};
-
-		img.onerror = function () {
-			toast.error(i18n.t('Failed to load image from URL.'));
-		};
-	};
-
 	const submitHandler = async () => {
 		if (name !== $user?.name) {
 			if (profileImageUrl === generateInitialsImage($user?.name) || profileImageUrl === '') {
@@ -167,66 +119,7 @@
 </script>
 
 <div id="tab-account" class="flex flex-col h-full justify-between text-sm">
-	<div class=" overflow-y-scroll max-h-[28rem] lg:max-h-full">
-		<input
-			id="profile-image-input"
-			bind:this={profileImageInputElement}
-			type="file"
-			hidden
-			accept="image/*,video/*"
-			on:change={(e) => {
-				const files = profileImageInputElement.files ?? [];
-				let reader = new FileReader();
-				reader.onload = (event) => {
-					let originalImageUrl = `${event.target.result}`;
-
-					const img = new Image();
-					img.src = originalImageUrl;
-
-					img.onload = function () {
-						const canvas = document.createElement('canvas');
-						const ctx = canvas.getContext('2d');
-
-						// Calculate the aspect ratio of the image
-						const aspectRatio = img.width / img.height;
-
-						// Calculate the new width and height to fit within 250x250
-						let newWidth, newHeight;
-						if (aspectRatio > 1) {
-							newWidth = 250 * aspectRatio;
-							newHeight = 250;
-						} else {
-							newWidth = 250;
-							newHeight = 250 / aspectRatio;
-						}
-
-						// Set the canvas size
-						canvas.width = 250;
-						canvas.height = 250;
-
-						// Calculate the position to center the image
-						const offsetX = (250 - newWidth) / 2;
-						const offsetY = (250 - newHeight) / 2;
-
-						// Draw the image on the canvas
-						ctx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
-
-						// Get the base64 representation of the compressed image
-						const compressedSrc = canvas.toDataURL('image/jpeg');
-
-						// Display the compressed image
-						profileImageUrl = compressedSrc;
-
-						profileImageInputElement.files = null;
-					};
-				};
-
-				if (files.length > 0 && (files[0]['type'].startsWith('image/') || files[0]['type'].startsWith('video/'))) {
-					reader.readAsDataURL(files[0]);
-				}
-			}}
-		/>
-
+	<div class=" overflow-y-scroll max-h-[28rem] md:max-h-full">
 		<div class="space-y-1">
 			<div>
 				<div class="text-base font-medium">{$i18n.t('Your Account')}</div>
@@ -241,81 +134,6 @@
 			<div class="flex space-x-5 my-4">
 				<UserProfileImage bind:profileImageUrl user={$user} />
 
-						<button
-							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-lg py-0.5 opacity-0 group-hover:opacity-100 transition-all"
-							on:click={async () => {
-								if (canvasPixelTest()) {
-									profileImageUrl = generateInitialsImage(name);
-								} else {
-									toast.info(
-										$i18n.t(
-											'Fingerprint spoofing detected: Unable to use initials as avatar. Defaulting to default profile image.'
-										),
-										{
-											duration: 1000 * 10
-										}
-									);
-								}
-							}}>{$i18n.t('Initials')}</button
-						>
-
-						<button
-							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-lg py-0.5 opacity-0 group-hover:opacity-100 transition-all"
-							on:click={async () => {
-								const url = await getGravatarUrl(localStorage.token, $user?.email);
-
-								profileImageUrl = url;
-							}}>{$i18n.t('Gravatar')}</button
-						>
-						<button
-							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-lg py-0.5 opacity-0 group-hover:opacity-100 transition-all"
-							on:click={() => {
-								showUrlInput = !showUrlInput;
-							}}>{$i18n.t('From URL')}</button
-						>
-					</div>
-					{#if showUrlInput}
-						<div class="flex mt-2">
-							<input
-								class=" w-full text-sm dark:text-gray-300 bg-transparent outline-none border-b dark:border-gray-700"
-								type="url"
-								bind:value={imageUrl}
-								placeholder={$i18n.t('Enter image URL')}
-							/>
-							<button
-								class="ml-2 px-2 py-1 text-xs font-medium bg-black hover:bg-gray-900 text-white dark:bg-white dark:text-black dark:hover:bg-gray-100 transition rounded-full"
-								on:click={() => {
-									if (imageUrl) {
-										handleImageUrl(imageUrl);
-										showUrlInput = false;
-										imageUrl = '';
-									}
-								}}
-							>
-								{$i18n.t('Set')}
-							</button>
-						</div>
-					{/if}
-				</div>
-
-				<!-- Allow paste/url input for profile image -->
-				<div class="mt-2">
-					<div class=" mb-1 text-xs font-medium">{$i18n.t('Profile Image URL')}</div>
-					<input
-						class="w-full text-sm outline-hidden"
-						type="url"
-						placeholder={$i18n.t('Paste an image or video URL')}
-						bind:value={profileImageUrl}
-						on:change={() => {
-							// If the URL is an http(s) URL, just use it directly and skip canvas compression
-							if (profileImageUrl && (profileImageUrl.startsWith('http://') || profileImageUrl.startsWith('https://') || profileImageUrl.startsWith('blob:') || profileImageUrl.startsWith('data:'))) {
-								// leave as is; if needed, more validation could be added
-							} else {
-								profileImageUrl = '';
-							}
-						}}
-					/>
-				</div>
 				<div class="flex flex-1 flex-col">
 					<div class=" flex-1">
 						<div class="flex flex-col w-full">
