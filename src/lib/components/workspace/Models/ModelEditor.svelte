@@ -25,6 +25,8 @@
 	import PromptSuggestions from './PromptSuggestions.svelte';
 	import AccessControlModal from '../common/AccessControlModal.svelte';
 	import LockClosed from '$lib/components/icons/LockClosed.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
+	import UrlInputModal from '$lib/components/common/UrlInputModal.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -45,6 +47,7 @@
 	let showAdvanced = false;
 	let showPreview = false;
 	let showAccessControlModal = false;
+	let showUrlInputModal = false;
 
 	let loaded = false;
 
@@ -464,19 +467,11 @@
 										filesInputElement.click();
 									}}
 								>
-									{#if info.meta.profile_image_url}
-										<img
-											src={info.meta.profile_image_url}
-											alt="model profile"
-											class="rounded-xl size-60 object-cover shrink-0"
-										/>
-									{:else}
-										<img
-											src="{WEBUI_BASE_URL}/static/favicon.png"
-											alt="model profile"
-											class=" rounded-xl size-60 object-cover shrink-0"
-										/>
-									{/if}
+									<ProfileImage
+										src={info.meta.profile_image_url || `${WEBUI_BASE_URL}/static/favicon.png`}
+										alt="model profile"
+										className="rounded-xl size-60 object-cover shrink-0"
+									/>
 
 									<div class="absolute bottom-0 right-0 z-10">
 										<div class="m-1.5">
@@ -504,7 +499,16 @@
 									></div>
 								</button>
 
-								<div class="flex w-full mt-1 justify-end">
+								<div class="flex w-full mt-1 justify-between gap-2">
+									<button
+										class="px-2 py-1 text-gray-500 rounded-lg text-xs"
+										on:click={() => {
+											showUrlInputModal = true;
+										}}
+										type="button"
+									>
+										{$i18n.t('Enter URL')}
+									</button>
 									<button
 										class="px-2 py-1 text-gray-500 rounded-lg text-xs"
 										on:click={() => {
@@ -512,8 +516,8 @@
 										}}
 										type="button"
 									>
-										{$i18n.t('Reset Image')}</button
-									>
+										{$i18n.t('Reset Image')}
+									</button>
 								</div>
 							</div>
 						</div>
@@ -559,7 +563,6 @@
 									</button>
 								</div>
 							</div>
-
 							{#if preset}
 								<div class="mb-1">
 									<div class=" text-xs font-medium mb-1 text-gray-500">
@@ -580,9 +583,9 @@
 												<option value={model.id} class=" text-gray-900">{model.name}</option>
 											{/each}
 										</select>
+										</div>
 									</div>
-								</div>
-							{/if}
+								{/if}
 
 							<div class="mb-1">
 								<div class="mb-1 flex w-full justify-between items-center">
@@ -872,4 +875,14 @@
 			</form>
 		{/if}
 	</div>
+
+	<UrlInputModal
+		bind:show={showUrlInputModal}
+		bind:value={info.meta.profile_image_url}
+		on:submit={(e) => {
+			if (e.detail && e.detail.trim()) {
+				info.meta.profile_image_url = e.detail.trim();
+			}
+		}}
+	/>
 {/if}
