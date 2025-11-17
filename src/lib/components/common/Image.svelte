@@ -4,6 +4,7 @@
 	import { settings } from '$lib/stores';
 	import ImagePreview from './ImagePreview.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import ProfileImage from './ProfileImage.svelte';
 	import { getContext } from 'svelte';
 
 	export let src = '';
@@ -51,7 +52,11 @@
 				muted
 			></video>
 		{:else}
-			<img src={_src} {alt} class={imageClassName} draggable="false" data-cy="image" />
+			<ProfileImage
+				src={_src}
+				className={imageClassName}
+				{alt}
+			/>
 		{/if}
 	</button>
 

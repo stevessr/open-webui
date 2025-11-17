@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { isVideoUrl } from '$lib/utils/index';
+	import ProfileImage from './ProfileImage.svelte';
 
 	export let src: string = '';
 	export let alt: string = '';
@@ -28,12 +29,9 @@
 		Your browser does not support the video tag.
 	</video>
 {:else}
-	<img
+	<ProfileImage
 		{src}
 		{alt}
-		class={className}
-		crossorigin={crossOrigin}
-		draggable="false"
-		data-cy="image"
+		className={className}
 	/>
 {/if}
