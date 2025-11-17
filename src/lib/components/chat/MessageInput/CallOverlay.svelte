@@ -7,6 +7,7 @@
 	import { blobToFile } from '$lib/utils';
 	import { generateEmoji } from '$lib/apis';
 	import { synthesizeOpenAISpeech, transcribeAudio } from '$lib/apis/audio';
+	import { isVideoUrl } from '$lib/utils';
 
 	import { toast } from 'svelte-sonner';
 
@@ -27,6 +28,11 @@
 	let wakeLock = null;
 
 	let model = null;
+	$: modelProfileImageUrl =
+		model?.info?.meta?.profile_image_url ??
+		`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}&voice=true`;
+	$: modelProfileImageIsVideo =
+		!!model?.info?.meta?.profile_image_url && isVideoUrl(model?.info?.meta?.profile_image_url);
 
 	let loading = false;
 	let confirmed = false;
@@ -765,9 +771,23 @@
 								? ' size-16'
 								: rmsLevel * 100 > 1
 									? 'size-14'
-									: 'size-12'}  transition-all rounded-full bg-cover bg-center bg-no-repeat"
-						style={`background-image: url('${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}&voice=true');`}
-					/>
+									: 'size-12'} transition-all rounded-full bg-cover bg-center bg-no-repeat"
+					>
+						{#if modelProfileImageIsVideo}
+							<video
+								src={modelProfileImageUrl}
+								autoplay
+								muted
+								loop
+								class="rounded-full w-full h-full object-cover"
+							/>
+						{:else}
+							<div
+								style={`background-image: url('${modelProfileImageUrl}');`}
+								class="rounded-full w-full h-full bg-cover bg-center bg-no-repeat"
+							/>
+						{/if}
+					</div>
 				{/if}
 				<!-- navbar -->
 			</button>
@@ -842,8 +862,22 @@
 									: rmsLevel * 100 > 1
 										? 'size-44'
 										: 'size-40'} transition-all rounded-full bg-cover bg-center bg-no-repeat"
-							style={`background-image: url('${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}&voice=true');`}
-						/>
+						>
+							{#if modelProfileImageIsVideo}
+								<video
+									src={modelProfileImageUrl}
+									autoplay
+									muted
+									loop
+									class="rounded-full w-full h-full object-cover"
+								/>
+							{:else}
+								<div
+									style={`background-image: url('${modelProfileImageUrl}');`}
+									class="rounded-full w-full h-full bg-cover bg-center bg-no-repeat"
+								/>
+							{/if}
+						</div>
 					{/if}
 				</button>
 			{:else}
