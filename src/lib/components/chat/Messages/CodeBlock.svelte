@@ -44,7 +44,6 @@
 
 	export let className = 'mb-2';
 	export let editorClassName = '';
-	export let stickyButtonsClassName = 'top-0';
 
 	let pyodideWorker = null;
 
@@ -440,87 +439,90 @@
 				</div>
 			{/if}
 		{:else}
-			<div
-				class="absolute left-0 right-0 py-2.5 pr-3 text-text-300 pl-4.5 text-xs font-medium dark:text-white"
-			>
-				{lang}
-			</div>
 
 			<div
-				class="sticky {stickyButtonsClassName} left-0 right-0 py-2 pr-3 flex items-center justify-end w-full z-10 text-xs text-black dark:text-white"
-			>
-				<div class="flex items-center gap-0.5">
-					<button
-						class="flex gap-1 items-center bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
-						on:click={collapseCodeBlock}
-					>
-						<div class=" -translate-y-[0.5px]">
-							<ChevronUpDown className="size-3" />
-						</div>
-
-						<div>
-							{collapsed ? $i18n.t('Expand') : $i18n.t('Collapse')}
-						</div>
-					</button>
-
-					{#if ($config?.features?.enable_code_execution ?? true) && (lang.toLowerCase() === 'python' || lang.toLowerCase() === 'py' || (lang === '' && checkPythonCode(code)))}
-						{#if executing}
-							<div
-								class="run-code-button bg-none border-none p-0.5 cursor-not-allowed bg-white dark:bg-black"
-							>
-								{$i18n.t('Running')}
-							</div>
-						{:else if run}
-							<button
-								class="flex gap-1 items-center run-code-button bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
-								on:click={async () => {
-									code = _code;
-									await tick();
-									executePython(code);
-								}}
-							>
-								<div>
-									{$i18n.t('Run')}
-								</div>
-							</button>
-						{/if}
-					{/if}
-
-					{#if save}
-						<button
-							class="save-code-button bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
-							on:click={saveCode}
-						>
-							{saved ? $i18n.t('Saved') : $i18n.t('Save')}
-						</button>
-					{/if}
-
-					<button
-						class="copy-code-button bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
-						on:click={copyCode}>{copied ? $i18n.t('Copied') : $i18n.t('Copy')}</button
-					>
-
-					{#if preview && ['html', 'svg'].includes(lang)}
-						<button
-							class="flex gap-1 items-center run-code-button bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
-							on:click={previewCode}
-						>
-							<div>
-								{$i18n.t('Preview')}
-							</div>
-						</button>
-					{/if}
-				</div>
-			</div>
-
-			<div
-				class="language-{lang} rounded-t-3xl -mt-9 {editorClassName
+				class="language-{lang} rounded-t-3xl {editorClassName
 					? editorClassName
 					: executing || stdout || stderr || result
 						? ''
 						: 'rounded-b-3xl'} overflow-hidden"
 			>
-				<div class=" pt-8 bg-white dark:bg-black"></div>
+				<div class="code-block-header bg-gray-900 dark:bg-gray-900 h-10 flex items-center justify-between px-4 rounded-t-3xl">
+					<!-- 左侧：装饰圆点 -->
+					<div class="flex items-center gap-2">
+						<div class="flex items-center gap-2">
+							<div class="w-3 h-3 rounded-full bg-red-500"></div>
+							<div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+							<div class="w-3 h-3 rounded-full bg-green-500"></div>
+						</div>
+						{#if lang}
+							<span class="text-gray-400 text-sm font-medium ml-2">{lang}</span>
+						{/if}
+					</div>
+
+					<!-- 右侧：操作按钮 -->
+					<div class="flex items-center gap-1">
+						<button
+							class="flex gap-1 items-center bg-transparent hover:bg-gray-800 border-none transition rounded-md px-2 py-1 text-gray-300 hover:text-white text-xs"
+							on:click={collapseCodeBlock}
+						>
+							<div class="-translate-y-[0.5px]">
+								<ChevronUpDown className="size-3" />
+							</div>
+							<div>
+								{collapsed ? $i18n.t('Expand') : $i18n.t('Collapse')}
+							</div>
+						</button>
+
+						{#if ($config?.features?.enable_code_execution ?? true) && (lang.toLowerCase() === 'python' || lang.toLowerCase() === 'py' || (lang === '' && checkPythonCode(code)))}
+							{#if executing}
+								<div
+									class="run-code-button bg-transparent border-none px-2 py-1 cursor-not-allowed text-gray-500 text-xs"
+								>
+									{$i18n.t('Running')}
+								</div>
+							{:else if run}
+								<button
+									class="flex gap-1 items-center run-code-button bg-transparent hover:bg-gray-800 border-none transition rounded-md px-2 py-1 text-gray-300 hover:text-white text-xs"
+									on:click={async () => {
+										code = _code;
+										await tick();
+										executePython(code);
+									}}
+								>
+									<div>
+										{$i18n.t('Run')}
+									</div>
+								</button>
+							{/if}
+						{/if}
+
+						{#if save}
+							<button
+								class="save-code-button bg-transparent hover:bg-gray-800 border-none transition rounded-md px-2 py-1 text-gray-300 hover:text-white text-xs"
+								on:click={saveCode}
+							>
+								{saved ? $i18n.t('Saved') : $i18n.t('Save')}
+							</button>
+						{/if}
+
+						<button
+							class="copy-code-button bg-transparent hover:bg-gray-800 border-none transition rounded-md px-2 py-1 text-gray-300 hover:text-white text-xs"
+							on:click={copyCode}>{copied ? $i18n.t('Copied') : $i18n.t('Copy')}</button
+						>
+
+						{#if preview && ['html', 'svg'].includes(lang)}
+							<button
+								class="flex gap-1 items-center run-code-button bg-transparent hover:bg-gray-800 border-none transition rounded-md px-2 py-1 text-gray-300 hover:text-white text-xs"
+								on:click={previewCode}
+							>
+								<div>
+									{$i18n.t('Preview')}
+								</div>
+							</button>
+						{/if}
+					</div>
+				</div>
 
 				{#if !collapsed}
 					{#if edit}
@@ -537,8 +539,8 @@
 						/>
 					{:else}
 						<pre
-							class=" hljs p-4 px-5 overflow-x-auto"
-							style="border-top-left-radius: 0px; border-top-right-radius: 0px; {(executing ||
+							class="hljs overflow-x-auto m-0"
+							style="padding: 1rem 1.25rem; border-top-left-radius: 0px; border-top-right-radius: 0px; {(executing ||
 								stdout ||
 								stderr ||
 								result) &&
@@ -565,7 +567,7 @@
 				<div
 					id="plt-canvas-{id}"
 					class="bg-gray-50 dark:bg-black dark:text-white max-w-full overflow-x-auto scrollbar-hidden"
-				/>
+				></div>
 
 				{#if executing || stdout || stderr || result || files}
 					<div
