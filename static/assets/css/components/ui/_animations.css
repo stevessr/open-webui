@@ -72,6 +72,11 @@
   backdrop-filter: none !important;
 }
 
+.transv2 {
+  background: transparent !important;
+  backdrop-filter: blur(8px) !important;
+}
+
 .little-color {
   background: rgb(255 255 255 / 25%);
 }
