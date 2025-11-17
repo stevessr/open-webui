@@ -23,6 +23,7 @@
 	import DefaultFiltersSelector from './DefaultFiltersSelector.svelte';
 	import DefaultFeatures from './DefaultFeatures.svelte';
 	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
+	import UrlInputModal from '$lib/components/common/UrlInputModal.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -42,6 +43,7 @@
 
 	let showAdvanced = false;
 	let showPreview = false;
+	let showUrlInputModal = false;
 
 	let loaded = false;
 
@@ -464,13 +466,18 @@
 									</div>
 								</div>
 							</div>
-
-							<div
-								class="absolute top-0 bottom-0 left-0 right-0 bg-white dark:bg-black rounded-lg opacity-0 group-hover:opacity-20 transition"
-							></div>
 						</button>
 
-						<div class="flex w-full mt-1 justify-end">
+						<div class="flex w-full mt-1 justify-between gap-2">
+							<button
+								class="px-2 py-1 text-gray-500 rounded-lg text-xs"
+								on:click={() => {
+									showUrlInputModal = true;
+								}}
+								type="button"
+							>
+								{$i18n.t('Enter URL')}
+							</button>
 							<button
 								class="px-2 py-1 text-gray-500 rounded-lg text-xs"
 								on:click={() => {
@@ -478,8 +485,8 @@
 								}}
 								type="button"
 							>
-								{$i18n.t('Reset Image')}</button
-							>
+								{$i18n.t('Reset Image')}
+							</button>
 						</div>
 					</div>
 				</div>
@@ -855,4 +862,14 @@
 			</form>
 		{/if}
 	</div>
+
+	<UrlInputModal
+		bind:show={showUrlInputModal}
+		bind:value={info.meta.profile_image_url}
+		on:submit={(e) => {
+			if (e.detail && e.detail.trim()) {
+				info.meta.profile_image_url = e.detail.trim();
+			}
+		}}
+	/>
 {/if}
