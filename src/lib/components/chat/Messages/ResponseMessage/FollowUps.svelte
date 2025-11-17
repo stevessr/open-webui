@@ -22,6 +22,7 @@
 					class=" py-1.5 bg-transparent text-left text-sm flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition cursor-pointer"
 					on:click={() => onClick(followUp)}
 					aria-label={followUp}
+					id="follow-up"
 				>
 					<div class="line-clamp-1">
 						{followUp}
