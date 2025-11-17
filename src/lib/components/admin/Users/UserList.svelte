@@ -133,19 +133,6 @@
 	<UserChatsModal bind:show={showUserChatsModal} user={selectedUser} />
 {/if}
 
-{#if ($config?.license_metadata?.seats ?? null) !== null && total && total > $config?.license_metadata?.seats}
-	<div class=" mt-1 mb-2 text-xs text-red-500">
-		<Banner
-			className="mx-0"
-			banner={{
-				type: 'error',
-				title: 'License Error',
-				content:
-					'Exceeded the number of seats in your license. Please contact support to increase the number of seats.'
-			}}
-		/>
-	</div>
-{/if}
 
 {#if users === null || total === null}
 	<div class="my-10">
@@ -155,28 +142,6 @@
 	<div
 		class="trans pt-0.5 pb-1 gap-1 flex flex-col md:flex-row justify-between sticky top-0 z-10 bg-white dark:bg-gray-900"
 	>
-		<div class="flex md:self-center text-lg font-medium px-0.5">
-			<div class="flex-shrink-0">
-				{$i18n.t('Users')}
-			</div>
-			<div class="flex self-center w-[1px] h-6 mx-2.5 bg-gray-50 dark:bg-gray-850" />
-
-			{#if ($config?.license_metadata?.seats ?? null) !== null}
-				{#if total > $config?.license_metadata?.seats}
-					<span class="text-lg font-medium text-red-500"
-						>{total} of {$config?.license_metadata?.seats}
-						<span class="text-sm font-normal">{$i18n.t('available users')}</span></span
-					>
-				{:else}
-					<span class="text-lg font-medium text-gray-500 dark:text-gray-300"
-						>{total} of {$config?.license_metadata?.seats}
-						<span class="text-sm font-normal">{$i18n.t('available users')}</span></span
-					>
-				{/if}
-			{:else}
-				<span class="text-lg font-medium text-gray-500 dark:text-gray-300">{total}</span>
-			{/if}
-		</div>
 
 		<div class="flex gap-1">
 			<div class=" flex w-full space-x-2">
@@ -464,29 +429,5 @@
 
 	{#if total > 30}
 		<Pagination bind:page count={total} perPage={30} />
-	{/if}
-{/if}
-
-{#if !$config?.license_metadata}
-	{#if total > 50}
-		<div class="text-sm">
-			<Markdown
-				content={`
-> [!NOTE]
-> # **Hey there! 👋**
->
-> It looks like you have over 50 users, that usually falls under organizational usage.
-> 
-> Open WebUI is completely free to use as-is, with no restrictions or hidden limits, and we'd love to keep it that way. 🌱  
->
-> By supporting the project through sponsorship or an enterprise license, you’re not only helping us stay independent, you’re also helping us ship new features faster, improve stability, and grow the project for the long haul. With an *enterprise license*, you also get additional perks like dedicated support, customization options, and more, all at a fraction of what it would cost to build and maintain internally.  
-> 
-> Your support helps us stay independent and continue building great tools for everyone. 💛
-> 
-> - 👉 **[Click here to learn more about enterprise licensing](https://docs.openwebui.com/enterprise)**
-> - 👉 *[Click here to sponsor the project on GitHub](https://github.com/sponsors/tjbck)*
-`}
-			/>
-		</div>
 	{/if}
 {/if}
