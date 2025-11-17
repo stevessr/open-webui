@@ -730,12 +730,10 @@
 			<AppSidebar />
 
 			<div class="w-full flex-1 max-w-[calc(100%-4.5rem)]">
-				<Background />
 				<slot />
 			</div>
 		</div>
 	{:else}
-		<Background />
 		<slot />
 	{/if}
 {/if}
