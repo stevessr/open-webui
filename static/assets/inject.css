@@ -2,12 +2,20 @@
 
 @import "/assets/css/base/_variables.css";
 @import "/assets/css/base/_fonts.css";
+@import "/assets/css/base/_global.css";
+
 @import "/assets/css/components/_code-block.css";
 @import "/assets/css/components/_syntax-highlighting.css";
 
-@import "/assets/css/utilities/_fix-ui.css";
-@import "/assets/css/utilities/_fluent.css";
-@import "/assets/css/base/_global.css";
+/* UI Components */
+@import "/assets/css/components/ui/_sidebar.css";
+@import "/assets/css/components/ui/_editor.css";
+@import "/assets/css/components/ui/_followup.css";
+@import "/assets/css/components/ui/_table.css";
+@import "/assets/css/components/ui/_layout.css";
+@import "/assets/css/components/ui/_logo.css";
+@import "/assets/css/components/ui/_usermenu.css";
+@import "/assets/css/components/ui/_animations.css";
 
 @import "/assets/css/_theme.css";
 
