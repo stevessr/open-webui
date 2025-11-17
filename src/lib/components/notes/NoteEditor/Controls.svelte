@@ -7,6 +7,7 @@
 	import Collapsible from '$lib/components/common/Collapsible.svelte';
 	import FileItem from '$lib/components/common/FileItem.svelte';
 	import Image from '$lib/components/common/Image.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 
 	export let show = false;
 	export let selectedModelId = '';
@@ -90,14 +91,14 @@
 		<div class=" text-xs font-medium mb-1">{$i18n.t('Model')}</div>
 
 		<div class="w-full">
-			<select class="w-full bg-transparent text-sm outline-hidden" bind:value={selectedModelId}>
-				<option value="" class="bg-gray-50 dark:bg-gray-700" disabled>
-					{$i18n.t('Select a model')}
-				</option>
-				{#each $models.filter((model) => !(model?.info?.meta?.hidden ?? false)) as model}
-					<option value={model.id} class="bg-gray-50 dark:bg-gray-700">{model.name}</option>
-				{/each}
-			</select>
+			<Select
+				className="w-full bg-transparent text-sm outline-hidden"
+				bind:value={selectedModelId}
+				placeholder={$i18n.t('Select a model')}
+				items={$models
+					.filter((model) => !(model?.info?.meta?.hidden ?? false))
+					.map((m) => ({ value: m.id, label: m.name }))}
+			/>
 		</div>
 	</div>
 </div>

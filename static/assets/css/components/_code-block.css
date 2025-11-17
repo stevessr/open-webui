@@ -1,0 +1,340 @@
+/* 代码块容器样式 - 匹配 Svelte 组件结构 */
+.language-javascript,
+[class*="language-"] {
+    background: var(--bg-code) !important;
+    border-radius: var(--code-block-radius) !important;
+    box-shadow: var(--shadow-code) !important;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 确保 pre 标签填满容器 */
+.language-javascript pre,
+[class*="language-"] pre {
+    margin: 0 !important;
+    flex: 1;
+}
+
+/* 移除重复的 dark 样式，使用 CSS 变量 */
+.dark .language-javascript,
+.dark [class*="language-"] {
+    background: var(--bg-code) !important;
+    box-shadow: var(--shadow-code) !important;
+}
+
+/* 代码块顶部栏 */
+.code-block-header {
+    background: var(--code-header-bg) !important;
+    height: 40px !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 1.5rem 1.5rem 0 0;
+    padding: 0 1rem !important;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.dark .code-block-header {
+    background: var(--code-header-bg) !important;
+}
+
+/* 语言标签样式 */
+.code-block-header span {
+    color: var(--code-header-text) !important;
+}
+
+/* 装饰圆点 */
+.code-block-header .w-3 {
+    background-color: var(--code-dot-red) !important;
+}
+
+.code-block-header .w-3:nth-child(2) {
+    background-color: var(--code-dot-yellow) !important;
+}
+
+.code-block-header .w-3:nth-child(3) {
+    background-color: var(--code-dot-green) !important;
+}
+
+/* 顶部按钮样式优化 - 匹配新的黑条设计 */
+.code-block-header .save-code-button,
+.code-block-header .copy-code-button,
+.code-block-header .run-code-button,
+.code-block-header button {
+    background: transparent !important;
+    color: var(--code-btn-text) !important;
+    border: none !important;
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+    border-radius: 0.375rem !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+.code-block-header .save-code-button:hover,
+.code-block-header .copy-code-button:hover,
+.code-block-header .run-code-button:hover,
+.code-block-header button:hover {
+    background: var(--code-btn-hover-bg) !important;
+    color: var(--code-btn-hover-text) !important;
+}
+
+.dark .code-block-header .save-code-button,
+.dark .code-block-header .copy-code-button,
+.dark .code-block-header .run-code-button,
+.dark .code-block-header button {
+    background: transparent !important;
+    color: var(--code-btn-text) !important;
+}
+
+.dark .code-block-header .save-code-button:hover,
+.dark .code-block-header .copy-code-button:hover,
+.dark .code-block-header .run-code-button:hover,
+.dark .code-block-header button:hover {
+    background: var(--code-btn-hover-bg) !important;
+    color: var(--code-btn-hover-text) !important;
+}
+
+/* 装饰圆点现在在 HTML 中直接渲染，不需要伪元素 */
+
+/* 代码内容样式 */
+.hljs {
+    background: transparent !important;
+    display: block;
+}
+
+.hljs code {
+    display: block;
+    line-height: 1.6;
+    font-family: var(--font-mono, 'Courier New', monospace);
+}
+
+/* 代码内容区域 */
+.cm-content {
+    font-family: var(--font-mono);
+    font-size: 15px !important;
+    line-height: 1.6em !important;
+    padding: 20px 1.4em 1em 30px !important;
+    color: var(--code-text) !important;
+}
+
+.dark .cm-content {
+    color: var(--code-text) !important;
+}
+
+/* 滚动条样式 - 使用 CSS 变量 */
+.cm-scroller::-webkit-scrollbar {
+    height: var(--scrollbar-width) !important;
+    width: var(--scrollbar-width) !important;
+    background-color: var(--scrollbar-track-bg) !important;
+}
+
+/* 移除重复的 dark 样式 */
+.dark .cm-scroller::-webkit-scrollbar {
+    background-color: var(--scrollbar-track-bg) !important;
+}
+
+.cm-scroller::-webkit-scrollbar-track {
+    box-shadow: var(--shadow-inset) !important;
+    border-radius: var(--radius-lg) !important;
+    background-color: var(--scrollbar-track-bg) !important;
+}
+
+.dark .cm-scroller::-webkit-scrollbar-track {
+    box-shadow: var(--shadow-inset) !important;
+    background-color: var(--scrollbar-track-bg) !important;
+}
+
+.cm-scroller::-webkit-scrollbar-thumb {
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow-inset) !important;
+    background-color: var(--scrollbar-thumb-bg) !important;
+}
+
+.dark .cm-scroller::-webkit-scrollbar-thumb {
+    box-shadow: var(--shadow-inset) !important;
+    background-color: var(--scrollbar-thumb-bg) !important;
+}
+
+/* 行号栏样式 - 使用 CSS 变量 */
+.cm-gutters {
+    background: var(--code-gutter-bg) !important;
+    border-right: 1px solid var(--border-code) !important;
+    color: var(--code-gutter-text) !important;
+    padding-right: 10px !important;
+    font-family: var(--font-mono);
+}
+
+.dark .cm-gutters {
+    background: var(--code-gutter-bg) !important;
+    border-right: 1px solid var(--border-code) !important;
+    color: var(--code-gutter-text) !important;
+}
+
+/* 当前行高亮 - 使用 CSS 变量 */
+.cm-activeLine {
+    background: var(--code-line-highlight) !important;
+}
+
+.cm-gutterElement.cm-activeLineGutter {
+    background-color: var(--code-gutter-highlight);
+}
+
+.dark .cm-gutterElement.cm-activeLineGutter {
+    background-color: var(--code-gutter-highlight);
+}
+
+/* 添加代码选中样式 - 使用 CSS 变量 */
+.cm-selectionBackground,
+.cm-content ::selection {
+    background-color: var(--code-selection) !important;
+}
+
+.cm-line.cm-selected {
+    background-color: var(--code-selection) !important;
+}
+
+/* 选中时的文本颜色保持原样，确保可读性 */
+.cm-content ::selection {
+    color: rgba(62, 158, 111, 0.9) !important;
+}
+
+.dark .cm-content ::selection {
+    color: rgba(245, 177, 255, 0.9) !important;
+}
+
+/* 匹配相同结果时的颜色 */
+.cm-selectionMatch {
+    background-color: #9c88ff5a !important;
+}
+
+/* 当有多行选中时的样式 */
+.cm-selectionLayer>.cm-selectionBackground {
+    background-color: rgba(122, 129, 255, 0.2) !important;
+}
+
+/* 代码块折叠/展开样式 - 使用 CSS 变量 */
+.cm-scroller {
+    background-color: var(--code-bg);
+}
+
+#collapsed>.cm-scroller,
+#expanded>.cm-scroller {
+    padding-bottom: 40px;
+}
+
+.dark .cm-scroller {
+    background-color: var(--code-bg);
+}
+
+.cm-scroller {
+    overflow: auto !important;
+}
+
+.cm-editor {
+    transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden !important;
+}
+
+/* 只给超高的代码块添加最大高度和内边距 */
+.cm-editor#collapsed {
+    height: 400px;
+}
+
+/* .cm-editor#expanded { padding-bottom: 40px; } */
+/* 展开按钮样式 - 使用 CSS 变量 */
+.code-expand-btn {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--expand-btn-padding);
+    border-radius: var(--expand-btn-radius);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    border: none;
+    color: var(--expand-btn-text);
+    background: var(--expand-btn-bg);
+    backdrop-filter: blur(var(--blur-md));
+    box-shadow: var(--shadow-md);
+    -webkit-backdrop-filter: blur(var(--blur-md));
+    z-index: 11;
+    transition: var(--transition-slow);
+}
+
+.dark .code-expand-btn {
+    background: var(--bg-overlay);
+    color: var(--text-primary);
+}
+
+.code-expand-btn:hover {
+    background: var(--bg-overlay);
+    backdrop-filter: blur(var(--blur-lg));
+    -webkit-backdrop-filter: blur(var(--blur-lg));
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.dark .code-expand-btn:hover {
+    background: var(--bg-overlay);
+}
+
+.code-expand-btn:active {
+    transform: translateX(-50%) translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+.code-expand-btn::before {
+    content: "⌄";
+    display: inline-block;
+    margin-right: 4px;
+    font-size: 14px;
+    transition: transform 0.3s ease;
+}
+
+.code-expand-btn#expanded::before {
+    transform: rotate(180deg);
+}
+
+.code-expand-btn::after {
+    content: "展开代码";
+}
+
+.code-expand-btn#expanded::after {
+    content: "收起代码";
+}
+
+/* 渐变遮罩 - 使用 CSS 变量 */
+.cm-editor#collapsed::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: linear-gradient(transparent 0%, var(--bg-overlay) 40%, var(--bg-overlay) 80%, var(--bg-overlay) 100%);
+    pointer-events: none;
+    opacity: 0;
+    transition: var(--transition-slow);
+    z-index: 10;
+    width: calc(100% + 17px);
+}
+
+.dark .cm-editor#collapsed::after {
+    background: linear-gradient(transparent 0%, var(--bg-overlay) 40%, var(--bg-overlay) 80%, var(--bg-overlay) 100%);
+}
+
+/* 只在折叠状态显示渐变遮罩 */
+.cm-editor#collapsed::after {
+    opacity: 1;
+}
+
+/* 折叠按钮现在使用统一的 header 按钮样式 */

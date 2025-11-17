@@ -13,6 +13,7 @@
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
 	import { config, showChangelog } from '$lib/stores';
 	import { compareVersion } from '$lib/utils';
@@ -287,15 +288,16 @@
 					<div class="  mb-2.5 flex w-full justify-between">
 						<div class=" self-center text-xs font-medium">{$i18n.t('Default User Role')}</div>
 						<div class="flex items-center relative">
-							<select
-								class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
+							<Select
+								className="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
 								bind:value={adminConfig.DEFAULT_USER_ROLE}
 								placeholder={$i18n.t('Select a role')}
-							>
-								<option value="pending">{$i18n.t('pending')}</option>
-								<option value="user">{$i18n.t('user')}</option>
-								<option value="admin">{$i18n.t('admin')}</option>
-							</select>
+								items={[
+									{ value: 'pending', label: $i18n.t('pending') },
+									{ value: 'user', label: $i18n.t('user') },
+									{ value: 'admin', label: $i18n.t('admin') }
+								]}
+							/>
 						</div>
 					</div>
 

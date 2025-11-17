@@ -24,6 +24,7 @@
 	import DefaultFeatures from './DefaultFeatures.svelte';
 	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 	import UrlInputModal from '$lib/components/common/UrlInputModal.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 
 	const i18n = getContext('i18n');
 

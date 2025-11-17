@@ -1,0 +1,8 @@
+/* Pink Theme Styles */
+
+.pink-theme textarea,
+.pink-theme .theme-textarea {
+  background-color: #f8bbd0 !important;
+  color: #c2185b !important;
+  border: 1px solid #f06292 !important;
+}

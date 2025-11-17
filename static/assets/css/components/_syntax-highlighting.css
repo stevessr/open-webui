@@ -1,7 +1,7 @@
 /* 代码语法高亮 */
 .cm-line .ͼb {
     /* 关键字 */
-    color: #d73a49 !important;
+    color: var(--syntax-keyword) !important;
 }
 
 .dark .cm-line .ͼb {
@@ -10,7 +10,7 @@
 
 .cm-line .ͼd {
     /* 数字 */
-    color: #a29bfe !important;
+    color: var(--syntax-number) !important;
 }
 
 .dark .cm-line .ͼd {
@@ -19,7 +19,7 @@
 
 .cm-line .ͼe {
     /* 字符串 */
-    color: #6a89cc !important;
+    color: var(--syntax-string) !important;
 }
 
 .dark .cm-line .ͼe {

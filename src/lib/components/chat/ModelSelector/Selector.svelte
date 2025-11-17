@@ -63,8 +63,11 @@
 	let show = false;
 	let tags = [];
 
-	let selectedModel = '';
-	$: selectedModel = items.find((item) => item.value === value) ?? '';
+	let selectedModel: {
+		label?: string;
+		[value: string]: any;
+	} | null = null;
+	$: selectedModel = items.find((item) => item.value === value) ?? null;
 
 	let searchValue = '';
 
@@ -286,7 +289,7 @@
 				}
 			}
 
-			if ($MODEL_DOWNLOAD_POOL[sanitizedModelTag].done) {
+				if ($MODEL_DOWNLOAD_POOL[sanitizedModelTag].done) {
 				toast.success(
 					$i18n.t(`Model '{{modelName}}' has been successfully downloaded.`, {
 						modelName: sanitizedModelTag
@@ -296,7 +299,9 @@
 				models.set(
 					await getModels(
 						localStorage.token,
-						$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
+						$config?.features?.enable_direct_connections
+							? ($settings?.directConnections ?? null)
+							: null
 					)
 				);
 			} else {
@@ -356,7 +361,9 @@
 			models.set(
 				await getModels(
 					localStorage.token,
-					$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
+					$config?.features?.enable_direct_connections
+						? ($settings?.directConnections ?? null)
+						: null
 				)
 			);
 		}
@@ -389,10 +396,14 @@
 				models.set(
 					await getModels(
 						localStorage.token,
-						$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
+						$config?.features?.enable_direct_connections
+							? ($settings?.directConnections ?? null)
+							: null
 					)
 				);
 			}}
+			tabindex="0"
+			role="button"
 		>
 			{#if selectedModel}
 				{selectedModel.label}
@@ -404,7 +415,7 @@
 	</DropdownMenu.Trigger>
 
 	<DropdownMenu.Content
-		class=" z-40 {$mobile
+		class="trans z-40 {$mobile
 			? `w-full`
 			: `${className}`} max-w-[calc(100vw-1rem)] justify-start rounded-2xl  bg-white dark:bg-gray-850 dark:text-white shadow-lg  outline-hidden"
 		transition={flyAndScale}
@@ -450,7 +461,7 @@
 			<div class="px-2">
 				{#if tags && items.filter((item) => !(item.model?.info?.meta?.hidden ?? false)).length > 0}
 					<div
-						class=" flex w-full bg-white dark:bg-gray-850 overflow-x-auto scrollbar-none font-[450] mb-0.5"
+						class="trans flex w-full bg-white dark:bg-gray-850 overflow-x-auto scrollbar-none font-[450] mb-0.5"
 						on:wheel={(e) => {
 							if (e.deltaY !== 0) {
 								e.preventDefault();

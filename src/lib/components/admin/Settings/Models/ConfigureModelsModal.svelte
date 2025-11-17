@@ -14,6 +14,7 @@
 	import ModelList from './ModelList.svelte';
 	import { getModelsConfig, setModelsConfig } from '$lib/apis/configs';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import Minus from '$lib/components/icons/Minus.svelte';
 	import Plus from '$lib/components/icons/Plus.svelte';
 	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
@@ -198,19 +199,14 @@
 								</div>
 
 								<div class="flex items-center -mr-1">
-									<select
-										class="w-full py-1 text-sm rounded-lg bg-transparent {selectedModelId
+									<Select
+										className="w-full py-1 text-sm rounded-lg bg-transparent {selectedModelId
 											? ''
 											: 'text-gray-500'} placeholder:text-gray-300 dark:placeholder:text-gray-700 outline-hidden"
 										bind:value={selectedModelId}
-									>
-										<option value="">{$i18n.t('Select a model')}</option>
-										{#each $models as model}
-											<option value={model.id} class="bg-gray-50 dark:bg-gray-700"
-												>{model.name}</option
-											>
-										{/each}
-									</select>
+										placeholder={$i18n.t('Select a model')}
+										items={$models.map((m) => ({ value: m.id, label: m.name }))}
+									/>
 								</div>
 
 								<!-- <hr class=" border-gray-100 dark:border-gray-700/10 my-2.5 w-full" /> -->
