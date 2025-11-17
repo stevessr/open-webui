@@ -289,7 +289,7 @@
 				}
 			}
 
-			if ($MODEL_DOWNLOAD_POOL[sanitizedModelTag].done) {
+				if ($MODEL_DOWNLOAD_POOL[sanitizedModelTag].done) {
 				toast.success(
 					$i18n.t(`Model '{{modelName}}' has been successfully downloaded.`, {
 						modelName: sanitizedModelTag
@@ -299,7 +299,9 @@
 				models.set(
 					await getModels(
 						localStorage.token,
-						$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
+						$config?.features?.enable_direct_connections
+							? ($settings?.directConnections ?? null)
+							: null
 					)
 				);
 			} else {
@@ -359,7 +361,9 @@
 			models.set(
 				await getModels(
 					localStorage.token,
-					$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
+					$config?.features?.enable_direct_connections
+						? ($settings?.directConnections ?? null)
+						: null
 				)
 			);
 		}
@@ -392,13 +396,14 @@
 				models.set(
 					await getModels(
 						localStorage.token,
-						$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
+						$config?.features?.enable_direct_connections
+							? ($settings?.directConnections ?? null)
+							: null
 					)
 				);
 			}}
+			tabindex="0"
 			role="button"
-		>
-			aria-role="button"
 		>
 			{#if selectedModel}
 				{selectedModel.label}
