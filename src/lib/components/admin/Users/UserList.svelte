@@ -365,7 +365,7 @@
 									user.profile_image_url.startsWith('https://www.gravatar.com/avatar/') ||
 									user.profile_image_url.startsWith('data:')
 										? user.profile_image_url
-										: `${WEBUI_BASE_URL}/user.png`}
+										: `${WEBUI_BASE_URL}/user.gif`}
 									alt="user"
 								/>
 

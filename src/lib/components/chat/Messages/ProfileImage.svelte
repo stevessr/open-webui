@@ -15,7 +15,7 @@
 			  src.startsWith('data:') ||
 			  src.startsWith('/')
 			? src
-			: `${WEBUI_BASE_URL}/user.png`}
+			: `${WEBUI_BASE_URL}/user.gif`}
 	class=" {className} object-cover rounded-full"
 	alt="profile"
 	draggable="false"

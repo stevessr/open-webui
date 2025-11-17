@@ -366,7 +366,7 @@ export const generateInitialsImage = (name) => {
 		console.log(
 			'generateInitialsImage: failed pixel test, fingerprint evasion is likely. Using default image.'
 		);
-		return `${WEBUI_BASE_URL}/user.png`;
+		return `${WEBUI_BASE_URL}/user.gif`;
 	}
 
 	ctx.fillStyle = '#F39C12';

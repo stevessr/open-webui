@@ -402,7 +402,7 @@ async def get_user_profile_image_by_id(user_id: str, user=Depends(get_verified_u
                     )
                 except Exception as e:
                     pass
-        return FileResponse(f"{STATIC_DIR}/user.png")
+        return FileResponse(f"{STATIC_DIR}/user.gif")
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
