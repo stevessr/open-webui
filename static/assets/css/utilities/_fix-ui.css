@@ -71,48 +71,6 @@ div#progress-background {
   width: 100%;
   height: 0.75rem;
   border-radius: 9999px;
-  background-color: #fafafa9a;
-}
-
-/* Splash screen theme styles */
-#splash-screen {
-  background: #fff;
-}
-
-html.dark #splash-screen {
-  background: #000;
-}
-
-html.her #splash-screen {
-  background: #983724;
-}
-
-/* Logo visibility controls */
-#logo-her,
-#progress-background,
-#progress-bar {
-  display: none;
-}
-
-html.her #logo {
-  display: none;
-}
-
-html.her #logo-her,
-html.her #progress-background,
-html.her #progress-bar {
-  display: block;
-}
-
-html.her #logo-her {
-  filter: invert(1);
-}
-
-@media (max-width: 24rem) {
-  html.her #progress-background,
-  html.her #progress-bar {
-    display: none;
-  }
 }
 
 /* Animation utilities */
@@ -126,42 +84,6 @@ html.her #logo-her {
 
 .tippy-box {
   background-color: transparent;
-}
-
-/* Textarea theme styles */
-textarea,
-.theme-textarea {
-  background-color: var(--background-color, #f9fafb) !important;
-  color: var(--text-color, #374151) !important;
-  border: 1px solid var(--border-color, #d1d5db) !important;
-}
-
-html.dark textarea,
-html.dark .theme-textarea {
-  background-color: var(--background-color, #1f2937) !important;
-  color: var(--text-color, #d1d5db) !important;
-  border: 1px solid var(--border-color, #374151) !important;
-}
-
-.rose-pine textarea,
-.rose-pine .theme-textarea {
-  background-color: #1f1d2e !important;
-  color: #e0def4 !important;
-  border: 1px solid #403d52 !important;
-}
-
-.rose-pine-dawn textarea,
-.rose-pine-dawn .theme-textarea {
-  background-color: #faf4ed !important;
-  color: #575279 !important;
-  border: 1px solid #dfdad9 !important;
-}
-
-.pink-theme textarea,
-.pink-theme .theme-textarea {
-  background-color: #f8bbd0 !important;
-  color: #c2185b !important;
-  border: 1px solid #f06292 !important;
 }
 
 /* Utility classes */

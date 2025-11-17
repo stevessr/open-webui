@@ -1,0 +1,35 @@
+/* ========================================
+   Theme Consolidation
+   ========================================
+   This file imports all theme-specific CSS files.
+   Theme files are organized in the theme/ subdirectory.
+*/
+
+/* Import theme-specific CSS files */
+@import url('./theme/_theme-light.css');
+@import url('./theme/_theme-dark.css');
+@import url('./theme/_theme-her.css');
+@import url('./theme/_theme-pink.css');
+@import url('./theme/_theme-rose-pine.css');
+@import url('./theme/_theme-rose-pine-dawn.css');
+
+/* ========================================
+   Theme Information
+   ========================================
+
+   Available Themes:
+   - Light (default): Applied by default, styles base UI elements
+   - Dark: Applied via .html.dark class, dark color scheme
+   - Her: Applied via .html.her class, custom branded theme
+   - Pink: Applied via .pink-theme class, pink color scheme
+   - Rose Pine: Applied via .rose-pine class, rose pine dark theme
+   - Rose Pine Dawn: Applied via .rose-pine-dawn class, rose pine light theme
+
+   Usage:
+   Add the appropriate class to html element or specific container:
+   - <html class="dark"> for dark theme
+   - <html class="her"> for her theme
+   - <div class="pink-theme"> for pink theme
+   - <div class="rose-pine"> for rose pine theme
+   - <div class="rose-pine-dawn"> for rose pine dawn theme
+*/

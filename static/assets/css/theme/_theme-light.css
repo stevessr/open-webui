@@ -1,0 +1,32 @@
+/* Default/Light Theme Specific Styles */
+
+#splash-screen {
+  background: var(--bg-primary);
+}
+
+/* Native Component Defaults for Light Theme */
+div#progress-background {
+  background-color: #fafafa9a;
+}
+
+/* Progress visibility defaults */
+#progress-background {
+  display: none;
+}
+
+#progress-bar {
+  display: none;
+}
+
+/* Logo defaults */
+#logo-her {
+  display: none;
+}
+
+/* Light theme textarea styles */
+textarea,
+.theme-textarea {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-primary) !important;
+}
