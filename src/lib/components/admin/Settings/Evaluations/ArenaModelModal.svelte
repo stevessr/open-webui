@@ -5,6 +5,7 @@
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import { models } from '$lib/stores';
 	import Plus from '$lib/components/icons/Plus.svelte';
 	import Minus from '$lib/components/icons/Minus.svelte';
@@ -352,17 +353,16 @@
 						<hr class=" border-gray-100 dark:border-gray-700/10 my-2.5 w-full" />
 
 						<div class="flex items-center">
-							<select
-								class="w-full py-1 text-sm rounded-lg bg-transparent {selectedModelId
+							<Select
+								className="w-full py-1 text-sm rounded-lg bg-transparent {selectedModelId
 									? ''
 									: 'text-gray-500'} placeholder:text-gray-300 dark:placeholder:text-gray-700 outline-hidden"
 								bind:value={selectedModelId}
-							>
-								<option value="">{$i18n.t('Select a model')}</option>
-								{#each $models.filter((m) => m?.owned_by !== 'arena') as model}
-									<option value={model.id} class="bg-gray-50 dark:bg-gray-700">{model.name}</option>
-								{/each}
-							</select>
+								placeholder={$i18n.t('Select a model')}
+								items={$models
+									.filter((m) => m?.owned_by !== 'arena')
+									.map((m) => ({ value: m.id, label: m.name }))}
+							/>
 
 							<div>
 								<button
