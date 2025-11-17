@@ -461,7 +461,7 @@
 			<div class="px-2">
 				{#if tags && items.filter((item) => !(item.model?.info?.meta?.hidden ?? false)).length > 0}
 					<div
-						class=" flex w-full bg-white dark:bg-gray-850 overflow-x-auto scrollbar-none font-[450] mb-0.5"
+						class="trans flex w-full bg-white dark:bg-gray-850 overflow-x-auto scrollbar-none font-[450] mb-0.5"
 						on:wheel={(e) => {
 							if (e.deltaY !== 0) {
 								e.preventDefault();

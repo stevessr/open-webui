@@ -1,9 +1,9 @@
 /* 代码块容器样式 */
 .language-javascript,
 [class*="language-"] {
-    background: #f6f8fa !important;
-    border-radius: 10px !important;
-    box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.1) !important;
+    background: var(--bg-code) !important;
+    border-radius: var(--code-block-radius) !important;
+    box-shadow: var(--shadow-code) !important;
     position: relative;
     margin: 1.2em 0;
 }
@@ -16,11 +16,11 @@
 
 /* 代码块顶部栏 */
 .sticky.top-8 {
-    background: #e1e4e8 !important;
-    height: 40px !important;
+    background: var(--bg-code-header) !important;
+    height: var(--code-header-height) !important;
     display: flex;
     align-items: center;
-    border-radius: 10px 10px 0 0;
+    border-radius: var(--code-block-radius) var(--code-block-radius) 0 0;
     padding: 0 15px !important;
     margin-bottom: -59px !important;
 }
@@ -34,27 +34,27 @@
     position: absolute;
     left: 60px;
     top: 2px;
-    color: #abb2bf !important;
+    color: var(--text-code) !important;
     font-size: 17px !important;
     font-weight: 500 !important;
     z-index: 11;
 }
 
 .dark .text-text-300 {
-    color: #586069 !important;
+    color: var(--text-secondary) !important;
 }
 
 /* 顶部按钮样式优化 */
 .save-code-button,
 .copy-code-button,
 .run-code-button {
-    background: #f8f9fa !important;
-    color: #333 !important;
-    border: 1px solid #d1d5da !important;
-    font-size: 12px !important;
+    background: var(--btn-primary-bg) !important;
+    color: var(--btn-primary-text) !important;
+    border: 1px solid var(--btn-primary-border) !important;
+    font-size: var(--font-size-sm) !important;
     padding: 4px 12px !important;
-    border-radius: 4px !important;
-    transition: all 0.2s ease-in-out !important;
+    border-radius: var(--radius-sm) !important;
+    transition: var(--transition-base) !important;
 }
 
 .dark .save-code-button,
@@ -82,40 +82,40 @@
 [class*="language-"]::before {
     content: " ";
     position: absolute;
-    border-radius: 50%;
-    background: #ff5f56;
-    width: 12px;
-    height: 12px;
+    border-radius: var(--radius-full);
+    background: var(--traffic-light-red);
+    width: var(--code-traffic-light-size);
+    height: var(--code-traffic-light-size);
     left: 15px;
     top: 14px;
-    box-shadow: 20px 0 #ffbd2e, 40px 0 #27c93f;
+    box-shadow: var(--code-traffic-light-spacing) 0 var(--traffic-light-yellow), calc(var(--code-traffic-light-spacing) * 2) 0 var(--traffic-light-green);
     z-index: 10;
 }
 
 .dark .language-javascript::before,
 .dark [class*="language-"]::before {
-    background: #fc625d;
-    box-shadow: 20px 0 #fdbc40, 40px 0 #35cd4b;
+    background: var(--traffic-light-red-dark);
+    box-shadow: var(--code-traffic-light-spacing) 0 var(--traffic-light-yellow-dark), calc(var(--code-traffic-light-spacing) * 2) 0 var(--traffic-light-green-dark);
 }
 
 /* 代码内容区域 */
 .cm-content {
-    font-family: 'Dank Mono', -apple-system, BlinkMacSystemFont, Inter, ui-sans-serif, system-ui, 'Segoe UI', Roboto, Ubuntu, Cantarell, 'Noto Sans', sans-serif, 'Helvetica Neue', Arial, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    font-family: var(--font-mono);
     font-size: 15px !important;
     line-height: 1.6em !important;
     padding: 20px 1.4em 1em 30px !important;
-    color: #24292e !important;
+    color: var(--code-text) !important;
 }
 
 .dark .cm-content {
-    color: #abb2bf !important;
+    color: var(--code-text) !important;
 }
 
 /* 滚动条样式 */
 .cm-scroller::-webkit-scrollbar {
-    height: 10px !important;
-    width: 10px !important;
-    background-color: #f6f8fa !important;
+    height: var(--scrollbar-width) !important;
+    width: var(--scrollbar-width) !important;
+    background-color: var(--scrollbar-track-bg) !important;
 }
 
 .dark .cm-scroller::-webkit-scrollbar {
