@@ -1,6 +1,7 @@
 <script>
-	import { mobile, showArchivedChats, showSidebar, user } from '$lib/stores';
+	import { mobile, showArchivedChats, showSidebar, user, settings, config } from '$lib/stores';
 	import { getContext } from 'svelte';
+	import Background from '$lib/components/Background.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -10,6 +11,8 @@
 	import Sidebar from '$lib/components/icons/Sidebar.svelte';
 	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 </script>
+
+<Background />
 
 <div
 	class=" flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out {$showSidebar

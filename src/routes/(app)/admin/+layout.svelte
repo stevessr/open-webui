@@ -5,6 +5,7 @@
 	import { WEBUI_NAME, mobile, showSidebar, user } from '$lib/stores';
 	import { page } from '$app/stores';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import Background from '$lib/components/Background.svelte';
 
 	import Sidebar from '$lib/components/icons/Sidebar.svelte';
 
@@ -27,6 +28,7 @@
 </svelte:head>
 
 {#if loaded}
+	<Background />
 	<div
 		class=" flex flex-col h-screen max-h-[100dvh] flex-1 transition-width duration-200 ease-in-out {$showSidebar
 			? 'md:max-w-[calc(100%-260px)]'

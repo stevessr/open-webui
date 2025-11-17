@@ -3,7 +3,7 @@
 	import { spring } from 'svelte/motion';
 	import PyodideWorker from '$lib/workers/pyodide.worker?worker';
 	import { Toaster, toast } from 'svelte-sonner';
-	import { isVideoUrl } from '$lib/utils';
+	import Background from '$lib/components/Background.svelte';
 
 	let loadingProgress = spring(0, {
 		stiffness: 0.05
@@ -730,46 +730,12 @@
 			<AppSidebar />
 
 			<div class="w-full flex-1 max-w-[calc(100%-4.5rem)]">
-				{#if $settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url ?? null}
-					{#if isVideoUrl($settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url)}
-						<video
-							src={$settings?.backgroundImageUrl ??
-								$config?.license_metadata?.background_image_url}
-							autoplay
-							muted
-							loop
-							class="fixed top-0 left-0 w-full h-full object-cover -z-10"
-						/>
-					{:else}
-						<div
-							class="fixed top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat -z-10"
-							style="background-image: url({$settings?.backgroundImageUrl ??
-								$config?.license_metadata?.background_image_url})"
-						/>
-					{/if}
-				{/if}
+				<Background />
 				<slot />
 			</div>
 		</div>
 	{:else}
-		{#if $settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url ?? null}
-			{#if isVideoUrl($settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url)}
-				<video
-					src={$settings?.backgroundImageUrl ??
-						$config?.license_metadata?.background_image_url}
-					autoplay
-					muted
-					loop
-					class="fixed top-0 left-0 w-full h-full object-cover -z-10"
-				/>
-			{:else}
-				<div
-					class="fixed top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat -z-10"
-					style="background-image: url({$settings?.backgroundImageUrl ??
-						$config?.license_metadata?.background_image_url})"
-				/>
-			{/if}
-		{/if}
+		<Background />
 		<slot />
 	{/if}
 {/if}

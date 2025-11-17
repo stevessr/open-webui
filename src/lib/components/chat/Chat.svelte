@@ -14,6 +14,7 @@
 	import type { i18n as i18nType } from 'i18next';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { isVideoUrl } from '$lib/utils';
+	import Background from '$lib/components/Background.svelte';
 
 	import {
 		chatId,
@@ -2393,55 +2394,7 @@
 >
 	{#if !loading}
 		<div in:fade={{ duration: 50 }} class="w-full h-full flex flex-col">
-			{#if $selectedFolder && $selectedFolder?.meta?.background_image_url}
-				{#if isVideoUrl($selectedFolder?.meta?.background_image_url)}
-					<video
-						src={$selectedFolder?.meta?.background_image_url}
-						autoplay
-						muted
-						loop
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full object-cover"
-					/>
-				{:else}
-					<div
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
-						style="background-image: url({$selectedFolder?.meta?.background_image_url})  "
-					/>
-				{/if}
-
-				<div
-					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90 z-0"
-				/>
-			{:else if $settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url ?? null}
-				{#if isVideoUrl($settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url)}
-					<video
-						src={$settings?.backgroundImageUrl ??
-							$config?.license_metadata?.background_image_url}
-						autoplay
-						muted
-						loop
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full object-cover"
-					/>
-				{:else}
-					<div
-						class="absolute {$showSidebar
-							? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
-							: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
-						style="background-image: url({$settings?.backgroundImageUrl ??
-							$config?.license_metadata?.background_image_url})  "
-					/>
-				{/if}
-
-				<div
-					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90 z-0"
-				/>
-			{/if}
+			<Background />
 
 			<PaneGroup direction="horizontal" class="w-full h-full">
 				<Pane defaultSize={50} minSize={30} class="h-full flex relative max-w-full flex-col">
