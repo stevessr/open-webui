@@ -8,6 +8,8 @@
 	import { canvasPixelTest, generateInitialsImage } from '$lib/utils';
 
 	import { WEBUI_BASE_URL } from '$lib/constants';
+	import UrlInputModal from '$lib/components/common/UrlInputModal.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	export let profileImageUrl;
 	export let user = null;
@@ -15,6 +17,7 @@
 	export let imageClassName = 'size-14 md:size-18';
 
 	let profileImageInputElement;
+	let showUrlInput = false;
 </script>
 
 <input
@@ -88,10 +91,11 @@
 				profileImageInputElement.click();
 			}}
 		>
-			<img
-				src={profileImageUrl !== '' ? profileImageUrl : generateInitialsImage(user?.name)}
+			<ProfileImage
+				src={profileImageUrl}
+				name={user?.name}
+				className={imageClassName}
 				alt="profile"
-				class=" rounded-full {imageClassName} object-cover"
 			/>
 
 			<div class="absolute bottom-0 right-0 opacity-0 group-hover:opacity-100 transition">
@@ -147,5 +151,23 @@
 				profileImageUrl = url;
 			}}>{$i18n.t('Gravatar')}</button
 		>
+
+		<button
+			class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-lg py-0.5 opacity-0 group-hover:opacity-100 transition-all"
+			type="button"
+			on:click={() => {
+				showUrlInput = true;
+			}}
+		>URL</button
+		>
 	</div>
 </div>
+
+<UrlInputModal
+	bind:show={showUrlInput}
+	bind:value={profileImageUrl}
+	title="Enter image or video URL"
+	placeholder="Enter image or video URL..."
+	confirmText="Set"
+	userName={user?.name}
+/>
