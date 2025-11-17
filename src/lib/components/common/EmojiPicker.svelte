@@ -118,12 +118,12 @@
 		<slot />
 	</DropdownMenu.Trigger>
 		<DropdownMenu.Content
-			class="transv2 max-w-full w-80 border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-850 rounded-3xl z-9999 shadow-lg dark:text-white"
+			class="transv2 max-w-full w-80 border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-850 rounded-3xl z-999 shadow-lg dark:text-white"
 			sideOffset={8}
 			{side}
 			{align}
-		transition={flyAndScale}
-	>
+			transition={flyAndScale}
+		>
 		<div class="mb-1 px-4 pt-2.5 pb-2">
 			<input
 				type="text"
