@@ -115,7 +115,7 @@
 			class=" text-xs text-center text-gray-500 rounded-lg py-0.5 opacity-0 group-hover:opacity-100 transition-all"
 			type="button"
 			on:click={async () => {
-				profileImageUrl = `${WEBUI_BASE_URL}/user.png`;
+				profileImageUrl = `${WEBUI_BASE_URL}/user.gif`;
 			}}>{$i18n.t('Remove')}</button
 		>
 
