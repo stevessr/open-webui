@@ -1,4 +1,5 @@
 import { OLLAMA_API_BASE_URL } from '$lib/constants';
+import apiCache from '$lib/utils/cache';
 
 export const verifyOllamaConnection = async (token: string = '', connection: dict = {}) => {
 	let error = null;
@@ -171,6 +172,15 @@ export const updateOllamaUrls = async (token: string = '', urls: string[]) => {
 };
 
 export const getOllamaVersion = async (token: string, urlIdx?: number) => {
+	// 生成缓存键
+	const cacheKey = `ollama-version-${token}-${urlIdx || 'default'}`;
+
+	// 尝试从缓存获取
+	const cachedVersion = apiCache.get<string>(cacheKey);
+	if (cachedVersion !== null) {
+		return cachedVersion;
+	}
+
 	let error = null;
 
 	const res = await fetch(`${OLLAMA_API_BASE_URL}/api/version${urlIdx ? `/${urlIdx}` : ''}`, {
@@ -199,10 +209,26 @@ export const getOllamaVersion = async (token: string, urlIdx?: number) => {
 		throw error;
 	}
 
-	return res?.version ?? false;
+	const version = res?.version ?? false;
+
+	// 缓存结果 10 分钟
+	if (version) {
+		apiCache.set(cacheKey, version, 10 * 60 * 1000);
+	}
+
+	return version;
 };
 
 export const getOllamaModels = async (token: string = '', urlIdx: null | number = null) => {
+	// 生成缓存键
+	const cacheKey = `ollama-models-${token}-${urlIdx || 'default'}`;
+
+	// 尝试从缓存获取
+	const cachedModels = apiCache.get<any[]>(cacheKey);
+	if (cachedModels !== null) {
+		return cachedModels;
+	}
+
 	let error = null;
 
 	const res = await fetch(`${OLLAMA_API_BASE_URL}/api/tags${urlIdx !== null ? `/${urlIdx}` : ''}`, {
@@ -231,11 +257,18 @@ export const getOllamaModels = async (token: string = '', urlIdx: null | number 
 		throw error;
 	}
 
-	return (res?.models ?? [])
+	const models = (res?.models ?? [])
 		.map((model) => ({ id: model.model, name: model.name ?? model.model, ...model }))
 		.sort((a, b) => {
 			return (a?.name ?? a?.id ?? '').localeCompare(b?.name ?? b?.id ?? '');
 		});
+
+	// 缓存结果 2 分钟
+	if (models && models.length > 0) {
+		apiCache.set(cacheKey, models, 2 * 60 * 1000);
+	}
+
+	return models;
 };
 
 export const generatePrompt = async (token: string = '', model: string, conversation: string) => {
@@ -446,6 +479,12 @@ export const deleteModel = async (token: string, tagName: string, urlIdx: string
 		throw error;
 	}
 
+	// 删除成功后清除相关缓存
+	if (res) {
+		// 清除模型列表缓存
+		apiCache.delete(`ollama-models-${token}-${urlIdx || 'default'}`);
+	}
+
 	return res;
 };
 
@@ -477,7 +516,18 @@ export const pullModel = async (token: string, tagName: string, urlIdx: number |
 	if (error) {
 		throw error;
 	}
-	return [res, controller];
+
+	// 模型下载完成后清除相关缓存
+	// 注意：这里只是开始下载，实际完成需要监听流
+	// 我们可以在下载完成时调用缓存清除
+	const pullResult = [res, controller] as [Response, AbortController];
+
+	// 添加一个方法来清除缓存
+	(pullResult as any).clearCache = () => {
+		apiCache.delete(`ollama-models-${token}-${urlIdx || 'default'}`);
+	};
+
+	return pullResult;
 };
 
 export const downloadModel = async (
