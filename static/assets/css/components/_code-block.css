@@ -25,7 +25,7 @@
 
 /* 代码块顶部栏 */
 .code-block-header {
-    background: #1a1a1a !important;
+    background: var(--code-header-bg) !important;
     height: 40px !important;
     display: flex;
     align-items: center;
@@ -38,7 +38,25 @@
 }
 
 .dark .code-block-header {
-    background: #1a1a1a !important;
+    background: var(--code-header-bg) !important;
+}
+
+/* 语言标签样式 */
+.code-block-header span {
+    color: var(--code-header-text) !important;
+}
+
+/* 装饰圆点 */
+.code-block-header .w-3 {
+    background-color: var(--code-dot-red) !important;
+}
+
+.code-block-header .w-3:nth-child(2) {
+    background-color: var(--code-dot-yellow) !important;
+}
+
+.code-block-header .w-3:nth-child(3) {
+    background-color: var(--code-dot-green) !important;
 }
 
 /* 顶部按钮样式优化 - 匹配新的黑条设计 */
@@ -47,7 +65,7 @@
 .code-block-header .run-code-button,
 .code-block-header button {
     background: transparent !important;
-    color: #9ca3af !important;
+    color: var(--code-btn-text) !important;
     border: none !important;
     font-size: 0.75rem !important;
     padding: 0.25rem 0.5rem !important;
@@ -62,8 +80,8 @@
 .code-block-header .copy-code-button:hover,
 .code-block-header .run-code-button:hover,
 .code-block-header button:hover {
-    background: #374151 !important;
-    color: white !important;
+    background: var(--code-btn-hover-bg) !important;
+    color: var(--code-btn-hover-text) !important;
 }
 
 .dark .code-block-header .save-code-button,
@@ -71,15 +89,15 @@
 .dark .code-block-header .run-code-button,
 .dark .code-block-header button {
     background: transparent !important;
-    color: #9ca3af !important;
+    color: var(--code-btn-text) !important;
 }
 
 .dark .code-block-header .save-code-button:hover,
 .dark .code-block-header .copy-code-button:hover,
 .dark .code-block-header .run-code-button:hover,
 .dark .code-block-header button:hover {
-    background: #374151 !important;
-    color: white !important;
+    background: var(--code-btn-hover-bg) !important;
+    color: var(--code-btn-hover-text) !important;
 }
 
 /* 装饰圆点现在在 HTML 中直接渲染，不需要伪元素 */
