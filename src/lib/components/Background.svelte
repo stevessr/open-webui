@@ -5,7 +5,7 @@
 	export let zIndex = '-z-10';
 	export let opacity = 0.3; // Default opacity
 	export let url =
-		$selectedFolder?.meta?.background_image_url?.detail ||
+		$selectedFolder?.meta?.background_image_url ||
 		$settings?.backgroundImageUrl ||
 		'' ;
 	if(selectedFolder){
