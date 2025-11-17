@@ -26,7 +26,7 @@
 		if (tempValue && tempValue.trim()) {
 			value = tempValue.trim();
 			show = false;
-			dispatch('submit', { detail: value });
+			dispatch('submit', value);
 		}
 	};
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
+	import { DropdownMenu } from 'bits-ui';
 	import ChevronDown from '../icons/ChevronDown.svelte';
 	import Check from '../icons/Check.svelte';
 
@@ -11,89 +12,74 @@
 	export let disabled = false;
 	export let items: Array<{ value: string; label: string }> = [];
 
-	let isOpen = false;
-	let selectedLabel = '';
+	let show = false;
 
-	$: {
-		const selectedItem = items.find(item => item.value === value);
-		selectedLabel = selectedItem ? selectedItem.label : '';
-	}
+	$: selectedLabel = items.find((item) => item.value === value)?.label || '';
 
-	const toggleDropdown = () => {
-		if (!disabled) {
-			isOpen = !isOpen;
-		}
+	const handleSelect = (selectedValue: string) => {
+		console.log('handleSelect called with:', selectedValue);
+		value = selectedValue;
+		show = false;
+		dispatch('change', { value: selectedValue });
 	};
-
-	const selectItem = (item: { value: string; label: string }) => {
-		value = item.value;
-		selectedLabel = item.label;
-		isOpen = false;
-		dispatch('change', { value: item.value });
-	};
-
-	const handleClickOutside = (event: MouseEvent) => {
-		const target = event.target as HTMLElement;
-		if (!target.closest('.custom-select')) {
-			isOpen = false;
-		}
-	};
-
-	$: if (isOpen) {
-		setTimeout(() => {
-			document.addEventListener('click', handleClickOutside);
-		}, 0);
-	} else {
-		document.removeEventListener('click', handleClickOutside);
-	}
 </script>
 
-<div class="custom-select relative w-full">
-	<button
-		type="button"
-		class={`relative w-full transition-all duration-200 ${disabled
+<DropdownMenu.Root bind:open={show} disabled={disabled}>
+	<DropdownMenu.Trigger
+		class="relative w-full transition-all duration-200 {disabled
 			? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800'
-			: 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 cursor-pointer border border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20'} ${className}`}
+			: 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 cursor-pointer border border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20'
+		} {className}"
 		aria-label={placeholder || 'Select an option'}
-		on:click={toggleDropdown}
-		disabled={disabled}
+		{disabled}
 	>
-		<span class={`inline-flex w-full truncate px-3 py-2 text-sm ${className.includes('text-')
-			? ''
-			: 'text-gray-900 dark:text-gray-100'} ${disabled ? 'cursor-not-allowed' : ''}`}>
+		<span
+			class="inline-flex w-full truncate px-3 py-2 text-sm {className.includes('text-') ? '' : 'text-gray-900 dark:text-gray-100'} {disabled ? 'cursor-not-allowed' : ''}"
+		>
 			{selectedLabel || placeholder}
 		</span>
 		<ChevronDown
-			class={`absolute end-3 top-1/2 -translate-y-1/2 size-4 transition-transform duration-200 ${disabled ? 'pointer-events-none' : ''} ${isOpen ? 'rotate-180' : ''}`}
+			class="absolute end-3 top-1/2 -translate-y-1/2 size-4 transition-transform duration-200 {disabled ? 'pointer-events-none' : ''} {show ? 'rotate-180' : ''}"
 			strokeWidth="2"
 		/>
-	</button>
+	</DropdownMenu.Trigger>
 
-	{#if isOpen && !disabled}
-		<div class="absolute z-[1100] w-full mt-1 max-h-96 overflow-y-auto rounded-xl bg-white dark:bg-gray-900 shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
-			<div class="px-1 py-1">
+	<DropdownMenu.Content
+		class="transv2 z-2999 w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200/50 dark:border-gray-700/50 max-h-[80vh] overflow-hidden"
+		side="bottom"
+		sideOffset={4}
+		align="start"
+	>
+		<div class="p-4 border-b border-gray-200 dark:border-gray-700">
+			<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+				{placeholder || '选择选项'}
+			</h3>
+		</div>
+
+		<div class="max-h-60 overflow-y-auto">
+			<div class="p-2">
 				{#each items as item}
-					<button
-						type="button"
-						class={`group relative flex w-full select-none items-center rounded-lg py-2.5 pl-3 pr-8 text-sm transition-all duration-150 cursor-pointer
-							${value === item.value
-								? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium'
-								: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}
-							hover:bg-gray-100 dark:hover:bg-gray-800`}
-						on:click={() => selectItem(item)}
+					<DropdownMenu.Item
+						class="group relative flex w-full select-none items-center rounded-lg py-3 px-4 text-sm transition-all duration-150 cursor-pointer mb-1 {value === item.value
+							? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium'
+							: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}"
+						on:click={() => {
+							console.log('Item clicked:', item);
+							handleSelect(item.value);
+						}}
 					>
 						<span class="flex-1 truncate">{item.label}</span>
 						{#if value === item.value}
-							<div class="absolute end-2 top-1/2 -translate-y-1/2">
-								<Check class="size-4 text-blue-600 dark:text-blue-400" />
+							<div class="ml-2">
+								<Check class="size-5 text-blue-600 dark:text-blue-400" />
 							</div>
 						{/if}
-					</button>
+					</DropdownMenu.Item>
 				{/each}
 			</div>
 		</div>
-	{/if}
-</div>
+	</DropdownMenu.Content>
+</DropdownMenu.Root>
 
 <style>
 	.rotate-180 {
