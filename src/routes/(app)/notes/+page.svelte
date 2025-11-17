@@ -1,8 +1,5 @@
 <script>
 	import { getContext, onMount } from 'svelte';
-
-	const i18n = getContext('i18n');
-
 	import dayjs from '$lib/dayjs';
 	import { mobile, showArchivedChats, showSidebar, user } from '$lib/stores';
 	import { goto } from '$app/navigation';
@@ -14,7 +11,10 @@
 	import Notes from '$lib/components/notes/Notes.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Sidebar from '$lib/components/icons/Sidebar.svelte';
-	import { WEBUI_API_BASE_URL } from '$lib/constants';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
+	import Background from '$lib/components/Background.svelte';
+
+	const i18n = getContext('i18n');
 
 	let loaded = false;
 
@@ -39,6 +39,8 @@
 </script>
 
 {#if loaded}
+	<Background />
+
 	<div
 		class=" flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out {$showSidebar
 			? 'md:max-w-[calc(100%-var(--sidebar-width))]'
@@ -95,9 +97,9 @@
 									aria-label="User Menu"
 								>
 									<div class=" self-center">
-										<img
-											src={`${WEBUI_API_BASE_URL}/users/${$user?.id}/profile/image`}
-											class="size-6 object-cover rounded-full"
+										<ProfileImage
+											src={$user?.profile_image_url}
+											className="size-6 object-cover rounded-full"
 											alt="User profile"
 											draggable="false"
 										/>
