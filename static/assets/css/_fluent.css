@@ -172,6 +172,9 @@ tr,tbody,thead,table{
 
 div#chat-input
 {
-  color: transparent;
+  background: transparent;
+}
+
+select {
   background: transparent;
 }
