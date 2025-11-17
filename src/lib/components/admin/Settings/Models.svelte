@@ -38,6 +38,7 @@
 	import EyeSlash from '$lib/components/icons/EyeSlash.svelte';
 	import Eye from '$lib/components/icons/Eye.svelte';
 	import { WEBUI_BASE_URL } from '$lib/constants';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	let shiftKey = false;
 
@@ -334,10 +335,10 @@
 										? ''
 										: 'opacity-50 dark:opacity-50'} "
 								>
-									<img
+									<ProfileImage
 										src={model?.meta?.profile_image_url ?? `${WEBUI_BASE_URL}/static/favicon.png`}
 										alt="modelfile profile"
-										class=" rounded-full w-full h-auto object-cover"
+										className="rounded-full w-full h-auto object-cover"
 									/>
 								</div>
 							</div>

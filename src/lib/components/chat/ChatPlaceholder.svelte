@@ -11,6 +11,7 @@
 	import { sanitizeResponseContent } from '$lib/utils';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import EyeSlash from '$lib/components/icons/EyeSlash.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -52,15 +53,13 @@
 							)}
 							placement="right"
 						>
-							<img
-								crossorigin="anonymous"
+							<ProfileImage
 								src={model?.info?.meta?.profile_image_url ??
 									($i18n.language === 'dg-DG'
 										? `${WEBUI_BASE_URL}/doge.png`
 										: `${WEBUI_BASE_URL}/static/favicon.png`)}
-								class=" size-[2.7rem] rounded-full border-[1px] border-gray-100 dark:border-none"
+								className="size-[2.7rem] rounded-full border-[1px] border-gray-100 dark:border-none"
 								alt="logo"
-								draggable="false"
 							/>
 						</Tooltip>
 					</button>

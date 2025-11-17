@@ -8,6 +8,7 @@
 	import Notes from '$lib/components/notes/Notes.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Sidebar from '$lib/components/icons/Sidebar.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 </script>
 
 <div
@@ -66,9 +67,9 @@
 								aria-label="User Menu"
 							>
 								<div class=" self-center">
-									<img
+									<ProfileImage
 										src={$user?.profile_image_url}
-										class="size-6 object-cover rounded-full"
+										className="size-6 object-cover rounded-full"
 										alt="User profile"
 										draggable="false"
 									/>

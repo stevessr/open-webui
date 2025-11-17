@@ -21,6 +21,7 @@
 	} from '$lib/stores';
 	import { sanitizeResponseContent, extractCurlyBraceWords } from '$lib/utils';
 	import { WEBUI_BASE_URL } from '$lib/constants';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	import Suggestions from './Suggestions.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
@@ -120,15 +121,13 @@
 											selectedModelIdx = modelIdx;
 										}}
 									>
-										<img
-											crossorigin="anonymous"
+										<ProfileImage
 											src={model?.info?.meta?.profile_image_url ??
 												($i18n.language === 'dg-DG'
 													? `${WEBUI_BASE_URL}/doge.png`
 													: `${WEBUI_BASE_URL}/static/favicon.png`)}
-											class=" size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
+											className="size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
 											aria-hidden="true"
-											draggable="false"
 										/>
 									</button>
 								</Tooltip>

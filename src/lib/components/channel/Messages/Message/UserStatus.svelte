@@ -3,6 +3,7 @@
 
 	const i18n = getContext('i18n');
 	import { WEBUI_BASE_URL } from '$lib/constants';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	export let user = null;
 </script>
@@ -10,10 +11,9 @@
 {#if user}
 	<div class=" flex gap-3.5 w-full py-3 px-3 items-center">
 		<div class=" items-center flex shrink-0">
-			<img
-				crossorigin="anonymous"
+			<ProfileImage
 				src={user?.profile_image_url ?? `${WEBUI_BASE_URL}/static/favicon.png`}
-				class=" size-12 object-cover rounded-xl"
+				className="size-12 object-cover rounded-xl"
 				alt="profile"
 			/>
 		</div>

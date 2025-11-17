@@ -14,6 +14,7 @@
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import { WEBUI_BASE_URL } from '$lib/constants';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	export let show = false;
 	export let edit = false;
@@ -228,9 +229,9 @@
 									imageInputElement.click();
 								}}
 							>
-								<img
+								<ProfileImage
 									src={profileImageUrl}
-									class="size-16 rounded-full object-cover shrink-0"
+									className="size-16 rounded-full object-cover shrink-0"
 									alt="Profile"
 								/>
 

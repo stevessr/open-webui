@@ -28,5 +28,6 @@
 		src={src !== '' ? src : generateInitialsImage(name)}
 		{alt}
 		class="rounded-full {className} object-cover"
+		loading="lazy"
 	/>
 {/if}

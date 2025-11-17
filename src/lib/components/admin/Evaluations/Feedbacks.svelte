@@ -25,6 +25,7 @@
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { config } from '$lib/stores';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	export let feedbacks = [];
 
@@ -308,10 +309,10 @@
 							<div class="flex justify-center">
 								<Tooltip content={feedback?.user?.name}>
 									<div class="shrink-0">
-										<img
+										<ProfileImage
 											src={feedback?.user?.profile_image_url ?? `${WEBUI_BASE_URL}/user.gif`}
 											alt={feedback?.user?.name}
-											class="size-5 rounded-full object-cover shrink-0"
+											className="size-5 rounded-full object-cover shrink-0"
 										/>
 									</div>
 								</Tooltip>

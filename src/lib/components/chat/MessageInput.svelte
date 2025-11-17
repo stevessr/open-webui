@@ -7,6 +7,7 @@
 	import { v4 as uuidv4 } from 'uuid';
 	import { createPicker, getAuthToken } from '$lib/utils/google-drive-picker';
 	import { pickAndDownloadFile } from '$lib/utils/onedrive-file-picker';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	import { onMount, tick, getContext, createEventDispatcher, onDestroy } from 'svelte';
 	const dispatch = createEventDispatcher();
@@ -1068,10 +1069,9 @@
 								<div class="px-3 pt-3 text-left w-full flex flex-col z-10">
 									<div class="flex items-center justify-between w-full">
 										<div class="pl-[1px] flex items-center gap-2 text-sm dark:text-gray-500">
-											<img
-												crossorigin="anonymous"
+											<ProfileImage
 												alt="model profile"
-												class="size-3.5 max-w-[28px] object-cover rounded-full"
+												className="size-3.5 max-w-[28px] object-cover rounded-full"
 												src={$models.find((model) => model.id === atSelectedModel.id)?.info?.meta
 													?.profile_image_url ??
 													($i18n.language === 'dg-DG'
@@ -1540,12 +1540,11 @@
 													>
 														{#if filter?.icon}
 															<div class="size-4 items-center flex justify-center">
-																<img
+																<ProfileImage
 																	src={filter.icon}
-																	class="size-3.5 {filter.icon.includes('svg')
+																	className="size-3.5 {filter.icon.includes('svg')
 																		? 'dark:invert-[80%]'
 																		: ''}"
-																	style="fill: currentColor;"
 																	alt={filter.name}
 																/>
 															</div>

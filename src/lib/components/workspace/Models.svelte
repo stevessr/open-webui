@@ -41,6 +41,7 @@
 	import Eye from '../icons/Eye.svelte';
 	import ViewSelector from './common/ViewSelector.svelte';
 	import TagSelector from './common/TagSelector.svelte';
+import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	let shiftKey = false;
 
@@ -435,10 +436,10 @@
 											? 'bg-transparent'
 											: 'bg-white'} rounded-2xl"
 									>
-										<img
+										<ProfileImage
 											src={model?.meta?.profile_image_url ?? `${WEBUI_BASE_URL}/static/favicon.png`}
 											alt="modelfile profile"
-											class=" rounded-2xl size-12 object-cover"
+											className=" rounded-2xl size-12 object-cover"
 										/>
 									</div>
 								</div>

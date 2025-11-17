@@ -16,6 +16,7 @@
 	import { toast } from 'svelte-sonner';
 	import Tag from '$lib/components/icons/Tag.svelte';
 	import Label from '$lib/components/icons/Label.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -76,11 +77,11 @@
 		<div class="flex items-center gap-2">
 			<div class="flex items-center min-w-fit">
 				<Tooltip content={$user?.role === 'admin' ? (item?.value ?? '') : ''} placement="top-start">
-					<img
+					<ProfileImage
 						src={item.model?.info?.meta?.profile_image_url ??
 							`${WEBUI_BASE_URL}/static/favicon.png`}
 						alt="Model"
-						class="rounded-full size-5 flex items-center"
+						className="rounded-full size-5 flex items-center"
 					/>
 				</Tooltip>
 			</div>

@@ -5,6 +5,7 @@
 
 	import Cog6 from '$lib/components/icons/Cog6.svelte';
 	import ArenaModelModal from './ArenaModelModal.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 	export let model;
 
 	let showModel = false;
@@ -26,10 +27,10 @@
 	<div class="flex justify-between items-center mb-1">
 		<div class="flex flex-col flex-1">
 			<div class="flex gap-2.5 items-center">
-				<img
+				<ProfileImage
 					src={model.meta.profile_image_url}
 					alt={model.name}
-					class="size-8 rounded-full object-cover shrink-0"
+					className="size-8 rounded-full object-cover shrink-0"
 				/>
 
 				<div class="w-full flex flex-col">

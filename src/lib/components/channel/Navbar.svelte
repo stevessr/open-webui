@@ -11,6 +11,7 @@
 	import PencilSquare from '../icons/PencilSquare.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -79,11 +80,10 @@
 							aria-label="User Menu"
 						>
 							<div class=" self-center">
-								<img
+								<ProfileImage
 									src={$user?.profile_image_url}
-									class="size-6 object-cover rounded-full"
+									className="size-6 object-cover rounded-full"
 									alt="User profile"
-									draggable="false"
 								/>
 							</div>
 						</button>

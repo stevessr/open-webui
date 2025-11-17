@@ -22,6 +22,7 @@
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import DefaultFiltersSelector from './DefaultFiltersSelector.svelte';
 	import DefaultFeatures from './DefaultFeatures.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -430,16 +431,16 @@
 							}}
 						>
 							{#if info.meta.profile_image_url}
-								<img
+								<ProfileImage
 									src={info.meta.profile_image_url}
 									alt="model profile"
-									class="rounded-xl size-72 md:size-60 object-cover shrink-0"
+									className="rounded-xl size-72 md:size-60 object-cover shrink-0"
 								/>
 							{:else}
-								<img
-									src="{WEBUI_BASE_URL}/static/favicon.png"
+								<ProfileImage
+									src={`${WEBUI_BASE_URL}/static/favicon.png`}
 									alt="model profile"
-									class=" rounded-xl size-72 md:size-60 object-cover shrink-0"
+									className=" rounded-xl size-72 md:size-60 object-cover shrink-0"
 								/>
 							{/if}
 

@@ -8,6 +8,7 @@
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	import emojiGroups from '$lib/emoji-groups.json';
 	import emojiShortCodes from '$lib/emoji-shortcodes.json';
@@ -158,11 +159,10 @@
 												class="p-1.5 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition"
 												on:click={() => selectEmoji(emojiItem)}
 											>
-												<img
+												<ProfileImage
 													src="{WEBUI_BASE_URL}/assets/emojis/{emojiItem.name.toLowerCase()}.svg"
 													alt={emojiItem.name}
-													class="size-5"
-													loading="lazy"
+													className="size-5"
 												/>
 											</button>
 										</Tooltip>

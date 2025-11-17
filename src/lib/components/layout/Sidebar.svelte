@@ -63,6 +63,7 @@
 	import Note from '../icons/Note.svelte';
 	import { slide } from 'svelte/transition';
 	import HotkeyHint from '../common/HotkeyHint.svelte';
+import ProfileImage from '../common/ProfileImage.svelte';
 
 	const BREAKPOINT = 768;
 
@@ -561,10 +562,9 @@
 						aria-label={$showSidebar ? $i18n.t('Close Sidebar') : $i18n.t('Open Sidebar')}
 					>
 						<div class=" self-center flex items-center justify-center size-9">
-							<img
-								crossorigin="anonymous"
-								src="{WEBUI_BASE_URL}/static/favicon.png"
-								class="sidebar-new-chat-icon size-6 rounded-full group-hover:hidden"
+							<ProfileImage
+								src={`${WEBUI_BASE_URL}/static/favicon.png`}
+								className="sidebar-new-chat-icon size-6 rounded-full group-hover:hidden"
 								alt=""
 							/>
 
@@ -696,9 +696,9 @@
 								class=" cursor-pointer flex rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition group"
 							>
 								<div class=" self-center flex items-center justify-center size-9">
-									<img
+									<ProfileImage
 										src={$user?.profile_image_url}
-										class=" size-6 object-cover rounded-full"
+										className=" size-6 object-cover rounded-full"
 										alt={$i18n.t('Open User Profile Menu')}
 										aria-label={$i18n.t('Open User Profile Menu')}
 									/>
@@ -739,10 +739,9 @@
 					draggable="false"
 					on:click={newChatHandler}
 				>
-					<img
-						crossorigin="anonymous"
-						src="{WEBUI_BASE_URL}/static/favicon.png"
-						class="sidebar-new-chat-icon size-6 rounded-full"
+					<ProfileImage
+						src={`${WEBUI_BASE_URL}/static/favicon.png`}
+						className="sidebar-new-chat-icon size-6 rounded-full"
 						alt=""
 					/>
 				</a>
@@ -1235,9 +1234,9 @@
 								class=" flex items-center rounded-2xl py-2 px-1.5 w-full hover:bg-gray-100/50 dark:hover:bg-gray-900/50 transition"
 							>
 								<div class=" self-center mr-3">
-									<img
+									<ProfileImage
 										src={$user?.profile_image_url}
-										class=" size-6 object-cover rounded-full"
+										className=" size-6 object-cover rounded-full"
 										alt={$i18n.t('Open User Profile Menu')}
 										aria-label={$i18n.t('Open User Profile Menu')}
 									/>
