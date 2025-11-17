@@ -7,6 +7,7 @@
 	import { blobToFile } from '$lib/utils';
 	import { generateEmoji } from '$lib/apis';
 	import { synthesizeOpenAISpeech, transcribeAudio } from '$lib/apis/audio';
+	import { isVideoUrl } from '$lib/utils';
 
 	import { toast } from 'svelte-sonner';
 
@@ -763,11 +764,24 @@
 							?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png'
 							? ' bg-cover bg-center bg-no-repeat'
 							: 'bg-black dark:bg-white'}  bg-black dark:bg-white"
-						style={(model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !==
-						'/static/favicon.png'
-							? `background-image: url('${model?.info?.meta?.profile_image_url}');`
-							: ''}
-					/>
+						>{#if (model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png' && isVideoUrl(model?.info?.meta?.profile_image_url)}
+							<video
+								src={model?.info?.meta?.profile_image_url}
+								autoplay
+								muted
+								loop
+								class="rounded-full w-full h-full object-cover"
+							/>
+						{:else}
+							<div
+								style={(model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !==
+								'/static/favicon.png'
+									? `background-image: url('${model?.info?.meta?.profile_image_url}');`
+									: ''}
+								class="rounded-full w-full h-full"
+							/>
+						{/if}
+					</div>
 				{/if}
 				<!-- navbar -->
 			</button>
@@ -845,11 +859,24 @@
 								?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png'
 								? ' bg-cover bg-center bg-no-repeat'
 								: 'bg-black dark:bg-white'} "
-							style={(model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !==
-							'/static/favicon.png'
-								? `background-image: url('${model?.info?.meta?.profile_image_url}');`
-								: ''}
-						/>
+							>{#if (model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png' && isVideoUrl(model?.info?.meta?.profile_image_url)}
+								<video
+									src={model?.info?.meta?.profile_image_url}
+									autoplay
+									muted
+									loop
+									class="rounded-full w-full h-full object-cover"
+								/>
+							{:else}
+								<div
+									style={(model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !==
+									'/static/favicon.png'
+										? `background-image: url('${model?.info?.meta?.profile_image_url}');`
+										: ''}
+									class="rounded-full w-full h-full"
+								/>
+							{/if}
+						</div>
 					{/if}
 				</button>
 			{:else}
