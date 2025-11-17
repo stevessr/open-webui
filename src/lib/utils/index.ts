@@ -1604,6 +1604,13 @@ export const decodeString = (str: string) => {
 	}
 };
 
+export const isVideoUrl = (url: string) => {
+	if (!url) return false;
+	const videoExtensions = ['.mp4', '.webm', '.ogg', '.avi', '.mov', '.wmv', '.flv', '.m4v'];
+	const lowerUrl = url.toLowerCase();
+	return videoExtensions.some(ext => lowerUrl.includes(ext));
+};
+
 export const initMermaid = async () => {
 	const { default: mermaid } = await import('mermaid');
 	mermaid.initialize({
