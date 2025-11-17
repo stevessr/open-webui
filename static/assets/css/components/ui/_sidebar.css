@@ -1,0 +1,41 @@
+/* Sidebar Component Styles */
+
+#sidebar {
+  transition-timing-function: cubic-bezier(0.3, 0.3, 0.2, 1);
+  transition-duration: 0.5s;
+  --tw-duration: 0.5;
+  --tw-ease: cubic-bezier(0.3, 0.3, 0.2, 1);
+  background: transparent;
+  backdrop-filter: blur(8px);
+}
+
+#sidebar[data-state='true'] {
+  animation: 0.4s ease-in forwards fade-in !important;
+}
+
+#sidebar[data-state='true'] .ProseMirror {
+  white-space: pre-wrap;
+  height: 100%;
+  min-height: fit-content;
+  max-height: 100%;
+}
+
+/* Focus styles for form elements */
+#sidebar[data-state='true'] .ProseMirror:focus-visible,
+#sidebar[data-state='true'] .ProseMirror-focused,
+#sidebar[data-state='true'] input:focus,
+#sidebar[data-state='true'] textarea:focus {
+  outline: none;
+  position: relative;
+  z-index: 1;
+  border: 2px solid transparent;
+  border-radius: 5%;
+  background-color: transparent;
+}
+
+/* Animation */
+@keyframes fade-in {
+  0% { opacity: 0; }
+  30% { opacity: 0; }
+  100% { opacity: 1; }
+}

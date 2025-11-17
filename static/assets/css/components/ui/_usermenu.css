@@ -1,0 +1,6 @@
+/* UserMenu Component Styles */
+
+#user-menu {
+  background: transparent;
+  backdrop-filter: blur(8px);
+}
