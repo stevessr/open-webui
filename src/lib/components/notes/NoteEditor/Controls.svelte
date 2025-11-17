@@ -7,6 +7,7 @@
 	import Collapsible from '$lib/components/common/Collapsible.svelte';
 	import FileItem from '$lib/components/common/FileItem.svelte';
 	import Image from '$lib/components/common/Image.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 
 	export let show = false;
 	export let selectedModelId = '';
