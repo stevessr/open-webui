@@ -10,6 +10,7 @@
 	import Switch from '$lib/components/common/Switch.svelte';
 	import ManageFloatingActionButtonsModal from './Interface/ManageFloatingActionButtonsModal.svelte';
 	import ManageImageCompressionModal from './Interface/ManageImageCompressionModal.svelte';
+	import BackgroundUrlInputModal from '$lib/components/common/BackgroundUrlInputModal.svelte';
 	const dispatch = createEventDispatcher();
 
 	const i18n = getContext('i18n');
@@ -96,6 +97,7 @@
 
 	let showManageFloatingActionButtonsModal = false;
 	let showManageImageCompressionModal = false;
+	let showBackgroundUrlModal = false;
 
 	const toggleLandingPageMode = async () => {
 		landingPageMode = landingPageMode === '' ? 'chat' : '';
@@ -269,6 +271,17 @@
 	size={imageCompressionSize}
 	onSave={(size) => {
 		saveSettings({ imageCompressionSize: size });
+	}}
+/>
+
+<BackgroundUrlInputModal
+	bind:show={showBackgroundUrlModal}
+	bind:value={backgroundImageUrl}
+	title="Enter background image or video URL"
+	placeholder="Enter image or video URL..."
+	confirmText="Set"
+	on:confirm={() => {
+		saveSettings({ backgroundImageUrl });
 	}}
 />
 
@@ -537,23 +550,35 @@
 						{$i18n.t('Chat Background Image')}
 					</div>
 
-					<button
-						aria-labelledby="chat-background-label background-image-url-state"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
-							if (backgroundImageUrl !== null) {
-								backgroundImageUrl = null;
-								saveSettings({ backgroundImageUrl });
-							} else {
-								filesInputElement.click();
-							}
-						}}
-						type="button"
-					>
-						<span class="ml-2 self-center" id="background-image-url-state"
-							>{backgroundImageUrl !== null ? $i18n.t('Reset') : $i18n.t('Upload')}</span
+					<div class="flex items-center gap-2">
+						<button
+							aria-labelledby="chat-background-label background-image-url-state"
+							class="p-1 px-3 text-xs flex rounded-sm transition"
+							on:click={() => {
+								if (backgroundImageUrl !== null) {
+									backgroundImageUrl = null;
+									saveSettings({ backgroundImageUrl });
+								} else {
+									filesInputElement.click();
+								}
+							}}
+							type="button"
 						>
-					</button>
+							<span class="ml-2 self-center" id="background-image-url-state"
+								>{backgroundImageUrl !== null ? $i18n.t('Reset') : $i18n.t('Upload')}</span
+							>
+						</button>
+
+						<button
+							class="p-1 px-3 text-xs flex rounded-sm transition"
+							on:click={() => {
+								showBackgroundUrlModal = true;
+							}}
+							type="button"
+						>
+							{$i18n.t('URL')}
+						</button>
+					</div>
 				</div>
 			</div>
 
