@@ -244,7 +244,7 @@
 
 <div
 	id={`floating-buttons-${id}`}
-	class="absolute rounded-lg mt-1 text-xs z-9999"
+	class="absolute rounded-lg mt-1 text-xs z-999"
 	style="display: none"
 >
 	{#if responseContent === null}
