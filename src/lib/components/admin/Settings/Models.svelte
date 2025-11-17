@@ -377,14 +377,14 @@
 				<div class="flex-1"></div>
 
 				<Dropdown>
-					<Tooltip content={$i18n.t('Actions')}>
-						<button
-							class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-							type="button"
-						>
-							<EllipsisHorizontal className="size-4" />
-						</button>
-					</Tooltip>
+						<Tooltip content={$i18n.t('Actions')}>
+							<button
+								class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+								type="button"
+							>
+								<EllipsisHorizontal className="size-4" />
+							</button>
+						</Tooltip>
 
 					<div slot="content">
 						<DropdownMenu.Content
