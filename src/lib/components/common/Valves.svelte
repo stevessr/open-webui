@@ -66,7 +66,7 @@
 							<Select
 								className="w-full rounded-lg text-sm dark:text-gray-300 dark:bg-gray-850 outline-hidden border border-gray-100 dark:border-gray-850"
 								bind:value={valves[property]}
-								items={valvesSpec.properties[property].enum.map(option => ({
+								items={valvesSpec.properties[property].enum.map((option) => ({
 									value: option,
 									label: option
 								}))}

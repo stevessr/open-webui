@@ -764,7 +764,8 @@
 							?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png'
 							? ' bg-cover bg-center bg-no-repeat'
 							: 'bg-black dark:bg-white'}  bg-black dark:bg-white"
-						>{#if (model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png' && isVideoUrl(model?.info?.meta?.profile_image_url)}
+					>
+						{#if (model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png' && isVideoUrl(model?.info?.meta?.profile_image_url)}
 							<video
 								src={model?.info?.meta?.profile_image_url}
 								autoplay
@@ -859,7 +860,8 @@
 								?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png'
 								? ' bg-cover bg-center bg-no-repeat'
 								: 'bg-black dark:bg-white'} "
-							>{#if (model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png' && isVideoUrl(model?.info?.meta?.profile_image_url)}
+						>
+							{#if (model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png' && isVideoUrl(model?.info?.meta?.profile_image_url)}
 								<video
 									src={model?.info?.meta?.profile_image_url}
 									autoplay

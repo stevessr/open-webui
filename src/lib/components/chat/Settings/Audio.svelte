@@ -361,10 +361,12 @@
 							bind:value={voice}
 							items={[
 								{ value: '', label: $i18n.t('Default') },
-								...voices.filter((v) => nonLocalVoices || v.localService === true).map(_voice => ({
-									value: _voice.name,
-									label: _voice.name
-								}))
+								...voices
+									.filter((v) => nonLocalVoices || v.localService === true)
+									.map((_voice) => ({
+										value: _voice.name,
+										label: _voice.name
+									}))
 							]}
 						/>
 					</div>

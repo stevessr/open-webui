@@ -226,7 +226,7 @@
 							: 'outline-hidden'}"
 						bind:value={lang}
 						placeholder={$i18n.t('Select a language')}
-						items={languages.map(language => ({
+						items={languages.map((language) => ({
 							value: language['code'],
 							label: language['title']
 						}))}

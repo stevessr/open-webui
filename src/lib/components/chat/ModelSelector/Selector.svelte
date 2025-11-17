@@ -110,7 +110,6 @@
 		}
 	};
 
-	
 	$: filteredItems = (
 		searchValue
 			? fuse
@@ -160,7 +159,6 @@
 					})
 	).filter((item) => !(item.model?.info?.meta?.hidden ?? false));
 
-	
 	const resetView = async () => {
 		await tick();
 
@@ -282,7 +280,7 @@
 				}
 			}
 
-				if ($MODEL_DOWNLOAD_POOL[sanitizedModelTag].done) {
+			if ($MODEL_DOWNLOAD_POOL[sanitizedModelTag].done) {
 				toast.success(
 					$i18n.t(`Model '{{modelName}}' has been successfully downloaded.`, {
 						modelName: sanitizedModelTag
@@ -290,7 +288,9 @@
 				);
 
 				// 清除模型列表缓存以获取最新列表
-				apiCache.delete(`ollama-models-${localStorage.token}-${$settings?.directConnections ?? 'default'}`);
+				apiCache.delete(
+					`ollama-models-${localStorage.token}-${$settings?.directConnections ?? 'default'}`
+				);
 
 				models.set(
 					await getModels(
@@ -356,7 +356,9 @@
 			toast.success($i18n.t('Model unloaded successfully'));
 
 			// 清除模型列表缓存以获取最新列表
-			apiCache.delete(`ollama-models-${localStorage.token}-${$settings?.directConnections ?? 'default'}`);
+			apiCache.delete(
+				`ollama-models-${localStorage.token}-${$settings?.directConnections ?? 'default'}`
+			);
 
 			models.set(
 				await getModels(

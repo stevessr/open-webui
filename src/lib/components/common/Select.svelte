@@ -24,22 +24,25 @@
 	};
 </script>
 
-<DropdownMenu.Root bind:open={show} disabled={disabled}>
+<DropdownMenu.Root bind:open={show} {disabled}>
 	<DropdownMenu.Trigger
 		class="trans relative w-full transition-all duration-200 {disabled
 			? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800'
-			: 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 cursor-pointer border border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20'
-		} {className}"
+			: 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 cursor-pointer border border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20'} {className}"
 		aria-label={placeholder || 'Select an option'}
 		{disabled}
 	>
 		<span
-			class="inline-flex w-full truncate px-3 py-2 text-sm {className.includes('text-') ? '' : 'text-gray-900 dark:text-gray-100'} {disabled ? 'cursor-not-allowed' : ''}"
+			class="inline-flex w-full truncate px-3 py-2 text-sm {className.includes('text-')
+				? ''
+				: 'text-gray-900 dark:text-gray-100'} {disabled ? 'cursor-not-allowed' : ''}"
 		>
 			{selectedLabel || placeholder}
 		</span>
 		<ChevronDown
-			class="absolute end-3 top-1/2 -translate-y-1/2 size-4 transition-transform duration-200 {disabled ? 'pointer-events-none' : ''} {show ? 'rotate-180' : ''}"
+			class="absolute end-3 top-1/2 -translate-y-1/2 size-4 transition-transform duration-200 {disabled
+				? 'pointer-events-none'
+				: ''} {show ? 'rotate-180' : ''}"
 			strokeWidth="2"
 		/>
 	</DropdownMenu.Trigger>
@@ -60,9 +63,12 @@
 			<div class="p-2">
 				{#each items as item}
 					<DropdownMenu.Item
-						class="group relative flex w-full select-none items-center rounded-lg py-3 px-4 text-sm transition-all duration-150 cursor-pointer mb-1 {value === item.value
+						class="group relative flex w-full select-none items-center rounded-lg py-3 px-4 text-sm transition-all duration-150 cursor-pointer mb-1 {value ===
+						item.value
 							? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium'
-							: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'} {item.disabled ? 'opacity-50 cursor-not-allowed' : ''}"
+							: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'} {item.disabled
+							? 'opacity-50 cursor-not-allowed'
+							: ''}"
 						disabled={item.disabled}
 						on:click={() => {
 							if (!item.disabled) {

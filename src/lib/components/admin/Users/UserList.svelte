@@ -133,7 +133,6 @@
 	<UserChatsModal bind:show={showUserChatsModal} user={selectedUser} />
 {/if}
 
-
 {#if users === null || total === null}
 	<div class="my-10">
 		<Spinner className="size-5" />
@@ -142,7 +141,6 @@
 	<div
 		class="trans pt-0.5 pb-1 gap-1 flex flex-col md:flex-row justify-between sticky top-0 z-10 bg-white dark:bg-gray-900"
 	>
-
 		<div class="flex gap-1">
 			<div class=" flex w-full space-x-2">
 				<div class="flex flex-1">
@@ -327,10 +325,10 @@
 							<div class="flex items-center">
 								<ProfileImage
 									src={user?.profile_image_url?.startsWith(WEBUI_BASE_URL) ||
-										user.profile_image_url.startsWith('https://www.gravatar.com/avatar/') ||
-										user.profile_image_url.startsWith('data:')
-											? user.profile_image_url
-											: `${WEBUI_BASE_URL}/user.gif`}
+									user.profile_image_url.startsWith('https://www.gravatar.com/avatar/') ||
+									user.profile_image_url.startsWith('data:')
+										? user.profile_image_url
+										: `${WEBUI_BASE_URL}/user.gif`}
 									alt="user"
 									className="rounded-full w-6 h-6 object-cover mr-2.5 flex-shrink-0"
 								/>

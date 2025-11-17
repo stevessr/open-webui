@@ -41,7 +41,7 @@
 	import Eye from '../icons/Eye.svelte';
 	import ViewSelector from './common/ViewSelector.svelte';
 	import TagSelector from './common/TagSelector.svelte';
-import ProfileImage from '$lib/components/common/ProfileImage.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	let shiftKey = false;
 

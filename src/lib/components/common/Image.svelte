@@ -25,7 +25,11 @@
 	let showImagePreview = false;
 	let isVideo = false;
 
-	$: isVideo = _src && (['.mp4', '.webm', '.ogg', '.avi', '.mov', '.wmv', '.flv', '.m4v'].some(ext => _src.toLowerCase().includes(ext)));
+	$: isVideo =
+		_src &&
+		['.mp4', '.webm', '.ogg', '.avi', '.mov', '.wmv', '.flv', '.m4v'].some((ext) =>
+			_src.toLowerCase().includes(ext)
+		);
 </script>
 
 <ImagePreview bind:show={showImagePreview} src={_src} {alt} />
@@ -42,21 +46,10 @@
 		type="button"
 	>
 		{#if isVideo}
-			<video
-				src={_src}
-				class={imageClassName}
-				controls
-				data-cy="video"
-				title={alt}
-				autoplay
-				muted
+			<video src={_src} class={imageClassName} controls data-cy="video" title={alt} autoplay muted
 			></video>
 		{:else}
-			<ProfileImage
-				src={_src}
-				className={imageClassName}
-				{alt}
-			/>
+			<ProfileImage src={_src} className={imageClassName} {alt} />
 		{/if}
 	</button>
 

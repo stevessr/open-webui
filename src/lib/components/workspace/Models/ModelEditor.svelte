@@ -529,10 +529,18 @@
 									bind:value={info.base_model_id}
 									items={[
 										{ value: null, label: $i18n.t('Select a base model') },
-										...$models.filter((m) => (model ? m.id !== model.id : true) && !m?.preset && m?.owned_by !== 'arena' && !(m?.direct ?? false)).map(model => ({
-											value: model.id,
-											label: model.name
-										}))
+										...$models
+											.filter(
+												(m) =>
+													(model ? m.id !== model.id : true) &&
+													!m?.preset &&
+													m?.owned_by !== 'arena' &&
+													!(m?.direct ?? false)
+											)
+											.map((model) => ({
+												value: model.id,
+												label: model.name
+											}))
 									]}
 									on:change={(e) => {
 										addUsage(e.detail.value);

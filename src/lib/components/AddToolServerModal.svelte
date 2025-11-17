@@ -609,10 +609,14 @@
 												{ value: 'none', label: $i18n.t('None') },
 												{ value: 'bearer', label: $i18n.t('Bearer') },
 												{ value: 'session', label: $i18n.t('Session') },
-												...(!direct ? [
-													{ value: 'system_oauth', label: $i18n.t('OAuth') },
-													...(type === 'mcp' ? [{ value: 'oauth_2.1', label: $i18n.t('OAuth 2.1') }] : [])
-												] : [])
+												...(!direct
+													? [
+															{ value: 'system_oauth', label: $i18n.t('OAuth') },
+															...(type === 'mcp'
+																? [{ value: 'oauth_2.1', label: $i18n.t('OAuth 2.1') }]
+																: [])
+														]
+													: [])
 											]}
 										/>
 									</div>

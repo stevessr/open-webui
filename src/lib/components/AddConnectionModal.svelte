@@ -364,13 +364,24 @@
 											items={[
 												{ value: 'none', label: $i18n.t('None') },
 												{ value: 'bearer', label: $i18n.t('Bearer') },
-												...(!ollama ? [
-													{ value: 'session', label: $i18n.t('Session') },
-													...(!direct ? [
-														{ value: 'system_oauth', label: $i18n.t('OAuth') },
-														...(azure ? [{ value: 'microsoft_entra_id', label: $i18n.t('Entra ID') }] : [])
-													] : [])
-												] : [])
+												...(!ollama
+													? [
+															{ value: 'session', label: $i18n.t('Session') },
+															...(!direct
+																? [
+																		{ value: 'system_oauth', label: $i18n.t('OAuth') },
+																		...(azure
+																			? [
+																					{
+																						value: 'microsoft_entra_id',
+																						label: $i18n.t('Entra ID')
+																					}
+																				]
+																			: [])
+																	]
+																: [])
+														]
+													: [])
 											]}
 										/>
 									</div>

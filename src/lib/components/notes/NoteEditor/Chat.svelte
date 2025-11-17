@@ -424,10 +424,12 @@ Based on the user's instruction, update and enhance the existing notes or select
 									className="bg-transparent rounded-lg text-sm outline-hidden w-full"
 									bind:value={selectedModelId}
 									placeholder={$i18n.t('Select a model')}
-									items={$models.filter((model) => !(model?.info?.meta?.hidden ?? false)).map(model => ({
-										value: model.id,
-										label: model.name
-									}))}
+									items={$models
+										.filter((model) => !(model?.info?.meta?.hidden ?? false))
+										.map((model) => ({
+											value: model.id,
+											label: model.name
+										}))}
 								/>
 							</Tooltip>
 						</div>

@@ -165,20 +165,21 @@
 							bind:value={selectedId}
 							items={tab === 'tools'
 								? [
-									{ value: '', label: $i18n.t('Select a tool'), disabled: true },
-									...$tools.filter((tool) => !tool?.id?.startsWith('server:')).map(tool => ({
-										value: tool.id,
-										label: tool.name
-									}))
-								]
+										{ value: '', label: $i18n.t('Select a tool'), disabled: true },
+										...$tools
+											.filter((tool) => !tool?.id?.startsWith('server:'))
+											.map((tool) => ({
+												value: tool.id,
+												label: tool.name
+											}))
+									]
 								: [
-									{ value: '', label: $i18n.t('Select a function'), disabled: true },
-									...$functions.map(func => ({
-										value: func.id,
-										label: func.name
-									}))
-								]
-							}
+										{ value: '', label: $i18n.t('Select a function'), disabled: true },
+										...$functions.map((func) => ({
+											value: func.id,
+											label: func.name
+										}))
+									]}
 						/>
 					</div>
 				</div>

@@ -63,7 +63,7 @@
 	import Note from '../icons/Note.svelte';
 	import { slide } from 'svelte/transition';
 	import HotkeyHint from '../common/HotkeyHint.svelte';
-import ProfileImage from '../common/ProfileImage.svelte';
+	import ProfileImage from '../common/ProfileImage.svelte';
 
 	const BREAKPOINT = 768;
 

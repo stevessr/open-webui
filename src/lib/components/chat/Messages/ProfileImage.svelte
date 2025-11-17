@@ -5,18 +5,15 @@
 	export let className = 'size-8';
 	export let src = `${WEBUI_BASE_URL}/static/favicon.png`;
 
-	$: processedSrc = src === ''
-		? `${WEBUI_BASE_URL}/static/favicon.png`
-		: src.startsWith(WEBUI_BASE_URL) ||
-			  src.startsWith('https://www.gravatar.com/avatar/') ||
-			  src.startsWith('data:') ||
-			  src.startsWith('/')
-			? src
-			: `${WEBUI_BASE_URL}/user.gif`;
+	$: processedSrc =
+		src === ''
+			? `${WEBUI_BASE_URL}/static/favicon.png`
+			: src.startsWith(WEBUI_BASE_URL) ||
+				  src.startsWith('https://www.gravatar.com/avatar/') ||
+				  src.startsWith('data:') ||
+				  src.startsWith('/')
+				? src
+				: `${WEBUI_BASE_URL}/user.gif`;
 </script>
 
-<ProfileImage
-	src={processedSrc}
-	className="{className} object-cover rounded-full"
-	alt="profile"
-/>
+<ProfileImage src={processedSrc} className="{className} object-cover rounded-full" alt="profile" />

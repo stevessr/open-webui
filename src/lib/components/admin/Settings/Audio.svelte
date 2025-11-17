@@ -526,7 +526,10 @@
 							}}
 							items={[
 								{ value: '', label: $i18n.t('Web API') },
-								{ value: 'transformers', label: $i18n.t('Transformers') + ' (' + $i18n.t('Local') + ')' },
+								{
+									value: 'transformers',
+									label: $i18n.t('Transformers') + ' (' + $i18n.t('Local') + ')'
+								},
 								{ value: 'openai', label: $i18n.t('OpenAI') },
 								{ value: 'elevenlabs', label: $i18n.t('ElevenLabs') },
 								{ value: 'azure', label: $i18n.t('Azure AI Speech') }
@@ -606,7 +609,7 @@
 										bind:value={TTS_VOICE}
 										items={[
 											{ value: '', label: $i18n.t('Default') },
-											...voices.map(voice => ({
+											...voices.map((voice) => ({
 												value: voice.voiceURI,
 												label: voice.name
 											}))
@@ -807,7 +810,7 @@
 							className="dark:bg-gray-900 w-fit cursor-pointer text-xs bg-transparent outline-hidden text-right"
 							aria-label={$i18n.t('Select how to split message text for TTS requests')}
 							bind:value={TTS_SPLIT_ON}
-							items={Object.values(TTS_RESPONSE_SPLIT).map(split => ({
+							items={Object.values(TTS_RESPONSE_SPLIT).map((split) => ({
 								value: split,
 								label: $i18n.t(split.charAt(0).toUpperCase() + split.slice(1))
 							}))}

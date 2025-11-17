@@ -244,7 +244,7 @@
 								}}
 								items={[
 									{ value: '', label: $i18n.t('Select a pipeline url'), disabled: true },
-									...PIPELINES_LIST.map(pipelines => ({
+									...PIPELINES_LIST.map((pipelines) => ({
 										value: pipelines.idx.toString(),
 										label: pipelines.url
 									}))
@@ -501,7 +501,7 @@
 																<Select
 																	className="w-full rounded-lg text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 																	bind:value={valves[property]}
-																	items={valves_spec.properties[property].enum.map(option => ({
+																	items={valves_spec.properties[property].enum.map((option) => ({
 																		value: option,
 																		label: option
 																	}))}

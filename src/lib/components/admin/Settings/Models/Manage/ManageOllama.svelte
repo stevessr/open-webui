@@ -811,9 +811,9 @@
 								className="w-full py-2 px-4 text-sm outline-hidden bg-transparent"
 								bind:value={deleteModelTag}
 								placeholder={$i18n.t('Select a model')}
-								items={ollamaModels.map((m) => ({ 
-									value: m.id, 
-									label: m.name + ' (' + (m.size / 1024 ** 3).toFixed(1) + ' GB)' 
+								items={ollamaModels.map((m) => ({
+									value: m.id,
+									label: m.name + ' (' + (m.size / 1024 ** 3).toFixed(1) + ' GB)'
 								}))}
 							/>
 						</div>

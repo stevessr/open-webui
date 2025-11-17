@@ -120,9 +120,9 @@
 								placeholder={$i18n.t('Select a engine')}
 								items={[
 									{ value: '', label: $i18n.t('Select a engine'), disabled: true },
-									...webSearchEngines.map(engine => ({
+									...webSearchEngines.map((engine) => ({
 										value: engine,
-										label: (engine === 'duckduckgo' || engine === 'ddgs') ? 'DDGS' : engine
+										label: engine === 'duckduckgo' || engine === 'ddgs' ? 'DDGS' : engine
 									}))
 								]}
 							/>
@@ -738,7 +738,7 @@
 								placeholder={$i18n.t('Select a engine')}
 								items={[
 									{ value: '', label: $i18n.t('Default') },
-									...webLoaderEngines.map(engine => ({
+									...webLoaderEngines.map((engine) => ({
 										value: engine,
 										label: engine
 									}))

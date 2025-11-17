@@ -163,12 +163,14 @@
 									className="outline-hidden bg-transparent text-sm rounded-lg w-full max-w-full"
 									bind:value={selectedGroupId}
 									items={[
-								{ value: '', label: $i18n.t('Select a group'), disabled: true },
-								...groups.filter((group) => !(accessControl?.read?.group_ids ?? []).includes(group.id)).map(group => ({
-									value: group.id,
-									label: group.name
-								}))
-							]}
+										{ value: '', label: $i18n.t('Select a group'), disabled: true },
+										...groups
+											.filter((group) => !(accessControl?.read?.group_ids ?? []).includes(group.id))
+											.map((group) => ({
+												value: group.id,
+												label: group.name
+											}))
+									]}
 									on:change={(e) => {
 										if (e.detail.value !== '') {
 											accessControl.read.group_ids = [

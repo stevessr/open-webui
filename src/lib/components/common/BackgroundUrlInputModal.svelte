@@ -4,9 +4,9 @@
 	import { isVideoUrl } from '$lib/utils';
 
 	export let show = false;
-	export let title = "Enter URL";
-	export let placeholder = "Enter URL...";
-	export let confirmText = "Set";
+	export let title = 'Enter URL';
+	export let placeholder = 'Enter URL...';
+	export let confirmText = 'Set';
 	export let value = '';
 
 	const dispatch = createEventDispatcher();
@@ -66,7 +66,7 @@
 			bind:this={inputElement}
 			bind:value={tempValue}
 			type="url"
-			placeholder={placeholder}
+			{placeholder}
 			class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 			on:keydown={handleKeydown}
 		/>

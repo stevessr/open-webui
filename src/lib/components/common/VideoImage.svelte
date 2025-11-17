@@ -29,9 +29,5 @@
 		Your browser does not support the video tag.
 	</video>
 {:else}
-	<ProfileImage
-		{src}
-		{alt}
-		className={className}
-	/>
+	<ProfileImage {src} {alt} {className} />
 {/if}

@@ -301,7 +301,7 @@
 		}, 1500); // Debounce for 1.5 seconds
 	};
 
-	$: query, debouncedQueryHandler();
+	$: (query, debouncedQueryHandler());
 
 	onMount(async () => {
 		rankHandler();

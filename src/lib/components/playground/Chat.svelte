@@ -326,7 +326,7 @@
 									className="bg-transparent border border-gray-100 dark:border-gray-850 rounded-lg text-sm outline-hidden w-full"
 									bind:value={selectedModelId}
 									placeholder={$i18n.t('Select a model')}
-									items={$models.map(model => ({
+									items={$models.map((model) => ({
 										value: model.id,
 										label: model.name
 									}))}

@@ -25,18 +25,9 @@
 		style="opacity: {selectedImageIdx === idx ? 1 : 0};"
 	>
 		{#if isVideoUrl(imageUrl)}
-			<video
-				src={imageUrl}
-				autoplay
-				muted
-				loop
-				class="w-full h-full object-cover"
-			/>
+			<video src={imageUrl} autoplay muted loop class="w-full h-full object-cover" />
 		{:else}
-			<div
-				class="w-full h-full bg-cover bg-center"
-				style="background-image: url('{imageUrl}')"
-			/>
+			<div class="w-full h-full bg-cover bg-center" style="background-image: url('{imageUrl}')" />
 		{/if}
 	</div>
 {/each}

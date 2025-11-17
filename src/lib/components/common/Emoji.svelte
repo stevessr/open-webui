@@ -11,7 +11,7 @@
 	<ProfileImage
 		src="{WEBUI_BASE_URL}/assets/emojis/{$shortCodesToEmojis[shortCode].toLowerCase()}.svg"
 		alt={shortCode}
-		className={className}
+		{className}
 	/>
 {:else}
 	<div>
