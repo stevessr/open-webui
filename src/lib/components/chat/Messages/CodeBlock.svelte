@@ -600,6 +600,8 @@
 											{#each files as file}
 												{#if file.type.startsWith('image')}
 													<img src={file.data} alt="Output" class=" w-full max-w-[36rem]" />
+												{:else if file.type.startsWith('video')}
+													<video src={file.data} alt="Output" class=" w-full max-w-[36rem]" controls autoplay muted></video>
 												{/if}
 											{/each}
 										</div>
