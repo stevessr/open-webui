@@ -167,6 +167,11 @@
 
 		// Helper function to check if the pressed keys match the shortcut definition
 		const isShortcutMatch = (event: KeyboardEvent, shortcut): boolean => {
+			// Check if shortcut is undefined
+			if (!shortcut) {
+				return false;
+			}
+
 			const keys = shortcut?.keys || [];
 
 			const normalized = keys.map((k) => k.toLowerCase());
@@ -194,6 +199,11 @@
 
 		const setupKeyboardShortcuts = () => {
 			document.addEventListener('keydown', async (event) => {
+				// Skip if event.key is undefined
+				if (!event.key) {
+					return;
+				}
+
 				if (isShortcutMatch(event, shortcuts[Shortcut.SEARCH])) {
 					console.log('Shortcut triggered: SEARCH');
 					event.preventDefault();
