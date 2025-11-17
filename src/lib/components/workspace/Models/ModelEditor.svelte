@@ -18,13 +18,13 @@
 	import Capabilities from '$lib/components/workspace/Models/Capabilities.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import AccessControl from '../common/AccessControl.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import DefaultFiltersSelector from './DefaultFiltersSelector.svelte';
 	import DefaultFeatures from './DefaultFeatures.svelte';
 	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 	import UrlInputModal from '$lib/components/common/UrlInputModal.svelte';
-	import Select from '$lib/components/common/Select.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -523,22 +523,21 @@
 							<div class=" text-sm font-semibold mb-1">{$i18n.t('Base Model (From)')}</div>
 
 							<div>
-								<select
-									class="text-sm w-full bg-transparent outline-hidden"
+								<Select
+									className="text-sm w-full bg-transparent outline-hidden"
 									placeholder={$i18n.t('Select a base model (e.g. llama3, gpt-4o)')}
 									bind:value={info.base_model_id}
+									items={[
+										{ value: null, label: $i18n.t('Select a base model') },
+										...$models.filter((m) => (model ? m.id !== model.id : true) && !m?.preset && m?.owned_by !== 'arena' && !(m?.direct ?? false)).map(model => ({
+											value: model.id,
+											label: model.name
+										}))
+									]}
 									on:change={(e) => {
-										addUsage(e.target.value);
+										addUsage(e.detail.value);
 									}}
-									required
-								>
-									<option value={null} class=" text-gray-900"
-										>{$i18n.t('Select a base model')}</option
-									>
-									{#each $models.filter((m) => (model ? m.id !== model.id : true) && !m?.preset && m?.owned_by !== 'arena' && !(m?.direct ?? false)) as model}
-										<option value={model.id} class=" text-gray-900">{model.name}</option>
-									{/each}
-								</select>
+								/>
 							</div>
 						</div>
 					{/if}

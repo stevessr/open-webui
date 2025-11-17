@@ -10,6 +10,7 @@
 
 	import AdvancedParams from './Advanced/AdvancedParams.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	export let saveSettings: Function;
 	export let getModels: Function;
 
@@ -198,42 +199,41 @@
 			<div class="flex w-full justify-between">
 				<div class=" self-center text-xs font-medium">{$i18n.t('Theme')}</div>
 				<div class="flex items-center relative">
-					<select
-						class="dark:bg-gray-900 w-fit pr-8 rounded-sm py-2 px-2 text-xs bg-transparent text-right {$settings.highContrastMode
+					<Select
+						className="dark:bg-gray-900 w-fit text-xs bg-transparent text-right {$settings.highContrastMode
 							? ''
 							: 'outline-hidden'}"
 						bind:value={selectedTheme}
 						placeholder={$i18n.t('Select a theme')}
-						on:change={() => themeChangeHandler(selectedTheme)}
-					>
-						<option value="system">⚙️ {$i18n.t('System')}</option>
-						<option value="dark">🌑 {$i18n.t('Dark')}</option>
-						<option value="oled-dark">🌃 {$i18n.t('OLED Dark')}</option>
-						<option value="light">☀️ {$i18n.t('Light')}</option>
-						<option value="her">🌷 Her</option>
-						<!-- <option value="rose-pine dark">🪻 {$i18n.t('Rosé Pine')}</option>
-						<option value="rose-pine-dawn light">🌷 {$i18n.t('Rosé Pine Dawn')}</option> -->
-					</select>
+						items={[
+							{ value: 'system', label: '⚙️ ' + $i18n.t('System') },
+							{ value: 'dark', label: '🌑 ' + $i18n.t('Dark') },
+							{ value: 'oled-dark', label: '🌃 ' + $i18n.t('OLED Dark') },
+							{ value: 'light', label: '☀️ ' + $i18n.t('Light') },
+							{ value: 'her', label: '🌷 Her' }
+						]}
+						on:change={(e) => themeChangeHandler(e.detail.value)}
+					/>
 				</div>
 			</div>
 
 			<div class=" flex w-full justify-between">
 				<div class=" self-center text-xs font-medium">{$i18n.t('Language')}</div>
 				<div class="flex items-center relative">
-					<select
-						class="dark:bg-gray-900 w-fit pr-8 rounded-sm py-2 px-2 text-xs bg-transparent text-right {$settings.highContrastMode
+					<Select
+						className="dark:bg-gray-900 w-fit text-xs bg-transparent text-right {$settings.highContrastMode
 							? ''
 							: 'outline-hidden'}"
 						bind:value={lang}
 						placeholder={$i18n.t('Select a language')}
+						items={languages.map(language => ({
+							value: language['code'],
+							label: language['title']
+						}))}
 						on:change={(e) => {
-							changeLanguage(lang);
+							changeLanguage(e.detail.value);
 						}}
-					>
-						{#each languages as language}
-							<option value={language['code']}>{language['title']}</option>
-						{/each}
-					</select>
+					/>
 				</div>
 			</div>
 			{#if $i18n.language === 'en-US' && !($config?.license_metadata ?? false)}

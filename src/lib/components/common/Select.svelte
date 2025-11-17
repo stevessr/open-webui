@@ -10,7 +10,7 @@
 	export let placeholder = '';
 	export let className = '';
 	export let disabled = false;
-	export let items: Array<{ value: string; label: string }> = [];
+	export let items: Array<{ value: string; label: string; disabled?: boolean }> = [];
 
 	let show = false;
 
@@ -26,7 +26,7 @@
 
 <DropdownMenu.Root bind:open={show} disabled={disabled}>
 	<DropdownMenu.Trigger
-		class="relative w-full transition-all duration-200 {disabled
+		class="trans relative w-full transition-all duration-200 {disabled
 			? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800'
 			: 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 cursor-pointer border border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20'
 		} {className}"
@@ -62,10 +62,13 @@
 					<DropdownMenu.Item
 						class="group relative flex w-full select-none items-center rounded-lg py-3 px-4 text-sm transition-all duration-150 cursor-pointer mb-1 {value === item.value
 							? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium'
-							: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}"
+							: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'} {item.disabled ? 'opacity-50 cursor-not-allowed' : ''}"
+						disabled={item.disabled}
 						on:click={() => {
-							console.log('Item clicked:', item);
-							handleSelect(item.value);
+							if (!item.disabled) {
+								console.log('Item clicked:', item);
+								handleSelect(item.value);
+							}
 						}}
 					>
 						<span class="flex-1 truncate">{item.label}</span>

@@ -357,24 +357,22 @@
 
 								<div class="flex gap-2">
 									<div class="flex-shrink-0 self-start">
-										<select
+										<Select
 											id="select-bearer-or-session"
-											class={`w-full text-sm bg-transparent pr-5 ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
+											className={`w-full text-sm bg-transparent ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
 											bind:value={auth_type}
-										>
-											<option value="none">{$i18n.t('None')}</option>
-											<option value="bearer">{$i18n.t('Bearer')}</option>
-
-											{#if !ollama}
-												<option value="session">{$i18n.t('Session')}</option>
-												{#if !direct}
-													<option value="system_oauth">{$i18n.t('OAuth')}</option>
-													{#if azure}
-														<option value="microsoft_entra_id">{$i18n.t('Entra ID')}</option>
-													{/if}
-												{/if}
-											{/if}
-										</select>
+											items={[
+												{ value: 'none', label: $i18n.t('None') },
+												{ value: 'bearer', label: $i18n.t('Bearer') },
+												...(!ollama ? [
+													{ value: 'session', label: $i18n.t('Session') },
+													...(!direct ? [
+														{ value: 'system_oauth', label: $i18n.t('OAuth') },
+														...(azure ? [{ value: 'microsoft_entra_id', label: $i18n.t('Entra ID') }] : [])
+													] : [])
+												] : [])
+											]}
+										/>
 									</div>
 
 									<div class="flex flex-1 items-center">

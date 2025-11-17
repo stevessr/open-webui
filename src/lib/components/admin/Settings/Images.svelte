@@ -18,6 +18,7 @@
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import CodeEditorModal from '$lib/components/common/CodeEditorModal.svelte';
 	const dispatch = createEventDispatcher();
 
@@ -382,16 +383,17 @@
 								</div>
 							</div>
 
-							<select
-								class=" dark:bg-gray-900 w-fit pr-8 cursor-pointer rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
+							<Select
+								className="dark:bg-gray-900 w-fit cursor-pointer text-xs bg-transparent outline-hidden text-right"
 								bind:value={config.IMAGE_GENERATION_ENGINE}
 								placeholder={$i18n.t('Select Engine')}
-							>
-								<option value="openai">{$i18n.t('Default (Open AI)')}</option>
-								<option value="comfyui">{$i18n.t('ComfyUI')}</option>
-								<option value="automatic1111">{$i18n.t('Automatic1111')}</option>
-								<option value="gemini">{$i18n.t('Gemini')}</option>
-							</select>
+								items={[
+									{ value: 'openai', label: $i18n.t('Default (Open AI)') },
+									{ value: 'comfyui', label: $i18n.t('ComfyUI') },
+									{ value: 'automatic1111', label: $i18n.t('Automatic1111') },
+									{ value: 'gemini', label: $i18n.t('Gemini') }
+								]}
+							/>
 						</div>
 					</div>
 
@@ -827,14 +829,15 @@
 									</div>
 								</div>
 
-								<select
-									class=" dark:bg-gray-900 w-fit pr-8 cursor-pointer rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
+								<Select
+									className="dark:bg-gray-900 w-fit cursor-pointer text-xs bg-transparent outline-hidden text-right"
 									bind:value={config.IMAGES_GEMINI_ENDPOINT_METHOD}
 									placeholder={$i18n.t('Select Method')}
-								>
-									<option value="predict">predict</option>
-									<option value="generateContent">generateContent</option>
-								</select>
+									items={[
+										{ value: 'predict', label: 'predict' },
+										{ value: 'generateContent', label: 'generateContent' }
+									]}
+								/>
 							</div>
 						</div>
 					{/if}
@@ -853,15 +856,16 @@
 								</div>
 							</div>
 
-							<select
-								class=" dark:bg-gray-900 w-fit pr-8 cursor-pointer rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
+							<Select
+								className="dark:bg-gray-900 w-fit cursor-pointer text-xs bg-transparent outline-hidden text-right"
 								bind:value={config.IMAGE_EDIT_ENGINE}
 								placeholder={$i18n.t('Select Engine')}
-							>
-								<option value="openai">{$i18n.t('Default (Open AI)')}</option>
-								<option value="comfyui">{$i18n.t('ComfyUI')}</option>
-								<option value="gemini">{$i18n.t('Gemini')}</option>
-							</select>
+								items={[
+									{ value: 'openai', label: $i18n.t('Default (Open AI)') },
+									{ value: 'comfyui', label: $i18n.t('ComfyUI') },
+									{ value: 'gemini', label: $i18n.t('Gemini') }
+								]}
+							/>
 						</div>
 					</div>
 
