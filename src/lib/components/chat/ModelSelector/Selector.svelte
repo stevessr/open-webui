@@ -286,7 +286,7 @@
 				}
 			}
 
-			if ($MODEL_DOWNLOAD_POOL[sanitizedModelTag].done) {
+				if ($MODEL_DOWNLOAD_POOL[sanitizedModelTag].done) {
 				toast.success(
 					$i18n.t(`Model '{{modelName}}' has been successfully downloaded.`, {
 						modelName: sanitizedModelTag
@@ -296,7 +296,9 @@
 				models.set(
 					await getModels(
 						localStorage.token,
-						$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
+						$config?.features?.enable_direct_connections
+							? ($settings?.directConnections ?? null)
+							: null
 					)
 				);
 			} else {
@@ -356,7 +358,9 @@
 			models.set(
 				await getModels(
 					localStorage.token,
-					$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
+					$config?.features?.enable_direct_connections
+						? ($settings?.directConnections ?? null)
+						: null
 				)
 			);
 		}
@@ -385,15 +389,19 @@
 			false)
 				? 'dark:placeholder-gray-100 placeholder-gray-800'
 				: 'placeholder-gray-400'}"
-			on:mouseenter={async () => {
-				models.set(
-					await getModels(
-						localStorage.token,
-						$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
-					)
-				);
-			}}
-		>
+				on:mouseenter={async () => {
+					models.set(
+						await getModels(
+							localStorage.token,
+							$config?.features?.enable_direct_connections
+								? ($settings?.directConnections ?? null)
+								: null
+						)
+					);
+				}}
+				tabindex="0"
+				role="button"
+			>
 			{#if selectedModel}
 				{selectedModel.label}
 			{:else}
