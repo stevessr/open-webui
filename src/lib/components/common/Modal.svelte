@@ -100,7 +100,7 @@
 		on:mousedown={() => {
 			show = false;
 		}}
-		tabindex=-1
+		tabindex="-1"
 	>
 		<div
 			class="trans m-auto max-w-full {sizeToWidth(size)} {size !== 'full'

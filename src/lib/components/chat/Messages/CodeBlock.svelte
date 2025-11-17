@@ -439,7 +439,6 @@
 				</div>
 			{/if}
 		{:else}
-
 			<div
 				class="language-{lang} rounded-t-3xl {editorClassName
 					? editorClassName
@@ -447,7 +446,9 @@
 						? ''
 						: 'rounded-b-3xl'} overflow-hidden"
 			>
-				<div class="code-block-header bg-gray-900 dark:bg-gray-900 h-10 flex items-center justify-between px-4 rounded-t-3xl">
+				<div
+					class="code-block-header bg-gray-900 dark:bg-gray-900 h-10 flex items-center justify-between px-4 rounded-t-3xl"
+				>
 					<!-- 左侧：装饰圆点 -->
 					<div class="flex items-center gap-2">
 						<div class="flex items-center gap-2">
@@ -603,7 +604,14 @@
 												{#if file.type.startsWith('image')}
 													<img src={file.data} alt="Output" class=" w-full max-w-[36rem]" />
 												{:else if file.type.startsWith('video')}
-													<video src={file.data} alt="Output" class=" w-full max-w-[36rem]" controls autoplay muted></video>
+													<video
+														src={file.data}
+														alt="Output"
+														class=" w-full max-w-[36rem]"
+														controls
+														autoplay
+														muted
+													></video>
 												{/if}
 											{/each}
 										</div>

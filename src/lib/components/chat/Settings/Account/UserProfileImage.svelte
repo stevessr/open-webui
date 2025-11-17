@@ -157,8 +157,7 @@
 			type="button"
 			on:click={() => {
 				showUrlInput = true;
-			}}
-		>URL</button
+			}}>URL</button
 		>
 	</div>
 </div>

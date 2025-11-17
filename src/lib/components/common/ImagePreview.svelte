@@ -24,7 +24,11 @@
 
 	let isVideo = false;
 
-	$: isVideo = src && (['.mp4', '.webm', '.ogg', '.avi', '.mov', '.wmv', '.flv', '.m4v'].some(ext => src.toLowerCase().includes(ext)));
+	$: isVideo =
+		src &&
+		['.mp4', '.webm', '.ogg', '.avi', '.mov', '.wmv', '.flv', '.m4v'].some((ext) =>
+			src.toLowerCase().includes(ext)
+		);
 
 	$: if (sceneElement && !isVideo) {
 		instance = panzoom(sceneElement, {
