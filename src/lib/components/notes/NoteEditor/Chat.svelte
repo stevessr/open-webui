@@ -394,7 +394,7 @@ Based on the user's instruction, update and enhance the existing notes or select
 						onSubmit={submitHandler}
 						{onStop}
 					>
-						<div slot="menu" class="flex items-center justify-between gap-2 w-full pr-1">
+						<div slot="menu" class="trans flex items-center justify-between gap-2 w-full pr-1">
 							<div>
 								<Tooltip content={$i18n.t('Edit')} placement="top">
 									<button

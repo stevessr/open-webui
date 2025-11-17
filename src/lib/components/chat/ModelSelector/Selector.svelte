@@ -63,8 +63,11 @@
 	let show = false;
 	let tags = [];
 
-	let selectedModel = '';
-	$: selectedModel = items.find((item) => item.value === value) ?? '';
+	let selectedModel: {
+		label?: string;
+		[value: string]: any;
+	} | null = null;
+	$: selectedModel = items.find((item) => item.value === value) ?? null;
 
 	let searchValue = '';
 
@@ -393,6 +396,9 @@
 					)
 				);
 			}}
+			role="button"
+		>
+			aria-role="button"
 		>
 			{#if selectedModel}
 				{selectedModel.label}
@@ -404,7 +410,7 @@
 	</DropdownMenu.Trigger>
 
 	<DropdownMenu.Content
-		class=" z-40 {$mobile
+		class="trans z-40 {$mobile
 			? `w-full`
 			: `${className}`} max-w-[calc(100vw-1rem)] justify-start rounded-2xl  bg-white dark:bg-gray-850 dark:text-white shadow-lg  outline-hidden"
 		transition={flyAndScale}
