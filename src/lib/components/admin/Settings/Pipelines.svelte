@@ -20,6 +20,7 @@
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 
 	const i18n: Writable<i18nType> = getContext('i18n');
 
@@ -233,25 +234,22 @@
 				<div class="space-y-1">
 					<div class="flex gap-2">
 						<div class="flex-1">
-							<select
-								class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+							<Select
+								className="w-full rounded-lg text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 								bind:value={selectedPipelinesUrlIdx}
 								placeholder={$i18n.t('Select a pipeline url')}
 								on:change={async () => {
 									await tick();
 									await setPipelines();
 								}}
-							>
-								<option value="" selected disabled class="bg-gray-100 dark:bg-gray-700"
-									>{$i18n.t('Select a pipeline url')}</option
-								>
-
-								{#each PIPELINES_LIST as pipelines, idx}
-									<option value={pipelines.idx.toString()} class="bg-gray-100 dark:bg-gray-700"
-										>{pipelines.url}</option
-									>
-								{/each}
-							</select>
+								items={[
+									{ value: '', label: $i18n.t('Select a pipeline url'), disabled: true },
+									...PIPELINES_LIST.map(pipelines => ({
+										value: pipelines.idx.toString(),
+										label: pipelines.url
+									}))
+								]}
+							/>
 						</div>
 					</div>
 				</div>
@@ -431,25 +429,24 @@
 							{#if pipelines.length > 0}
 								<div class="flex gap-2">
 									<div class="flex-1">
-										<select
-											class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+										<Select
+											className="w-full rounded-lg text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 											bind:value={selectedPipelineIdx}
 											placeholder={$i18n.t('Select a pipeline')}
 											on:change={async () => {
 												await tick();
 												await getValves(selectedPipelineIdx);
 											}}
-										>
-											{#each pipelines as pipeline, idx}
-												<option value={idx} class="bg-gray-100 dark:bg-gray-700"
-													>{pipeline.name} ({pipeline.type ?? 'pipe'})</option
-												>
-											{/each}
-										</select>
+											items={pipelines.map((pipeline, idx) => ({
+												value: idx,
+												label: `${pipeline.name} (${pipeline.type ?? 'pipe'})`
+											}))}
+										/>
 									</div>
 
 									<button
 										class="px-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-gray-100 rounded-lg transition"
+										aria-label={$i18n.t('Delete pipeline')}
 										on:click={() => {
 											deletePipelineHandler();
 										}}
@@ -501,16 +498,14 @@
 													<div class="flex mt-0.5 mb-1.5 space-x-2">
 														<div class=" flex-1">
 															{#if valves_spec.properties[property]?.enum ?? null}
-																<select
-																	class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+																<Select
+																	className="w-full rounded-lg text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 																	bind:value={valves[property]}
-																>
-																	{#each valves_spec.properties[property].enum as option}
-																		<option value={option} selected={option === valves[property]}>
-																			{option}
-																		</option>
-																	{/each}
-																</select>
+																	items={valves_spec.properties[property].enum.map(option => ({
+																		value: option,
+																		label: option
+																	}))}
+																/>
 															{:else if (valves_spec.properties[property]?.type ?? null) === 'boolean'}
 																<div class="flex justify-between items-center">
 																	<div class="text-xs text-gray-500">

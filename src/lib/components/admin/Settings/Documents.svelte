@@ -27,6 +27,7 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
 	const i18n = getContext('i18n');
@@ -346,20 +347,21 @@
 							<div class="self-center text-xs font-medium">
 								{$i18n.t('Content Extraction Engine')}
 							</div>
-							<div class="">
-								<select
-									class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
+							<div class="w-fit">
+								<Select
+									className="text-xs w-fit"
 									bind:value={RAGConfig.CONTENT_EXTRACTION_ENGINE}
-								>
-									<option value="">{$i18n.t('Default')}</option>
-									<option value="external">{$i18n.t('External')}</option>
-									<option value="tika">{$i18n.t('Tika')}</option>
-									<option value="docling">{$i18n.t('Docling')}</option>
-									<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
-									<option value="document_intelligence">{$i18n.t('Document Intelligence')}</option>
-									<option value="mistral_ocr">{$i18n.t('Mistral OCR')}</option>
-									<option value="mineru">{$i18n.t('MinerU')}</option>
-								</select>
+									items={[
+										{ value: '', label: $i18n.t('Default') },
+										{ value: 'external', label: $i18n.t('External') },
+										{ value: 'tika', label: $i18n.t('Tika') },
+										{ value: 'docling', label: $i18n.t('Docling') },
+										{ value: 'datalab_marker', label: $i18n.t('Datalab Marker API') },
+										{ value: 'document_intelligence', label: $i18n.t('Document Intelligence') },
+										{ value: 'mistral_ocr', label: $i18n.t('Mistral OCR') },
+										{ value: 'mineru', label: $i18n.t('MinerU') }
+									]}
+								/>
 							</div>
 						</div>
 
@@ -534,15 +536,16 @@
 										{$i18n.t('Output Format')}
 									</Tooltip>
 								</div>
-								<div class="">
-									<select
-										class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
+								<div class="w-fit">
+									<Select
+										className="text-xs w-fit"
 										bind:value={RAGConfig.DATALAB_MARKER_OUTPUT_FORMAT}
-									>
-										<option value="markdown">{$i18n.t('Markdown')}</option>
-										<option value="json">{$i18n.t('JSON')}</option>
-										<option value="html">{$i18n.t('HTML')}</option>
-									</select>
+										items={[
+											{ value: 'markdown', label: $i18n.t('Markdown') },
+											{ value: 'json', label: $i18n.t('JSON') },
+											{ value: 'html', label: $i18n.t('HTML') }
+										]}
+									/>
 								</div>
 							</div>
 						{:else if RAGConfig.CONTENT_EXTRACTION_ENGINE === 'external'}
@@ -617,16 +620,17 @@
 										{$i18n.t('PDF Backend')}
 									</Tooltip>
 								</div>
-								<div class="">
-									<select
-										class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
+								<div class="w-fit">
+									<Select
+										className="text-xs w-fit"
 										bind:value={RAGConfig.DOCLING_PDF_BACKEND}
-									>
-										<option value="pypdfium2">{$i18n.t('pypdfium2')}</option>
-										<option value="dlparse_v1">{$i18n.t('dlparse_v1')}</option>
-										<option value="dlparse_v2">{$i18n.t('dlparse_v2')}</option>
-										<option value="dlparse_v4">{$i18n.t('dlparse_v4')}</option>
-									</select>
+										items={[
+											{ value: 'pypdfium2', label: $i18n.t('pypdfium2') },
+											{ value: 'dlparse_v1', label: $i18n.t('dlparse_v1') },
+											{ value: 'dlparse_v2', label: $i18n.t('dlparse_v2') },
+											{ value: 'dlparse_v4', label: $i18n.t('dlparse_v4') }
+										]}
+									/>
 								</div>
 							</div>
 							<div class="flex justify-between w-full mt-2">
@@ -635,14 +639,15 @@
 										{$i18n.t('Table Mode')}
 									</Tooltip>
 								</div>
-								<div class="">
-									<select
-										class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
+								<div class="w-fit">
+									<Select
+										className="text-xs w-fit"
 										bind:value={RAGConfig.DOCLING_TABLE_MODE}
-									>
-										<option value="fast">{$i18n.t('fast')}</option>
-										<option value="accurate">{$i18n.t('accurate')}</option>
-									</select>
+										items={[
+											{ value: 'fast', label: $i18n.t('fast') },
+											{ value: 'accurate', label: $i18n.t('accurate') }
+										]}
+									/>
 								</div>
 							</div>
 							<div class="flex justify-between w-full mt-2">
@@ -651,14 +656,15 @@
 										{$i18n.t('Pipeline')}
 									</Tooltip>
 								</div>
-								<div class="">
-									<select
-										class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
+								<div class="w-fit">
+									<Select
+										className="text-xs w-fit"
 										bind:value={RAGConfig.DOCLING_PIPELINE}
-									>
-										<option value="standard">{$i18n.t('standard')}</option>
-										<option value="vlm">{$i18n.t('vlm')}</option>
-									</select>
+										items={[
+											{ value: 'standard', label: $i18n.t('standard') },
+											{ value: 'vlm', label: $i18n.t('vlm') }
+										]}
+									/>
 								</div>
 							</div>
 							<div class="flex w-full mt-2">
@@ -874,14 +880,15 @@
 						<div class="  mb-2.5 flex w-full justify-between">
 							<div class=" self-center text-xs font-medium">{$i18n.t('Text Splitter')}</div>
 							<div class="flex items-center relative">
-								<select
-									class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
+								<Select
+									className="text-xs w-fit"
 									bind:value={RAGConfig.TEXT_SPLITTER}
-								>
-									<option value="">{$i18n.t('Default')} ({$i18n.t('Character')})</option>
-									<option value="token">{$i18n.t('Token')} ({$i18n.t('Tiktoken')})</option>
-									<option value="markdown_header">{$i18n.t('Markdown (Header)')}</option>
-								</select>
+									items={[
+										{ value: '', label: $i18n.t('Default') + ' (' + $i18n.t('Character') + ')' },
+										{ value: 'token', label: $i18n.t('Token') + ' (' + $i18n.t('Tiktoken') + ')' },
+										{ value: 'markdown_header', label: $i18n.t('Markdown (Header)') }
+									]}
+								/>
 							</div>
 						</div>
 
@@ -936,27 +943,27 @@
 									{$i18n.t('Embedding Model Engine')}
 								</div>
 								<div class="flex items-center relative">
-									<select
-										class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-right"
+									<Select
+										className="text-xs w-fit"
 										bind:value={embeddingEngine}
-										placeholder={$i18n.t('Select an embedding model engine')}
+										items={[
+											{ value: '', label: $i18n.t('Default (SentenceTransformers)') },
+											{ value: 'ollama', label: $i18n.t('Ollama') },
+											{ value: 'openai', label: $i18n.t('OpenAI') },
+											{ value: 'azure_openai', label: $i18n.t('Azure OpenAI') }
+										]}
 										on:change={(e) => {
-											if (e.target.value === 'ollama') {
+											if (e.detail.value === 'ollama') {
 												embeddingModel = '';
-											} else if (e.target.value === 'openai') {
+											} else if (e.detail.value === 'openai') {
 												embeddingModel = 'text-embedding-3-small';
-											} else if (e.target.value === 'azure_openai') {
+											} else if (e.detail.value === 'azure_openai') {
 												embeddingModel = 'text-embedding-3-small';
-											} else if (e.target.value === '') {
+											} else if (e.detail.value === '') {
 												embeddingModel = 'sentence-transformers/all-MiniLM-L6-v2';
 											}
 										}}
-									>
-										<option value="">{$i18n.t('Default (SentenceTransformers)')}</option>
-										<option value="ollama">{$i18n.t('Ollama')}</option>
-										<option value="openai">{$i18n.t('OpenAI')}</option>
-										<option value="azure_openai">{$i18n.t('Azure OpenAI')}</option>
-									</select>
+									/>
 								</div>
 							</div>
 
@@ -1137,21 +1144,21 @@
 											{$i18n.t('Reranking Engine')}
 										</div>
 										<div class="flex items-center relative">
-											<select
-												class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-right"
+											<Select
+												className="text-xs w-fit"
 												bind:value={RAGConfig.RAG_RERANKING_ENGINE}
-												placeholder={$i18n.t('Select a reranking model engine')}
+												items={[
+													{ value: '', label: $i18n.t('Default (SentenceTransformers)') },
+													{ value: 'external', label: $i18n.t('External') }
+												]}
 												on:change={(e) => {
-													if (e.target.value === 'external') {
+													if (e.detail.value === 'external') {
 														RAGConfig.RAG_RERANKING_MODEL = '';
-													} else if (e.target.value === '') {
+													} else if (e.detail.value === '') {
 														RAGConfig.RAG_RERANKING_MODEL = 'BAAI/bge-reranker-v2-m3';
 													}
 												}}
-											>
-												<option value="">{$i18n.t('Default (SentenceTransformers)')}</option>
-												<option value="external">{$i18n.t('External')}</option>
-											</select>
+											/>
 										</div>
 									</div>
 

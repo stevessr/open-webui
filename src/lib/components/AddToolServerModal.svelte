@@ -490,14 +490,15 @@
 
 									<div class="flex gap-2">
 										<div class="flex-shrink-0 self-start">
-											<select
+											<Select
 												id="select-bearer-or-session"
-												class={`w-full text-sm bg-transparent pr-5 ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
+												className={`w-full text-sm bg-transparent ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
 												bind:value={spec_type}
-											>
-												<option value="url">{$i18n.t('URL')}</option>
-												<option value="json">{$i18n.t('JSON')}</option>
-											</select>
+												items={[
+													{ value: 'url', label: $i18n.t('URL') },
+													{ value: 'json', label: $i18n.t('JSON') }
+												]}
+											/>
 										</div>
 
 										<div class="flex flex-1 items-center">
@@ -600,23 +601,20 @@
 
 								<div class="flex gap-2">
 									<div class="flex-shrink-0 self-start">
-										<select
+										<Select
 											id="select-bearer-or-session"
-											class={`w-full text-sm bg-transparent pr-5 ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
+											className={`w-full text-sm bg-transparent ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
 											bind:value={auth_type}
-										>
-											<option value="none">{$i18n.t('None')}</option>
-
-											<option value="bearer">{$i18n.t('Bearer')}</option>
-											<option value="session">{$i18n.t('Session')}</option>
-
-											{#if !direct}
-												<option value="system_oauth">{$i18n.t('OAuth')}</option>
-												{#if type === 'mcp'}
-													<option value="oauth_2.1">{$i18n.t('OAuth 2.1')}</option>
-												{/if}
-											{/if}
-										</select>
+											items={[
+												{ value: 'none', label: $i18n.t('None') },
+												{ value: 'bearer', label: $i18n.t('Bearer') },
+												{ value: 'session', label: $i18n.t('Session') },
+												...(!direct ? [
+													{ value: 'system_oauth', label: $i18n.t('OAuth') },
+													...(type === 'mcp' ? [{ value: 'oauth_2.1', label: $i18n.t('OAuth 2.1') }] : [])
+												] : [])
+											]}
+										/>
 									</div>
 
 									<div class="flex flex-1 items-center">
