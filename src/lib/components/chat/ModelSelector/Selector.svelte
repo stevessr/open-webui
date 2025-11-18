@@ -404,7 +404,7 @@
 	</DropdownMenu.Trigger>
 
 	<DropdownMenu.Content
-		class="trans z-40 {$mobile
+		class="transv2 z-40 {$mobile
 			? `w-full`
 			: `${className}`} max-w-[calc(100vw-1rem)] justify-start rounded-2xl  bg-white dark:bg-gray-850 dark:text-white shadow-lg  outline-hidden"
 		side={$mobile ? 'bottom' : 'bottom-start'}

@@ -69,10 +69,15 @@ class Pipe:
         include_thoughts: bool = Field(
             default=True, description="是否返回 Gemini 的思考摘要"
         )
-        # 伪流式打字延迟
-        pseudo_stream_delay: float = Field(
+        # 输出延迟配置
+        output_delay: float = Field(
             default=0.01,
-            description="每个字符之间的延迟（秒），用于模拟打字效果。设置为 0 以禁用。",
+            description="输出延迟时间（秒）。在字符模式下为每个字符间的延迟，在块模式下为每个块间的延迟。设置为 0 以禁用。",
+        )
+        # 块状输出配置
+        block_size: int = Field(
+            default=10,
+            description="每个输出块的字符数。当大于 1 时分块输出，为 1 时逐字符输出，小于 0 时按空格分块输出。",
         )
         # temperature 和 top_P 配置
         temperature: float = Field(default=0.7, description="控制生成文本的随机性。")
@@ -112,6 +117,15 @@ class Pipe:
 
     def pipes(self) -> List[dict]:
         return self.get_models()
+
+    def split_html_tags(self, text: str) -> List[str]:
+        """
+        将文本分割为 HTML 标签和普通文本块的列表
+        例如："Hello <b>world</b>!" -> ["Hello ", "<b>", "world", "</b>", "!"]
+        """
+        import re
+        pattern = r'(<[^>]+>)'
+        return re.split(pattern, text)
 
     async def process_stream(
         self, response: httpx.Response
@@ -437,10 +451,51 @@ class Pipe:
                     continue
 
                 full_response += chunk
-                for char in chunk:
-                    yield char
-                    if self.valves.pseudo_stream_delay > 0:
-                        await asyncio.sleep(self.valves.pseudo_stream_delay)
+
+                # 根据配置选择输出方式：块状输出、字符输出或空格分块输出
+                if self.valves.block_size > 1:
+                    # 块状输出模式 - 先分离 HTML 标签
+                    for chunk_part in self.split_html_tags(chunk):
+                        if chunk_part.startswith('<') and chunk_part.endswith('>'):
+                            # HTML 标签直接输出，不分块
+                            yield chunk_part
+                        else:
+                            # 普通文本分块输出
+                            for i in range(0, len(chunk_part), self.valves.block_size):
+                                block = chunk_part[i:i + self.valves.block_size]
+                                if block:  # 避免输出空块
+                                    yield block
+                                    if self.valves.output_delay > 0:
+                                        await asyncio.sleep(self.valves.output_delay)
+                elif self.valves.block_size < 0:
+                    # 按空格分块输出模式 - 先分离 HTML 标签
+                    for chunk_part in self.split_html_tags(chunk):
+                        if chunk_part.startswith('<') and chunk_part.endswith('>'):
+                            # HTML 标签直接输出，不分块
+                            yield chunk_part
+                        else:
+                            # 普通文本按空格分块输出
+                            words = chunk_part.split()
+                            for word in words:
+                                if word:  # 避免输出空词
+                                    yield word + ' '  # 在每个词后添加空格
+                                    if self.valves.output_delay > 0:
+                                        await asyncio.sleep(self.valves.output_delay)
+                else:
+                    # 原有的字符输出模式
+                    skip = False
+                    for char in chunk:
+                        yield char
+
+                        if char == '<':
+                            skip = True
+                        elif char == '>':
+                            skip = False
+
+                        if skip:
+                            continue
+                        if self.valves.output_delay > 0:
+                            await asyncio.sleep(self.valves.output_delay)
 
             if not full_response and not stream_had_error:
                 logger.warning(f"[{request_id}] 响应流结束但未收到任何文本内容。")
