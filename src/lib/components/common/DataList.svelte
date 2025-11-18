@@ -100,13 +100,13 @@
 			id="data-list-dropdown"
 			role="listbox"
 			tabindex="-1"
-			on:click|stopPropagation
 		>
 			{#if filteredOptions.length > 0}
 				<div class="py-1">
 					{#each filteredOptions as option, index}
-						<div
-							class="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm"
+						<button
+							type="button"
+							class="w-full px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm text-left"
 							on:click={() => handleSelect(option.value)}
 							on:keydown={(event) => {
 								if (event.key === 'Enter' || event.key === ' ') {
@@ -116,9 +116,10 @@
 							}}
 							role="option"
 							tabindex="0"
+							aria-selected={value === option.value}
 						>
 							{option.label || option.value}
-						</div>
+						</button>
 					{/each}
 				</div>
 			{:else}
