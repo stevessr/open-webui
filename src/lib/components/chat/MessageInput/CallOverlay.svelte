@@ -13,6 +13,7 @@
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import VideoInputMenu from './CallOverlay/VideoInputMenu.svelte';
+	import VideoImage from '$lib/components/common/VideoImage.svelte';
 	import { KokoroWorker } from '$lib/workers/KokoroWorker';
 
 	const i18n = getContext('i18n');
@@ -765,23 +766,13 @@
 							? ' bg-cover bg-center bg-no-repeat'
 							: 'bg-black dark:bg-white'}  bg-black dark:bg-white"
 					>
-						{#if (model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png' && isVideoUrl(model?.info?.meta?.profile_image_url)}
-							<video
-								src={model?.info?.meta?.profile_image_url}
-								autoplay
-								muted
-								loop
-								class="rounded-full w-full h-full object-cover"
-							/>
-						{:else}
-							<div
-								style={(model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !==
-								'/static/favicon.png'
-									? `background-image: url('${model?.info?.meta?.profile_image_url}');`
-									: ''}
-								class="rounded-full w-full h-full"
-							/>
-						{/if}
+						<VideoImage
+							src={model?.info?.meta?.profile_image_url ?? '/static/favicon.png'}
+							className="rounded-full w-full h-full object-cover"
+							{autoplay}
+							{muted}
+							{loop}
+						/>
 					</div>
 				{/if}
 				<!-- navbar -->
@@ -861,23 +852,13 @@
 								? ' bg-cover bg-center bg-no-repeat'
 								: 'bg-black dark:bg-white'} "
 						>
-							{#if (model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png' && isVideoUrl(model?.info?.meta?.profile_image_url)}
-								<video
-									src={model?.info?.meta?.profile_image_url}
-									autoplay
-									muted
-									loop
-									class="rounded-full w-full h-full object-cover"
-								/>
-							{:else}
-								<div
-									style={(model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !==
-									'/static/favicon.png'
-										? `background-image: url('${model?.info?.meta?.profile_image_url}');`
-										: ''}
-									class="rounded-full w-full h-full"
-								/>
-							{/if}
+							<VideoImage
+								src={model?.info?.meta?.profile_image_url ?? '/static/favicon.png'}
+								className="rounded-full w-full h-full object-cover"
+								{autoplay}
+								{muted}
+								{loop}
+							/>
 						</div>
 					{/if}
 				</button>
