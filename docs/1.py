@@ -126,6 +126,7 @@ class Pipe:
         stream_iterator = response.aiter_lines()
         content_yielded = False
         thinking_started = False
+        is_inside_thought_block = False
 
         try:
             while True:
@@ -164,20 +165,42 @@ class Pipe:
                                         is_thought_part = part.get("thought") is True
                                         text_content = part.get("text", "")
 
-                                        if not text_content.strip():
-                                            continue
-
                                         if is_thought_part:
                                             thinking_started = True
+                                            
+                                            if not is_inside_thought_block:
+                                                is_inside_thought_block = True
+                                                if self.emitter:
+                                                    await self.emitter({
+                                                        "type": "message",
+                                                        "data": {"content": "<think>\n"}
+                                                    })
+                                            
                                             thought_text = text_content.strip()
-                                            await self.emit_status(
-                                                thought_text,
-                                                done=False,
-                                                action="思考",
-                                            )
+                                            quoted_lines = [
+                                                f"> {line}"
+                                                for line in thought_text.splitlines()
+                                            ]
+                                            quoted_thought = "\n".join(quoted_lines)
+
+                                            if quoted_thought and self.emitter:
+                                                for char in quoted_thought:
+                                                    await self.emitter({
+                                                        "type": "message",
+                                                        "data": {"content": char}
+                                                    })
                                         else:
-                                            yield text_content
-                                            content_yielded = True
+                                            if is_inside_thought_block:
+                                                is_inside_thought_block = False
+                                                if self.emitter:
+                                                    await self.emitter({
+                                                        "type": "message",
+                                                        "data": {"content": "\n</think>"}
+                                                    })
+                                            
+                                            if text_content:
+                                                yield text_content
+                                                content_yielded = True
 
                         if usage_metadata := chunk.get("usageMetadata"):
                             usage_parts = []
@@ -229,7 +252,6 @@ class Pipe:
                             )
                             logger.info(usage_msg)
                             await self.emit_status(usage_msg, done=False)
-                        # --- 核心修改结束 ---
 
                         if finish_reason := chunk.get("candidates", [{}])[0].get(
                             "finishReason"
@@ -261,6 +283,9 @@ class Pipe:
                     return
 
         finally:
+            if is_inside_thought_block:
+                if self.emitter:
+                    await self.emitter({"type": "message", "data": {"content": "</think>"}})
             if thinking_started:
                 await self.emit_status("思考完成", done=True, action="思考")
             if not finish_reason_received:
