@@ -98,35 +98,48 @@ jobs:
         run: |
           cd build
 
-          # Initialize git repo if not exists
+          # Initialize git repo
           git init
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
+          git config --global init.defaultBranch main
 
-          # Configure sparse checkout for the owu branch
+          # Add remote
           git remote add origin "https://${{ env.PERSONAL_ACCESS_TOKEN }}@github.com/stevessr/owu.git"
-          git sparse-checkout init --cone
-          git sparse-checkout set static
 
-          # Fetch the existing owu branch to get history
-          git fetch origin owu --depth=2
+          # Fetch the existing owu branch to get static assets
+          echo "Fetching existing owu branch..."
+          git fetch origin owu --depth=3
 
-          # Create a new commit with static + new build
+          # Create a new branch for deployment
           git checkout -b deploy-${{ github.sha }}
 
-          # If static directory exists from previous build, preserve it
-          if [ -d "static" ]; then
-            echo "Static directory exists, preserving..."
+          # If owu branch exists, copy static assets from it
+          if git ls-tree --name-only origin/owu | grep -q "static"; then
+            echo "Found static directory in previous deployment, preserving..."
+            # Create static directory and restore from previous commit
+            mkdir -p static
+            git sparse-checkout init --cone
+            git sparse-checkout set static
+            git read-tree origin/owu
+            git checkout-index -a --prefix=/
+            # Disable sparse checkout to allow new files
+            git sparse-checkout disable
           else
-            echo "Static directory not found, this might be the first deployment"
+            echo "No previous static directory found, this might be the first deployment"
           fi
 
-          # Add all files including existing static and new build
-          git add .
+          # Add all files (existing static + new build)
+          git add -A
+          git status
+
+          # Commit with descriptive message
           git commit -m "Deploy owu site - static + build ${{ github.sha }}
 
           Static assets preserved from previous deployments
-          New build from commit ${{ github.sha }}"
+          New build from: ${{ github.repository }}@${{ github.sha }}
 
-          # Force push to owu branch, preserving static assets from previous commit
+          Deployment timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+
+          # Force push to owu branch
           git push --force origin deploy-${{ github.sha }}:owu
