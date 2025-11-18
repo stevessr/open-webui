@@ -19,6 +19,7 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import CodeEditorModal from '$lib/components/common/CodeEditorModal.svelte';
+	import DataList from '$lib/components/common/DataList.svelte';
 	const dispatch = createEventDispatcher();
 
 	const i18n = getContext('i18n');
@@ -27,6 +28,8 @@
 
 	let models = null;
 	let config = null;
+
+	$: modelOptions = models ? models.map(model => ({ value: model.id, label: model.name })) : [];
 
 	let showComfyUIWorkflowEditor = false;
 	let REQUIRED_WORKFLOW_NODES = [
@@ -321,19 +324,13 @@
 								</div>
 
 								<Tooltip content={$i18n.t('Enter Model ID')} placement="top-start">
-									<input
-										list="model-list"
-										class=" text-right text-sm bg-transparent outline-hidden max-w-full w-52"
+									<DataList
 										bind:value={config.IMAGE_GENERATION_MODEL}
+										options={modelOptions}
 										placeholder={$i18n.t('Select a model')}
-										required
+										ariaLabel={$i18n.t('Enter Model ID')}
+										className="text-right text-sm bg-transparent outline-hidden max-w-full w-52"
 									/>
-
-									<datalist id="model-list">
-										{#each models ?? [] as model}
-											<option value={model.id}>{model.name}</option>
-										{/each}
-									</datalist>
 								</Tooltip>
 							</div>
 						</div>
@@ -906,18 +903,13 @@
 								</div>
 
 								<Tooltip content={$i18n.t('Enter Model ID')} placement="top-start">
-									<input
-										list="model-list"
-										class="text-right text-sm bg-transparent outline-hidden max-w-full w-52"
+									<DataList
 										bind:value={config.IMAGE_EDIT_MODEL}
+										options={modelOptions}
 										placeholder={$i18n.t('Select a model')}
+										ariaLabel={$i18n.t('Enter Model ID')}
+										className="text-right text-sm bg-transparent outline-hidden max-w-full w-52"
 									/>
-
-									<datalist id="model-list">
-										{#each models ?? [] as model}
-											<option value={model.id}>{model.name}</option>
-										{/each}
-									</datalist>
 								</Tooltip>
 							</div>
 						</div>
