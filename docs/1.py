@@ -80,26 +80,25 @@ class Pipe:
 
     def __init__(self):
         self.type = "manifold"
-        self.name = "Gemini: Manifold"
+        self.name = ""
         self.valves = self.Valves()
         self.emitter: Optional[Callable[[dict], Awaitable[None]]] = None
         logger.info(f"管道 '{self.name}' 已初始化。")
 
-    async def emit_status(
-        self, message: str, done: bool = False, action: Optional[str] = None
-    ):
+    async def emit_status(self, message: str, done: bool = False):
         if self.emitter:
-            data_payload = {
-                "description": str(message)[:500],
-                "done": done,
-            }
-            if action:
-                data_payload["action"] = action
-
-            status_payload = {
-                "type": "status",
-                "data": data_payload,
-            }
+            if message.strip().startswith("<thinking>") and message.strip().endswith(
+                "</thinking>"
+            ):
+                status_payload = {
+                    "type": "status",
+                    "data": {"description": message, "done": done},
+                }
+            else:
+                status_payload = {
+                    "type": "status",
+                    "data": {"description": str(message)[:500], "done": done},
+                }
             logger.debug(f"发送状态更新：{status_payload}")
             await self.emitter(status_payload)
 
@@ -125,8 +124,6 @@ class Pipe:
         finish_reason_received = False
         stream_iterator = response.aiter_lines()
         content_yielded = False
-        thinking_started = False
-        is_inside_thought_block = False
 
         try:
             while True:
@@ -165,43 +162,26 @@ class Pipe:
                                         is_thought_part = part.get("thought") is True
                                         text_content = part.get("text", "")
 
+                                        if not text_content.strip():
+                                            continue
+
                                         if is_thought_part:
-                                            thinking_started = True
-                                            
-                                            if not is_inside_thought_block:
-                                                is_inside_thought_block = True
-                                                if self.emitter:
-                                                    await self.emitter({
-                                                        "type": "message",
-                                                        "data": {"content": "<think>\n"}
-                                                    })
-                                            
                                             thought_text = text_content.strip()
                                             quoted_lines = [
                                                 f"> {line}"
                                                 for line in thought_text.splitlines()
                                             ]
                                             quoted_thought = "\n".join(quoted_lines)
-
-                                            if quoted_thought and self.emitter:
-                                                for char in quoted_thought:
-                                                    await self.emitter({
-                                                        "type": "message",
-                                                        "data": {"content": char}
-                                                    })
+                                            thought_msg = (
+                                                f"<think>{quoted_thought}</think>"
+                                            )
+                                            yield thought_msg
+                                            content_yielded = True
                                         else:
-                                            if is_inside_thought_block:
-                                                is_inside_thought_block = False
-                                                if self.emitter:
-                                                    await self.emitter({
-                                                        "type": "message",
-                                                        "data": {"content": "\n</think>"}
-                                                    })
-                                            
-                                            if text_content:
-                                                yield text_content
-                                                content_yielded = True
+                                            yield text_content
+                                            content_yielded = True
 
+                        # --- 核心修改开始：分离思考/工具和其他部分的 Token 计算 ---
                         if usage_metadata := chunk.get("usageMetadata"):
                             usage_parts = []
                             prompt_tokens = usage_metadata.get("promptTokenCount", 0)
@@ -252,6 +232,7 @@ class Pipe:
                             )
                             logger.info(usage_msg)
                             await self.emit_status(usage_msg, done=False)
+                        # --- 核心修改结束 ---
 
                         if finish_reason := chunk.get("candidates", [{}])[0].get(
                             "finishReason"
@@ -283,11 +264,6 @@ class Pipe:
                     return
 
         finally:
-            if is_inside_thought_block:
-                if self.emitter:
-                    await self.emitter({"type": "message", "data": {"content": "</think>"}})
-            if thinking_started:
-                await self.emit_status("思考完成", done=True, action="思考")
             if not finish_reason_received:
                 warning_msg = "警告：API 响应流已结束，但未收到明确的完成信号（finishReason）。这可能表示流被意外中断或未完全发送。"
                 logger.warning(warning_msg)
@@ -348,11 +324,7 @@ class Pipe:
                 "Added a dummy 'user' turn to continue the conversation after a 'model' turn."
             )
 
-        gemini_tools = [
-            {"googleSearch": {}},
-            {"code_execution": {}},
-            {"url_context": {}},
-        ]
+        gemini_tools = [{"googleSearch": {}}, {"code_execution": {}},{"url_context":{}}]
 
         data = {
             "contents": gemini_contents,
