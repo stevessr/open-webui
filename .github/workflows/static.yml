@@ -97,10 +97,36 @@ jobs:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           cd build
+
+          # Initialize git repo if not exists
           git init
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git add .
-          git commit -m "Deploy owu site (build ${{ github.sha }})"
+
+          # Configure sparse checkout for the owu branch
           git remote add origin "https://${{ env.PERSONAL_ACCESS_TOKEN }}@github.com/stevessr/owu.git"
-          git push --force --quiet origin HEAD:owu
+          git sparse-checkout init --cone
+          git sparse-checkout set static
+
+          # Fetch the existing owu branch to get history
+          git fetch origin owu --depth=2
+
+          # Create a new commit with static + new build
+          git checkout -b deploy-${{ github.sha }}
+
+          # If static directory exists from previous build, preserve it
+          if [ -d "static" ]; then
+            echo "Static directory exists, preserving..."
+          else
+            echo "Static directory not found, this might be the first deployment"
+          fi
+
+          # Add all files including existing static and new build
+          git add .
+          git commit -m "Deploy owu site - static + build ${{ github.sha }}
+
+          Static assets preserved from previous deployments
+          New build from commit ${{ github.sha }}"
+
+          # Force push to owu branch, preserving static assets from previous commit
+          git push --force origin deploy-${{ github.sha }}:owu
