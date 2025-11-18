@@ -9,11 +9,14 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Select from '$lib/components/common/Select.svelte';
+	import DataList from '$lib/components/common/DataList.svelte';
 	const dispatch = createEventDispatcher();
 
 	const i18n = getContext('i18n');
 
 	export let saveSettings: Function;
+
+	$: voiceOptions = voices ? voices.map(voice => ({ value: voice.id, label: voice.name })) : [];
 
 	// Audio
 	let conversationMode = false;
@@ -318,18 +321,13 @@
 					<div class=" mb-2.5 text-sm font-medium">{$i18n.t('Set Voice')}</div>
 					<div class="flex w-full">
 						<div class="flex-1">
-							<input
-								list="voice-list"
-								class="w-full text-sm bg-transparent dark:text-gray-300 outline-hidden"
+							<DataList
 								bind:value={voice}
+								options={voiceOptions}
 								placeholder={$i18n.t('Select a voice')}
+								ariaLabel={$i18n.t('Voice')}
+								className="w-full text-sm bg-transparent dark:text-gray-300 outline-hidden"
 							/>
-
-							<datalist id="voice-list">
-								{#each voices as voice}
-									<option value={voice.id}>{voice.name}</option>
-								{/each}
-							</datalist>
 						</div>
 					</div>
 				</div>
@@ -386,18 +384,13 @@
 				<div class=" mb-2.5 text-sm font-medium">{$i18n.t('Set Voice')}</div>
 				<div class="flex w-full">
 					<div class="flex-1">
-						<input
-							list="voice-list"
-							class="w-full text-sm bg-transparent dark:text-gray-300 outline-hidden"
+						<DataList
 							bind:value={voice}
+							options={voiceOptions}
 							placeholder={$i18n.t('Select a voice')}
+							ariaLabel={$i18n.t('Voice')}
+							className="w-full text-sm bg-transparent dark:text-gray-300 outline-hidden"
 						/>
-
-						<datalist id="voice-list">
-							{#each voices as voice}
-								<option value={voice.id}>{voice.name}</option>
-							{/each}
-						</datalist>
 					</div>
 				</div>
 			</div>

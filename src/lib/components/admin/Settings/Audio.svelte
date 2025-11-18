@@ -15,6 +15,7 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 	import Select from '$lib/components/common/Select.svelte';
+	import DataList from '$lib/components/common/DataList.svelte';
 
 	import { TTS_RESPONSE_SPLIT } from '$lib/types';
 
@@ -25,6 +26,9 @@
 	const i18n = getContext<Writable<i18nType>>('i18n');
 
 	export let saveHandler: () => void;
+
+	$: modelOptions = models ? models.map(model => ({ value: model.id, label: model.name })) : [];
+	$: voiceOptions = voices ? voices.map(voice => ({ value: voice.id, label: voice.name })) : [];
 
 	// Audio
 	let TTS_OPENAI_API_BASE_URL = '';
@@ -271,16 +275,13 @@
 						<div class=" mb-1.5 text-xs font-medium">{$i18n.t('STT Model')}</div>
 						<div class="flex w-full">
 							<div class="flex-1">
-								<input
-									list="model-list"
-									class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+								<DataList
 									bind:value={STT_MODEL}
+									options={[{ value: 'whisper-1', label: 'whisper-1' }]}
 									placeholder={$i18n.t('Select a model')}
+									ariaLabel={$i18n.t('STT Model')}
+									className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 								/>
-
-								<datalist id="model-list">
-									<option value="whisper-1" />
-								</datalist>
 							</div>
 						</div>
 					</div>
@@ -623,16 +624,13 @@
 							<div class=" mb-1.5 text-xs font-medium">{$i18n.t('TTS Model')}</div>
 							<div class="flex w-full">
 								<div class="flex-1">
-									<input
-										list="model-list"
-										class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+									<DataList
 										bind:value={TTS_MODEL}
+										options={[{ value: 'tts-1', label: 'tts-1' }]}
 										placeholder={$i18n.t('CMU ARCTIC speaker embedding name')}
+										ariaLabel={$i18n.t('TTS Model')}
+										className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 									/>
-
-									<datalist id="model-list">
-										<option value="tts-1" />
-									</datalist>
 								</div>
 							</div>
 							<div class="mt-2 mb-1 text-xs text-gray-400 dark:text-gray-500">
@@ -665,18 +663,13 @@
 								<div class=" mb-1.5 text-xs font-medium">{$i18n.t('TTS Voice')}</div>
 								<div class="flex w-full">
 									<div class="flex-1">
-										<input
-											list="voice-list"
-											class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+										<DataList
 											bind:value={TTS_VOICE}
+											options={voiceOptions}
 											placeholder={$i18n.t('Select a voice')}
+											ariaLabel={$i18n.t('TTS Voice')}
+											className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 										/>
-
-										<datalist id="voice-list">
-											{#each voices as voice}
-												<option value={voice.id}>{voice.name}</option>
-											{/each}
-										</datalist>
 									</div>
 								</div>
 							</div>
@@ -684,18 +677,13 @@
 								<div class=" mb-1.5 text-xs font-medium">{$i18n.t('TTS Model')}</div>
 								<div class="flex w-full">
 									<div class="flex-1">
-										<input
-											list="tts-model-list"
-											class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
-											bind:value={TTS_MODEL}
-											placeholder={$i18n.t('Select a model')}
-										/>
-
-										<datalist id="tts-model-list">
-											{#each models as model}
-												<option value={model.id} class="bg-gray-50 dark:bg-gray-700" />
-											{/each}
-										</datalist>
+										<DataList
+										bind:value={TTS_MODEL}
+										options={modelOptions}
+										placeholder={$i18n.t('Select a model')}
+										ariaLabel={$i18n.t('TTS Model')}
+										className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+									/>
 									</div>
 								</div>
 							</div>
@@ -722,18 +710,13 @@
 								<div class=" mb-1.5 text-xs font-medium">{$i18n.t('TTS Voice')}</div>
 								<div class="flex w-full">
 									<div class="flex-1">
-										<input
-											list="voice-list"
-											class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+										<DataList
 											bind:value={TTS_VOICE}
+											options={voiceOptions}
 											placeholder={$i18n.t('Select a voice')}
+											ariaLabel={$i18n.t('TTS Voice')}
+											className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 										/>
-
-										<datalist id="voice-list">
-											{#each voices as voice}
-												<option value={voice.id}>{voice.name}</option>
-											{/each}
-										</datalist>
 									</div>
 								</div>
 							</div>
@@ -741,18 +724,13 @@
 								<div class=" mb-1.5 text-xs font-medium">{$i18n.t('TTS Model')}</div>
 								<div class="flex w-full">
 									<div class="flex-1">
-										<input
-											list="tts-model-list"
-											class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
-											bind:value={TTS_MODEL}
-											placeholder={$i18n.t('Select a model')}
-										/>
-
-										<datalist id="tts-model-list">
-											{#each models as model}
-												<option value={model.id} class="bg-gray-50 dark:bg-gray-700" />
-											{/each}
-										</datalist>
+										<DataList
+										bind:value={TTS_MODEL}
+										options={modelOptions}
+										placeholder={$i18n.t('Select a model')}
+										ariaLabel={$i18n.t('TTS Model')}
+										className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+									/>
 									</div>
 								</div>
 							</div>
@@ -763,18 +741,13 @@
 								<div class=" mb-1.5 text-xs font-medium">{$i18n.t('TTS Voice')}</div>
 								<div class="flex w-full">
 									<div class="flex-1">
-										<input
-											list="voice-list"
-											class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+										<DataList
 											bind:value={TTS_VOICE}
+											options={voiceOptions}
 											placeholder={$i18n.t('Select a voice')}
+											ariaLabel={$i18n.t('TTS Voice')}
+											className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 										/>
-
-										<datalist id="voice-list">
-											{#each voices as voice}
-												<option value={voice.id}>{voice.name}</option>
-											{/each}
-										</datalist>
 									</div>
 								</div>
 							</div>

@@ -8,10 +8,19 @@
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Select from '$lib/components/common/Select.svelte';
+	import DataList from '$lib/components/common/DataList.svelte';
 
 	const i18n = getContext('i18n');
 
 	export let saveHandler: Function;
+
+	let perplexityModelOptions = [
+		{ value: 'sonar', label: $i18n.t('Sonar') },
+		{ value: 'sonar-pro', label: $i18n.t('Sonar Pro') },
+		{ value: 'sonar-reasoning', label: $i18n.t('Sonar Reasoning') },
+		{ value: 'sonar-reasoning-pro', label: $i18n.t('Sonar Reasoning Pro') },
+		{ value: 'sonar-deep-research', label: $i18n.t('Sonar Deep Research') }
+	];
 
 	let webSearchEngines = [
 		'ollama_cloud',
@@ -502,19 +511,13 @@
 									<div class="self-center text-xs font-medium mb-1">
 										{$i18n.t('Perplexity Model')}
 									</div>
-									<input
-										list="perplexity-model-list"
-										class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+									<DataList
 										bind:value={webConfig.PERPLEXITY_MODEL}
+										options={perplexityModelOptions}
+										placeholder={$i18n.t('Select a model')}
+										ariaLabel={$i18n.t('Perplexity Model')}
+										className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 									/>
-
-									<datalist id="perplexity-model-list">
-										<option value="sonar">{$i18n.t('Sonar')}</option>
-										<option value="sonar-pro">{$i18n.t('Sonar Pro')}</option>
-										<option value="sonar-reasoning">{$i18n.t('Sonar Reasoning')}</option>
-										<option value="sonar-reasoning-pro">{$i18n.t('Sonar Reasoning Pro')}</option>
-										<option value="sonar-deep-research">{$i18n.t('Sonar Deep Research')}</option>
-									</datalist>
 								</div>
 							</div>
 

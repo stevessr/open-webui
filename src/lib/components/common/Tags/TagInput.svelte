@@ -2,6 +2,7 @@
 	import { createEventDispatcher, getContext } from 'svelte';
 	import { tags } from '$lib/stores';
 	import { toast } from 'svelte-sonner';
+	import DataList from '$lib/components/common/DataList.svelte';
 	const dispatch = createEventDispatcher();
 
 	const i18n = getContext('i18n');
@@ -9,6 +10,8 @@
 	export let label = '';
 	let showTagInput = false;
 	let tagName = '';
+
+	const tagOptions = $tags.map(tag => ({ value: tag.name, label: tag.name }));
 
 	const addTagHandler = async () => {
 		tagName = tagName.trim();
@@ -20,28 +23,28 @@
 			toast.error($i18n.t(`Invalid Tag`));
 		}
 	};
+
+	const handleTagSelect = (selectedTag: string) => {
+		tagName = selectedTag;
+	};
 </script>
 
 <div class="px-0.5 flex {showTagInput ? 'flex-row-reverse' : ''}">
 	{#if showTagInput}
 		<div class="flex items-center">
-			<input
+			<DataList
 				bind:value={tagName}
-				class=" px-2 cursor-pointer self-center text-xs h-fit bg-transparent outline-hidden line-clamp-1 w-[6.5rem]"
+				options={tagOptions}
 				placeholder={$i18n.t('Add a tag')}
-				aria-label={$i18n.t('Add a tag')}
-				list="tagOptions"
-				on:keydown={(event) => {
+				ariaLabel={$i18n.t('Add a tag')}
+				onSelect={handleTagSelect}
+				onKeydown={(event) => {
 					if (event.key === 'Enter') {
 						addTagHandler();
 					}
 				}}
+				className="transv2 px-2 cursor-pointer self-center text-xs h-fit bg-transparent outline-hidden line-clamp-1 w-[6.5rem]"
 			/>
-			<datalist id="tagOptions">
-				{#each $tags as tag}
-					<option value={tag.name} />
-				{/each}
-			</datalist>
 
 			<button type="button" aria-label={$i18n.t('Save Tag')} on:click={addTagHandler}>
 				<svg
