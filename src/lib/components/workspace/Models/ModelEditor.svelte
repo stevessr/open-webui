@@ -582,8 +582,14 @@
 						{/if}
 					</div>
 
-					<div class=" mt-2 my-1">
-						<div class="">
+					<div class="my-2">
+						<div class="mb-1 flex w-full justify-between items-center">
+							<div class="self-center text-sm font-semibold">{$i18n.t('Tags')}</div>
+							<div class="text-xs text-gray-500">
+								{$i18n.t('Press Enter to add')}
+							</div>
+						</div>
+						<div class="trans p-3 bg-gray-50 dark:bg-gray-950 rounded-xl border border-gray-100 dark:border-gray-850">
 							<Tags
 								tags={info?.meta?.tags ?? []}
 								on:delete={(e) => {
@@ -595,11 +601,19 @@
 									if (!(info?.meta?.tags ?? null)) {
 										info.meta.tags = [{ name: tagName }];
 									} else {
-										info.meta.tags = [...info.meta.tags, { name: tagName }];
+										// 避免重复标签
+										if (!info.meta.tags.some(tag => tag.name === tagName)) {
+											info.meta.tags = [...info.meta.tags, { name: tagName }];
+										}
 									}
 								}}
 							/>
 						</div>
+						{#if (info?.meta?.tags ?? []).length === 0}
+							<div class="mt-1 text-xs text-gray-400 text-center">
+								{$i18n.t('Add tags to categorize your model')}
+							</div>
+						{/if}
 					</div>
 
 					<div class="my-2">
