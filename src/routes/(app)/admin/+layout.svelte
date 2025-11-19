@@ -28,7 +28,7 @@
 </svelte:head>
 
 {#if loaded}
-	<Background />
+	<Background opacity={0.25} />
 	<div
 		class="relative z-10 flex flex-col h-screen max-h-[100dvh] flex-1 transition-width duration-200 ease-in-out {$showSidebar
 			? 'md:max-w-[calc(100%-260px)]'
