@@ -14,14 +14,39 @@
 
 	const currentDomain = typeof window !== 'undefined' ? window.location.hostname : '';
 
+	/**
+	 * 提取主机名的可注册域名部分。
+	 * 例如 'www.google.com' -> 'google.com'
+	 * 'a.b.c' -> 'b.c'
+	 */
+	function getRegistrableDomain(hostname: string): string {
+		if (!hostname) return '';
+		const parts = hostname.split('.');
+		if (parts.length > 2) {
+			return parts.slice(-2).join('.');
+		}
+		return hostname;
+	}
+
+	/**
+	 * 检查两个主机名是否属于同一个可注册域名。
+	 * 例如 isSameRegistrableDomain('a.example.com', 'b.example.com') => true
+	 * isSameRegistrableDomain('a.example.com', 'a.another.com') => false
+	 */
+	function isSameRegistrableDomain(hostname1: string, hostname2: string): boolean {
+		const domain1 = getRegistrableDomain(hostname1);
+		const domain2 = getRegistrableDomain(hostname2);
+		return domain1 === domain2 && domain1 !== '';
+	}
+
 	// Function to convert cross-domain URLs to proxy URLs
 	const convertToProxyUrl = (url: string): string => {
 		try {
 			if (!url) return url;
 
 			const urlObj = new URL(url);
-			// If the domain is different from current domain, convert to proxy URL
-			if (urlObj.hostname !== currentDomain) {
+			// 如果两个 URL 不属于同一个主域名，则转换为代理 URL
+			if (!isSameRegistrableDomain(urlObj.hostname, currentDomain)) {
 				return `/op${urlObj.pathname}${urlObj.search}${urlObj.hash}`;
 			}
 			return url;
@@ -50,7 +75,7 @@
 			// If error occurs and src is not already a proxy URL, try proxy
 			if (src && src !== processedSrc) {
 				const originalUrl = new URL(src);
-				if (originalUrl.hostname !== currentDomain) {
+				if (!isSameRegistrableDomain(originalUrl.hostname, currentDomain)) {
 					video.src = `/op${originalUrl.pathname}${originalUrl.search}${originalUrl.hash}`;
 				}
 			}

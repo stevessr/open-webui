@@ -103,18 +103,10 @@ class Pipe:
 
     async def emit_status(self, message: str, done: bool = False):
         if self.emitter:
-            if message.strip().startswith("<thinking>") and message.strip().endswith(
-                "</thinking>"
-            ):
-                status_payload = {
-                    "type": "status",
-                    "data": {"description": message, "done": done},
-                }
-            else:
-                status_payload = {
-                    "type": "status",
-                    "data": {"description": str(message)[:500], "done": done},
-                }
+            status_payload = {
+                "type": "status",
+                "data": {"description": str(message)[:500], "done": done},
+            }
             logger.debug(f"发送状态更新：{status_payload}")
             await self.emitter(status_payload)
 
@@ -143,13 +135,19 @@ class Pipe:
         self, response: httpx.Response
     ) -> AsyncGenerator[str, None]:
         """
-        处理来自 Gemini API 的服务器发送事件 (SSE) 流，并增加了超时和完整性检查。
-        （已修正，可处理“思考”内容为布尔值或字符串的情况）
+        处理来自 Gemini API 的服务器发送事件 (SSE) 流。
+        核心修改：
+        1. 收到思考片段立刻 yield。如果是首个思考片段，头部追加 <think>。
+        2. 收到文本片段时，如果前一个是思考片段，则在文本前追加 </think>。
+        3. 保留详细的 Token 计算逻辑。
         """
         logger.info("开始处理 API 响应流。")
         finish_reason_received = False
         stream_iterator = response.aiter_lines()
         content_yielded = False
+
+        # 状态标记：当前是否处于思考标签块内
+        is_thinking = False
 
         try:
             while True:
@@ -188,26 +186,54 @@ class Pipe:
                                         is_thought_part = part.get("thought") is True
                                         text_content = part.get("text", "")
 
-                                        if not text_content.strip():
+                                        # 如果内容为空，跳过处理（避免产生空的标签切换）
+                                        if not text_content:
                                             continue
 
+                                        content_yielded = True
+
                                         if is_thought_part:
-                                            thought_text = text_content.strip()
+                                            # --- 处理思考片段 ---
+                                            prefix = ""
+                                            # 如果之前不是思考状态，说明是第一个思考片段，追加 <think>
+                                            if not is_thinking:
+                                                prefix = "<think>"
+                                                is_thinking = True
+
+                                            # 格式化思考内容（保留每一行前的 > 符号）
+                                            # 注意：为了支持流式，这里不使用 strip()，避免吞掉换行符
                                             quoted_lines = [
                                                 f"> {line}"
-                                                for line in thought_text.splitlines()
+                                                for line in text_content.splitlines()
                                             ]
+                                            # splitlines 会吃掉末尾的换行，如果原文有换行需要补上处理
+                                            # 这里简单处理：如果原文结尾是换行，splitlines 后可能少一个空行
                                             quoted_thought = "\n".join(quoted_lines)
-                                            thought_msg = (
-                                                f"<think>{quoted_thought}</think>"
-                                            )
-                                            yield thought_msg
-                                            content_yielded = True
-                                        else:
-                                            yield text_content
-                                            content_yielded = True
 
-                        # --- 核心修改开始：分离思考/工具和其他部分的 Token 计算 ---
+                                            # 如果原文以换行结尾，join 后通常需要补一个换行以保持流的连贯性
+                                            if text_content.endswith("\n"):
+                                                quoted_thought += "\n"
+
+                                            # 如果 splitlines 为空（例如 text_content 只是 "\n"），需要特殊处理
+                                            if (
+                                                not quoted_thought
+                                                and text_content.strip() == ""
+                                            ):
+                                                quoted_thought = text_content
+
+                                            yield prefix + quoted_thought
+
+                                        else:
+                                            # --- 处理文本片段 ---
+                                            prefix = ""
+                                            # 如果之前是思考状态，说明思考结束，文本开始，追加 </think>
+                                            if is_thinking:
+                                                prefix = "</think>"
+                                                is_thinking = False
+
+                                            yield prefix + text_content
+
+                        # --- Token 计算逻辑 (保持不变) ---
                         if usage_metadata := chunk.get("usageMetadata"):
                             usage_parts = []
                             prompt_tokens = usage_metadata.get("promptTokenCount", 0)
@@ -216,7 +242,6 @@ class Pipe:
                             )
                             total_tokens = usage_metadata.get("totalTokenCount", 0)
 
-                            # 根据文档，这些是可能出现的与“思考”相关的 Token 字段。
                             thoughts_tokens = usage_metadata.get(
                                 "thoughtsTokenCount", 0
                             )
@@ -225,25 +250,21 @@ class Pipe:
                                 "groundingTokenCount", 0
                             )
 
-                            # 将所有非内容生成的 Token 加总
                             thinking_and_tool_tokens = (
                                 thoughts_tokens + tool_use_tokens + grounding_tokens
                             )
 
-                            # 从候选 Token 总数中减去思考/工具 Token，得到纯文本输出 Token
                             output_text_tokens = (
                                 candidates_tokens - thinking_and_tool_tokens
                             )
 
                             usage_parts.append(f"输入：{prompt_tokens} tokens")
 
-                            # 仅当纯文本输出 Token 大于 0 时显示
                             if output_text_tokens > 0:
                                 usage_parts.append(
                                     f"输出 (内容): {output_text_tokens} tokens"
                                 )
 
-                            # 仅当思考/工具 Token 大于 0 时显示
                             if thinking_and_tool_tokens > 0:
                                 usage_parts.append(
                                     f"输出 (思考/工具): {thinking_and_tool_tokens} tokens"
@@ -258,7 +279,7 @@ class Pipe:
                             )
                             logger.info(usage_msg)
                             await self.emit_status(usage_msg, done=False)
-                        # --- 核心修改结束 ---
+                        # --- Token 计算结束 ---
 
                         if finish_reason := chunk.get("candidates", [{}])[0].get(
                             "finishReason"
@@ -288,6 +309,11 @@ class Pipe:
                     await self.emit_status(error_msg, done=True)
                     yield error_msg
                     return
+
+            # 循环结束后，如果仍在思考状态，必须闭合标签
+            if is_thinking:
+                yield "</think>"
+                is_thinking = False
 
         finally:
             if not finish_reason_received:
