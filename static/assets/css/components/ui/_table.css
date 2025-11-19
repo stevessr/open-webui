@@ -1,7 +1,7 @@
 /* Table Component Styles */
 
 table {
-  background: var(--bg-primary) !important;
+  background: transparent !important;
   border-collapse: collapse !important;
   border-radius: var(--radius-lg) !important;
   overflow: hidden !important;
@@ -9,12 +9,12 @@ table {
 }
 
 thead {
-  background: var(--bg-secondary) !important;
+  background: transparent !important;
   border-bottom: 2px solid var(--border-primary) !important;
 }
 
 th {
-  background: var(--bg-secondary) !important;
+  background: transparent !important;
   color: var(--text-primary) !important;
   font-weight: 600 !important;
   padding: var(--spacing-3) var(--spacing-4) !important;
@@ -27,7 +27,7 @@ tbody {
 }
 
 tr {
-  background: var(--bg-primary) !important;
+  background: transparent !important;
   border-bottom: 1px solid var(--border-secondary) !important;
   transition: var(--transition-base) !important;
 }
@@ -41,7 +41,7 @@ tr:last-child {
 }
 
 td {
-  background: var(--bg-primary) !important;
+  background: transparent !important;
   color: var(--text-primary) !important;
   padding: var(--spacing-3) var(--spacing-4) !important;
   border-bottom: 1px solid var(--border-secondary) !important;
@@ -49,7 +49,7 @@ td {
 
 /* Dark theme table adjustments */
 html.dark table {
-  background: var(--bg-primary) !important;
+  background: transparent !important;
   border-color: var(--border-primary) !important;
 }
 
@@ -59,7 +59,7 @@ html.dark thead {
 }
 
 html.dark th {
-  background: var(--bg-tertiary) !important;
+  background: transparent !important;
   color: var(--text-primary) !important;
   border-color: var(--border-primary) !important;
 }
@@ -69,7 +69,7 @@ html.dark tbody {
 }
 
 html.dark tr {
-  background: var(--bg-primary) !important;
+  background: transparent !important;
   border-color: var(--border-secondary) !important;
 }
 
@@ -78,7 +78,7 @@ html.dark tr:hover {
 }
 
 html.dark td {
-  background: var(--bg-primary) !important;
+  background: transparent !important;
   color: var(--text-primary) !important;
   border-color: var(--border-secondary) !important;
 }
