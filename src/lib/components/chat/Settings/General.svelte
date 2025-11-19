@@ -15,7 +15,7 @@
 	export let getModels: Function;
 
 	// General
-	let themes = ['dark', 'light', 'oled-dark'];
+	let themes = ['dark', 'light', 'oled-dark', 'macaron'];
 	let selectedTheme = 'system';
 
 	let languages: Awaited<ReturnType<typeof getLanguages>> = [];
@@ -121,7 +121,7 @@
 	});
 
 	const applyTheme = (_theme: string) => {
-		let themeToApply = _theme === 'oled-dark' ? 'dark' : _theme === 'her' ? 'light' : _theme;
+		let themeToApply = _theme === 'oled-dark' ? 'dark' : _theme === 'her' ? 'light' : _theme === 'macaron' ? 'light' : _theme;
 
 		if (_theme === 'system') {
 			themeToApply = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -184,11 +184,24 @@
 		console.log(_theme);
 	};
 
-	const themeChangeHandler = (_theme: string) => {
-		theme.set(_theme);
-		localStorage.setItem('theme', _theme);
-		applyTheme(_theme);
-	};
+  const themeChangeHandler = (_theme: string) => {
+    theme.set(_theme);
+    localStorage.setItem('theme', _theme);
+    applyTheme(_theme);
+
+    if (_theme === 'macaron') {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/assets/css/macaron.css';
+      link.id = 'macaron-theme';
+      document.head.appendChild(link);
+    } else {
+      const link = document.getElementById('macaron-theme');
+      if (link) {
+        link.remove();
+      }
+    }
+  };
 </script>
 
 <div class="flex flex-col h-full justify-between text-sm" id="tab-general">
@@ -210,7 +223,8 @@
 							{ value: 'dark', label: '🌑 ' + $i18n.t('Dark') },
 							{ value: 'oled-dark', label: '🌃 ' + $i18n.t('OLED Dark') },
 							{ value: 'light', label: '☀️ ' + $i18n.t('Light') },
-							{ value: 'her', label: '🌷 Her' }
+							{ value: 'her', label: '🌷 Her' },
+							{ value: 'macaron', label: '🍬 ' + $i18n.t('Macaron') }
 						]}
 						on:change={(e) => themeChangeHandler(e.detail.value)}
 					/>

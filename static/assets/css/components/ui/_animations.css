@@ -68,12 +68,12 @@
 
 /* Utility classes */
 .trans {
-  background-color: transparent !important;
+  background-color: transparent ;
   backdrop-filter: none !important;
 }
 
 .transv2 {
-  background: transparent !important;
+  background: transparent ;
   backdrop-filter: blur(8px) !important;
 }
 

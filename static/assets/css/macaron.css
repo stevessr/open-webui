@@ -1,0 +1,175 @@
+html[class*='light'] {
+  --color-gray-50: #fdf5f8;
+  --color-gray-100: #fce9f2;
+  --color-gray-200: #faddde;
+  --color-gray-300: #f8c9d0;
+  --color-gray-400: #f6b5c1;
+  --color-gray-500: #f3a1b3;
+  --color-gray-600: #d97a9b;
+  --color-gray-700: #b85c82;
+  --color-gray-800: #97436a;
+  --color-gray-850: #7f365a;
+  --color-gray-900: #68294a;
+  --color-gray-950: #501f3a;
+
+  /* Macaron theme specific variables */
+  --macaron-primary: #f3a1b3;
+  --macaron-secondary: #d97a9b;
+  --macaron-accent: #b85c82;
+  --macaron-bg-light: rgba(243, 161, 179, 0.05);
+  --macaron-bg-medium: rgba(243, 161, 179, 0.2);
+  --macaron-bg-strong: rgba(243, 161, 179, 0.5);
+  --macaron-text-primary: #501f3a;
+  --macaron-text-secondary: #68294a;
+  --macaron-text-muted: #97436a;
+  --macaron-border: rgba(243, 161, 179, 0.3);
+  --macaron-shadow: rgba(217, 122, 155, 0.2);
+
+  /* Component specific variables */
+  --bg-primary: var(--macaron-bg-light);
+  --bg-secondary: var(--macaron-bg-medium);
+  --bg-tertiary: var(--macaron-bg-strong);
+  --text-primary: var(--macaron-text-primary);
+  --text-secondary: var(--macaron-text-secondary);
+  --text-muted: var(--macaron-text-muted);
+  --border-primary: var(--macaron-border);
+  --border-secondary: var(--macaron-border);
+  --shadow-sm: 0 1px 2px 0 var(--macaron-shadow);
+  --shadow-md: 0 4px 6px -1px var(--macaron-shadow);
+  --shadow-lg: 0 10px 15px -3px var(--macaron-shadow);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --transition-base: all 0.2s ease-in-out;
+}
+
+body {
+  background-color: #fdf5f8;
+  color: #501f3a;
+}
+
+.macaron .overscroll-contain,
+.macaron .menu-cover,
+.macaron .chat-interface,
+.macaron .model-menu,
+.macaron .parameter-panel,
+.macaron .tools-menu,
+.macaron .trans,
+.macaron .transv2 {
+  background-color: var(--macaron-bg-medium);
+}
+
+.macaron .rainbow-text {
+  background: linear-gradient(45deg, var(--macaron-primary), var(--macaron-secondary), var(--macaron-accent), var(--color-gray-800), var(--color-gray-850), var(--color-gray-900), var(--color-gray-950), var(--macaron-primary));
+  background-size: 400% 400%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbow-shift 3s ease-in-out infinite;
+}
+
+.macaron .tippy-box {
+  background-color: var(--macaron-bg-strong);
+}
+
+.macaron .little-color {
+  background: rgba(243, 161, 179, 0.25);
+}
+
+.macaron div#chat-input,
+.macaron select {
+  background-color: var(--macaron-bg-strong);
+}
+.macaron #message-input-container,
+#sidebar,
+#note-container,
+#chat-container {
+  background-color: var(--macaron-bg-strong);
+  /* Semi-transparent Macaron pink */
+}
+
+.macaron #message-input-container,
+#user-menu,
+#playground-container,
+#admin-container,
+#notes-container,
+#workspace-container,
+#channel-container {
+  background-color: var(--macaron-bg-light);
+}
+
+.macaron #user-menu-modal {
+  background-color: var(--macaron-bg-strong);
+}
+
+.macaron .tag-selcetor,
+.macaron .clean {
+  background-color: transparent;
+}
+
+.macaron button {
+  color: var(--macaron-text-muted);
+}
+
+/* Additional component styles using variables */
+.macaron table {
+  background: var(--bg-primary) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.macaron thead {
+  background: var(--bg-secondary) !important;
+  border-bottom: 2px solid var(--border-primary) !important;
+}
+
+.macaron th {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  padding: var(--spacing-3) var(--spacing-4) !important;
+  text-align: left !important;
+  border-bottom: 1px solid var(--border-primary) !important;
+}
+
+.macaron tbody {
+  background: var(--bg-primary) !important;
+}
+
+.macaron tr {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border-secondary) !important;
+  transition: var(--transition-base) !important;
+}
+
+.macaron tr:hover {
+  background: var(--bg-secondary) !important;
+}
+
+.macaron td {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  padding: var(--spacing-3) var(--spacing-4) !important;
+  border-bottom: 1px solid var(--border-secondary) !important;
+}
+
+.macaron .ProseMirror {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+}
+
+.macaron .ProseMirror:focus-visible,
+.macaron .ProseMirror-focused,
+.macaron input:focus {
+  outline: none;
+  position: relative;
+  z-index: 1;
+  border-width: 0px;
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  background-color: transparent;
+}
