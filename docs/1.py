@@ -124,7 +124,8 @@ class Pipe:
         例如："Hello <b>world</b>!" -> ["Hello ", "<b>", "world", "</b>", "!"]
         """
         import re
-        pattern = r'(<[^>]+>)'
+
+        pattern = r"(<[^>]+>)"
         return re.split(pattern, text)
 
     async def process_stream(
@@ -153,7 +154,6 @@ class Pipe:
 
                     try:
                         chunk = json.loads(line)
-                        # logger.debug(f"收到并解析了数据块：{chunk}")
 
                         if "error" in chunk:
                             error_detail = chunk.get("error", {}).get(
@@ -232,8 +232,6 @@ class Pipe:
                                 if usage_parts
                                 else "用量信息可用"
                             )
-                            # 不再频繁 log，避免刷屏，仅发送状态
-                            # logger.info(usage_msg) 
                             await self.emit_status(usage_msg, done=False)
                         # --- 结束 Token 计算 ---
 
@@ -251,7 +249,9 @@ class Pipe:
                 except StopAsyncIteration:
                     break
                 except asyncio.TimeoutError:
-                    error_msg = f"🚨 流超时：{self.valves.stream_idle_timeout}秒无数据。"
+                    error_msg = (
+                        f"🚨 流超时：{self.valves.stream_idle_timeout}秒无数据。"
+                    )
                     logger.error(error_msg)
                     await self.emit_status(error_msg, done=True)
                     yield error_msg
@@ -266,7 +266,7 @@ class Pipe:
     ) -> AsyncGenerator[str, None]:
         """构建请求并从 Gemini API 流式传输响应。"""
         api_model = self.valves.api_model
-        
+
         gemini_contents = []
         for msg in messages:
             role = "user" if msg.get("role") == "user" else "model"
@@ -281,16 +281,21 @@ class Pipe:
                         parts.append({"text": part.get("text", "")})
                     elif part_type == "image_url":
                         image_url = part.get("image_url", {}).get("url", "")
-                        if image_url.startswith("data:image") and ";base64," in image_url:
+                        if (
+                            image_url.startswith("data:image")
+                            and ";base64," in image_url
+                        ):
                             try:
                                 header, encoded_data = image_url.split(",", 1)
                                 mime_type = header.split(":", 1)[1].split(";", 1)[0]
-                                parts.append({
-                                    "inlineData": {
-                                        "mimeType": mime_type,
-                                        "data": encoded_data
+                                parts.append(
+                                    {
+                                        "inlineData": {
+                                            "mimeType": mime_type,
+                                            "data": encoded_data,
+                                        }
                                     }
-                                })
+                                )
                             except Exception:
                                 pass
             if parts:
@@ -300,7 +305,12 @@ class Pipe:
         if gemini_contents and gemini_contents[-1]["role"] == "model":
             gemini_contents.append({"role": "user", "parts": [{"text": "Continue"}]})
 
-        gemini_tools = [{"googleSearch": {}}, {"code_execution": {}}]
+        # 启用工具：搜索和代码执行
+        gemini_tools = [
+            {"googleSearch": {}},
+            {"code_execution": {}},
+            {"url_context": {}},
+        ]
 
         data = {
             "contents": gemini_contents,
@@ -340,7 +350,7 @@ class Pipe:
 
     async def check_completion(self, messages: list, last_response: str) -> bool:
         """
-        使用模型独立判断最后的回复是否完整。
+        使用模型独立判断：回复是否满足了用户的要求（而不仅仅是句子完整）。
         """
         # 提取最后一条用户消息作为上下文
         last_user_msg = "N/A"
@@ -351,51 +361,67 @@ class Pipe:
                     last_user_msg = content
                 elif isinstance(content, list):
                     # 简化处理，只取文本部分
-                    texts = [p.get("text", "") for p in content if p.get("type") == "text"]
+                    texts = [
+                        p.get("text", "") for p in content if p.get("type") == "text"
+                    ]
                     last_user_msg = " ".join(texts)
                 break
-        
-        # 构造判断提示词
+
+        # --- 核心修改：更严格的业务逻辑完成性检查 Prompt ---
         judge_prompt = f"""
-You are a strict output validator.
-Your task is to analyze the following response from an AI model corresponding to the user's request and determine if the response is COMPLETE or INCOMPLETE.
+You are a strict Quality Assurance Validator for an AI assistant.
+Your task is to determine if the Model Response **fully satisfies** the User Request.
 
-User Request (Context):
-"{last_user_msg[:2000]}" ... (truncated)
+User Request:
+"{last_user_msg[:2000]}"
 
-Model Response to Evaluate:
+Model Response (to evaluate):
 "{last_response}"
 
-Criteria:
-1. Does the response finish its sentence?
-2. Does it seem to abruptly stop?
-3. Does it fully address the request or is it clearly cut off?
+Evaluation Criteria:
+1. **Requirement Fulfillment**: Did the model do what was asked? (e.g., if asked for code, is the code there? If asked for a list of 10, are there 10?)
+2. **Completeness**: Is the answer cut off in the middle of a sentence, a list, or a code block?
+3. **Conclusion**: Does the response have a natural conclusion or closing?
 
-Reply ONLY with the word "COMPLETE" if it is finished, or "INCOMPLETE" if it needs to continue. Do not output anything else.
+Instructions:
+- If the response is cut off, incomplete, or misses part of the user's instruction, reply "INCOMPLETE".
+- If the response effectively answers the prompt and is syntactically finished, reply "COMPLETE".
+
+Reply ONLY with the word "COMPLETE" or "INCOMPLETE". Do not explain.
 """
-        
+
         payload = {
             "contents": [{"role": "user", "parts": [{"text": judge_prompt}]}],
             "generationConfig": {
-                "temperature": 0.0, # 确定性输出
-                "maxOutputTokens": 10
-            }
+                "temperature": 0.0,  # 确定性输出
+                "maxOutputTokens": 5,
+            },
         }
-        
-        # 使用 fast/lite 模型进行判断，或者复用当前模型
-        judge_model = self.valves.api_model 
+
+        judge_model = self.valves.api_model
         url = f"/v1beta/models/{judge_model}:generateContent?key={self.valves.api_key}"
 
         try:
-            async with httpx.AsyncClient(base_url=self.valves.base_url, trust_env=True, timeout=30) as client:
+            async with httpx.AsyncClient(
+                base_url=self.valves.base_url, trust_env=True, timeout=30
+            ) as client:
                 response = await client.post(url, json=payload)
                 if response.status_code == 200:
                     data = response.json()
-                    text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip().upper()
-                    logger.info(f"🔍 完整性检查结果：{text}")
+                    text = (
+                        data.get("candidates", [{}])[0]
+                        .get("content", {})
+                        .get("parts", [{}])[0]
+                        .get("text", "")
+                        .strip()
+                        .upper()
+                    )
+                    logger.info(f"🔍 需求满足度/完整性检查结果：{text}")
                     return "COMPLETE" in text
                 else:
-                    logger.warning(f"完整性检查失败 ({response.status_code})，默认认为已完成以防止死循环。")
+                    logger.warning(
+                        f"完整性检查失败 ({response.status_code})，默认通过以防死循环。"
+                    )
                     return True
         except Exception as e:
             logger.error(f"完整性检查发生异常：{e}，默认为 True")
@@ -421,13 +447,13 @@ Reply ONLY with the word "COMPLETE" if it is finished, or "INCOMPLETE" if it nee
             model_id = body.get("model", self.valves.model_id)
 
             loop_count = 0
-            max_loops = 15 # 安全上限
-            
+            max_loops = 10  # 适当降低最大循环次数，防止无限纠缠
+
             while loop_count < max_loops:
                 loop_count += 1
                 stream_had_error = False
                 full_response_this_turn = ""
-                
+
                 # 1. 执行流式生成
                 async for chunk in self.get_request_stream(messages, model_id):
                     if chunk.startswith("🚨"):
@@ -437,56 +463,73 @@ Reply ONLY with the word "COMPLETE" if it is finished, or "INCOMPLETE" if it nee
 
                     full_response_this_turn += chunk
 
-                    # 根据配置输出 (块状/字符/空格)
+                    # 根据配置输出
                     if self.valves.block_size > 1:
                         for part in self.split_html_tags(chunk):
-                            if part.startswith('<') and part.endswith('>'):
+                            if part.startswith("<") and part.endswith(">"):
                                 yield part
                             else:
                                 for i in range(0, len(part), self.valves.block_size):
-                                    yield part[i:i + self.valves.block_size]
-                                    if self.valves.output_delay > 0: await asyncio.sleep(self.valves.output_delay)
+                                    yield part[i : i + self.valves.block_size]
+                                    if self.valves.output_delay > 0:
+                                        await asyncio.sleep(self.valves.output_delay)
                     elif self.valves.block_size < 0:
                         for part in self.split_html_tags(chunk):
-                            if part.startswith('<') and part.endswith('>'):
+                            if part.startswith("<") and part.endswith(">"):
                                 yield part
                             else:
                                 for word in part.split():
-                                    yield word + ' '
-                                    if self.valves.output_delay > 0: await asyncio.sleep(self.valves.output_delay)
+                                    yield word + " "
+                                    if self.valves.output_delay > 0:
+                                        await asyncio.sleep(self.valves.output_delay)
                     else:
                         for char in chunk:
                             yield char
-                            if self.valves.output_delay > 0 and char not in ['<', '>']:
+                            if self.valves.output_delay > 0 and char not in ["<", ">"]:
                                 await asyncio.sleep(self.valves.output_delay)
 
                 if stream_had_error:
                     break
-                
+
                 if not full_response_this_turn.strip():
                     logger.warning("收到空响应，停止生成。")
                     break
 
                 # 2. 独立判断是否结束
-                # 等待流稍微稳定
                 await asyncio.sleep(0.2)
-                await self.emit_status(f"正在验证回答完整性... (第 {loop_count} 轮)", done=False)
-                
-                is_complete = await self.check_completion(messages, full_response_this_turn)
+                await self.emit_status(
+                    f"正在验证回答是否满足要求... (第 {loop_count} 轮)", done=False
+                )
+
+                is_complete = await self.check_completion(
+                    messages, full_response_this_turn
+                )
 
                 if is_complete:
-                    logger.info(f"[{request_id}] 判定回答已完整。")
+                    logger.info(f"[{request_id}] 判定回答已满足要求。")
                     break
                 else:
-                    logger.info(f"[{request_id}] 判定回答不完整，准备继续...")
-                    await self.emit_status(f"检测到回答未完成，自动继续生成... (第 {loop_count + 1} 轮)", done=False)
-                    
+                    logger.info(
+                        f"[{request_id}] 判定回答未完成/未满足要求，继续生成..."
+                    )
+                    await self.emit_status(
+                        f"回答未完成或未满足要求，正在继续... (第 {loop_count + 1} 轮)",
+                        done=False,
+                    )
+
                     # 更新历史
-                    messages.append({"role": "model", "content": full_response_this_turn})
-                    messages.append({"role": "user", "content": "Please continue strictly from where you stopped."})
-                    
-                    # 发送换行符以分隔接下来的内容
-                    yield "\n" 
+                    messages.append(
+                        {"role": "model", "content": full_response_this_turn}
+                    )
+                    # 提示词稍微修改，强调继续完成
+                    messages.append(
+                        {
+                            "role": "user",
+                            "content": "It seems the previous response was incomplete or cut off. Please continue exactly from where you left off to fully satisfy the original request.",
+                        }
+                    )
+
+                    yield "\n"  # 视觉分隔
 
             if loop_count >= max_loops:
                 yield "\n\n[达到最大自动续写次数限制]"
