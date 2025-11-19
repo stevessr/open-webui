@@ -3,39 +3,21 @@
 	import { tags } from '$lib/stores';
 	import { toast } from 'svelte-sonner';
 	import DataList from '$lib/components/common/DataList.svelte';
+	import { filterTagSuggestions } from '$lib/constants/vendorTags';
 	const dispatch = createEventDispatcher();
 
 	const i18n = getContext('i18n');
 
 	export let label = '';
+	export let modelInfo: { owned_by?: string; name?: string; id?: string; base_model_id?: string } = {};
+
 	let showTagInput = false;
 	let tagName = '';
 
-	// 动态生成标签选项，包括现有标签和用户输入的新标签
+	// 使用厂商标签系统生成选项
 	$: tagOptions = [
-		// 如果用户输入了内容且不在现有标签中，添加为新选项
-		...(tagName.trim() && !$tags.some(tag => tag.name.toLowerCase() === tagName.trim().toLowerCase())
-			? [{ value: tagName.trim(), label: `${tagName.trim()} (新建)` }]
-			: []),
-		// 现有标签，按字母排序，优先显示匹配的标签
-		...$tags
-			.filter(tag => tag.name.toLowerCase().includes(tagName.trim().toLowerCase()))
-			.sort((a, b) => {
-				const aLower = a.name.toLowerCase();
-				const bLower = b.name.toLowerCase();
-				const inputLower = tagName.trim().toLowerCase();
-
-				// 优先显示以输入内容开头的标签
-				const aStartsWith = aLower.startsWith(inputLower);
-				const bStartsWith = bLower.startsWith(inputLower);
-
-				if (aStartsWith && !bStartsWith) return -1;
-				if (!aStartsWith && bStartsWith) return 1;
-
-				// 然后按字母顺序排序
-				return aLower.localeCompare(bLower);
-			})
-			.map(tag => ({ value: tag.name, label: tag.name }))
+		// 如果用户输入了内容，优先显示匹配的推荐标签
+		...filterTagSuggestions(tagName.trim(), modelInfo)
 	];
 
 	const addTagHandler = async () => {
@@ -103,7 +85,7 @@
 				onSelect={handleTagSelect}
 				onKeydown={handleKeydown}
 				on:blur={handleBlur}
-				className="transv2 px-2 py-1 cursor-pointer self-center text-xs h-fit bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md outline-hidden line-clamp-1 w-[10rem] focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+				className="transv2 px-2 py-1 cursor-pointer self-center text-xs h-fit bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md outline-hidden line-clamp-1 w-[12rem] focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
 			/>
 
 			<button

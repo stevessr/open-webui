@@ -586,12 +586,18 @@
 						<div class="mb-1 flex w-full justify-between items-center">
 							<div class="self-center text-sm font-semibold">{$i18n.t('Tags')}</div>
 							<div class="text-xs text-gray-500">
-								{$i18n.t('Press Enter to add')}
+								{$i18n.t('智能推荐标签')}
 							</div>
 						</div>
 						<div class="trans p-3 bg-gray-50 dark:bg-gray-950 rounded-xl border border-gray-100 dark:border-gray-850">
 							<Tags
 								tags={info?.meta?.tags ?? []}
+								modelInfo={{
+									owned_by: model?.owned_by,
+									name: model?.name,
+									id: model?.id,
+									base_model_id: info?.base_model_id
+								}}
 								on:delete={(e) => {
 									const tagName = e.detail;
 									info.meta.tags = info.meta.tags.filter((tag) => tag.name !== tagName);
@@ -611,7 +617,7 @@
 						</div>
 						{#if (info?.meta?.tags ?? []).length === 0}
 							<div class="mt-1 text-xs text-gray-400 text-center">
-								{$i18n.t('Add tags to categorize your model')}
+								{$i18n.t('基于模型厂商智能推荐标签')}
 							</div>
 						{/if}
 					</div>
