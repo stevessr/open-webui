@@ -1,5 +1,5 @@
 """
-title: Gemini with search & code (Pseudo-streaming) - Robust Version with Detailed Token Calculation
+title: Gemini with search & code (Pseudo-streaming) - Robust Version with Independent Judgment
 licence: MIT
 """
 
@@ -7,8 +7,8 @@ import json
 import logging
 import time
 import uuid
-from typing import AsyncIterable, Optional, Callable, Awaitable, AsyncGenerator, List
-import asyncio  # 引入 asyncio 用于超时和延迟
+from typing import Optional, Callable, Awaitable, AsyncGenerator, List
+import asyncio
 
 import httpx
 from pydantic import BaseModel, Field
@@ -32,7 +32,7 @@ logger.setLevel(log_level)
 class Pipe:
     """
     一个用于与 Gemini API 交互的 Manifold 风格管道。
-    该管道处理流式响应并提供状态更新。
+    该管道处理流式响应，并在每轮结束后使用模型独立判断是否需要继续生成。
     """
 
     class Valves(BaseModel):
@@ -51,14 +51,14 @@ class Pipe:
 
         # 模型配置
         model_id: str = Field(
-            default="gemini-2.5-flash",
+            default="gemini-2.5-flash-lite",
             description="UI 中使用的模型 ID。",
         )
         model_display_name: str = Field(
-            default="Gemini 2.5 Flash 研究", description="UI 中显示的模型名称。"
+            default="Gemini 2.5 Flash lite 研究", description="UI 中显示的模型名称。"
         )
         api_model: str = Field(
-            default="gemini-2.5-flash",
+            default="gemini-2.5-flash-lite",
             description="用于 API 调用的实际 Gemini 模型名称。",
         )
         # 思考预算配置
@@ -85,7 +85,7 @@ class Pipe:
 
     def __init__(self):
         self.type = "manifold"
-        self.name = ""
+        self.name = "Gemini 2.5 Flash lite 研究"
         self.valves = self.Valves()
         self.emitter: Optional[Callable[[dict], Awaitable[None]]] = None
         logger.info(f"管道 '{self.name}' 已初始化。")
@@ -132,7 +132,6 @@ class Pipe:
     ) -> AsyncGenerator[str, None]:
         """
         处理来自 Gemini API 的服务器发送事件 (SSE) 流，并增加了超时和完整性检查。
-        （已修正，可处理“思考”内容为布尔值或字符串的情况）
         """
         logger.info("开始处理 API 响应流。")
         finish_reason_received = False
@@ -154,7 +153,7 @@ class Pipe:
 
                     try:
                         chunk = json.loads(line)
-                        logger.debug(f"收到并解析了数据块：{chunk}")
+                        # logger.debug(f"收到并解析了数据块：{chunk}")
 
                         if "error" in chunk:
                             error_detail = chunk.get("error", {}).get(
@@ -195,7 +194,7 @@ class Pipe:
                                             yield text_content
                                             content_yielded = True
 
-                        # --- 核心修改开始：分离思考/工具和其他部分的 Token 计算 ---
+                        # --- Token 计算逻辑 ---
                         if usage_metadata := chunk.get("usageMetadata"):
                             usage_parts = []
                             prompt_tokens = usage_metadata.get("promptTokenCount", 0)
@@ -204,7 +203,6 @@ class Pipe:
                             )
                             total_tokens = usage_metadata.get("totalTokenCount", 0)
 
-                            # 根据文档，这些是可能出现的与“思考”相关的 Token 字段。 [10]
                             thoughts_tokens = usage_metadata.get(
                                 "thoughtsTokenCount", 0
                             )
@@ -213,94 +211,63 @@ class Pipe:
                                 "groundingTokenCount", 0
                             )
 
-                            # 将所有非内容生成的 Token 加总
                             thinking_and_tool_tokens = (
                                 thoughts_tokens + tool_use_tokens + grounding_tokens
                             )
-
-                            # 从候选 Token 总数中减去思考/工具 Token，得到纯文本输出 Token
                             output_text_tokens = (
                                 candidates_tokens - thinking_and_tool_tokens
                             )
 
-                            usage_parts.append(f"输入：{prompt_tokens} tokens")
-
-                            # 仅当纯文本输出 Token 大于 0 时显示
+                            usage_parts.append(f"输入：{prompt_tokens}")
                             if output_text_tokens > 0:
-                                usage_parts.append(
-                                    f"输出 (内容): {output_text_tokens} tokens"
-                                )
-
-                            # 仅当思考/工具 Token 大于 0 时显示
+                                usage_parts.append(f"输出：{output_text_tokens}")
                             if thinking_and_tool_tokens > 0:
                                 usage_parts.append(
-                                    f"输出 (思考/工具): {thinking_and_tool_tokens} tokens"
+                                    f"思考/工具：{thinking_and_tool_tokens}"
                                 )
-
-                            usage_parts.append(f"总计：{total_tokens} tokens")
+                            usage_parts.append(f"总计：{total_tokens}")
 
                             usage_msg = (
-                                f"用量信息：{', '.join(usage_parts)}"
+                                f"Token 用量：{', '.join(usage_parts)}"
                                 if usage_parts
                                 else "用量信息可用"
                             )
-                            logger.info(usage_msg)
+                            # 不再频繁 log，避免刷屏，仅发送状态
+                            # logger.info(usage_msg) 
                             await self.emit_status(usage_msg, done=False)
-                        # --- 核心修改结束 ---
+                        # --- 结束 Token 计算 ---
 
                         if finish_reason := chunk.get("candidates", [{}])[0].get(
                             "finishReason"
                         ):
-                            logger.info(f"从 API 收到完成原因：{finish_reason}")
+                            logger.info(f"API 完成原因：{finish_reason}")
                             finish_reason_received = True
 
                     except json.JSONDecodeError:
-                        logger.warning(f"解码 JSON 行失败：{line}. 跳过此行。")
-                        await self.emit_status(
-                            f"警告：无法解析一个数据块。可能存在格式问题。", done=False
-                        )
+                        logger.warning(f"解码 JSON 行失败：{line}")
                     except (KeyError, IndexError) as e:
-                        logger.debug(
-                            f"无法从数据块中提取文本或元数据：{line}. 错误：{e}. 跳过此块。"
-                        )
-                        await self.emit_status(
-                            f"警告：接收到未知格式的数据块。", done=False
-                        )
+                        logger.debug(f"数据块解析错误：{e}")
 
                 except StopAsyncIteration:
-                    logger.info("响应流正常结束。")
                     break
                 except asyncio.TimeoutError:
-                    error_msg = f"🚨 流超时：在 {self.valves.stream_idle_timeout} 秒内未收到新数据，连接可能已中断。"
+                    error_msg = f"🚨 流超时：{self.valves.stream_idle_timeout}秒无数据。"
                     logger.error(error_msg)
                     await self.emit_status(error_msg, done=True)
                     yield error_msg
                     return
 
         finally:
-            if not finish_reason_received:
-                warning_msg = "警告：API 响应流已结束，但未收到明确的完成信号（finishReason）。这可能表示流被意外中断或未完全发送。"
-                logger.warning(warning_msg)
-                await self.emit_status(warning_msg, done=True)
-            elif not content_yielded and finish_reason_received:
-                logger.debug(
-                    "Stream ended with finish reason but no text content was yielded."
-                )
-
-        logger.info("响应流处理完毕。")
+            if not finish_reason_received and content_yielded:
+                logger.warning("流结束但未收到 finishReason。")
 
     async def get_request_stream(
         self, messages: list, model_name: str
     ) -> AsyncGenerator[str, None]:
         """构建请求并从 Gemini API 流式传输响应。"""
         api_model = self.valves.api_model
-        logger.info(
-            f"为 UI 模型 '{model_name}' 准备请求，使用 API 模型 '{api_model}'。"
-        )
-
         
         gemini_contents = []
-
         for msg in messages:
             role = "user" if msg.get("role") == "user" else "model"
             content = msg.get("content")
@@ -324,21 +291,16 @@ class Pipe:
                                         "data": encoded_data
                                     }
                                 })
-                            except (ValueError, IndexError) as e:
-                                logger.error(f"Error parsing image data URI: {e}. Skipping image part.")
-
-                        else:
-                             logger.warning(f"Unsupported image URL format. Only 'data:image' URIs are supported.")
+                            except Exception:
+                                pass
             if parts:
                 gemini_contents.append({"role": role, "parts": parts})
 
+        # 如果最后一条是 model，补一个 user continue (这是 API 的要求，不能以 model 结尾)
         if gemini_contents and gemini_contents[-1]["role"] == "model":
             gemini_contents.append({"role": "user", "parts": [{"text": "Continue"}]})
-            logger.warning(
-                "Added a dummy 'user' turn to continue the conversation after a 'model' turn."
-            )
 
-        gemini_tools = [{"googleSearch": {}}, {"code_execution": {}},{"url_context":{}}]
+        gemini_tools = [{"googleSearch": {}}, {"code_execution": {}}]
 
         data = {
             "contents": gemini_contents,
@@ -361,38 +323,83 @@ class Pipe:
                 trust_env=True,
                 timeout=self.valves.timeout,
             ) as client:
-                await self.emit_status(
-                    f"正在向 Gemini 模型发送请求：{api_model}", done=False
-                )
                 async with client.stream("POST", url, json=data) as response:
                     if response.status_code != 200:
                         error_content = await response.aread()
-                        error_message = f"🚨 Gemini API 错误：{response.status_code} - {error_content.decode()}"
-                        await self.emit_status(error_message, done=True)
+                        error_message = f"🚨 API 错误：{response.status_code} - {error_content.decode()}"
                         yield error_message
                         return
 
                     async for content in self.process_stream(response):
                         yield content
 
-        except httpx.ConnectError as e:
-            error_msg = f"🚨 连接错误：无法连接到 {self.valves.base_url}。请检查网络连接或基础 URL。 {e}"
-            logger.exception(error_msg)
-            await self.emit_status(error_msg, done=True)
-            yield error_msg
-        except httpx.TimeoutException:
-            error_msg = (
-                f"🚨 请求超时：对 Gemini API 的请求在 {self.valves.timeout} 秒后超时。"
-                f"请检查网络或增加管道超时设置。"
-            )
-            logger.error(error_msg)
-            await self.emit_status(error_msg, done=True)
-            yield error_msg
         except Exception as e:
-            error_msg = f"🚨 发生意外错误：{e}"
-            logger.exception(f"在 get_request_stream 中发生意外错误：{e}")
-            await self.emit_status(error_msg, done=True)
+            error_msg = f"🚨 请求异常：{e}"
+            logger.exception(error_msg)
             yield error_msg
+
+    async def check_completion(self, messages: list, last_response: str) -> bool:
+        """
+        使用模型独立判断最后的回复是否完整。
+        """
+        # 提取最后一条用户消息作为上下文
+        last_user_msg = "N/A"
+        for msg in reversed(messages):
+            if msg.get("role") == "user":
+                content = msg.get("content")
+                if isinstance(content, str):
+                    last_user_msg = content
+                elif isinstance(content, list):
+                    # 简化处理，只取文本部分
+                    texts = [p.get("text", "") for p in content if p.get("type") == "text"]
+                    last_user_msg = " ".join(texts)
+                break
+        
+        # 构造判断提示词
+        judge_prompt = f"""
+You are a strict output validator.
+Your task is to analyze the following response from an AI model corresponding to the user's request and determine if the response is COMPLETE or INCOMPLETE.
+
+User Request (Context):
+"{last_user_msg[:2000]}" ... (truncated)
+
+Model Response to Evaluate:
+"{last_response}"
+
+Criteria:
+1. Does the response finish its sentence?
+2. Does it seem to abruptly stop?
+3. Does it fully address the request or is it clearly cut off?
+
+Reply ONLY with the word "COMPLETE" if it is finished, or "INCOMPLETE" if it needs to continue. Do not output anything else.
+"""
+        
+        payload = {
+            "contents": [{"role": "user", "parts": [{"text": judge_prompt}]}],
+            "generationConfig": {
+                "temperature": 0.0, # 确定性输出
+                "maxOutputTokens": 10
+            }
+        }
+        
+        # 使用 fast/lite 模型进行判断，或者复用当前模型
+        judge_model = self.valves.api_model 
+        url = f"/v1beta/models/{judge_model}:generateContent?key={self.valves.api_key}"
+
+        try:
+            async with httpx.AsyncClient(base_url=self.valves.base_url, trust_env=True, timeout=30) as client:
+                response = await client.post(url, json=payload)
+                if response.status_code == 200:
+                    data = response.json()
+                    text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip().upper()
+                    logger.info(f"🔍 完整性检查结果：{text}")
+                    return "COMPLETE" in text
+                else:
+                    logger.warning(f"完整性检查失败 ({response.status_code})，默认认为已完成以防止死循环。")
+                    return True
+        except Exception as e:
+            logger.error(f"完整性检查发生异常：{e}，默认为 True")
+            return True
 
     async def pipe(
         self,
@@ -401,116 +408,91 @@ class Pipe:
         __event_emitter__: Optional[Callable[[dict], Awaitable[None]]] = None,
         __event_call__: Optional[Callable[[dict], Awaitable[dict]]] = None,
     ) -> AsyncGenerator[str, None]:
-        """
-        管道的主入口点。
-        它验证请求，调用 Gemini API，并以伪流式（逐字）的方式返回响应。
-        """
         self.emitter = __event_emitter__
         request_id = str(uuid.uuid4())
-        logger.info(f"[{request_id}] 管道开始处理新请求。")
-        logger.debug(f"[{request_id}] 收到的请求体：{body}")
+        logger.info(f"[{request_id}] 开始处理请求。")
 
         try:
-            await self.emit_status("正在验证请求负载...", done=False)
-            if not isinstance(body, dict):
-                error_msg = "❌ 错误：请求体必须是有效的 JSON 对象。"
-                yield error_msg
-                await self.emit_status("错误：无效的请求体。", done=True)
-                return
-
-            messages = body.get("messages")
-            if not messages or not isinstance(messages, list):
-                error_msg = "❌ 错误：请求体必须包含一个有效的 'messages' 列表。"
-                yield error_msg
-                await self.emit_status(
-                    "错误：缺少或无效的 'messages' 列表。", done=True
-                )
-                return
-
             if not self.valves.api_key:
-                error_msg = (
-                    "❌ 错误：Gemini API 密钥未设置。请在管道配置中提供 API 密钥。"
-                )
-                yield error_msg
-                await self.emit_status(error_msg, done=True)
+                yield "❌ 错误：未设置 API 密钥。"
                 return
 
-            logger.info(f"[{request_id}] 请求负载验证通过。")
-
+            messages = body.get("messages", [])
             model_id = body.get("model", self.valves.model_id)
 
-            await self.emit_status(f"正在使用模型 '{model_id}' 开始生成...", done=False)
+            loop_count = 0
+            max_loops = 15 # 安全上限
+            
+            while loop_count < max_loops:
+                loop_count += 1
+                stream_had_error = False
+                full_response_this_turn = ""
+                
+                # 1. 执行流式生成
+                async for chunk in self.get_request_stream(messages, model_id):
+                    if chunk.startswith("🚨"):
+                        stream_had_error = True
+                        yield chunk
+                        continue
 
-            stream_had_error = False
-            full_response = ""
+                    full_response_this_turn += chunk
 
-            async for chunk in self.get_request_stream(messages, model_id):
-                if chunk.startswith("🚨"):
-                    stream_had_error = True
-                    yield chunk
-                    continue
+                    # 根据配置输出 (块状/字符/空格)
+                    if self.valves.block_size > 1:
+                        for part in self.split_html_tags(chunk):
+                            if part.startswith('<') and part.endswith('>'):
+                                yield part
+                            else:
+                                for i in range(0, len(part), self.valves.block_size):
+                                    yield part[i:i + self.valves.block_size]
+                                    if self.valves.output_delay > 0: await asyncio.sleep(self.valves.output_delay)
+                    elif self.valves.block_size < 0:
+                        for part in self.split_html_tags(chunk):
+                            if part.startswith('<') and part.endswith('>'):
+                                yield part
+                            else:
+                                for word in part.split():
+                                    yield word + ' '
+                                    if self.valves.output_delay > 0: await asyncio.sleep(self.valves.output_delay)
+                    else:
+                        for char in chunk:
+                            yield char
+                            if self.valves.output_delay > 0 and char not in ['<', '>']:
+                                await asyncio.sleep(self.valves.output_delay)
 
-                full_response += chunk
+                if stream_had_error:
+                    break
+                
+                if not full_response_this_turn.strip():
+                    logger.warning("收到空响应，停止生成。")
+                    break
 
-                # 根据配置选择输出方式：块状输出、字符输出或空格分块输出
-                if self.valves.block_size > 1:
-                    # 块状输出模式 - 先分离 HTML 标签
-                    for chunk_part in self.split_html_tags(chunk):
-                        if chunk_part.startswith('<') and chunk_part.endswith('>'):
-                            # HTML 标签直接输出，不分块
-                            yield chunk_part
-                        else:
-                            # 普通文本分块输出
-                            for i in range(0, len(chunk_part), self.valves.block_size):
-                                block = chunk_part[i:i + self.valves.block_size]
-                                if block:  # 避免输出空块
-                                    yield block
-                                    if self.valves.output_delay > 0:
-                                        await asyncio.sleep(self.valves.output_delay)
-                elif self.valves.block_size < 0:
-                    # 按空格分块输出模式 - 先分离 HTML 标签
-                    for chunk_part in self.split_html_tags(chunk):
-                        if chunk_part.startswith('<') and chunk_part.endswith('>'):
-                            # HTML 标签直接输出，不分块
-                            yield chunk_part
-                        else:
-                            # 普通文本按空格分块输出
-                            words = chunk_part.split()
-                            for word in words:
-                                if word:  # 避免输出空词
-                                    yield word + ' '  # 在每个词后添加空格
-                                    if self.valves.output_delay > 0:
-                                        await asyncio.sleep(self.valves.output_delay)
+                # 2. 独立判断是否结束
+                # 等待流稍微稳定
+                await asyncio.sleep(0.2)
+                await self.emit_status(f"正在验证回答完整性... (第 {loop_count} 轮)", done=False)
+                
+                is_complete = await self.check_completion(messages, full_response_this_turn)
+
+                if is_complete:
+                    logger.info(f"[{request_id}] 判定回答已完整。")
+                    break
                 else:
-                    # 原有的字符输出模式
-                    skip = False
-                    for char in chunk:
-                        yield char
+                    logger.info(f"[{request_id}] 判定回答不完整，准备继续...")
+                    await self.emit_status(f"检测到回答未完成，自动继续生成... (第 {loop_count + 1} 轮)", done=False)
+                    
+                    # 更新历史
+                    messages.append({"role": "model", "content": full_response_this_turn})
+                    messages.append({"role": "user", "content": "Please continue strictly from where you stopped."})
+                    
+                    # 发送换行符以分隔接下来的内容
+                    yield "\n" 
 
-                        if char == '<':
-                            skip = True
-                        elif char == '>':
-                            skip = False
+            if loop_count >= max_loops:
+                yield "\n\n[达到最大自动续写次数限制]"
 
-                        if skip:
-                            continue
-                        if self.valves.output_delay > 0:
-                            await asyncio.sleep(self.valves.output_delay)
-
-            if not full_response and not stream_had_error:
-                logger.warning(f"[{request_id}] 响应流结束但未收到任何文本内容。")
-                yield ""
-
-            if not stream_had_error:
-                logger.info(f"[{request_id}] 内容生成成功且无错误。")
-                await self.emit_status("生成完成。", done=True)
-            else:
-                logger.warning(f"[{request_id}] 内容生成期间发生错误。")
+            await self.emit_status("生成完成。", done=True)
 
         except Exception as e:
-            error_msg = f"❌ 管道中发生意外的系统错误：{e}"
-            logger.exception(f"[{request_id}] {error_msg}")
-            await self.emit_status(f"致命错误：{e}", done=True)
-            yield error_msg
-
-        logger.info(f"[{request_id}] 管道处理结束。")
+            logger.exception(f"[{request_id}] 致命错误：{e}")
+            yield f"❌ 系统错误：{e}"
