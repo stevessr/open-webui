@@ -48,7 +48,7 @@
 	</Select.Trigger>
 
 	<Select.Content
-		class="trans rounded-2xl min-w-[170px] p-1 border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg"
+		class="transv2 rounded-2xl min-w-[170px] p-1 border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg"
 		sameWidth={false}
 		align="start"
 	>
