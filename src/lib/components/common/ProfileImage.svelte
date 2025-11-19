@@ -12,6 +12,7 @@
 	export let autoplay = true;
 	export let muted = true;
 	export let loop = true;
+	export let style: string = '';
 
 	const currentDomain = typeof window !== 'undefined' ? window.location.hostname : '';
 
@@ -35,7 +36,14 @@
 </script>
 
 {#if processedSrc && isVideoUrl(processedSrc)}
-	<video src={processedSrc} {alt} class="rounded-full {className} object-cover" {autoplay} {muted} {loop}
+	<video
+		src={processedSrc}
+		{alt}
+		class="rounded-full {className} object-cover"
+		{autoplay}
+		{muted}
+		{loop}
+		{style}
 		on:error={(e) => {
 			const video = e.target as HTMLVideoElement;
 			// If error occurs and src is not already a proxy URL, try proxy
@@ -52,6 +60,7 @@
 		src={processedSrc !== '' ? processedSrc : generateInitialsImage(name)}
 		{alt}
 		class="rounded-full {className} object-cover"
+		{style}
 		loading="lazy"
 		on:error={(e) => {
 			const img = e.target as HTMLImageElement;

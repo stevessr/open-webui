@@ -10,6 +10,7 @@
 	export let autoplay: boolean = false;
 	export let muted: boolean = false;
 	export let loop: boolean = false;
+	export let opacity: number | null = null;
 
 	const currentDomain = typeof window !== 'undefined' ? window.location.hostname : '';
 
@@ -58,5 +59,5 @@
 		Your browser does not support the video tag.
 	</video>
 {:else}
-	<ProfileImage src={processedSrc} {alt} {className} />
+	<ProfileImage src={processedSrc} {alt} {className} style="opacity: {opacity}" />
 {/if}
