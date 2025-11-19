@@ -14,13 +14,13 @@
 			autoplay
 			muted
 			loop
-			class="fixed top-0 left-0 w-full h-full object-cover {zIndex}"
+			class="fixed top-0 left-0 w-full h-full object-cover {zIndex} pointer-events-none"
 			style="opacity: {opacity};"
 			id="background"
 		></video>
 	{:else}
 		<div
-			class="fixed top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat {zIndex}"
+			class="fixed top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat {zIndex} pointer-events-none"
 			style="opacity: {opacity};"
 		>
 			<img
