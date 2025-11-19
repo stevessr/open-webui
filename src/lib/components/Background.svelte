@@ -2,14 +2,10 @@
 	import { settings, config, selectedFolder } from '$lib/stores';
 	import { isVideoUrl } from '$lib/utils';
 
-	export let zIndex = '-z-10';
+	export let zIndex = '';
 	export let opacity = 0.3; // Default opacity
 	export let url =
 		$selectedFolder?.meta?.background_image_url || $settings?.backgroundImageUrl || '';
-	if (selectedFolder) {
-		console.log('selected', selectedFolder);
-	}
-	console.log('url in Background.svelte:', url);
 </script>
 
 {#if url}
