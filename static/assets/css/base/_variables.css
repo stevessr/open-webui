@@ -17,9 +17,9 @@
   --color-danger: #d1242f;
 
   /* Background Colors */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f6f8fa;
-  --bg-tertiary: #f8f9fa;
+  --bg-primary: rgba(255, 255, 255, 0.5);
+  --bg-secondary: rgba(246, 248, 250, 0.5);
+  --bg-tertiary: rgba(248, 249, 250, 0.5);
   --bg-overlay: rgba(255, 255, 255, 0.6);
   --bg-code: #f6f8fa;
   --bg-code-header: #e1e4e8;
@@ -134,9 +134,9 @@
    ======================================== */
 html.dark {
   /* Background Colors */
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-tertiary: #21252b;
+  --bg-primary: rgba(13, 17, 23, 0.8);
+  --bg-secondary: rgba(22, 27, 34, 0.8);
+  --bg-tertiary: rgba(33, 37, 43, 0.8);
   --bg-overlay: rgba(45, 45, 45, 0.6);
   --bg-code: #282c34;
   --bg-code-header: #21252b;
