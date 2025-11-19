@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getContext, createEventDispatcher, onMount } from 'svelte';
 	import { createNewChannel, deleteChannelById } from '$lib/apis/channels';
+	import { activeChannel } from '$lib/stores';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
@@ -88,6 +89,20 @@
 		background_image_url = '';
 		background_opacity = 0.25;
 		loading = false;
+	};
+	const updateChannelMeta = (key: string, value: any) => {
+		activeChannel.update((channel) => {
+			if (channel) {
+				return {
+					...channel,
+					meta: {
+						...(channel.meta ?? {}),
+						[key]: value
+					}
+				};
+			}
+			return channel;
+		});
 	};
 </script>
 
