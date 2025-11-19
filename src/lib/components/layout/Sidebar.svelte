@@ -477,7 +477,7 @@
 
 <ChannelModal
 	bind:show={showCreateChannel}
-	onSubmit={async ({ name, access_control }) => {
+	onSubmit={async ({ name, access_control, meta }) => {
 		name = name?.trim();
 		if (!name) {
 			toast.error($i18n.t('Channel name cannot be empty.'));
@@ -486,7 +486,8 @@
 
 		const res = await createNewChannel(localStorage.token, {
 			name: name,
-			access_control: access_control
+			access_control: access_control,
+			meta: meta
 		}).catch((error) => {
 			toast.error(`${error}`);
 			return null;
@@ -1145,23 +1146,23 @@
 										>
 											{$i18n.t(chat.time_range)}
 											<!-- localisation keys for time_range to be recognized from the i18next parser (so they don't get automatically removed):
-							{$i18n.t('Today')}
-							{$i18n.t('Yesterday')}
-							{$i18n.t('Previous 7 days')}
-							{$i18n.t('Previous 30 days')}
-							{$i18n.t('January')}
-							{$i18n.t('February')}
-							{$i18n.t('March')}
-							{$i18n.t('April')}
-							{$i18n.t('May')}
-							{$i18n.t('June')}
-							{$i18n.t('July')}
-							{$i18n.t('August')}
-							{$i18n.t('September')}
-							{$i18n.t('October')}
-							{$i18n.t('November')}
-							{$i18n.t('December')}
-							-->
+											{$i18n.t('Today')}
+											{$i18n.t('Yesterday')}
+											{$i18n.t('Previous 7 days')}
+											{$i18n.t('Previous 30 days')}
+											{$i18n.t('January')}
+											{$i18n.t('February')}
+											{$i18n.t('March')}
+											{$i18n.t('April')}
+											{$i18n.t('May')}
+											{$i18n.t('June')}
+											{$i18n.t('July')}
+											{$i18n.t('August')}
+											{$i18n.t('September')}
+											{$i18n.t('October')}
+											{$i18n.t('November')}
+											{$i18n.t('December')}
+											-->
 										</div>
 									{/if}
 

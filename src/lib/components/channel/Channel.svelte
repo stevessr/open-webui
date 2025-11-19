@@ -6,7 +6,9 @@
 	import { goto } from '$app/navigation';
 
 	import { chatId, showSidebar, socket, user } from '$lib/stores';
+	import Background from '$lib/components/Background.svelte';
 	import { getChannelById, getChannelMessages, sendMessage } from '$lib/apis/channels';
+	import { searchUsers } from '$lib/apis/users';
 
 	import Messages from './Messages.svelte';
 	import MessageInput from './MessageInput.svelte';
@@ -26,6 +28,7 @@
 
 	let channel = null;
 	let messages = null;
+	let channelUsers = [];
 
 	let replyToMessage = null;
 	let threadId = null;
@@ -60,6 +63,11 @@
 			messages = await getChannelMessages(localStorage.token, id, 0);
 
 			if (messages) {
+				const res = await searchUsers(localStorage.token, '');
+				if (res) {
+					channelUsers = res.users;
+				}
+
 				scrollToBottom();
 
 				if (messages.length < 50) {
@@ -204,6 +212,10 @@
 <svelte:head>
 	<title>#{channel?.name ?? 'Channel'} • Neko</title>
 </svelte:head>
+<Background
+	opacity={channel?.meta?.background_opacity}
+	url={channel?.meta?.background_image_url}
+/>
 
 <div
 	class="h-screen max-h-[100dvh] transition-width duration-200 ease-in-out {$showSidebar
@@ -266,6 +278,7 @@
 					bind:replyToMessage
 					{typingUsers}
 					userSuggestions={true}
+					users={channelUsers}
 					channelSuggestions={true}
 					disabled={!channel?.write_access}
 					placeholder={!channel?.write_access
