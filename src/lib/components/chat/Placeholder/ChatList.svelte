@@ -11,6 +11,7 @@
 	dayjs.extend(localizedFormat);
 
 	export let chats = [];
+	export let show:bool = false;
 
 	let chatList = null;
 

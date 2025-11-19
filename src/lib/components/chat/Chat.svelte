@@ -84,7 +84,7 @@
 	import { uploadFile } from '$lib/apis/files';
 	import { createOpenAITextStream } from '$lib/apis/streaming';
 	import { getFunctions } from '$lib/apis/functions';
-	import { updateFolderById } from '$lib/apis/folders';
+	import { updateFolderById, getFolderById } from '$lib/apis/folders';
 
 	import Banner from '../common/Banner.svelte';
 	import MessageInput from '$lib/components/chat/MessageInput.svelte';
@@ -1087,6 +1087,15 @@
 			});
 
 			const chatContent = chat.chat;
+
+			if (chat.folder_id) {
+				const folder = await getFolderById(localStorage.token, chat.folder_id).catch(
+					(error) => {
+						return null;
+					}
+				);
+				selectedFolder.set(folder);
+			}
 
 			if (chatContent) {
 				console.log(chatContent);
@@ -2394,7 +2403,7 @@
 >
 	{#if !loading}
 		<div in:fade={{ duration: 50 }} class="w-full h-full flex flex-col">
-			<Background />
+			<Background {chat} />
 
 			<PaneGroup direction="horizontal" class="w-full h-full">
 				<Pane defaultSize={50} minSize={30} class="h-full flex relative max-w-full flex-col">

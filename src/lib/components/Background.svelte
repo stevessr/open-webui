@@ -3,9 +3,8 @@
 	import { isVideoUrl } from '$lib/utils';
 
 	export let zIndex = '';
-	export let opacity = 0.3; // Default opacity
-	export let url =
-		$selectedFolder?.meta?.background_image_url || $settings?.backgroundImageUrl || '';
+	export let opacity = 0.75; // Default opacity
+	$: url = $selectedFolder?.meta?.background_image_url || $settings?.backgroundImageUrl || '';
 </script>
 
 {#if url}
@@ -26,10 +25,10 @@
 		>
 			<img
 				src={url}
-				alt="Background Image"
+				alt=""
 				class="w-full h-full object-cover"
 				style="opacity: {opacity};"
-			/>
+			/>	
 		</div>
 	{/if}
 {/if}
