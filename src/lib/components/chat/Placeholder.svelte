@@ -102,7 +102,25 @@
 					}}
 				/>
 			{:else}
-				<div class="flex flex-row justify-center gap-3 @sm:gap-3.5 w-fit px-5 max-w-xl">
+				<div class="flex flex-col items-center gap-3 @sm:gap-3.5 w-fit px-5 max-w-xl">
+					<div
+						class=" text-3xl @sm:text-3xl line-clamp-1 flex items-center"
+						in:fade={{ duration: 100 }}
+					>
+						{#if models[selectedModelIdx]?.name}
+							<Tooltip
+								content={models[selectedModelIdx]?.name}
+								placement="top"
+								className=" flex items-center "
+							>
+								<span class="line-clamp-1">
+									{models[selectedModelIdx]?.name}
+								</span>
+							</Tooltip>
+						{:else}
+							{$i18n.t('Hello, {{name}}', { name: $user?.name })}
+						{/if}
+					</div>
 					<div class="flex shrink-0 justify-center">
 						<div class="flex -space-x-4 mb-0.5" in:fade={{ duration: 100 }}>
 							{#each models as model, modelIdx}
@@ -126,32 +144,13 @@
 												($i18n.language === 'dg-DG'
 													? `${WEBUI_BASE_URL}/doge.png`
 													: `${WEBUI_BASE_URL}/static/favicon.png`)}
-											className="size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
+											className="max-h-20 @sm:max-h-21 rounded-full border-[1px] border-gray-100 dark:border-none"
 											aria-hidden="true"
 										/>
 									</button>
 								</Tooltip>
 							{/each}
 						</div>
-					</div>
-
-					<div
-						class=" text-3xl @sm:text-3xl line-clamp-1 flex items-center"
-						in:fade={{ duration: 100 }}
-					>
-						{#if models[selectedModelIdx]?.name}
-							<Tooltip
-								content={models[selectedModelIdx]?.name}
-								placement="top"
-								className=" flex items-center "
-							>
-								<span class="line-clamp-1">
-									{models[selectedModelIdx]?.name}
-								</span>
-							</Tooltip>
-						{:else}
-							{$i18n.t('Hello, {{name}}', { name: $user?.name })}
-						{/if}
 					</div>
 				</div>
 

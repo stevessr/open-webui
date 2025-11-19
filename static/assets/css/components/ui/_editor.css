@@ -23,8 +23,8 @@ input:focus {
 
 /* Layout Elements */
 #sidebar[data-state='true'],
-.parameter-panel,
-div {
+.parameter-panel
+{
   animation: 0.1s ease-in forwards fade-in !important;
 }
 
