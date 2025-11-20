@@ -37,6 +37,12 @@ export function convertToProxyUrl(url: string, currentDomain: string): string {
 		// 如果已经是代理路径，直接返回
 		if (url.startsWith('/op/')) return url;
 
+		// 跳过 base64 编码的 URL (data: scheme)
+		if (url.startsWith('data:')) return url;
+
+		// 跳过非 HTTP(S) 协议的 URL
+		if (!url.startsWith('http://') && !url.startsWith('https://')) return url;
+
 		const urlObj = new URL(url);
 		// 如果两个 URL 不属于同一个主域名，则转换为代理 URL
 		if (!isSameRegistrableDomain(urlObj.hostname, currentDomain)) {
