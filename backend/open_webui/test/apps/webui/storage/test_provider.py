@@ -64,7 +64,7 @@ def test_cloudflare_imgbed_instantiation(monkeypatch):
     monkeypatch.setattr(provider, "CLOUDFLARE_IMGBED_URL", None)
     with pytest.raises(RuntimeError):
         provider.CloudFlareImgBedStorageProvider()
-    
+
     # Test successful instantiation
     monkeypatch.setattr(provider, "CLOUDFLARE_IMGBED_URL", "https://example.com")
     monkeypatch.setattr(provider, "CLOUDFLARE_IMGBED_API_KEY", "test-key")

@@ -378,13 +378,15 @@ class CloudFlareImgBedStorageProvider(StorageProvider):
         contents, file_path = LocalStorageProvider.upload_file(file, filename, tags)
         try:
             # Prepare the file for upload
-            files = {"file": (filename, open(file_path, "rb"), "application/octet-stream")}
-            
+            files = {
+                "file": (filename, open(file_path, "rb"), "application/octet-stream")
+            }
+
             # Prepare headers with API key if available
             headers = {}
             if self.api_key:
                 headers["Authorization"] = f"Bearer {self.api_key}"
-            
+
             # Upload to CloudFlare ImgBed
             response = requests.post(
                 f"{self.base_url}/upload",
@@ -392,10 +394,10 @@ class CloudFlareImgBedStorageProvider(StorageProvider):
                 headers=headers,
                 timeout=300,
             )
-            
+
             response.raise_for_status()
             result = response.json()
-            
+
             # CloudFlare ImgBed typically returns the file URL in the response
             # The exact response format may vary, adjust based on actual API response
             if isinstance(result, dict) and "url" in result:
@@ -405,7 +407,7 @@ class CloudFlareImgBedStorageProvider(StorageProvider):
             else:
                 # Fallback: construct URL from base_url and filename
                 file_url = f"{self.base_url}/file/{filename}"
-            
+
             return contents, file_url
         except requests.exceptions.RequestException as e:
             raise RuntimeError(f"Error uploading file to CloudFlare ImgBed: {e}")
@@ -423,20 +425,20 @@ class CloudFlareImgBedStorageProvider(StorageProvider):
             # Extract filename from the URL
             filename = file_path.split("/")[-1]
             local_file_path = f"{UPLOAD_DIR}/{filename}"
-            
+
             # Prepare headers with API key if available
             headers = {}
             if self.api_key:
                 headers["Authorization"] = f"Bearer {self.api_key}"
-            
+
             # Download from CloudFlare ImgBed
             response = requests.get(file_path, headers=headers, timeout=60)
             response.raise_for_status()
-            
+
             # Save to local storage
             with open(local_file_path, "wb") as f:
                 f.write(response.content)
-            
+
             return local_file_path
         except requests.exceptions.RequestException as e:
             raise RuntimeError(f"Error downloading file from CloudFlare ImgBed: {e}")
@@ -447,24 +449,24 @@ class CloudFlareImgBedStorageProvider(StorageProvider):
             # Extract the file identifier from the URL
             # The exact deletion endpoint may vary based on CloudFlare ImgBed API
             # This is a basic implementation that may need adjustment
-            
+
             # Prepare headers with API key if available
             headers = {}
             if self.api_key:
                 headers["Authorization"] = f"Bearer {self.api_key}"
-            
+
             # Try to delete from CloudFlare ImgBed
             # Note: The actual delete endpoint might be different
             filename = file_path.split("/")[-1]
             delete_url = f"{self.base_url}/api/manage/delete/{filename}"
-            
+
             response = requests.delete(delete_url, headers=headers, timeout=60)
             # Don't raise for 404 as the file might already be deleted
             if response.status_code not in [200, 204, 404]:
                 response.raise_for_status()
         except requests.exceptions.RequestException as e:
             log.warning(f"Error deleting file from CloudFlare ImgBed: {e}")
-        
+
         # Always try to delete from local storage
         try:
             LocalStorageProvider.delete_file(file_path)
@@ -478,7 +480,7 @@ class CloudFlareImgBedStorageProvider(StorageProvider):
         log.warning(
             "Bulk deletion is not fully supported for CloudFlare ImgBed storage provider"
         )
-        
+
         # Always delete from local storage
         LocalStorageProvider.delete_all_files()
 
