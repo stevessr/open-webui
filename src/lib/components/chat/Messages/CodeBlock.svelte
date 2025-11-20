@@ -447,7 +447,7 @@
 						: 'rounded-b-3xl'} overflow-hidden"
 			>
 				<div
-					class="code-block-header bg-gray-900 dark:bg-gray-900 h-10 flex items-center justify-between px-4 rounded-t-3xl"
+					class="sticky top-0 z-10 code-block-header bg-gray-900 dark:bg-gray-900 h-10 flex items-center justify-between px-4 rounded-t-3xl"
 				>
 					<!-- 左侧：装饰圆点 -->
 					<div class="flex items-center gap-2">
