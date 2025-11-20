@@ -90,6 +90,7 @@ class Pipe:
         self.type = "manifold"
         self.name = ""
         self.valves = self.Valves()
+        self.uservalves = self.UserValves()
         self.emitter: Optional[Callable[[dict], Awaitable[None]]] = None
         self.default: Optional[dict] = {
             "thinking_budget": -1,
@@ -328,10 +329,9 @@ class Pipe:
         logger.info("响应流处理完毕。")
 
     async def get_request_stream(
-        self, messages: list, model_name: str, __user__: Optional[dict] = None
+        self, messages: list, model_name: str
     ) -> AsyncGenerator[str, None]:
         """构建请求并从 Gemini API 流式传输响应。"""
-        user_valves = (__user__ or self.default).get("valves", self.UserValves())
         api_model = self.valves.api_model
         logger.info(
             f"为 UI 模型 '{model_name}' 准备请求，使用 API 模型 '{api_model}'。"
@@ -371,7 +371,28 @@ class Pipe:
                                 logger.error(
                                     f"Error parsing image data URI: {e}. Skipping image part."
                                 )
+                        elif image_url.startswith("http://") or image_url.startswith(
+                            "https://"
+                        ):
+                            import mimetypes
 
+                            # 去除参数
+                            clean_url = image_url.split("?")[0]
+                            # 自动猜测类型
+                            mime_type, _ = mimetypes.guess_type(clean_url)
+
+                            # 如果猜不到，给一个默认值
+                            if not mime_type:
+                                mime_type = "image/jpeg"
+
+                            parts.append(
+                                {
+                                    "file_data": {
+                                        "mimeType": mime_type,
+                                        "file_uri": image_url,
+                                    }
+                                }
+                            )
                         else:
                             logger.warning(
                                 f"Unsupported image URL format. Only 'data:image' URIs are supported."
@@ -395,11 +416,11 @@ class Pipe:
             "contents": gemini_contents,
             "tools": gemini_tools,
             "generationConfig": {
-                "temperature": user_valves.temperature,
-                "topP": user_valves.top_p,
+                "temperature": self.uservalves.temperature,
+                "topP": self.uservalves.top_p,
                 "thinkingConfig": {
-                    "includeThoughts": user_valves.include_thoughts,
-                    "thinkingBudget": user_valves.thinking_budget,
+                    "includeThoughts": self.uservalves.include_thoughts,
+                    "thinkingBudget": self.uservalves.thinking_budget,
                 },
             },
         }
@@ -457,7 +478,6 @@ class Pipe:
         它验证请求，调用 Gemini API，并以伪流式（逐字）的方式返回响应。
         """
         self.emitter = __event_emitter__
-        user_valves = (__user__ or self.default).get("valves", self.UserValves())
         request_id = str(uuid.uuid4())
         logger.info(f"[{request_id}] 管道开始处理新请求。")
         logger.debug(f"[{request_id}] 收到的请求体：{body}")
@@ -496,7 +516,7 @@ class Pipe:
             stream_had_error = False
             full_response = ""
 
-            async for chunk in self.get_request_stream(messages, model_id, __user__):
+            async for chunk in self.get_request_stream(messages, model_id):
                 if chunk.startswith("🚨"):
                     stream_had_error = True
                     yield chunk
@@ -505,7 +525,7 @@ class Pipe:
                 full_response += chunk
 
                 # 根据配置选择输出方式：块状输出、字符输出或空格分块输出
-                if user_valves.block_size > 1:
+                if self.uservalves.block_size > 1:
                     # 块状输出模式 - 先分离 HTML 标签
                     for chunk_part in self.split_html_tags(chunk):
                         if chunk_part.startswith("<") and chunk_part.endswith(">"):
@@ -513,13 +533,17 @@ class Pipe:
                             yield chunk_part
                         else:
                             # 普通文本分块输出
-                            for i in range(0, len(chunk_part), user_valves.block_size):
-                                block = chunk_part[i : i + user_valves.block_size]
+                            for i in range(
+                                0, len(chunk_part), self.uservalves.block_size
+                            ):
+                                block = chunk_part[i : i + self.uservalves.block_size]
                                 if block:  # 避免输出空块
                                     yield block
-                                    if user_valves.output_delay > 0:
-                                        await asyncio.sleep(user_valves.output_delay)
-                elif user_valves.block_size < 0:
+                                    if self.uservalves.output_delay > 0:
+                                        await asyncio.sleep(
+                                            self.uservalves.output_delay
+                                        )
+                elif self.uservalves.block_size < 0:
                     # 按空格分块输出模式 - 先分离 HTML 标签
                     for chunk_part in self.split_html_tags(chunk):
                         if chunk_part.startswith("<") and chunk_part.endswith(">"):
@@ -534,8 +558,10 @@ class Pipe:
                             for part in parts:
                                 if part:  # 避免输出空串
                                     yield part
-                                    if user_valves.output_delay > 0:
-                                        await asyncio.sleep(user_valves.output_delay)
+                                    if self.uservalves.output_delay > 0:
+                                        await asyncio.sleep(
+                                            self.uservalves.output_delay
+                                        )
                 else:
                     # 原有的字符输出模式
                     skip = False
@@ -549,8 +575,8 @@ class Pipe:
 
                         if skip:
                             continue
-                        if user_valves.output_delay > 0:
-                            await asyncio.sleep(user_valves.output_delay)
+                        if self.uservalves.output_delay > 0:
+                            await asyncio.sleep(self.uservalves.output_delay)
 
             if not full_response and not stream_had_error:
                 logger.warning(f"[{request_id}] 响应流结束但未收到任何文本内容。")
