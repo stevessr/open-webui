@@ -289,7 +289,10 @@ jobs:
             echo "Build _app directory contents:"
             ls -la ../build/_app/
 
-            cp -r ../build/_app ./
+            git reset HEAD~1
+            rm -rf ./_app
+
+            cp -r ../build/* ./
 
             # Show what will be committed
             echo "Files copied to owu branch:"
