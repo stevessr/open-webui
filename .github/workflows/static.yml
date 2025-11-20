@@ -13,58 +13,39 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '22'
-
-      # Use pnpm/action-setup to install pnpm and set up caching
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: latest # Or specify your pnpm version
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          bun-version: latest
 
       - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
         # The 'pnpm update' command is usually for updating your lockfile,
         # typically done locally. 'pnpm install' is for CI.
 
       - name: Fix missing Dependencies
         run: |
-          pnpm add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
-          pnpm add onnxruntime-web
-          pnpm add lowlight
-          pnpm add @floating-ui/utils
+          bun add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
+          bun add onnxruntime-web
+          bun add lowlight
+          bun add @floating-ui/utils
         # Consider if these need --save-dev or just --save depending on their usage
 
       - name: Cache node modules
         uses: actions/cache@v4
         with:
           path: |
-            ~/.npm
+            ~/.bun
             node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: |
-            ${{ runner.os }}-node-
+            ${{ runner.os }}-bun-
 
       - name: Format Frontend
-        run: pnpm format
+        run: bun run format
 
       - name: Run i18next
-        run: pnpm i18n:parse
+        run: bun run i18n:parse
 
   build:
     name: 'Build Frontend'
@@ -74,48 +55,30 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '22'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: latest
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          bun-version: latest
 
       - name: Cache node modules
         uses: actions/cache@v4
         with:
           path: |
-            ~/.npm
+            ~/.bun
             node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: |
-            ${{ runner.os }}-node-
+            ${{ runner.os }}-bun-
 
       - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Fix missing Dependencies
         run: |
-          pnpm add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
-          pnpm add onnxruntime-web
-          pnpm add lowlight
-          pnpm add @floating-ui/utils
+          bun add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
+          bun add onnxruntime-web
+          bun add lowlight
+          bun add @floating-ui/utils
 
       - name: Cache build artifacts
         uses: actions/cache@v4
@@ -123,12 +86,15 @@ jobs:
           path: |
             build
             .svelte-kit
-          key: ${{ runner.os }}-build-${{ hashFiles('src/**', 'static/**', 'package.json', 'pnpm-lock.yaml', 'vite.config.ts', 'svelte.config.js', 'tailwind.config.js') }}
+          key: ${{ runner.os }}-build-${{ hashFiles('src/**', 'static/**', 'package.json', 'bun.lockb', 'vite.config.ts', 'svelte.config.js', 'tailwind.config.js') }}
           restore-keys: |
             ${{ runner.os }}-build-
 
       - name: Build Frontend
-        run: pnpm build
+        env:
+          APP_BUILD_HASH: ${{ github.sha }}
+          VITE_BUILD_TIME: ${{ github.event.head_commit.timestamp }}
+        run: bun run build
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -145,48 +111,30 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '22'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: latest
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          bun-version: latest
 
       - name: Cache node modules
         uses: actions/cache@v4
         with:
           path: |
-            ~/.npm
+            ~/.bun
             node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: |
-            ${{ runner.os }}-node-
+            ${{ runner.os }}-bun-
 
       - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Fix missing Dependencies
         run: |
-          pnpm add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
-          pnpm add onnxruntime-web
-          pnpm add lowlight
-          pnpm add @floating-ui/utils
+          bun add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
+          bun add onnxruntime-web
+          bun add lowlight
+          bun add @floating-ui/utils
 
       - name: Cache build artifacts
         uses: actions/cache@v4
@@ -194,15 +142,18 @@ jobs:
           path: |
             build
             .svelte-kit
-          key: ${{ runner.os }}-build-${{ hashFiles('src/**', 'static/**', 'package.json', 'pnpm-lock.yaml', 'vite.config.ts', 'svelte.config.js', 'tailwind.config.js') }}
+          key: ${{ runner.os }}-build-${{ hashFiles('src/**', 'static/**', 'package.json', 'bun.lockb', 'vite.config.ts', 'svelte.config.js', 'tailwind.config.js') }}
           restore-keys: |
             ${{ runner.os }}-build-
 
       - name: Build Frontend (if not cached)
+        env:
+          APP_BUILD_HASH: ${{ github.sha }}
+          VITE_BUILD_TIME: ${{ github.event.head_commit.timestamp }}
         run: |
           if [ ! -d "build" ] || [ ! -f "build/index.html" ]; then
             echo "Build not found in cache, building..."
-            pnpm build
+            bun run build
           else
             echo "Build found in cache, skipping build step"
           fi

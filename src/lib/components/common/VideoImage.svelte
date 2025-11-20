@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { isVideoUrl } from '$lib/utils/index';
+	import { convertToProxyUrl, isSameRegistrableDomain } from '$lib/utils/url';
 	import ProfileImage from './ProfileImage.svelte';
 
 	export let src: string = '';
@@ -15,50 +16,11 @@
 	const currentDomain = typeof window !== 'undefined' ? window.location.hostname : '';
 	const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
-	/**
-	 * 提取主机名的可注册域名部分。
-	 * 例如 'www.google.com' -> 'google.com'
-	 * 'a.b.c' -> 'b.c'
-	 */
-	function getRegistrableDomain(hostname: string): string {
-		if (!hostname) return '';
-		const parts = hostname.split('.');
-		if (parts.length > 2) {
-			return parts.slice(-2).join('.');
-		}
-		return hostname;
-	}
+	let hasErrorRetried = false;
 
-	/**
-	 * 检查两个主机名是否属于同一个可注册域名。
-	 * 例如 isSameRegistrableDomain('a.example.com', 'b.example.com') => true
-	 * isSameRegistrableDomain('a.example.com', 'a.another.com') => false
-	 */
-	function isSameRegistrableDomain(hostname1: string, hostname2: string): boolean {
-		const domain1 = getRegistrableDomain(hostname1);
-		const domain2 = getRegistrableDomain(hostname2);
-		return domain1 === domain2 && domain1 !== '';
-	}
-
-	// Function to convert cross-domain URLs to proxy URLs
-	const convertToProxyUrl = (url: string): string => {
-		try {
-			if (!url) return url;
-			if (currentDomain == '') return url; // In non-browser environments, return original URL
-
-			const urlObj = new URL(url);
-			// 如果两个 URL 不属于同一个主域名，则转换为代理 URL
-			if (!isSameRegistrableDomain(urlObj.hostname, currentDomain)) {
-				return `/op${urlObj.pathname}${urlObj.search}${urlObj.hash}`;
-			}
-			return url;
-		} catch (e) {
-			return url; // Return original URL if parsing fails
-		}
-	};
-
-	$: processedSrc = convertToProxyUrl(src);
+	$: processedSrc = convertToProxyUrl(src, currentDomain);
 	$: isVideo = processedSrc && isVideoUrl(processedSrc);
+	$: if (src) hasErrorRetried = false; // Reset error retry state when src changes
 </script>
 
 {#if isVideo}
@@ -76,11 +38,20 @@
 			if (currentDomain == '') return; // In non-browser environments, do nothing
 
 			const video = e.target as HTMLVideoElement;
+
+			// 如果已经重试过一次，不再处理错误
+			if (hasErrorRetried) return;
+
 			// If error occurs and src is not already a proxy URL, try proxy
 			if (src && src !== processedSrc) {
 				const originalUrl = new URL(src);
 				if (isSameRegistrableDomain(originalUrl.hostname, currentDomain)) return; // If same domain, do nothing
 				video.src = `${origin}/op${originalUrl.pathname}${originalUrl.search}${originalUrl.hash}`;
+				hasErrorRetried = true;
+			} else if (processedSrc !== src) {
+				// 如果当前是代理 URL 且失败了，回退到原始 URL
+				video.src = src;
+				hasErrorRetried = true;
 			}
 		}}
 	>
