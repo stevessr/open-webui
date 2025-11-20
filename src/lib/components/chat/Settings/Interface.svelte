@@ -10,6 +10,7 @@
 	import Switch from '$lib/components/common/Switch.svelte';
 	import ManageFloatingActionButtonsModal from './Interface/ManageFloatingActionButtonsModal.svelte';
 	import ManageImageCompressionModal from './Interface/ManageImageCompressionModal.svelte';
+	import ImgBedSettings from './Interface/ImgBedSettings.svelte';
 	import BackgroundUrlInputModal from '$lib/components/common/BackgroundUrlInputModal.svelte';
 	const dispatch = createEventDispatcher();
 
@@ -98,6 +99,7 @@
 	let showManageFloatingActionButtonsModal = false;
 	let showManageImageCompressionModal = false;
 	let showBackgroundUrlModal = false;
+	let showImgBedSettings = false;
 
 	const toggleLandingPageMode = async () => {
 		landingPageMode = landingPageMode === '' ? 'chat' : '';
@@ -1256,6 +1258,27 @@
 					</div>
 				</div>
 			{/if}
+
+			<div>
+				<div class=" py-0.5 flex w-full justify-between">
+					<div id="img-bed-settings-label" class=" self-center text-xs">
+						{$i18n.t('Image Hosting Settings')}
+					</div>
+
+					<div class="flex items-center gap-2 p-1">
+						<button
+							class="text-xs text-gray-700 dark:text-gray-400 underline"
+							type="button"
+							aria-label={$i18n.t('Open Image Hosting Settings')}
+							on:click={() => {
+								showImgBedSettings = true;
+							}}
+						>
+							{$i18n.t('Configure')}
+						</button>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -1268,3 +1291,9 @@
 		</button>
 	</div>
 </form>
+
+<!-- ImgBed Settings Modal -->
+<ImgBedSettings
+	bind:show={showImgBedSettings}
+	{saveSettings}
+/>
