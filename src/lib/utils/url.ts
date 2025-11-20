@@ -44,6 +44,30 @@ export function convertToProxyUrl(url: string, currentDomain: string): string {
 		if (!url.startsWith('http://') && !url.startsWith('https://')) return url;
 
 		const urlObj = new URL(url);
+
+		// 检查是否为外部图片存储服务，如果是则不进行代理处理
+		const externalImageServices = [
+			'bed.stevessr.eu.org',
+			'cdn.jsdelivr.net',
+			'githubusercontent.com',
+			'discord.com',
+			'discordapp.com',
+			'media.discordapp.net',
+			'images.unsplash.com',
+			'pixabay.com',
+			'pexels.com',
+			'storyblok.com',
+			'cloudinary.com',
+			'imgur.com',
+			'i.imgur.com',
+			'ibb.co'
+		];
+
+		// 如果是外部图片服务，直接返回原始 URL
+		if (externalImageServices.some(service => urlObj.hostname.includes(service))) {
+			return url;
+		}
+
 		// 如果两个 URL 不属于同一个主域名，则转换为代理 URL
 		if (!isSameRegistrableDomain(urlObj.hostname, currentDomain)) {
 			return `/op${urlObj.pathname}${urlObj.search}${urlObj.hash}`;
