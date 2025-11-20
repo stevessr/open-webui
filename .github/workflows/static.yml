@@ -218,14 +218,15 @@ jobs:
           echo "Clearing existing files in owu branch..."
           git rm -r . 2>/dev/null || true
 
+          # Clean up any remaining non-git files
+          echo "Cleaning up any remaining non-git files..."
+          find . -maxdepth 1 -not -name ".git" -not -name "." -exec rm -rf {} + 2>/dev/null || true
+
           # Copy complete build directory to owu branch
           if [ -d "../build" ]; then
             echo "Copying complete build directory to owu branch..."
             echo "Build directory contents:"
             ls -la ../build/
-
-            git reset HEAD~1
-            rm -rf ./_app
 
             cp -r ../build/* ./
 
