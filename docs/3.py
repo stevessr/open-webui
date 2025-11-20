@@ -77,21 +77,8 @@ class Pipe:
         self.type = "manifold"
         self.name = "gemini3"
         self.valves = self.Valves()
+        self.uservalues = self.UserValves()
         self.emitter: Optional[Callable[[dict], Awaitable[None]]] = None
-        self.default: Optional[dict] = {
-            "model": self.valves.model_id,
-            "temperature": 1,
-            "top_p": 0.95,
-            "include_thoughts": True,
-            "output_delay": 0.01,
-            "default_thinking_level": "HIGH",
-            "timeout": 600,
-            "stream_idle_timeout": 30,
-            "search_tool_enabled": True,
-            "code_execution_tool_enabled": True,
-            "url_context_tool_enabled": True,
-            "google_maps_tool_enabled": False,
-        }
 
     async def emit_status(self, message: str, done: bool = False):
         if self.emitter:
@@ -106,11 +93,10 @@ class Pipe:
         return [{"id": self.valves.model_id, "name": self.valves.model_display_name}]
 
     async def process_stream(
-        self, response: httpx.Response, __user__: Optional[dict] = None
+        self, response: httpx.Response
     ) -> AsyncGenerator[str, None]:
         """处理流，使用状态机防止标签爆炸"""
         stream_iterator = response.aiter_lines()
-        user_valves = (__user__ or self.default).get("valves", self.UserValves())
 
         # 状态变量：记录当前是否在思考块中
         in_thought_block = False
@@ -120,7 +106,7 @@ class Pipe:
                 try:
                     line = await asyncio.wait_for(
                         stream_iterator.__anext__(),
-                        timeout=user_valves.stream_idle_timeout,
+                        timeout=self.uservalues.stream_idle_timeout,
                     )
 
                     if not line.strip() or not line.startswith("data: "):
@@ -192,14 +178,13 @@ class Pipe:
                 yield "\n</think>\n"
 
     async def get_request_stream(
-        self, messages: list, body: dict, __user__: Optional[dict] = None
+        self, messages: list, body: dict
     ) -> AsyncGenerator[str, None]:
         api_model = self.valves.api_model
-        user_valves = (__user__ or self.default).get("valves", self.UserValves())
 
         thinking_params = body.get("thinking_parameters", {})
         thinking_level = thinking_params.get(
-            "thinking_level", user_valves.default_thinking_level
+            "thinking_level", self.uservalues.default_thinking_level
         )
         thinking_level = thinking_level.upper() if thinking_level else "HIGH"
 
@@ -208,13 +193,13 @@ class Pipe:
         if not tools:
             # 默认开启搜索，为了增强能力
             tools = []
-            if user_valves.search_tool_enabled:
+            if self.uservalues.search_tool_enabled:
                 tools.append({"googleSearch": {}})
-            if user_valves.code_execution_tool_enabled:
+            if self.uservalues.code_execution_tool_enabled:
                 tools.append({"code_execution": {}})
-            if user_valves.url_context_tool_enabled:
+            if self.uservalues.url_context_tool_enabled:
                 tools.append({"url_context": {}})
-            if user_valves.google_maps_tool_enabled:
+            if self.uservalues.google_maps_tool_enabled:
                 tools.append({"googleMaps": {}})
 
         logger.info(f"Requesting {api_model} with Thinking Level: {thinking_level}")
@@ -246,10 +231,10 @@ class Pipe:
                 gemini_contents.append({"role": role, "parts": parts})
 
         gen_config = {
-            "temperature": user_valves.temperature,
-            "topP": user_valves.top_p,
+            "temperature": self.uservalues.temperature,
+            "topP": self.uservalues.top_p,
             "thinkingConfig": {
-                "includeThoughts": user_valves.include_thoughts,
+                "includeThoughts": self.uservalues.include_thoughts,
                 "thinkingLevel": thinking_level,
             },
         }
@@ -263,7 +248,7 @@ class Pipe:
         url = f"/v1beta/models/{api_model}:streamGenerateContent?key={self.valves.api_key}&alt=sse"
 
         async with httpx.AsyncClient(
-            base_url=self.valves.base_url, timeout=user_valves.timeout
+            base_url=self.valves.base_url, timeout=self.uservalues.timeout
         ) as client:
             await self.emit_status(
                 f"Calling Gemini 3 (Level: {thinking_level})...", done=False
@@ -274,7 +259,7 @@ class Pipe:
                         err = await response.aread()
                         yield f"🚨 API Error {response.status_code}: {err.decode()}"
                         return
-                    async for chunk in self.process_stream(response, __user__):
+                    async for chunk in self.process_stream(response):
                         yield chunk
             except Exception as e:
                 yield f"🚨 Connection Error: {e}"
@@ -287,7 +272,7 @@ class Pipe:
         __event_call__: Optional[Callable[[dict], Awaitable[dict]]] = None,
     ) -> AsyncGenerator[str, None]:
         self.emitter = __event_emitter__
-        user_valves = (__user__ or self.default).get("valves", self.UserValves())
+        self.uservalues = __user__.get("valves") if __user__ else self.UserValves()
 
         if not self.valves.api_key:
             yield "❌ API Key Missing"
@@ -295,7 +280,7 @@ class Pipe:
 
         messages = body.get("messages", [])
 
-        async for chunk in self.get_request_stream(messages, body, __user__):
+        async for chunk in self.get_request_stream(messages, body):
             yield chunk
-            if user_valves.output_delay > 0:
-                await asyncio.sleep(user_valves.output_delay)
+            if self.uservalues.output_delay > 0:
+                await asyncio.sleep(self.uservalues.output_delay)

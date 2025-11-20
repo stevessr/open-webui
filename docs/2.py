@@ -102,16 +102,8 @@ class Pipe:
         self.type = "manifold"
         self.name = ""
         self.valves = self.Valves()
-        self.uservalves = self.UserValves()
+        self.uservalues = self.UserValves()
         self.emitter: Optional[Callable[[dict], Awaitable[None]]] = None
-        self.default: Optional[dict] = {
-            "thinking_budget": -1,
-            "include_thoughts": True,
-            "output_delay": 0.01,
-            "block_size": 10,
-            "temperature": 0.7,
-            "top_p": 0.9,
-        }
         logger.info(f"管道 '{self.name}' 已初始化。")
 
     async def emit_status(self, message: str, done: bool = False):
@@ -551,6 +543,7 @@ class Pipe:
     ) -> AsyncGenerator[str, None]:
         """管道的主入口点。"""
         self.emitter = __event_emitter__
+        self.uservalues = __user__.get("valves") if __user__ else self.UserValves()
         request_id = str(uuid.uuid4())
         logger.info(f"[{request_id}] 管道开始处理新请求。")
 
