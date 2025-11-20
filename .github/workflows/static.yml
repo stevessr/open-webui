@@ -184,40 +184,80 @@ jobs:
           # Add remote
           git remote add origin "https://${{ env.PERSONAL_ACCESS_TOKEN }}@github.com/stevessr/owu.git"
 
-          # Fetch the existing owu branch to get static assets
-          echo "Fetching existing owu branch..."
-          git fetch origin owu --depth=3
+          # Fetch existing branches to check what exists
+          echo "Fetching existing branches..."
+          git fetch origin --depth=3
 
-          # Create a new branch for deployment
-          git checkout -b deploy-${{ github.sha }}
-
-          # If owu branch exists, copy only static assets from it
-          if git ls-tree --name-only origin/owu | grep -q "static"; then
-            echo "Found static directory in previous deployment, preserving..."
-
-            # Create static directory if not exists
-            mkdir -p static
-
-            # Use git archive to extract only static directory
-            git archive origin/owu:static --format=tar | tar -x -C ./
-
-            echo "Static files preserved:"
-            ls -la static/ || echo "Static directory is empty"
+          # Handle data branch (contains everything except _app)
+          echo "=== Processing data branch ==="
+          if git ls-remote --heads origin data | grep -q "refs/heads/data"; then
+            echo "Data branch exists, fetching and updating..."
+            git fetch origin data --depth=3
+            git checkout data
+            git pull origin data
           else
-            echo "No previous static directory found, this might be the first deployment"
+            echo "Data branch does not exist, creating..."
+            git checkout -b data
+            git commit --allow-empty -m "Initial data branch commit"
           fi
 
-          # Add all files (existing static + new build)
-          git add -A
-          git status
+          # Add all files except _app directory to data branch
+          echo "Adding files to data branch (excluding _app)..."
+          git add .
+          git reset HEAD _app 2>/dev/null || true
+          if [ -d "_app" ]; then
+            git rm -r --cached _app 2>/dev/null || true
+          fi
 
-          # Commit with descriptive message
-          git commit -m "Deploy owu site - static + build ${{ github.sha }}
+          # Commit changes to data branch
+          if ! git diff --staged --quiet; then
+            git commit -m "Update data branch - build ${{ github.sha }}
 
-          Static assets preserved from previous deployments
-          New build from: ${{ github.repository }}@${{ github.sha }}
+            Files: All build assets except _app
+            Build from: ${{ github.repository }}@${{ github.sha }}
+            Timestamp: $(date -u +\"%Y-%m-%d %H:%M:%S UTC\")"
+            git push origin data
+          else
+            echo "No changes to data branch"
+          fi
 
-          Deployment timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          # Handle owu branch (contains _app files)
+          echo "=== Processing owu branch ==="
+          if git ls-remote --heads origin owu | grep -q "refs/heads/owu"; then
+            echo "OWU branch exists, fetching..."
+            git fetch origin owu --depth=3
+            git checkout owu
+            git pull origin owu
+          else
+            echo "OWU branch does not exist, creating from data branch..."
+            git checkout -b owu data
+          fi
+
+          # Clear existing files and add only _app directory
+          echo "Setting up owu branch with _app files..."
+          git rm -r . 2>/dev/null || true
+          if [ -d "_app" ]; then
+            git add _app
+          else
+            echo "Warning: _app directory not found"
+            git commit --allow-empty -m "Empty owu branch - no _app directory found"
+          fi
+
+          # Commit changes to owu branch
+          if ! git diff --staged --quiet; then
+            git commit -m "Update owu branch - _app files from build ${{ github.sha }}
+
+            Files: _app directory only
+            Build from: ${{ github.repository }}@${{ github.sha }}
+            Timestamp: $(date -u +\"%Y-%m-%d %H:%M:%S UTC\")"
+          else
+            git commit --allow-empty -m "Update owu branch - no _app changes - build ${{ github.sha }}"
+          fi
 
           # Force push to owu branch
-          git push --force origin deploy-${{ github.sha }}:owu
+          git push --force origin owu
+
+          echo "=== Deployment Summary ==="
+          echo "✓ Data branch updated with build assets (excluding _app)"
+          echo "✓ OWU branch updated with _app files"
+          echo "✓ Both branches pushed successfully"
