@@ -8,8 +8,9 @@ import logging
 import time
 import uuid
 import re
+import base64
 from typing import AsyncIterable, Optional, Callable, Awaitable, AsyncGenerator, List
-import asyncio  # 引入 asyncio 用于超时和延迟
+import asyncio
 
 import httpx
 from pydantic import BaseModel, Field
@@ -33,24 +34,35 @@ logger.setLevel(log_level)
 class Pipe:
     """
     一个用于与 Gemini API 交互的 Manifold 风格管道。
-    该管道处理流式响应并提供状态更新。
+    该管道处理流式响应并提供状态更新，支持独立的文件上传配置（URL 和 API Key）。
     """
 
     class Valves(BaseModel):
-        # Pydantic 模型，用于配置管道的阀门（即设置）
+        # --- 基础 API 配置 (用于对话生成) ---
         base_url: str = Field(
             default="https://generativelanguage.googleapis.com",
-            description="Gemini API 的基础 URL",
+            description="Gemini 生成 API 的基础 URL (用于 chat/generateContent)。",
         )
-        api_key: str = Field(default="", description="Gemini API 密钥")
+        api_key: str = Field(default="", description="用于对话生成的 Gemini API 密钥。")
+
+        # --- 文件上传 API 配置 (独立) ---
+        file_api_base_url: str = Field(
+            default="https://generativelanguage.googleapis.com",
+            description="Gemini 文件上传 API 的基础 URL (用于 upload/files)。",
+        )
+        file_api_key: str = Field(
+            default="",
+            description="用于文件上传的 Gemini API 密钥。如果留空，将默认使用上面的 api_key。",
+        )
+
         timeout: int = Field(default=600, description="整个请求的超时时间（秒）")
 
-        # 新增：流空闲超时，用于检测中断的流
+        # --- 流式和超时配置 ---
         stream_idle_timeout: int = Field(
             default=30, description="在假定连接中断之前，等待新数据的最长时间（秒）。"
         )
 
-        # 模型配置
+        # --- 模型配置 ---
         model_id: str = Field(
             default="gemini-2.5-flash-lite",
             description="UI 中使用的模型 ID。",
@@ -125,29 +137,101 @@ class Pipe:
     def split_html_tags(self, text: str) -> List[str]:
         """
         将文本分割为 HTML 标签和普通文本块的列表
-        例如："Hello <b>world</b>!" -> ["Hello ", "<b>", "world", "</b>", "!"]
         """
-        import re
-
         pattern = r"(<[^>]+>)"
         return re.split(pattern, text)
+
+    async def _upload_file(
+        self, client: httpx.AsyncClient, mime_type: str, data: bytes
+    ) -> str:
+        """
+        使用 Gemini File API 的可恢复上传协议上传文件字节。
+        使用 self.valves.file_api_base_url 和 self.valves.file_api_key。
+        """
+        num_bytes = len(data)
+        display_name = "Uploaded Image"
+
+        # 1. 确定使用的 API Key (优先使用独立的上传 Key，没有则回退到主 Key)
+        upload_api_key = (
+            self.valves.file_api_key
+            if self.valves.file_api_key
+            else self.valves.api_key
+        )
+
+        if not upload_api_key:
+            raise ValueError("未设置上传用的 API Key (file_api_key 或 api_key 均为空)")
+
+        # 2. 构造上传初始 URL
+        base_upload_url = self.valves.file_api_base_url.rstrip("/")
+        if not base_upload_url:
+            base_upload_url = "https://generativelanguage.googleapis.com"
+
+        # 简单的路径拼接，确保指向 /upload/v1beta/files
+        if base_upload_url.endswith("/upload/v1beta/files"):
+            upload_endpoint = base_upload_url
+        else:
+            upload_endpoint = f"{base_upload_url}/upload/v1beta/files"
+
+        params = {"key": upload_api_key}
+
+        headers_init = {
+            "X-Goog-Upload-Protocol": "resumable",
+            "X-Goog-Upload-Command": "start",
+            "X-Goog-Upload-Header-Content-Length": str(num_bytes),
+            "X-Goog-Upload-Header-Content-Type": mime_type,
+            "Content-Type": "application/json",
+        }
+
+        payload_init = {"file": {"display_name": display_name}}
+
+        logger.info(
+            f"开始上传文件 ({num_bytes} bytes, {mime_type}) 到：{upload_endpoint}"
+        )
+
+        try:
+            resp_init = await client.post(
+                upload_endpoint, params=params, headers=headers_init, json=payload_init
+            )
+            resp_init.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            logger.error(f"上传初始化失败：{e.response.text}")
+            raise e
+
+        # 从响应头获取实际的上传 URL
+        upload_url = resp_init.headers.get("x-goog-upload-url")
+        if not upload_url:
+            raise ValueError("未从 API 收到 x-goog-upload-url")
+
+        # 3. 上传实际字节
+        headers_upload = {
+            "Content-Length": str(num_bytes),
+            "X-Goog-Upload-Offset": "0",
+            "X-Goog-Upload-Command": "upload, finalize",
+        }
+
+        # 注意：upload_url 通常是一个完整的绝对路径，httpx 会直接使用它
+        resp_upload = await client.post(
+            upload_url, headers=headers_upload, content=data
+        )
+        resp_upload.raise_for_status()
+
+        file_info = resp_upload.json()
+        file_uri = file_info.get("file", {}).get("uri")
+
+        if not file_uri:
+            raise ValueError("上传完成但未收到 file_uri")
+
+        logger.info(f"文件上传成功：{file_uri}")
+        return file_uri
 
     async def process_stream(
         self, response: httpx.Response
     ) -> AsyncGenerator[str, None]:
-        """
-        处理来自 Gemini API 的服务器发送事件 (SSE) 流。
-        核心修改：
-        1. 收到思考片段立刻 yield。如果是首个思考片段，头部追加 <think>。
-        2. 收到文本片段时，如果前一个是思考片段，则在文本前追加 </think>。
-        3. 保留详细的 Token 计算逻辑。
-        """
+        """处理来自 Gemini API 的服务器发送事件 (SSE) 流。"""
         logger.info("开始处理 API 响应流。")
         finish_reason_received = False
         stream_iterator = response.aiter_lines()
         content_yielded = False
-
-        # 状态标记：当前是否处于思考标签块内
         is_thinking = False
 
         try:
@@ -165,7 +249,6 @@ class Pipe:
 
                     try:
                         chunk = json.loads(line)
-                        logger.debug(f"收到并解析了数据块：{chunk}")
 
                         if "error" in chunk:
                             error_detail = chunk.get("error", {}).get(
@@ -187,35 +270,26 @@ class Pipe:
                                         is_thought_part = part.get("thought") is True
                                         text_content = part.get("text", "")
 
-                                        # 如果内容为空，跳过处理（避免产生空的标签切换）
                                         if not text_content:
                                             continue
 
                                         content_yielded = True
 
                                         if is_thought_part:
-                                            # --- 处理思考片段 ---
                                             prefix = ""
-                                            # 如果之前不是思考状态，说明是第一个思考片段，追加 <think>
                                             if not is_thinking:
                                                 prefix = "<think>"
                                                 is_thinking = True
 
-                                            # 格式化思考内容（保留每一行前的 > 符号）
-                                            # 注意：为了支持流式，这里不使用 strip()，避免吞掉换行符
                                             quoted_lines = [
                                                 f"> {line}"
                                                 for line in text_content.splitlines()
                                             ]
-                                            # splitlines 会吃掉末尾的换行，如果原文有换行需要补上处理
-                                            # 这里简单处理：如果原文结尾是换行，splitlines 后可能少一个空行
                                             quoted_thought = "\n".join(quoted_lines)
 
-                                            # 如果原文以换行结尾，join 后通常需要补一个换行以保持流的连贯性
                                             if text_content.endswith("\n"):
                                                 quoted_thought += "\n"
 
-                                            # 如果 splitlines 为空（例如 text_content 只是 "\n"），需要特殊处理
                                             if (
                                                 not quoted_thought
                                                 and text_content.strip() == ""
@@ -225,16 +299,13 @@ class Pipe:
                                             yield prefix + quoted_thought
 
                                         else:
-                                            # --- 处理文本片段 ---
                                             prefix = ""
-                                            # 如果之前是思考状态，说明思考结束，文本开始，追加 </think>
                                             if is_thinking:
                                                 prefix = "</think>"
                                                 is_thinking = False
 
                                             yield prefix + text_content
 
-                        # --- Token 计算逻辑 (保持不变) ---
                         if usage_metadata := chunk.get("usageMetadata"):
                             usage_parts = []
                             prompt_tokens = usage_metadata.get("promptTokenCount", 0)
@@ -259,28 +330,25 @@ class Pipe:
                                 candidates_tokens - thinking_and_tool_tokens
                             )
 
-                            usage_parts.append(f"输入：{prompt_tokens} tokens")
+                            usage_parts.append(f"输入：{prompt_tokens}")
 
                             if output_text_tokens > 0:
-                                usage_parts.append(
-                                    f"输出 (内容): {output_text_tokens} tokens"
-                                )
+                                usage_parts.append(f"输出 (内容): {output_text_tokens}")
 
                             if thinking_and_tool_tokens > 0:
                                 usage_parts.append(
-                                    f"输出 (思考/工具): {thinking_and_tool_tokens} tokens"
+                                    f"输出 (思考/工具): {thinking_and_tool_tokens}"
                                 )
 
-                            usage_parts.append(f"总计：{total_tokens} tokens")
+                            usage_parts.append(f"总计：{total_tokens}")
 
                             usage_msg = (
-                                f"用量信息：{', '.join(usage_parts)}"
+                                f"Token 用量：{', '.join(usage_parts)}"
                                 if usage_parts
                                 else "用量信息可用"
                             )
-                            logger.info(usage_msg)
+                            logger.debug(usage_msg)
                             await self.emit_status(usage_msg, done=False)
-                        # --- Token 计算结束 ---
 
                         if finish_reason := chunk.get("candidates", [{}])[0].get(
                             "finishReason"
@@ -290,48 +358,31 @@ class Pipe:
 
                     except json.JSONDecodeError:
                         logger.warning(f"解码 JSON 行失败：{line}. 跳过此行。")
-                        await self.emit_status(
-                            f"警告：无法解析一个数据块。可能存在格式问题。", done=False
-                        )
-                    except (KeyError, IndexError) as e:
-                        logger.debug(
-                            f"无法从数据块中提取文本或元数据：{line}. 错误：{e}. 跳过此块。"
-                        )
-                        await self.emit_status(
-                            f"警告：接收到未知格式的数据块。", done=False
-                        )
+                    except Exception as e:
+                        logger.debug(f"处理数据块错误：{e}. 跳过此块。")
 
                 except StopAsyncIteration:
                     logger.info("响应流正常结束。")
                     break
                 except asyncio.TimeoutError:
-                    error_msg = f"🚨 流超时：在 {self.valves.stream_idle_timeout} 秒内未收到新数据，连接可能已中断。"
+                    error_msg = f"🚨 流超时：在 {self.valves.stream_idle_timeout} 秒内未收到新数据。"
                     logger.error(error_msg)
                     await self.emit_status(error_msg, done=True)
                     yield error_msg
                     return
 
-            # 循环结束后，如果仍在思考状态，必须闭合标签
             if is_thinking:
                 yield "</think>"
                 is_thinking = False
 
         finally:
-            if not finish_reason_received:
-                warning_msg = "警告：API 响应流已结束，但未收到明确的完成信号（finishReason）。这可能表示流被意外中断或未完全发送。"
-                logger.warning(warning_msg)
-                await self.emit_status(warning_msg, done=True)
-            elif not content_yielded and finish_reason_received:
-                logger.debug(
-                    "Stream ended with finish reason but no text content was yielded."
-                )
-
-        logger.info("响应流处理完毕。")
+            if not finish_reason_received and not content_yielded:
+                logger.warning("流结束但未收到完成信号。")
 
     async def get_request_stream(
         self, messages: list, model_name: str
     ) -> AsyncGenerator[str, None]:
-        """构建请求并从 Gemini API 流式传输响应。"""
+        """构建请求并从 Gemini API 流式传输响应，支持通过 File API 上传图片。"""
         api_model = self.valves.api_model
         logger.info(
             f"为 UI 模型 '{model_name}' 准备请求，使用 API 模型 '{api_model}'。"
@@ -339,77 +390,105 @@ class Pipe:
 
         gemini_contents = []
 
-        for msg in messages:
-            role = "user" if msg.get("role") == "user" else "model"
-            content = msg.get("content")
-            parts = []
-            if isinstance(content, str):
-                parts.append({"text": content})
-            elif isinstance(content, list):
-                for part in content:
-                    part_type = part.get("type")
-                    if part_type == "text":
-                        parts.append({"text": part.get("text", "")})
-                    elif part_type == "image_url":
-                        image_url = part.get("image_url", {}).get("url", "")
-                        if (
-                            image_url.startswith("data:image")
-                            and ";base64," in image_url
-                        ):
-                            try:
-                                header, encoded_data = image_url.split(",", 1)
-                                mime_type = header.split(":", 1)[1].split(";", 1)[0]
-                                parts.append(
-                                    {
-                                        "inlineData": {
-                                            "mimeType": mime_type,
-                                            "data": encoded_data,
+        # 使用独立的 httpx Client 进行上传操作
+        async with httpx.AsyncClient(timeout=self.valves.timeout) as upload_client:
+            for msg in messages:
+                role = "user" if msg.get("role") == "user" else "model"
+                content = msg.get("content")
+                parts = []
+
+                if isinstance(content, str):
+                    parts.append({"text": content})
+                elif isinstance(content, list):
+                    for part in content:
+                        part_type = part.get("type")
+                        if part_type == "text":
+                            parts.append({"text": part.get("text", "")})
+
+                        elif part_type == "image_url":
+                            image_url = part.get("image_url", {}).get("url", "")
+
+                            mime_type = "image/jpeg"  # 默认
+                            image_bytes = None
+
+                            # 1. 处理 Data URI
+                            if image_url.startswith("data:image"):
+                                try:
+                                    header, encoded_data = image_url.split(",", 1)
+                                    mime_type = header.split(":", 1)[1].split(";", 1)[0]
+                                    image_bytes = base64.b64decode(encoded_data)
+                                except Exception as e:
+                                    logger.error(f"解析 base64 图片数据失败：{e}")
+                                    await self.emit_status(
+                                        "警告：解析图片数据失败，已跳过图片。",
+                                        done=False,
+                                    )
+
+                            # 2. 处理远程 URL
+                            elif image_url.startswith(
+                                "http://"
+                            ) or image_url.startswith("https://"):
+                                if self.valves.file_api_key == "":
+                                    await self.emit_status(
+                                        "警告：未配置上传 API Key，无法上传远程图片，已跳过图片。",
+                                        done=False,
+                                    )
+                                    continue
+                                try:
+                                    await self.emit_status(
+                                        f"正在下载远程图片...", done=False
+                                    )
+                                    resp = await upload_client.get(image_url)
+                                    if resp.status_code == 200:
+                                        image_bytes = resp.content
+                                        import mimetypes
+
+                                        guessed_type, _ = mimetypes.guess_type(
+                                            image_url
+                                        )
+                                        if guessed_type:
+                                            mime_type = guessed_type
+                                    else:
+                                        logger.error(
+                                            f"下载远程图片失败：{resp.status_code}"
+                                        )
+                                except Exception as e:
+                                    logger.error(f"下载远程图片异常：{e}")
+
+                            # 3. 执行上传
+                            if image_bytes:
+                                try:
+                                    await self.emit_status(
+                                        "正在上传图片到 Gemini...", done=False
+                                    )
+                                    file_uri = await self._upload_file(
+                                        upload_client, mime_type, image_bytes
+                                    )
+
+                                    parts.append(
+                                        {
+                                            "file_data": {
+                                                "mime_type": mime_type,
+                                                "file_uri": file_uri,
+                                            }
                                         }
-                                    }
-                                )
-                            except (ValueError, IndexError) as e:
-                                logger.error(
-                                    f"Error parsing image data URI: {e}. Skipping image part."
-                                )
-                        elif image_url.startswith("http://") or image_url.startswith(
-                            "https://"
-                        ):
-                            import mimetypes
+                                    )
+                                except Exception as e:
+                                    error_msg = f"上传图片到 Gemini 失败：{e}"
+                                    logger.error(error_msg)
+                                    await self.emit_status(
+                                        f"警告：{error_msg}", done=False
+                                    )
 
-                            # 去除参数
-                            clean_url = image_url.split("?")[0]
-                            # 自动猜测类型
-                            mime_type, _ = mimetypes.guess_type(clean_url)
-
-                            # 如果猜不到，给一个默认值
-                            if not mime_type:
-                                mime_type = "image/jpeg"
-
-                            parts.append(
-                                {
-                                    "file_data": {
-                                        "mimeType": mime_type,
-                                        "file_uri": image_url,
-                                    }
-                                }
-                            )
-                        else:
-                            logger.warning(
-                                f"Unsupported image URL format. Only 'data:image' URIs are supported."
-                            )
-            if parts:
-                gemini_contents.append({"role": role, "parts": parts})
+                if parts:
+                    gemini_contents.append({"role": role, "parts": parts})
 
         if gemini_contents and gemini_contents[-1]["role"] == "model":
             gemini_contents.append({"role": "user", "parts": [{"text": "Continue"}]})
-            logger.warning(
-                "Added a dummy 'user' turn to continue the conversation after a 'model' turn."
-            )
 
         gemini_tools = [
             {"googleSearch": {}},
             {"code_execution": {}},
-            {"url_context": {}},
         ]
 
         data = {
@@ -448,21 +527,18 @@ class Pipe:
                         yield content
 
         except httpx.ConnectError as e:
-            error_msg = f"🚨 连接错误：无法连接到 {self.valves.base_url}。请检查网络连接或基础 URL。 {e}"
+            error_msg = f"🚨 连接错误：无法连接到 {self.valves.base_url}。 {e}"
             logger.exception(error_msg)
             await self.emit_status(error_msg, done=True)
             yield error_msg
         except httpx.TimeoutException:
-            error_msg = (
-                f"🚨 请求超时：对 Gemini API 的请求在 {self.valves.timeout} 秒后超时。"
-                f"请检查网络或增加管道超时设置。"
-            )
+            error_msg = f"🚨 请求超时：{self.valves.timeout} 秒超时。"
             logger.error(error_msg)
             await self.emit_status(error_msg, done=True)
             yield error_msg
         except Exception as e:
             error_msg = f"🚨 发生意外错误：{e}"
-            logger.exception(f"在 get_request_stream 中发生意外错误：{e}")
+            logger.exception(error_msg)
             await self.emit_status(error_msg, done=True)
             yield error_msg
 
@@ -473,125 +549,70 @@ class Pipe:
         __event_emitter__: Optional[Callable[[dict], Awaitable[None]]] = None,
         __event_call__: Optional[Callable[[dict], Awaitable[dict]]] = None,
     ) -> AsyncGenerator[str, None]:
-        """
-        管道的主入口点。
-        它验证请求，调用 Gemini API，并以伪流式（逐字）的方式返回响应。
-        """
+        """管道的主入口点。"""
         self.emitter = __event_emitter__
         request_id = str(uuid.uuid4())
         logger.info(f"[{request_id}] 管道开始处理新请求。")
-        logger.debug(f"[{request_id}] 收到的请求体：{body}")
 
         try:
-            await self.emit_status("正在验证请求负载...", done=False)
-            if not isinstance(body, dict):
-                error_msg = "❌ 错误：请求体必须是有效的 JSON 对象。"
-                yield error_msg
-                await self.emit_status("错误：无效的请求体。", done=True)
-                return
-
-            messages = body.get("messages")
-            if not messages or not isinstance(messages, list):
-                error_msg = "❌ 错误：请求体必须包含一个有效的 'messages' 列表。"
-                yield error_msg
-                await self.emit_status(
-                    "错误：缺少或无效的 'messages' 列表。", done=True
-                )
-                return
-
             if not self.valves.api_key:
-                error_msg = (
-                    "❌ 错误：Gemini API 密钥未设置。请在管道配置中提供 API 密钥。"
-                )
+                error_msg = "❌ 错误：Gemini API 密钥未设置。"
                 yield error_msg
                 await self.emit_status(error_msg, done=True)
                 return
 
-            logger.info(f"[{request_id}] 请求负载验证通过。")
-
+            messages = body.get("messages")
             model_id = body.get("model", self.valves.model_id)
 
-            await self.emit_status(f"正在使用模型 '{model_id}' 开始生成...", done=False)
-
-            stream_had_error = False
-            full_response = ""
-
             async for chunk in self.get_request_stream(messages, model_id):
-                if chunk.startswith("🚨"):
-                    stream_had_error = True
-                    yield chunk
-                    continue
-
-                full_response += chunk
-
-                # 根据配置选择输出方式：块状输出、字符输出或空格分块输出
+                # 处理输出模式（分块/字符）
                 if self.uservalves.block_size > 1:
-                    # 块状输出模式 - 先分离 HTML 标签
                     for chunk_part in self.split_html_tags(chunk):
                         if chunk_part.startswith("<") and chunk_part.endswith(">"):
-                            # HTML 标签直接输出，不分块
                             yield chunk_part
                         else:
-                            # 普通文本分块输出
                             for i in range(
                                 0, len(chunk_part), self.uservalves.block_size
                             ):
                                 block = chunk_part[i : i + self.uservalves.block_size]
-                                if block:  # 避免输出空块
+                                if block:
                                     yield block
                                     if self.uservalves.output_delay > 0:
                                         await asyncio.sleep(
                                             self.uservalves.output_delay
                                         )
                 elif self.uservalves.block_size < 0:
-                    # 按空格分块输出模式 - 先分离 HTML 标签
+                    # 按空格分块
                     for chunk_part in self.split_html_tags(chunk):
                         if chunk_part.startswith("<") and chunk_part.endswith(">"):
-                            # HTML 标签直接输出，不分块
                             yield chunk_part
                         else:
-                            # 普通文本按空格分块输出
-                            # 修复：使用 re.split(r'(\s+)') 而不是 split()
-                            # split() 会丢弃所有空白符（包括换行符），导致代码块和段落合并。
-                            # re.split(r'(\s+)') 会保留分隔符（即空格、换行符等），防止格式丢失。
                             parts = re.split(r"(\s+)", chunk_part)
                             for part in parts:
-                                if part:  # 避免输出空串
+                                if part:
                                     yield part
                                     if self.uservalves.output_delay > 0:
                                         await asyncio.sleep(
                                             self.uservalves.output_delay
                                         )
                 else:
-                    # 原有的字符输出模式
+                    # 逐字输出
                     skip = False
                     for char in chunk:
                         yield char
-
                         if char == "<":
                             skip = True
                         elif char == ">":
                             skip = False
-
                         if skip:
                             continue
                         if self.uservalves.output_delay > 0:
                             await asyncio.sleep(self.uservalves.output_delay)
 
-            if not full_response and not stream_had_error:
-                logger.warning(f"[{request_id}] 响应流结束但未收到任何文本内容。")
-                yield ""
-
-            if not stream_had_error:
-                logger.info(f"[{request_id}] 内容生成成功且无错误。")
-                await self.emit_status("生成完成。", done=True)
-            else:
-                logger.warning(f"[{request_id}] 内容生成期间发生错误。")
+            await self.emit_status("生成完成。", done=True)
 
         except Exception as e:
-            error_msg = f"❌ 管道中发生意外的系统错误：{e}"
+            error_msg = f"❌ 系统错误：{e}"
             logger.exception(f"[{request_id}] {error_msg}")
             await self.emit_status(f"致命错误：{e}", done=True)
             yield error_msg
-
-        logger.info(f"[{request_id}] 管道处理结束。")
