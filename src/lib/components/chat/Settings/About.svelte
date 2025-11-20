@@ -57,7 +57,7 @@
 				<div class="flex flex-col text-xs text-gray-700 dark:text-gray-200">
 					<div class="flex gap-1">
 						<Tooltip content={WEBUI_BUILD_HASH}>
-							v{WEBUI_VERSION}
+							v{WEBUI_VERSION} ({WEBUI_BUILD_HASH})
 						</Tooltip>
 
 						{#if $config?.features?.enable_version_update_check}

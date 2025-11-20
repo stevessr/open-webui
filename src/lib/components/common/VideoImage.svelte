@@ -5,7 +5,7 @@
 	export let src: string = '';
 	export let alt: string = '';
 	export let className: string = '';
-	export let crossOrigin: string | null = null;
+	export let crossOrigin: 'use-credentials' | 'anonymous' | '' | undefined = 'anonymous';
 	export let controls: boolean = true;
 	export let autoplay: boolean = false;
 	export let muted: boolean = false;
@@ -13,6 +13,7 @@
 	export let opacity: number | null = null;
 
 	const currentDomain = typeof window !== 'undefined' ? window.location.hostname : '';
+	const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
 	/**
 	 * 提取主机名的可注册域名部分。
@@ -43,6 +44,7 @@
 	const convertToProxyUrl = (url: string): string => {
 		try {
 			if (!url) return url;
+			if (currentDomain == '') return url; // In non-browser environments, return original URL
 
 			const urlObj = new URL(url);
 			// 如果两个 URL 不属于同一个主域名，则转换为代理 URL
@@ -71,13 +73,14 @@
 		data-cy="video"
 		title={alt}
 		on:error={(e) => {
+			if (currentDomain == '') return; // In non-browser environments, do nothing
+
 			const video = e.target as HTMLVideoElement;
 			// If error occurs and src is not already a proxy URL, try proxy
 			if (src && src !== processedSrc) {
 				const originalUrl = new URL(src);
-				if (!isSameRegistrableDomain(originalUrl.hostname, currentDomain)) {
-					video.src = `/op${originalUrl.pathname}${originalUrl.search}${originalUrl.hash}`;
-				}
+				if (isSameRegistrableDomain(originalUrl.hostname, currentDomain)) return; // If same domain, do nothing
+				video.src = `${origin}/op${originalUrl.pathname}${originalUrl.search}${originalUrl.hash}`;
 			}
 		}}
 	>
