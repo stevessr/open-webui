@@ -196,78 +196,13 @@ jobs:
           echo "Available branches:"
           git branch -r || echo "No remote branches found"
 
-      - name: Process data branch
-        env:
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-        run: |
-          cd deploy
-
-          echo "=== Processing data branch ==="
-
-          if git ls-remote --heads origin data | grep -q "refs/heads/data"; then
-            echo "Data branch exists, fetching and updating..."
-            git fetch origin data --depth=3
-            git checkout data
-            git pull origin data || true
-          else
-            echo "Data branch does not exist, creating..."
-            git checkout -b data
-            git commit --allow-empty -m "Initial data branch commit"
-          fi
-
-          # Clear all existing files first
-          echo "Clearing existing files in data branch..."
-          git rm -r . 2>/dev/null || true
-
-          # Copy all files from build except _app directory
-          echo "Copying build files to data branch (excluding _app)..."
-          if [ -d "../build" ]; then
-            # List build directory contents first
-            echo "Build directory contents:"
-            ls -la ../build/
-
-            # Copy files excluding _app
-            rsync -av --exclude='_app' ../build/ ./
-
-            # List what was copied
-            echo "Files copied to data branch:"
-            ls -la
-            echo "Files to be committed to data branch:"
-            git status --porcelain
-          else
-            echo "Error: build directory not found"
-            echo "Current directory contents:"
-            ls -la ..
-            exit 1
-          fi
-
-          # Commit changes to data branch
-          git add .
-          if ! git diff --staged --quiet; then
-            echo "Committing data branch changes..."
-            git commit -m "Update data branch - build ${{ github.sha }}
-
-            Files: All build assets except _app
-            Build from: ${{ github.repository }}@${{ github.sha }}
-            Timestamp: $(date -u +\"%Y-%m-%d %H:%M:%S UTC\")"
-            echo "Pushing data branch..."
-            git push origin data
-            echo "✓ Data branch updated successfully"
-          else
-            echo "No changes to data branch - nothing to commit"
-          fi
-
       - name: Process owu branch
         env:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           echo "=== Processing owu branch ==="
 
-          # Reuse the deploy directory for owu branch processing
           cd deploy
-
-          # Reset to clean state for owu branch
-          echo "Preparing for owu branch processing..."
 
           if git ls-remote --heads origin owu | grep -q "refs/heads/owu"; then
             echo "OWU branch exists, fetching..."
@@ -283,11 +218,11 @@ jobs:
           echo "Clearing existing files in owu branch..."
           git rm -r . 2>/dev/null || true
 
-          # Copy only _app directory from build
-          if [ -d "../build/_app" ]; then
-            echo "Copying _app directory to owu branch..."
-            echo "Build _app directory contents:"
-            ls -la ../build/_app/
+          # Copy complete build directory to owu branch
+          if [ -d "../build" ]; then
+            echo "Copying complete build directory to owu branch..."
+            echo "Build directory contents:"
+            ls -la ../build/
 
             git reset HEAD~1
             rm -rf ./_app
@@ -299,25 +234,25 @@ jobs:
             ls -la
             echo "Files to be committed to owu branch:"
             git status --porcelain
-            echo "_app directory copied successfully"
+            echo "Complete build directory copied successfully"
           else
-            echo "Warning: _app directory not found in build"
-            echo "Build directory contents:"
-            ls -la ../build/
-            git commit --allow-empty -m "Empty owu branch - no _app directory found"
+            echo "Error: build directory not found"
+            echo "Current directory contents:"
+            ls -la ..
+            exit 1
           fi
 
           # Commit changes to owu branch
           git add .
           if ! git diff --staged --quiet; then
             echo "Committing owu branch changes..."
-            git commit -m "Update owu branch - _app files from build ${{ github.sha }}
+            git commit -m "Update owu branch - complete build ${{ github.sha }}
 
-            Files: _app directory only
+            Files: Complete build assets including _app
             Build from: ${{ github.repository }}@${{ github.sha }}
             Timestamp: $(date -u +\"%Y-%m-%d %H:%M:%S UTC\")"
           else
-            git commit --allow-empty -m "Update owu branch - no _app changes - build ${{ github.sha }}"
+            git commit --allow-empty -m "Update owu branch - no build changes - ${{ github.sha }}"
           fi
 
           echo "Pushing owu branch..."
@@ -334,8 +269,7 @@ jobs:
 
           echo ""
           echo "=== Deployment Summary ==="
-          echo "✓ Data branch: Updated with build assets (excluding _app)"
-          echo "✓ OWU branch: Updated with _app files only"
+          echo "✓ OWU branch: Updated with complete build assets"
           echo "✓ Repository: https://github.com/stevessr/owu"
           echo "✓ Build commit: ${{ github.sha }}"
           echo "✓ Deployment timestamp: $(date -u +\"%Y-%m-%d %H:%M:%S UTC\")"
