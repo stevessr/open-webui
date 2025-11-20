@@ -72,6 +72,9 @@
 	let copied = false;
 	let saved = false;
 
+	// Animation states
+	let contentElement = null;
+
 	const collapseCodeBlock = () => {
 		collapsed = !collapsed;
 	};
@@ -467,7 +470,7 @@
 							class="flex gap-1 items-center bg-transparent hover:bg-gray-800 border-none transition rounded-md px-2 py-1 text-gray-300 hover:text-white text-xs"
 							on:click={collapseCodeBlock}
 						>
-							<div class="-translate-y-[0.5px]">
+							<div class="-translate-y-[0.5px] collapse-button-icon {collapsed ? 'rotated' : ''}">
 								<ChevronUpDown className="size-3" />
 							</div>
 							<div>
@@ -526,31 +529,93 @@
 				</div>
 
 				{#if !collapsed}
-					{#if edit}
-						<CodeEditor
-							value={code}
-							{id}
-							{lang}
-							onSave={() => {
-								saveCode();
-							}}
-							onChange={(value) => {
-								_code = value;
-							}}
-						/>
-					{:else}
-						<pre
-							class="hljs overflow-x-auto m-0"
-							style="padding: 1rem 1.25rem; border-top-left-radius: 0px; border-top-right-radius: 0px; {(executing ||
-								stdout ||
-								stderr ||
-								result) &&
-								'border-bottom-left-radius: 0px; border-bottom-right-radius: 0px;'}"><code
-								class="language-{lang} rounded-t-none whitespace-pre text-sm"
-								>{@html hljs.highlightAuto(code, hljs.getLanguage(lang)?.aliases).value ||
-									code}</code
-							></pre>
-					{/if}
+					<div
+						class="code-content-wrapper expanded"
+						bind:this={contentElement}
+					>
+						{#if edit}
+							<CodeEditor
+								value={code}
+								{id}
+								{lang}
+								onSave={() => {
+									saveCode();
+								}}
+								onChange={(value) => {
+									_code = value;
+								}}
+							/>
+						{:else}
+							<pre
+								class="hljs overflow-x-auto m-0"
+								style="padding: 1rem 1.25rem; border-top-left-radius: 0px; border-top-right-radius: 0px; {(executing ||
+									stdout ||
+									stderr ||
+									result) &&
+									'border-bottom-left-radius: 0px; border-bottom-right-radius: 0px;'}"><code
+									class="language-{lang} rounded-t-none whitespace-pre text-sm"
+									>{@html hljs.highlightAuto(code, hljs.getLanguage(lang)?.aliases).value ||
+										code}</code
+								></pre>
+						{/if}
+
+						<div
+							id="plt-canvas-{id}"
+							class="bg-gray-50 dark:bg-black dark:text-white max-w-full overflow-x-auto scrollbar-hidden"
+						></div>
+
+						{#if executing || stdout || stderr || result || files}
+							<div
+								class="bg-gray-50 dark:bg-black dark:text-white rounded-b-3xl! py-4 px-4 flex flex-col gap-2"
+							>
+								{#if executing}
+									<div class=" ">
+										<div class=" text-gray-500 text-sm mb-1">{$i18n.t('STDOUT/STDERR')}</div>
+										<div class="text-sm">{$i18n.t('Running...')}</div>
+									</div>
+								{:else}
+									{#if stdout || stderr}
+										<div class=" ">
+											<div class=" text-gray-500 text-sm mb-1">{$i18n.t('STDOUT/STDERR')}</div>
+											<div
+												class="text-sm font-mono whitespace-pre-wrap {stdout?.split('\n')?.length > 100
+													? `max-h-96`
+													: ''}  overflow-y-auto"
+											>
+												{stdout || stderr}
+											</div>
+										</div>
+									{/if}
+									{#if result || files}
+										<div class=" ">
+											<div class=" text-gray-500 text-sm mb-1">{$i18n.t('RESULT')}</div>
+											{#if result}
+												<div class="text-sm">{`${JSON.stringify(result)}`}</div>
+											{/if}
+											{#if files}
+												<div class="flex flex-col gap-2">
+													{#each files as file}
+														{#if file.type.startsWith('image')}
+															<img src={file.data} alt="Output" class=" w-full max-w-[36rem]" />
+														{:else if file.type.startsWith('video')}
+															<video
+																src={file.data}
+																alt="Output"
+																class=" w-full max-w-[36rem]"
+																controls
+																autoplay
+																muted
+															></video>
+														{/if}
+													{/each}
+												</div>
+											{/if}
+										</div>
+									{/if}
+								{/if}
+							</div>
+						{/if}
+					</div>
 				{:else}
 					<div
 						class="bg-white dark:bg-black dark:text-white rounded-b-3xl! pt-0.5 pb-3 px-4 flex flex-col gap-2 text-xs"
@@ -563,65 +628,46 @@
 					</div>
 				{/if}
 			</div>
-
-			{#if !collapsed}
-				<div
-					id="plt-canvas-{id}"
-					class="bg-gray-50 dark:bg-black dark:text-white max-w-full overflow-x-auto scrollbar-hidden"
-				></div>
-
-				{#if executing || stdout || stderr || result || files}
-					<div
-						class="bg-gray-50 dark:bg-black dark:text-white rounded-b-3xl! py-4 px-4 flex flex-col gap-2"
-					>
-						{#if executing}
-							<div class=" ">
-								<div class=" text-gray-500 text-sm mb-1">{$i18n.t('STDOUT/STDERR')}</div>
-								<div class="text-sm">{$i18n.t('Running...')}</div>
-							</div>
-						{:else}
-							{#if stdout || stderr}
-								<div class=" ">
-									<div class=" text-gray-500 text-sm mb-1">{$i18n.t('STDOUT/STDERR')}</div>
-									<div
-										class="text-sm font-mono whitespace-pre-wrap {stdout?.split('\n')?.length > 100
-											? `max-h-96`
-											: ''}  overflow-y-auto"
-									>
-										{stdout || stderr}
-									</div>
-								</div>
-							{/if}
-							{#if result || files}
-								<div class=" ">
-									<div class=" text-gray-500 text-sm mb-1">{$i18n.t('RESULT')}</div>
-									{#if result}
-										<div class="text-sm">{`${JSON.stringify(result)}`}</div>
-									{/if}
-									{#if files}
-										<div class="flex flex-col gap-2">
-											{#each files as file}
-												{#if file.type.startsWith('image')}
-													<img src={file.data} alt="Output" class=" w-full max-w-[36rem]" />
-												{:else if file.type.startsWith('video')}
-													<video
-														src={file.data}
-														alt="Output"
-														class=" w-full max-w-[36rem]"
-														controls
-														autoplay
-														muted
-													></video>
-												{/if}
-											{/each}
-										</div>
-									{/if}
-								</div>
-							{/if}
-						{/if}
-					</div>
-				{/if}
-			{/if}
-		{/if}
+		{/if} <!-- 这里添加缺失的 closing tag -->
 	</div>
 </div>
+
+<style>
+	.code-content-wrapper {
+		overflow: hidden;
+		transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+	}
+
+	.code-content-wrapper.expanded {
+		max-height: 2000px;
+		opacity: 1;
+	}
+
+	.code-content-wrapper.collapsed {
+		max-height: 0;
+		opacity: 0;
+	}
+
+	/* Smooth rotation for the collapse/expand button icon */
+	.collapse-button-icon {
+		transition: transform 0.3s ease-in-out;
+	}
+
+	.collapse-button-icon.rotated {
+		transform: rotate(180deg);
+	}
+
+	/* Add subtle fade-in animation for expand button hover */
+	@keyframes fadeIn {
+		from {
+			opacity: 0.8;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	button:hover {
+		animation: fadeIn 0.2s ease-in-out;
+	}
+</style>
