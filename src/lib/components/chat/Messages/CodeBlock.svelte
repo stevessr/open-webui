@@ -2,6 +2,7 @@
 	import hljs from 'highlight.js';
 	import { toast } from 'svelte-sonner';
 	import { getContext, onMount, tick, onDestroy } from 'svelte';
+	import { slide } from 'svelte/transition'; // 仅用于轻量级文本提示的动画
 	import { config } from '$lib/stores';
 
 	import PyodideWorker from '$lib/workers/pyodide.worker?worker';
@@ -425,7 +426,7 @@
 		{#if ['mermaid', 'vega', 'vega-lite'].includes(lang)}
 			{#if renderHTML}
 				<SvgPanZoom
-					className=" rounded-3xl max-h-fit overflow-hidden"
+					className=" rounded-3xl max-h-fit"
 					svg={renderHTML}
 					content={_token.text}
 				/>
@@ -447,10 +448,10 @@
 					? editorClassName
 					: executing || stdout || stderr || result
 						? ''
-						: 'rounded-b-3xl'} overflow-hidden"
+						: 'rounded-b-3xl'}"
 			>
 				<div
-					class="sticky top-0 z-10 code-block-header bg-gray-900 dark:bg-gray-900 h-10 flex items-center justify-between px-4 rounded-t-3xl"
+					class="sticky top-32 z-30 code-block-header bg-gray-900 dark:bg-gray-900 h-10 flex items-center justify-between px-4 rounded-t-3xl"
 				>
 					<!-- 左侧：装饰圆点 -->
 					<div class="flex items-center gap-2">
@@ -528,11 +529,9 @@
 					</div>
 				</div>
 
-				{#if !collapsed}
-					<div
-						class="code-content-wrapper expanded"
-						bind:this={contentElement}
-					>
+				<!-- 使用 CSS Grid 动画替换 {#if !collapsed} -->
+				<div class="code-grid-transition {collapsed ? 'is-collapsed' : ''}">
+					<div class="overflow-hidden min-h-0">
 						{#if edit}
 							<CodeEditor
 								value={code}
@@ -616,8 +615,12 @@
 							</div>
 						{/if}
 					</div>
-				{:else}
+				</div>
+
+				<!-- 折叠后的提示文字 -->
+				{#if collapsed}
 					<div
+						transition:slide={{ duration: 200 }}
 						class="bg-white dark:bg-black dark:text-white rounded-b-3xl! pt-0.5 pb-3 px-4 flex flex-col gap-2 text-xs"
 					>
 						<span class="text-gray-500 italic">
@@ -628,24 +631,25 @@
 					</div>
 				{/if}
 			</div>
-		{/if} <!-- 这里添加缺失的 closing tag -->
+		{/if}
 	</div>
 </div>
 
 <style>
-	.code-content-wrapper {
-		overflow: hidden;
-		transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+	/* CSS Grid 动画核心逻辑：利用 grid-template-rows 进行高度过渡，比 max-height 更平滑且性能更好 */
+	.code-grid-transition {
+		display: grid;
+		grid-template-rows: 1fr;
+		transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
-	.code-content-wrapper.expanded {
-		max-height: 2000px;
-		opacity: 1;
+	.code-grid-transition.is-collapsed {
+		grid-template-rows: 0fr;
 	}
 
-	.code-content-wrapper.collapsed {
-		max-height: 0;
-		opacity: 0;
+	/* 必须设置 min-height: 0 否则 grid 的 1fr 动画可能失效 */
+	.code-grid-transition > div {
+		min-height: 0;
 	}
 
 	/* Smooth rotation for the collapse/expand button icon */
@@ -669,5 +673,14 @@
 
 	button:hover {
 		animation: fadeIn 0.2s ease-in-out;
+	}
+
+	/* Ensure sticky positioning works correctly for the code block header */
+	.code-block-header {
+		position: sticky !important;
+		top: 32px !important;
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		z-index: 30; /* 提高层级，防止动画时内容穿透 Header */
 	}
 </style>
