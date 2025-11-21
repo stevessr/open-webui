@@ -6,23 +6,9 @@
 
 	import { config } from '$lib/stores';
 	import { getBackendConfig } from '$lib/apis';
-	import Database from './Settings/Database.svelte';
-
-	import General from './Settings/General.svelte';
-	import Pipelines from './Settings/Pipelines.svelte';
-	import Audio from './Settings/Audio.svelte';
-	import Images from './Settings/Images.svelte';
-	import Interface from './Settings/Interface.svelte';
-	import Models from './Settings/Models.svelte';
-	import Connections from './Settings/Connections.svelte';
-	import Documents from './Settings/Documents.svelte';
-	import WebSearch from './Settings/WebSearch.svelte';
 
 	import ChartBar from '../icons/ChartBar.svelte';
 	import DocumentChartBar from '../icons/DocumentChartBar.svelte';
-	import Evaluations from './Settings/Evaluations.svelte';
-	import CodeExecution from './Settings/CodeExecution.svelte';
-	import Tools from './Settings/Tools.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -437,83 +423,119 @@
 		class="flex-1 mt-3 lg:mt-0 px-[16px] lg:pr-[16px] lg:pl-0 overflow-y-scroll scrollbar-hidden"
 	>
 		{#if selectedTab === 'general'}
-			<General
-				saveHandler={async () => {
-					toast.success($i18n.t('Settings saved successfully!'));
+			{#await import('./Settings/General.svelte') then Component}
+				<svelte:component
+					this={Component.default}
+					saveHandler={async () => {
+						toast.success($i18n.t('Settings saved successfully!'));
 
-					await tick();
-					await config.set(await getBackendConfig());
-				}}
-			/>
+						await tick();
+						await config.set(await getBackendConfig());
+					}}
+				/>
+			{/await}
 		{:else if selectedTab === 'connections'}
-			<Connections
-				on:save={() => {
-					toast.success($i18n.t('Settings saved successfully!'));
-				}}
-			/>
+			{#await import('./Settings/Connections.svelte') then Component}
+				<svelte:component
+					this={Component.default}
+					on:save={() => {
+						toast.success($i18n.t('Settings saved successfully!'));
+					}}
+				/>
+			{/await}
 		{:else if selectedTab === 'models'}
-			<Models />
+			{#await import('./Settings/Models.svelte') then Component}
+				<svelte:component this={Component.default} />
+			{/await}
 		{:else if selectedTab === 'evaluations'}
-			<Evaluations />
+			{#await import('./Settings/Evaluations.svelte') then Component}
+				<svelte:component this={Component.default} />
+			{/await}
 		{:else if selectedTab === 'tools'}
-			<Tools />
+			{#await import('./Settings/Tools.svelte') then Component}
+				<svelte:component this={Component.default} />
+			{/await}
 		{:else if selectedTab === 'documents'}
-			<Documents
-				on:save={async () => {
-					toast.success($i18n.t('Settings saved successfully!'));
+			{#await import('./Settings/Documents.svelte') then Component}
+				<svelte:component
+					this={Component.default}
+					on:save={async () => {
+						toast.success($i18n.t('Settings saved successfully!'));
 
-					await tick();
-					await config.set(await getBackendConfig());
-				}}
-			/>
+						await tick();
+						await config.set(await getBackendConfig());
+					}}
+				/>
+			{/await}
 		{:else if selectedTab === 'web'}
-			<WebSearch
-				saveHandler={async () => {
-					toast.success($i18n.t('Settings saved successfully!'));
+			{#await import('./Settings/WebSearch.svelte') then Component}
+				<svelte:component
+					this={Component.default}
+					saveHandler={async () => {
+						toast.success($i18n.t('Settings saved successfully!'));
 
-					await tick();
-					await config.set(await getBackendConfig());
-				}}
-			/>
+						await tick();
+						await config.set(await getBackendConfig());
+					}}
+				/>
+			{/await}
 		{:else if selectedTab === 'code-execution'}
-			<CodeExecution
-				saveHandler={async () => {
-					toast.success($i18n.t('Settings saved successfully!'));
+			{#await import('./Settings/CodeExecution.svelte') then Component}
+				<svelte:component
+					this={Component.default}
+					saveHandler={async () => {
+						toast.success($i18n.t('Settings saved successfully!'));
 
-					await tick();
-					await config.set(await getBackendConfig());
-				}}
-			/>
+						await tick();
+						await config.set(await getBackendConfig());
+					}}
+				/>
+			{/await}
 		{:else if selectedTab === 'interface'}
-			<Interface
-				on:save={() => {
-					toast.success($i18n.t('Settings saved successfully!'));
-				}}
-			/>
+			{#await import('./Settings/Interface.svelte') then Component}
+				<svelte:component
+					this={Component.default}
+					on:save={() => {
+						toast.success($i18n.t('Settings saved successfully!'));
+					}}
+				/>
+			{/await}
 		{:else if selectedTab === 'audio'}
-			<Audio
-				saveHandler={() => {
-					toast.success($i18n.t('Settings saved successfully!'));
-				}}
-			/>
+			{#await import('./Settings/Audio.svelte') then Component}
+				<svelte:component
+					this={Component.default}
+					saveHandler={() => {
+						toast.success($i18n.t('Settings saved successfully!'));
+					}}
+				/>
+			{/await}
 		{:else if selectedTab === 'images'}
-			<Images
-				on:save={() => {
-					toast.success($i18n.t('Settings saved successfully!'));
-				}}
-			/>
+			{#await import('./Settings/Images.svelte') then Component}
+				<svelte:component
+					this={Component.default}
+					on:save={() => {
+						toast.success($i18n.t('Settings saved successfully!'));
+					}}
+				/>
+			{/await}
 		{:else if selectedTab === 'db'}
-			<Database
-				saveHandler={() => {
-					toast.success($i18n.t('Settings saved successfully!'));
-				}}
-			/>
+			{#await import('./Settings/Database.svelte') then Component}
+				<svelte:component
+					this={Component.default}
+					saveHandler={() => {
+						toast.success($i18n.t('Settings saved successfully!'));
+					}}
+				/>
+			{/await}
 		{:else if selectedTab === 'pipelines'}
-			<Pipelines
-				saveHandler={() => {
-					toast.success($i18n.t('Settings saved successfully!'));
-				}}
-			/>
+			{#await import('./Settings/Pipelines.svelte') then Component}
+				<svelte:component
+					this={Component.default}
+					saveHandler={() => {
+						toast.success($i18n.t('Settings saved successfully!'));
+					}}
+				/>
+			{/await}
 		{/if}
 	</div>
 </div>

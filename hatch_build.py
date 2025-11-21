@@ -10,14 +10,20 @@ from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 class CustomBuildHook(BuildHookInterface):
     def initialize(self, version, build_data):
         super().initialize(version, build_data)
+    def build(self, version, build_data):
         stderr.write(">>> Building Open Webui frontend\n")
-        npm = shutil.which("npm")
-        if npm is None:
+        pnpm = shutil.which("pnpm")
+        if pnpm is None:
             raise RuntimeError(
-                "NodeJS `npm` is required for building Open Webui but it was not found"
+                "NodeJS `pnpm` is required for building Open Webui but it was not found"
             )
-        stderr.write("### npm install\n")
-        subprocess.run([npm, "install", "--force"], check=True)  # noqa: S603
-        stderr.write("\n### npm run build\n")
+        stderr.write("### pnpm install\n")
+        subprocess.run([pnpm, "install", "--force"], check=True)  # noqa: S603
+        stderr.write("\n### pnpm run build\n")
         os.environ["APP_BUILD_HASH"] = version
-        subprocess.run([npm, "run", "build"], check=True)  # noqa: S603
+        subprocess.run([pnpm, "run", "build"], check=True)  # noqa: S603
+
+        # Copy the frontend build output to the backend static files
+        stderr.write("### Copying frontend build to backend static files\n")
+        shutil.copytree("build", "backend/open_webui/frontend", dirs_exist_ok=True)
+
