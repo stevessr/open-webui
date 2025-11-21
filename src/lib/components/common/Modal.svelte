@@ -100,7 +100,7 @@
 		tabindex="-1"
 	>
 		<div
-			class="trans m-auto max-w-full {sizeToWidth(size)} {size !== 'full'
+			class="trans m-auto w-full {sizeToWidth(size)} {size !== 'full'
 				? 'mx-2'
 				: ''} shadow-3xl min-h-fit scrollbar-hidden {className} border border-white dark:border-gray-850"
 			in:flyAndScale
