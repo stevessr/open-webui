@@ -1,6 +1,6 @@
 import logging
 
-import requests
+import httpx
 from open_webui.retrieval.web.main import SearchResult
 from open_webui.env import SRC_LOG_LEVELS
 from yarl import URL
@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
 
 
-def search_jina(api_key: str, query: str, count: int) -> list[SearchResult]:
+async def search_jina(api_key: str, query: str, count: int) -> list[SearchResult]:
     """
     Search using Jina's Search API and return the results as a list of SearchResult objects.
     Args:
@@ -31,9 +31,10 @@ def search_jina(api_key: str, query: str, count: int) -> list[SearchResult]:
     payload = {"q": query, "count": count if count <= 10 else 10}
 
     url = str(URL(jina_search_endpoint))
-    response = requests.post(url, headers=headers, json=payload)
-    response.raise_for_status()
-    data = response.json()
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        data = response.json()
 
     results = []
     for result in data["data"]:

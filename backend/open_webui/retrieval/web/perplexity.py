@@ -1,6 +1,6 @@
 import logging
 from typing import Optional, Literal
-import requests
+import httpx
 
 from open_webui.retrieval.web.main import SearchResult, get_filtered_results
 from open_webui.env import SRC_LOG_LEVELS
@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
 
 
-def search_perplexity(
+async def search_perplexity(
     api_key: str,
     query: str,
     count: int,
@@ -69,7 +69,8 @@ def search_perplexity(
         }
 
         # Make the API request
-        response = requests.request("POST", url, json=payload, headers=headers)
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, json=payload, headers=headers)
 
         # Parse the JSON response
         json_response = response.json()

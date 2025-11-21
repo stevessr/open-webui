@@ -1,11 +1,12 @@
 import os
-import time
-import requests
 import logging
 import json
 from typing import List, Optional
 from langchain_core.documents import Document
 from fastapi import HTTPException, status
+import httpx
+import asyncio
+import aiofiles
 
 log = logging.getLogger(__name__)
 
@@ -63,16 +64,17 @@ class DatalabMarkerLoader:
         }
         return mime_map.get(ext, "application/octet-stream")
 
-    def check_marker_request_status(self, request_id: str) -> dict:
+    async def check_marker_request_status(self, request_id: str) -> dict:
         url = f"{self.api_base_url}/{request_id}"
         headers = {"X-Api-Key": self.api_key}
         try:
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
-            result = response.json()
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, headers=headers)
+                response.raise_for_status()
+                result = response.json()
             log.info(f"Marker API status check for request {request_id}: {result}")
             return result
-        except requests.HTTPError as e:
+        except httpx.HTTPStatusError as e:
             log.error(f"Error checking Marker request status: {e}")
             raise HTTPException(
                 status.HTTP_502_BAD_GATEWAY,
@@ -84,7 +86,7 @@ class DatalabMarkerLoader:
                 status.HTTP_502_BAD_GATEWAY, detail=f"Invalid JSON: {e}"
             )
 
-    def load(self) -> List[Document]:
+    async def load(self) -> List[Document]:
         filename = os.path.basename(self.file_path)
         mime_type = self._get_mime_type(filename)
         headers = {"X-Api-Key": self.api_key}
@@ -108,21 +110,22 @@ class DatalabMarkerLoader:
         )
 
         try:
-            with open(self.file_path, "rb") as f:
-                files = {"file": (filename, f, mime_type)}
-                response = requests.post(
-                    f"{self.api_base_url}",
-                    data=form_data,
-                    files=files,
-                    headers=headers,
-                )
-                response.raise_for_status()
-                result = response.json()
+            async with aiofiles.open(self.file_path, "rb") as f:
+                files = {"file": (filename, await f.read(), mime_type)}
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        f"{self.api_base_url}",
+                        data=form_data,
+                        files=files,
+                        headers=headers,
+                    )
+                    response.raise_for_status()
+                    result = response.json()
         except FileNotFoundError:
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=f"File not found: {self.file_path}"
             )
-        except requests.HTTPError as e:
+        except httpx.HTTPStatusError as e:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 detail=f"Datalab Marker request failed: {e}",
@@ -146,56 +149,57 @@ class DatalabMarkerLoader:
         # Check if this is a direct response (self-hosted) or polling response (DataLab)
         if check_url:
             # DataLab polling pattern
-            for _ in range(300):  # Up to 10 minutes
-                time.sleep(2)
-                try:
-                    poll_response = requests.get(check_url, headers=headers)
-                    poll_response.raise_for_status()
-                    poll_result = poll_response.json()
-                except (requests.HTTPError, ValueError) as e:
-                    raw_body = poll_response.text
-                    log.error(f"Polling error: {e}, response body: {raw_body}")
-                    raise HTTPException(
-                        status.HTTP_502_BAD_GATEWAY, detail=f"Polling failed: {e}"
-                    )
-
-                status_val = poll_result.get("status")
-                success_val = poll_result.get("success")
-
-                if status_val == "complete":
-                    summary = {
-                        k: poll_result.get(k)
-                        for k in (
-                            "status",
-                            "output_format",
-                            "success",
-                            "error",
-                            "page_count",
-                            "total_cost",
+            async with httpx.AsyncClient() as client:
+                for _ in range(300):  # Up to 10 minutes
+                    await asyncio.sleep(2)
+                    try:
+                        poll_response = await client.get(check_url, headers=headers)
+                        poll_response.raise_for_status()
+                        poll_result = poll_response.json()
+                    except (httpx.HTTPStatusError, ValueError) as e:
+                        raw_body = poll_response.text
+                        log.error(f"Polling error: {e}, response body: {raw_body}")
+                        raise HTTPException(
+                            status.HTTP_502_BAD_GATEWAY, detail=f"Polling failed: {e}"
                         )
-                    }
-                    log.info(
-                        f"Marker processing completed successfully: {json.dumps(summary, indent=2)}"
-                    )
-                    break
 
-                if status_val == "failed" or success_val is False:
-                    log.error(
-                        f"Marker poll failed full response: {json.dumps(poll_result, indent=2)}"
-                    )
-                    error_msg = (
-                        poll_result.get("error")
-                        or "Marker returned failure without error message"
-                    )
+                    status_val = poll_result.get("status")
+                    success_val = poll_result.get("success")
+
+                    if status_val == "complete":
+                        summary = {
+                            k: poll_result.get(k)
+                            for k in (
+                                "status",
+                                "output_format",
+                                "success",
+                                "error",
+                                "page_count",
+                                "total_cost",
+                            )
+                        }
+                        log.info(
+                            f"Marker processing completed successfully: {json.dumps(summary, indent=2)}"
+                        )
+                        break
+
+                    if status_val == "failed" or success_val is False:
+                        log.error(
+                            f"Marker poll failed full response: {json.dumps(poll_result, indent=2)}"
+                        )
+                        error_msg = (
+                            poll_result.get("error")
+                            or "Marker returned failure without error message"
+                        )
+                        raise HTTPException(
+                            status.HTTP_400_BAD_REQUEST,
+                            detail=f"Marker processing failed: {error_msg}",
+                        )
+                else:
                     raise HTTPException(
-                        status.HTTP_400_BAD_REQUEST,
-                        detail=f"Marker processing failed: {error_msg}",
+                        status.HTTP_504_GATEWAY_TIMEOUT,
+                        detail="Marker processing timed out",
                     )
-            else:
-                raise HTTPException(
-                    status.HTTP_504_GATEWAY_TIMEOUT,
-                    detail="Marker processing timed out",
-                )
 
             if not poll_result.get("success", False):
                 error_msg = poll_result.get("error") or "Unknown processing error"
@@ -250,8 +254,8 @@ class DatalabMarkerLoader:
         output_path = os.path.join(marker_output_dir, output_filename)
 
         try:
-            with open(output_path, "w", encoding="utf-8") as f:
-                f.write(full_text)
+            async with aiofiles.open(output_path, "w", encoding="utf-8") as f:
+                await f.write(full_text)
             log.info(f"Saved Marker output to: {output_path}")
         except Exception as e:
             log.warning(f"Failed to write marker output to disk: {e}")

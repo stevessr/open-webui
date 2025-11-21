@@ -1,6 +1,7 @@
 import logging
 import time
 from typing import Optional
+import asyncio
 
 from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
@@ -99,7 +100,7 @@ class FileForm(BaseModel):
 
 
 class FilesTable:
-    def insert_new_file(self, user_id: str, form_data: FileForm) -> Optional[FileModel]:
+    async def insert_new_file(self, user_id: str, form_data: FileForm) -> Optional[FileModel]:
         with get_db() as db:
             file = FileModel(
                 **{
@@ -112,9 +113,9 @@ class FilesTable:
 
             try:
                 result = File(**file.model_dump())
-                db.add(result)
-                db.commit()
-                db.refresh(result)
+                await asyncio.to_thread(db.add, result)
+                await asyncio.to_thread(db.commit)
+                await asyncio.to_thread(db.refresh, result)
                 if result:
                     return FileModel.model_validate(result)
                 else:
@@ -123,18 +124,18 @@ class FilesTable:
                 log.exception(f"Error inserting a new file: {e}")
                 return None
 
-    def get_file_by_id(self, id: str) -> Optional[FileModel]:
+    async def get_file_by_id(self, id: str) -> Optional[FileModel]:
         with get_db() as db:
             try:
-                file = db.get(File, id)
+                file = await asyncio.to_thread(db.get, File, id)
                 return FileModel.model_validate(file)
             except Exception:
                 return None
 
-    def get_file_by_id_and_user_id(self, id: str, user_id: str) -> Optional[FileModel]:
+    async def get_file_by_id_and_user_id(self, id: str, user_id: str) -> Optional[FileModel]:
         with get_db() as db:
             try:
-                file = db.query(File).filter_by(id=id, user_id=user_id).first()
+                file = await asyncio.to_thread(db.query(File).filter_by(id=id, user_id=user_id).first)
                 if file:
                     return FileModel.model_validate(file)
                 else:
@@ -142,10 +143,10 @@ class FilesTable:
             except Exception:
                 return None
 
-    def get_file_metadata_by_id(self, id: str) -> Optional[FileMetadataResponse]:
+    async def get_file_metadata_by_id(self, id: str) -> Optional[FileMetadataResponse]:
         with get_db() as db:
             try:
-                file = db.get(File, id)
+                file = await asyncio.to_thread(db.get, File, id)
                 return FileMetadataResponse(
                     id=file.id,
                     hash=file.hash,
@@ -156,12 +157,13 @@ class FilesTable:
             except Exception:
                 return None
 
-    def get_files(self) -> list[FileModel]:
+    async def get_files(self) -> list[FileModel]:
         with get_db() as db:
-            return [FileModel.model_validate(file) for file in db.query(File).all()]
+            files = await asyncio.to_thread(db.query(File).all)
+            return [FileModel.model_validate(file) for file in files]
 
-    def check_access_by_user_id(self, id, user_id, permission="write") -> bool:
-        file = self.get_file_by_id(id)
+    async def check_access_by_user_id(self, id, user_id, permission="write") -> bool:
+        file = await self.get_file_by_id(id)
         if not file:
             return False
         if file.user_id == user_id:
@@ -169,18 +171,26 @@ class FilesTable:
         # Implement additional access control logic here as needed
         return False
 
-    def get_files_by_ids(self, ids: list[str]) -> list[FileModel]:
+    async def get_files_by_ids(self, ids: list[str]) -> list[FileModel]:
         with get_db() as db:
-            return [
-                FileModel.model_validate(file)
-                for file in db.query(File)
+            files = await asyncio.to_thread(
+                db.query(File)
                 .filter(File.id.in_(ids))
                 .order_by(File.updated_at.desc())
-                .all()
-            ]
+                .all
+            )
+            return [FileModel.model_validate(file) for file in files]
 
-    def get_file_metadatas_by_ids(self, ids: list[str]) -> list[FileMetadataResponse]:
+    async def get_file_metadatas_by_ids(self, ids: list[str]) -> list[FileMetadataResponse]:
         with get_db() as db:
+            files = await asyncio.to_thread(
+                db.query(
+                    File.id, File.hash, File.meta, File.created_at, File.updated_at
+                )
+                .filter(File.id.in_(ids))
+                .order_by(File.updated_at.desc())
+                .all
+            )
             return [
                 FileMetadataResponse(
                     id=file.id,
@@ -189,68 +199,61 @@ class FilesTable:
                     created_at=file.created_at,
                     updated_at=file.updated_at,
                 )
-                for file in db.query(
-                    File.id, File.hash, File.meta, File.created_at, File.updated_at
-                )
-                .filter(File.id.in_(ids))
-                .order_by(File.updated_at.desc())
-                .all()
+                for file in files
             ]
 
-    def get_files_by_user_id(self, user_id: str) -> list[FileModel]:
+    async def get_files_by_user_id(self, user_id: str) -> list[FileModel]:
         with get_db() as db:
-            return [
-                FileModel.model_validate(file)
-                for file in db.query(File).filter_by(user_id=user_id).all()
-            ]
+            files = await asyncio.to_thread(db.query(File).filter_by(user_id=user_id).all)
+            return [FileModel.model_validate(file) for file in files]
 
-    def update_file_hash_by_id(self, id: str, hash: str) -> Optional[FileModel]:
+    async def update_file_hash_by_id(self, id: str, hash: str) -> Optional[FileModel]:
         with get_db() as db:
             try:
-                file = db.query(File).filter_by(id=id).first()
+                file = await asyncio.to_thread(db.query(File).filter_by(id=id).first)
                 file.hash = hash
-                db.commit()
+                await asyncio.to_thread(db.commit)
 
                 return FileModel.model_validate(file)
             except Exception:
                 return None
 
-    def update_file_data_by_id(self, id: str, data: dict) -> Optional[FileModel]:
+    async def update_file_data_by_id(self, id: str, data: dict) -> Optional[FileModel]:
         with get_db() as db:
             try:
-                file = db.query(File).filter_by(id=id).first()
+                file = await asyncio.to_thread(db.query(File).filter_by(id=id).first)
                 file.data = {**(file.data if file.data else {}), **data}
-                db.commit()
+                await asyncio.to_thread(db.commit)
                 return FileModel.model_validate(file)
             except Exception as e:
 
                 return None
 
-    def update_file_metadata_by_id(self, id: str, meta: dict) -> Optional[FileModel]:
+    async def update_file_metadata_by_id(self, id: str, meta: dict) -> Optional[FileModel]:
         with get_db() as db:
             try:
-                file = db.query(File).filter_by(id=id).first()
+                file = await asyncio.to_thread(db.query(File).filter_by(id=id).first)
                 file.meta = {**(file.meta if file.meta else {}), **meta}
-                db.commit()
+                await asyncio.to_thread(db.commit)
                 return FileModel.model_validate(file)
             except Exception:
                 return None
 
-    def delete_file_by_id(self, id: str) -> bool:
+    async def delete_file_by_id(self, id: str) -> bool:
         with get_db() as db:
             try:
-                db.query(File).filter_by(id=id).delete()
-                db.commit()
+                await asyncio.to_thread(db.query(File).filter_by(id=id).delete)
+                await asyncio.to_thread(db.commit)
 
                 return True
             except Exception:
                 return False
 
-    def delete_all_files(self) -> bool:
+    async def delete_all_files(self) -> bool:
         with get_db() as db:
             try:
-                db.query(File).delete()
-                db.commit()
+                await asyncio.to_thread(db.query(File).delete)
+                await asyncio.to_thread(db.commit)
 
                 return True
             except Exception:

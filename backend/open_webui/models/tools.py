@@ -5,6 +5,7 @@ from typing import Optional
 from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.models.users import Users, UserResponse
 from open_webui.models.groups import Groups
+import asyncio
 
 from open_webui.env import SRC_LOG_LEVELS
 from pydantic import BaseModel, ConfigDict
@@ -111,7 +112,7 @@ class ToolValves(BaseModel):
 
 
 class ToolsTable:
-    def insert_new_tool(
+    async def insert_new_tool(
         self, user_id: str, form_data: ToolForm, specs: list[dict]
     ) -> Optional[ToolModel]:
         with get_db() as db:
@@ -127,9 +128,9 @@ class ToolsTable:
 
             try:
                 result = Tool(**tool.model_dump())
-                db.add(result)
-                db.commit()
-                db.refresh(result)
+                await asyncio.to_thread(db.add, result)
+                await asyncio.to_thread(db.commit)
+                await asyncio.to_thread(db.refresh, result)
                 if result:
                     return ToolModel.model_validate(result)
                 else:
@@ -138,21 +139,23 @@ class ToolsTable:
                 log.exception(f"Error creating a new tool: {e}")
                 return None
 
-    def get_tool_by_id(self, id: str) -> Optional[ToolModel]:
+    async def get_tool_by_id(self, id: str) -> Optional[ToolModel]:
         try:
             with get_db() as db:
-                tool = db.get(Tool, id)
+                tool = await asyncio.to_thread(db.get, Tool, id)
                 return ToolModel.model_validate(tool)
         except Exception:
             return None
 
-    def get_tools(self) -> list[ToolUserModel]:
+    async def get_tools(self) -> list[ToolUserModel]:
         with get_db() as db:
-            all_tools = db.query(Tool).order_by(Tool.updated_at.desc()).all()
+            all_tools = await asyncio.to_thread(
+                db.query(Tool).order_by(Tool.updated_at.desc()).all
+            )
 
             user_ids = list(set(tool.user_id for tool in all_tools))
 
-            users = Users.get_users_by_user_ids(user_ids) if user_ids else []
+            users = await Users.get_users_by_user_ids(user_ids) if user_ids else []
             users_dict = {user.id: user for user in users}
 
             tools = []
@@ -168,11 +171,11 @@ class ToolsTable:
                 )
             return tools
 
-    def get_tools_by_user_id(
+    async def get_tools_by_user_id(
         self, user_id: str, permission: str = "write"
     ) -> list[ToolUserModel]:
-        tools = self.get_tools()
-        user_group_ids = {group.id for group in Groups.get_groups_by_member_id(user_id)}
+        tools = await self.get_tools()
+        user_group_ids = {group.id for group in await Groups.get_groups_by_member_id(user_id)}
 
         return [
             tool
@@ -181,31 +184,31 @@ class ToolsTable:
             or has_access(user_id, permission, tool.access_control, user_group_ids)
         ]
 
-    def get_tool_valves_by_id(self, id: str) -> Optional[dict]:
+    async def get_tool_valves_by_id(self, id: str) -> Optional[dict]:
         try:
             with get_db() as db:
-                tool = db.get(Tool, id)
+                tool = await asyncio.to_thread(db.get, Tool, id)
                 return tool.valves if tool.valves else {}
         except Exception as e:
             log.exception(f"Error getting tool valves by id {id}")
             return None
 
-    def update_tool_valves_by_id(self, id: str, valves: dict) -> Optional[ToolValves]:
+    async def update_tool_valves_by_id(self, id: str, valves: dict) -> Optional[ToolValves]:
         try:
             with get_db() as db:
-                db.query(Tool).filter_by(id=id).update(
+                await asyncio.to_thread(db.query(Tool).filter_by(id=id).update,
                     {"valves": valves, "updated_at": int(time.time())}
                 )
-                db.commit()
-                return self.get_tool_by_id(id)
+                await asyncio.to_thread(db.commit)
+                return await self.get_tool_by_id(id)
         except Exception:
             return None
 
-    def get_user_valves_by_id_and_user_id(
+    async def get_user_valves_by_id_and_user_id(
         self, id: str, user_id: str
     ) -> Optional[dict]:
         try:
-            user = Users.get_user_by_id(user_id)
+            user = await Users.get_user_by_id(user_id)
             user_settings = user.settings.model_dump() if user.settings else {}
 
             # Check if user has "tools" and "valves" settings
@@ -221,11 +224,11 @@ class ToolsTable:
             )
             return None
 
-    def update_user_valves_by_id_and_user_id(
+    async def update_user_valves_by_id_and_user_id(
         self, id: str, user_id: str, valves: dict
     ) -> Optional[dict]:
         try:
-            user = Users.get_user_by_id(user_id)
+            user = await Users.get_user_by_id(user_id)
             user_settings = user.settings.model_dump() if user.settings else {}
 
             # Check if user has "tools" and "valves" settings
@@ -237,7 +240,7 @@ class ToolsTable:
             user_settings["tools"]["valves"][id] = valves
 
             # Update the user settings in the database
-            Users.update_user_by_id(user_id, {"settings": user_settings})
+            await Users.update_user_by_id(user_id, {"settings": user_settings})
 
             return user_settings["tools"]["valves"][id]
         except Exception as e:
@@ -246,29 +249,29 @@ class ToolsTable:
             )
             return None
 
-    def update_tool_by_id(self, id: str, updated: dict) -> Optional[ToolModel]:
+    async def update_tool_by_id(self, id: str, updated: dict) -> Optional[ToolModel]:
         try:
             with get_db() as db:
-                db.query(Tool).filter_by(id=id).update(
+                await asyncio.to_thread(db.query(Tool).filter_by(id=id).update,
                     {**updated, "updated_at": int(time.time())}
                 )
-                db.commit()
+                await asyncio.to_thread(db.commit)
 
-                tool = db.query(Tool).get(id)
-                db.refresh(tool)
+                tool = await asyncio.to_thread(db.get, Tool, id)
+                await asyncio.to_thread(db.refresh, tool)
                 return ToolModel.model_validate(tool)
         except Exception:
             return None
 
-    def delete_tool_by_id(self, id: str) -> bool:
-        try:
-            with get_db() as db:
-                db.query(Tool).filter_by(id=id).delete()
-                db.commit()
-
-                return True
-        except Exception:
-            return False
+        async def delete_tool_by_id(self, id: str) -> bool:
+            try:
+                with get_db() as db:
+                    await asyncio.to_thread(db.query(Tool).filter_by(id=id).delete)
+                    await asyncio.to_thread(db.commit)
+    
+                    return True
+            except Exception:
+                    return False
 
 
 Tools = ToolsTable()

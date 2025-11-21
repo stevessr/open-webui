@@ -17,12 +17,10 @@ from opentelemetry.instrumentation.httpx import (
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from opentelemetry.instrumentation.redis import RedisInstrumentor
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
 from opentelemetry.trace import Span, StatusCode
 from redis import Redis
-from requests import PreparedRequest, Response
 from sqlalchemy import Engine
 from fastapi import status
 
@@ -32,33 +30,6 @@ from open_webui.env import SRC_LOG_LEVELS
 
 logger = logging.getLogger(__name__)
 logger.setLevel(SRC_LOG_LEVELS["MAIN"])
-
-
-def requests_hook(span: Span, request: PreparedRequest):
-    """
-    Http Request Hook
-    """
-
-    span.update_name(f"{request.method} {request.url}")
-    span.set_attributes(
-        attributes={
-            SpanAttributes.HTTP_URL: request.url,
-            SpanAttributes.HTTP_METHOD: request.method,
-        }
-    )
-
-
-def response_hook(span: Span, request: PreparedRequest, response: Response):
-    """
-    HTTP Response Hook
-    """
-
-    span.set_attributes(
-        attributes={
-            SpanAttributes.HTTP_STATUS_CODE: response.status_code,
-        }
-    )
-    span.set_status(StatusCode.ERROR if response.status_code >= 400 else StatusCode.OK)
 
 
 def redis_request_hook(span: Span, instance: Redis, args, kwargs):
@@ -180,9 +151,6 @@ class Instrumentor(BaseInstrumentor):
         instrument_fastapi(app=self.app)
         SQLAlchemyInstrumentor().instrument(engine=self.db_engine)
         RedisInstrumentor().instrument(request_hook=redis_request_hook)
-        RequestsInstrumentor().instrument(
-            request_hook=requests_hook, response_hook=response_hook
-        )
         LoggingInstrumentor().instrument()
         HTTPXClientInstrumentor().instrument(
             request_hook=httpx_request_hook,

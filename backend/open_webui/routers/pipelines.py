@@ -12,8 +12,9 @@ from fastapi import (
 import aiohttp
 import os
 import logging
-import shutil
-import requests
+import httpx
+import asyncio
+import aiofiles
 from pydantic import BaseModel
 from starlette.responses import FileResponse
 from typing import Optional
@@ -220,20 +221,22 @@ async def upload_pipeline(
 
     r = None
     try:
-        # Save the uploaded file
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        # Save the uploaded file asynchronously
+        async with aiofiles.open(file_path, "wb") as buffer:
+            while chunk := await file.read(8192):
+                await buffer.write(chunk)
 
         url = request.app.state.config.OPENAI_API_BASE_URLS[urlIdx]
         key = request.app.state.config.OPENAI_API_KEYS[urlIdx]
 
-        with open(file_path, "rb") as f:
-            files = {"file": f}
-            r = requests.post(
-                f"{url}/pipelines/upload",
-                headers={"Authorization": f"Bearer {key}"},
-                files=files,
-            )
+        async with httpx.AsyncClient() as client:
+            async with aiofiles.open(file_path, "rb") as f_async:
+                files_payload = {"file": (filename, await f_async.read(), "application/octet-stream")}
+                r = await client.post(
+                    f"{url}/pipelines/upload",
+                    headers={"Authorization": f"Bearer {key}"},
+                    files=files_payload,
+                )
 
         r.raise_for_status()
         data = r.json()
@@ -280,11 +283,12 @@ async def add_pipeline(
         url = request.app.state.config.OPENAI_API_BASE_URLS[urlIdx]
         key = request.app.state.config.OPENAI_API_KEYS[urlIdx]
 
-        r = requests.post(
-            f"{url}/pipelines/add",
-            headers={"Authorization": f"Bearer {key}"},
-            json={"url": form_data.url},
-        )
+        async with httpx.AsyncClient() as client:
+            r = await client.post(
+                f"{url}/pipelines/add",
+                headers={"Authorization": f"Bearer {key}"},
+                json={"url": form_data.url},
+            )
 
         r.raise_for_status()
         data = r.json()
@@ -325,11 +329,12 @@ async def delete_pipeline(
         url = request.app.state.config.OPENAI_API_BASE_URLS[urlIdx]
         key = request.app.state.config.OPENAI_API_KEYS[urlIdx]
 
-        r = requests.delete(
-            f"{url}/pipelines/delete",
-            headers={"Authorization": f"Bearer {key}"},
-            json={"id": form_data.id},
-        )
+        async with httpx.AsyncClient() as client:
+            r = await client.delete(
+                f"{url}/pipelines/delete",
+                headers={"Authorization": f"Bearer {key}"},
+                json={"id": form_data.id},
+            )
 
         r.raise_for_status()
         data = r.json()
@@ -363,7 +368,8 @@ async def get_pipelines(
         url = request.app.state.config.OPENAI_API_BASE_URLS[urlIdx]
         key = request.app.state.config.OPENAI_API_KEYS[urlIdx]
 
-        r = requests.get(f"{url}/pipelines", headers={"Authorization": f"Bearer {key}"})
+        async with httpx.AsyncClient() as client:
+            r = await client.get(f"{url}/pipelines", headers={"Authorization": f"Bearer {key}"})
 
         r.raise_for_status()
         data = r.json()
@@ -400,9 +406,10 @@ async def get_pipeline_valves(
         url = request.app.state.config.OPENAI_API_BASE_URLS[urlIdx]
         key = request.app.state.config.OPENAI_API_KEYS[urlIdx]
 
-        r = requests.get(
-            f"{url}/{pipeline_id}/valves", headers={"Authorization": f"Bearer {key}"}
-        )
+        async with httpx.AsyncClient() as client:
+            r = await client.get(
+                f"{url}/{pipeline_id}/valves", headers={"Authorization": f"Bearer {key}"}
+            )
 
         r.raise_for_status()
         data = r.json()
@@ -439,10 +446,11 @@ async def get_pipeline_valves_spec(
         url = request.app.state.config.OPENAI_API_BASE_URLS[urlIdx]
         key = request.app.state.config.OPENAI_API_KEYS[urlIdx]
 
-        r = requests.get(
-            f"{url}/{pipeline_id}/valves/spec",
-            headers={"Authorization": f"Bearer {key}"},
-        )
+        async with httpx.AsyncClient() as client:
+            r = await client.get(
+                f"{url}/{pipeline_id}/valves/spec",
+                headers={"Authorization": f"Bearer {key}"},
+            )
 
         r.raise_for_status()
         data = r.json()
@@ -480,11 +488,12 @@ async def update_pipeline_valves(
         url = request.app.state.config.OPENAI_API_BASE_URLS[urlIdx]
         key = request.app.state.config.OPENAI_API_KEYS[urlIdx]
 
-        r = requests.post(
-            f"{url}/{pipeline_id}/valves/update",
-            headers={"Authorization": f"Bearer {key}"},
-            json={**form_data},
-        )
+        async with httpx.AsyncClient() as client:
+            r = await client.post(
+                f"{url}/{pipeline_id}/valves/update",
+                headers={"Authorization": f"Bearer {key}"},
+                json={**form_data},
+            )
 
         r.raise_for_status()
         data = r.json()

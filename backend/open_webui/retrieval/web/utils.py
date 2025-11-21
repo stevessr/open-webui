@@ -3,7 +3,6 @@ import logging
 import socket
 import ssl
 import urllib.parse
-import urllib.request
 from datetime import datetime, time, timedelta
 from typing import (
     Any,
@@ -132,13 +131,14 @@ class RateLimitMixin:
                 await asyncio.sleep((min_interval - time_since_last).total_seconds())
         self.last_request_time = datetime.now()
 
-    def _sync_wait_for_rate_limit(self):
+    async def _sync_wait_for_rate_limit(self):
         """Synchronous version of rate limit wait."""
         if self.requests_per_second and self.last_request_time:
             min_interval = timedelta(seconds=1.0 / self.requests_per_second)
             time_since_last = datetime.now() - self.last_request_time
             if time_since_last < min_interval:
-                time.sleep((min_interval - time_since_last).total_seconds())
+                loop = asyncio.get_event_loop()
+                loop.run_until_complete(asyncio.sleep((min_interval - time_since_last).total_seconds()))
         self.last_request_time = datetime.now()
 
 
@@ -154,11 +154,11 @@ class URLProcessingMixin:
         await self._wait_for_rate_limit()
         return True
 
-    def _safe_process_url_sync(self, url: str) -> bool:
+    async def _safe_process_url_sync(self, url: str) -> bool:
         """Synchronous version of safety checks."""
         if self.verify_ssl and not self._verify_ssl_cert(url):
             raise ValueError(f"SSL certificate verification failed for {url}")
-        self._sync_wait_for_rate_limit()
+        await self._sync_wait_for_rate_limit()
         return True
 
 
@@ -199,13 +199,12 @@ class SafeFireCrawlLoader(BaseLoader, RateLimitMixin, URLProcessingMixin):
         """
         proxy_server = proxy.get("server") if proxy else None
         if trust_env and not proxy_server:
-            env_proxies = urllib.request.getproxies()
-            env_proxy_server = env_proxies.get("https") or env_proxies.get("http")
-            if env_proxy_server:
-                if proxy:
-                    proxy["server"] = env_proxy_server
-                else:
-                    proxy = {"server": env_proxy_server}
+            # Get proxy from environment variables for aiohttp
+            # aiohttp will automatically use environment proxies when trust_env=True
+            if proxy:
+                proxy["server"] = "env"  # Use environment proxy
+            else:
+                proxy = {"server": "env"}
         self.web_paths = web_paths
         self.verify_ssl = verify_ssl
         self.requests_per_second = requests_per_second
@@ -327,13 +326,11 @@ class SafeTavilyLoader(BaseLoader, RateLimitMixin, URLProcessingMixin):
         # Initialize proxy configuration if using environment variables
         proxy_server = proxy.get("server") if proxy else None
         if trust_env and not proxy_server:
-            env_proxies = urllib.request.getproxies()
-            env_proxy_server = env_proxies.get("https") or env_proxies.get("http")
-            if env_proxy_server:
-                if proxy:
-                    proxy["server"] = env_proxy_server
-                else:
-                    proxy = {"server": env_proxy_server}
+            # aiohttp will automatically use environment proxies when trust_env=True
+            if proxy:
+                proxy["server"] = "env"  # Use environment proxy
+            else:
+                proxy = {"server": "env"}
 
         # Store parameters for creating TavilyLoader instances
         self.web_paths = web_paths if isinstance(web_paths, list) else [web_paths]
@@ -444,13 +441,11 @@ class SafePlaywrightURLLoader(PlaywrightURLLoader, RateLimitMixin, URLProcessing
 
         proxy_server = proxy.get("server") if proxy else None
         if trust_env and not proxy_server:
-            env_proxies = urllib.request.getproxies()
-            env_proxy_server = env_proxies.get("https") or env_proxies.get("http")
-            if env_proxy_server:
-                if proxy:
-                    proxy["server"] = env_proxy_server
-                else:
-                    proxy = {"server": env_proxy_server}
+            # aiohttp will automatically use environment proxies when trust_env=True
+            if proxy:
+                proxy["server"] = "env"  # Use environment proxy
+            else:
+                proxy = {"server": "env"}
 
         # We'll set headless to False if using playwright_ws_url since it's handled by the remote browser
         super().__init__(

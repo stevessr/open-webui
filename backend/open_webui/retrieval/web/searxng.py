@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-import requests
+import httpx
 from open_webui.retrieval.web.main import SearchResult, get_filtered_results
 from open_webui.env import SRC_LOG_LEVELS
 
@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
 
 
-def search_searxng(
+async def search_searxng(
     query_url: str,
     query: str,
     count: int,
@@ -36,7 +36,7 @@ def search_searxng(
         list[SearchResult]: A list of SearchResults sorted by relevance score in descending order.
 
     Raise:
-        requests.exceptions.RequestException: If a request error occurs during the search process.
+        httpx.RequestError: If a request error occurs during the search process.
     """
 
     # Default values for optional parameters are provided as empty strings or None when not specified.
@@ -64,17 +64,18 @@ def search_searxng(
 
     log.debug(f"searching {query_url}")
 
-    response = requests.get(
-        query_url,
-        headers={
-            "User-Agent": "Open WebUI (https://github.com/open-webui/open-webui) RAG Bot",
-            "Accept": "text/html",
-            "Accept-Encoding": "gzip, deflate",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Connection": "keep-alive",
-        },
-        params=params,
-    )
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            query_url,
+            headers={
+                "User-Agent": "Open WebUI (https://github.com/open-webui/open-webui) RAG Bot",
+                "Accept": "text/html",
+                "Accept-Encoding": "gzip, deflate",
+                "Accept-Language": "en-US,en;q=0.5",
+                "Connection": "keep-alive",
+            },
+            params=params,
+        )
 
     response.raise_for_status()  # Raise an exception for HTTP errors.
 

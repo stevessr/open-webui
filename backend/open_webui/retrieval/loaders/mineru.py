@@ -1,12 +1,14 @@
 import os
 import time
-import requests
 import logging
 import tempfile
 import zipfile
 from typing import List, Optional
 from langchain_core.documents import Document
 from fastapi import HTTPException, status
+import httpx
+import asyncio
+import aiofiles
 
 log = logging.getLogger(__name__)
 
@@ -51,21 +53,21 @@ class MinerULoader:
         if self.api_mode == "cloud" and not self.api_key:
             raise ValueError("API key is required for Cloud API mode")
 
-    def load(self) -> List[Document]:
+    async def load(self) -> List[Document]:
         """
         Main entry point for loading and parsing the document.
         Routes to Cloud or Local API based on api_mode.
         """
         try:
             if self.api_mode == "cloud":
-                return self._load_cloud_api()
+                return await self._load_cloud_api()
             else:
-                return self._load_local_api()
+                return await self._load_local_api()
         except Exception as e:
             log.error(f"Error loading document with MinerU: {e}")
             raise
 
-    def _load_local_api(self) -> List[Document]:
+    async def _load_local_api(self) -> List[Document]:
         """
         Load document using Local API (synchronous).
         Posts file to /file_parse endpoint and gets immediate response.
@@ -107,37 +109,37 @@ class MinerULoader:
             )
 
         try:
-            with open(self.file_path, "rb") as f:
-                files = {"files": (filename, f, "application/octet-stream")}
+            async with aiofiles.open(self.file_path, "rb") as f:
+                files = {"files": (filename, await f.read(), "application/octet-stream")}
 
                 log.info(f"Sending file to MinerU Local API: {filename}")
                 log.debug(f"Local API parameters: {form_data}")
 
-                response = requests.post(
-                    f"{self.api_url}/file_parse",
-                    data=form_data,
-                    files=files,
-                    timeout=300,  # 5 minute timeout for large documents
-                )
-                response.raise_for_status()
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        f"{self.api_url}/file_parse",
+                        data=form_data,
+                        files=files,
+                        timeout=300,  # 5 minute timeout for large documents
+                    )
+                    response.raise_for_status()
 
         except FileNotFoundError:
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=f"File not found: {self.file_path}"
             )
-        except requests.Timeout:
+        except httpx.TimeoutException:
             raise HTTPException(
                 status.HTTP_504_GATEWAY_TIMEOUT,
                 detail="MinerU Local API request timed out",
             )
-        except requests.HTTPError as e:
+        except httpx.HTTPStatusError as e:
             error_detail = f"MinerU Local API request failed: {e}"
-            if e.response is not None:
-                try:
-                    error_data = e.response.json()
-                    error_detail += f" - {error_data}"
-                except:
-                    error_detail += f" - {e.response.text}"
+            try:
+                error_data = e.response.json()
+                error_detail += f" - {error_data}"
+            except:
+                error_detail += f" - {e.response.text}"
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=error_detail)
         except Exception as e:
             raise HTTPException(
@@ -190,7 +192,7 @@ class MinerULoader:
 
         return [Document(page_content=markdown_content, metadata=metadata)]
 
-    def _load_cloud_api(self) -> List[Document]:
+    async def _load_cloud_api(self) -> List[Document]:
         """
         Load document using Cloud API (asynchronous).
         Uses batch upload endpoint to avoid need for public file URLs.
@@ -200,16 +202,16 @@ class MinerULoader:
         filename = os.path.basename(self.file_path)
 
         # Step 1: Request presigned upload URL
-        batch_id, upload_url = self._request_upload_url(filename)
+        batch_id, upload_url = await self._request_upload_url(filename)
 
         # Step 2: Upload file to presigned URL
-        self._upload_to_presigned_url(upload_url)
+        await self._upload_to_presigned_url(upload_url)
 
         # Step 3: Poll for results
-        result = self._poll_batch_status(batch_id, filename)
+        result = await self._poll_batch_status(batch_id, filename)
 
         # Step 4: Download and extract markdown from ZIP
-        markdown_content = self._download_and_extract_zip(
+        markdown_content = await self._download_and_extract_zip(
             result["full_zip_url"], filename
         )
 
@@ -224,7 +226,7 @@ class MinerULoader:
 
         return [Document(page_content=markdown_content, metadata=metadata)]
 
-    def _request_upload_url(self, filename: str) -> tuple:
+    async def _request_upload_url(self, filename: str) -> tuple:
         """
         Request presigned upload URL from Cloud API.
         Returns (batch_id, upload_url).
@@ -256,21 +258,21 @@ class MinerULoader:
         log.debug(f"Cloud API request body: {request_body}")
 
         try:
-            response = requests.post(
-                f"{self.api_url}/file-urls/batch",
-                headers=headers,
-                json=request_body,
-                timeout=30,
-            )
-            response.raise_for_status()
-        except requests.HTTPError as e:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.api_url}/file-urls/batch",
+                    headers=headers,
+                    json=request_body,
+                    timeout=30,
+                )
+                response.raise_for_status()
+        except httpx.HTTPStatusError as e:
             error_detail = f"Failed to request upload URL: {e}"
-            if e.response is not None:
-                try:
-                    error_data = e.response.json()
-                    error_detail += f" - {error_data.get('msg', error_data)}"
-                except:
-                    error_detail += f" - {e.response.text}"
+            try:
+                error_data = e.response.json()
+                error_detail += f" - {error_data.get('msg', error_data)}"
+            except:
+                error_detail += f" - {e.response.text}"
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=error_detail)
         except Exception as e:
             raise HTTPException(
@@ -308,30 +310,31 @@ class MinerULoader:
 
         return batch_id, upload_url
 
-    def _upload_to_presigned_url(self, upload_url: str) -> None:
+    async def _upload_to_presigned_url(self, upload_url: str) -> None:
         """
         Upload file to presigned URL (no authentication needed).
         """
         log.info(f"Uploading file to presigned URL")
 
         try:
-            with open(self.file_path, "rb") as f:
-                response = requests.put(
-                    upload_url,
-                    data=f,
-                    timeout=300,  # 5 minute timeout for large files
-                )
-                response.raise_for_status()
+            async with aiofiles.open(self.file_path, "rb") as f:
+                async with httpx.AsyncClient() as client:
+                    response = await client.put(
+                        upload_url,
+                        content=await f.read(),
+                        timeout=300,  # 5 minute timeout for large files
+                    )
+                    response.raise_for_status()
         except FileNotFoundError:
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=f"File not found: {self.file_path}"
             )
-        except requests.Timeout:
+        except httpx.TimeoutException:
             raise HTTPException(
                 status.HTTP_504_GATEWAY_TIMEOUT,
                 detail="File upload to presigned URL timed out",
             )
-        except requests.HTTPError as e:
+        except httpx.HTTPStatusError as e:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 detail=f"Failed to upload file to presigned URL: {e}",
@@ -344,7 +347,7 @@ class MinerULoader:
 
         log.info("File uploaded successfully")
 
-    def _poll_batch_status(self, batch_id: str, filename: str) -> dict:
+    async def _poll_batch_status(self, batch_id: str, filename: str) -> dict:
         """
         Poll batch status until completion.
         Returns the result dict for the file.
@@ -358,81 +361,81 @@ class MinerULoader:
 
         log.info(f"Polling batch status: {batch_id}")
 
-        for iteration in range(max_iterations):
-            try:
-                response = requests.get(
-                    f"{self.api_url}/extract-results/batch/{batch_id}",
-                    headers=headers,
-                    timeout=30,
-                )
-                response.raise_for_status()
-            except requests.HTTPError as e:
-                error_detail = f"Failed to poll batch status: {e}"
-                if e.response is not None:
+        async with httpx.AsyncClient() as client:
+            for iteration in range(max_iterations):
+                try:
+                    response = await client.get(
+                        f"{self.api_url}/extract-results/batch/{batch_id}",
+                        headers=headers,
+                        timeout=30,
+                    )
+                    response.raise_for_status()
+                except httpx.HTTPStatusError as e:
+                    error_detail = f"Failed to poll batch status: {e}"
                     try:
                         error_data = e.response.json()
                         error_detail += f" - {error_data.get('msg', error_data)}"
                     except:
                         error_detail += f" - {e.response.text}"
-                raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=error_detail)
-            except Exception as e:
-                raise HTTPException(
-                    status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Error polling batch status: {str(e)}",
-                )
-
-            try:
-                result = response.json()
-            except ValueError as e:
-                raise HTTPException(
-                    status.HTTP_502_BAD_GATEWAY,
-                    detail=f"Invalid JSON response while polling: {e}",
-                )
-
-            # Check for API error response
-            if result.get("code") != 0:
-                raise HTTPException(
-                    status.HTTP_400_BAD_REQUEST,
-                    detail=f"MinerU Cloud API error: {result.get('msg', 'Unknown error')}",
-                )
-
-            data = result.get("data", {})
-            extract_result = data.get("extract_result", [])
-
-            # Find our file in the batch results
-            file_result = None
-            for item in extract_result:
-                if item.get("file_name") == filename:
-                    file_result = item
-                    break
-
-            if not file_result:
-                raise HTTPException(
-                    status.HTTP_502_BAD_GATEWAY,
-                    detail=f"File {filename} not found in batch results",
-                )
-
-            state = file_result.get("state")
-
-            if state == "done":
-                log.info(f"Processing complete for {filename}")
-                return file_result
-            elif state == "failed":
-                error_msg = file_result.get("err_msg", "Unknown error")
-                raise HTTPException(
-                    status.HTTP_400_BAD_REQUEST,
-                    detail=f"MinerU processing failed: {error_msg}",
-                )
-            elif state in ["waiting-file", "pending", "running", "converting"]:
-                # Still processing
-                if iteration % 10 == 0:  # Log every 20 seconds
-                    log.info(
-                        f"Processing status: {state} (iteration {iteration + 1}/{max_iterations})"
+                    raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=error_detail)
+                except Exception as e:
+                    raise HTTPException(
+                        status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"Error polling batch status: {str(e)}",
                     )
-                time.sleep(poll_interval)
-            else:
-                log.warning(f"Unknown state: {state}")
-                time.sleep(poll_interval)
+
+                try:
+                    result = response.json()
+                except ValueError as e:
+                    raise HTTPException(
+                        status.HTTP_502_BAD_GATEWAY,
+                        detail=f"Invalid JSON response while polling: {e}",
+                    )
+
+                # Check for API error response
+                if result.get("code") != 0:
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST,
+                        detail=f"MinerU Cloud API error: {result.get('msg', 'Unknown error')}",
+                    )
+
+                data = result.get("data", {})
+                extract_result = data.get("extract_result", [])
+
+                # Find our file in the batch results
+                file_result = None
+                for item in extract_result:
+                    if item.get("file_name") == filename:
+                        file_result = item
+                        break
+
+                if not file_result:
+                    raise HTTPException(
+                        status.HTTP_502_BAD_GATEWAY,
+                        detail=f"File {filename} not found in batch results",
+                    )
+
+                state = file_result.get("state")
+
+                if state == "done":
+                    log.info(f"Processing complete for {filename}")
+                    return file_result
+                elif state == "failed":
+                    error_msg = file_result.get("err_msg", "Unknown error")
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST,
+                        detail=f"MinerU processing failed: {error_msg}",
+                    )
+                elif state in ["waiting-file", "pending", "running", "converting"]:
+                    # Still processing
+                    if iteration % 10 == 0:  # Log every 20 seconds
+                        log.info(
+                            f"Processing status: {state} (iteration {iteration + 1}/{max_iterations})"
+                        )
+                    await asyncio.sleep(poll_interval)
+                else:
+                    log.warning(f"Unknown state: {state}")
+                    await asyncio.sleep(poll_interval)
 
         # Timeout
         raise HTTPException(
@@ -440,7 +443,7 @@ class MinerULoader:
             detail="MinerU processing timed out after 10 minutes",
         )
 
-    def _download_and_extract_zip(self, zip_url: str, filename: str) -> str:
+    async def _download_and_extract_zip(self, zip_url: str, filename: str) -> str:
         """
         Download ZIP file from CDN and extract markdown content.
         Returns the markdown content as a string.
@@ -448,9 +451,10 @@ class MinerULoader:
         log.info(f"Downloading results from: {zip_url}")
 
         try:
-            response = requests.get(zip_url, timeout=60)
-            response.raise_for_status()
-        except requests.HTTPError as e:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(zip_url, timeout=60)
+                response.raise_for_status()
+        except httpx.HTTPStatusError as e:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 detail=f"Failed to download results ZIP: {e}",
@@ -487,8 +491,8 @@ class MinerULoader:
                             found_md_path = full_path
                             log.info(f"Found markdown file at: {full_path}")
                             try:
-                                with open(full_path, "r", encoding="utf-8") as f:
-                                    markdown_content = f.read()
+                                async with aiofiles.open(full_path, "r", encoding="utf-8") as f:
+                                    markdown_content = await f.read()
                                 if (
                                     markdown_content
                                 ):  # Use the first non-empty markdown file

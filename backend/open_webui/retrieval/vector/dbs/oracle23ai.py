@@ -31,7 +31,7 @@ from decimal import Decimal
 import logging
 import os
 import threading
-import time
+import asyncio
 import json
 import array
 import oracledb
@@ -140,7 +140,7 @@ class Oracle23aiClient(VectorDBBase):
         )
         log.info("Created DB connection pool with basic authentication.")
 
-    def get_connection(self):
+    async def get_connection(self):
         """
         Acquire a connection from the connection pool with retry logic.
 
@@ -162,11 +162,12 @@ class Oracle23aiClient(VectorDBBase):
                 if attempt < max_retries - 1:
                     wait_time = 2**attempt
                     log.info(f"Retrying in {wait_time} seconds...")
-                    time.sleep(wait_time)
+                    loop = asyncio.get_event_loop()
+                    loop.run_until_complete(asyncio.sleep(wait_time))
                 else:
                     raise
 
-    def start_health_monitor(self, interval_seconds: int = 60):
+    async def start_health_monitor(self, interval_seconds: int = 60):
         """
         Start a background thread to periodically check the health of the connection pool.
 
@@ -174,7 +175,7 @@ class Oracle23aiClient(VectorDBBase):
             interval_seconds (int): Number of seconds between health checks
         """
 
-        def _monitor():
+        async def _monitor():
             while True:
                 try:
                     log.info("[HealthCheck] Running periodic DB health check...")
@@ -182,7 +183,8 @@ class Oracle23aiClient(VectorDBBase):
                     log.info("[HealthCheck] Connection is healthy.")
                 except Exception as e:
                     log.exception(f"[HealthCheck] Connection health check failed: {e}")
-                time.sleep(interval_seconds)
+                loop = asyncio.get_event_loop()
+                loop.run_until_complete(asyncio.sleep(interval_seconds))
 
         thread = threading.Thread(target=_monitor, daemon=True)
         thread.start()

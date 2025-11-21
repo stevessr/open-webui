@@ -1,8 +1,7 @@
 import logging
 from typing import Optional
 
-import requests
-from requests.auth import HTTPDigestAuth
+import httpx
 from open_webui.retrieval.web.main import SearchResult, get_filtered_results
 from open_webui.env import SRC_LOG_LEVELS
 
@@ -10,7 +9,7 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
 
 
-def search_yacy(
+async def search_yacy(
     query_url: str,
     username: Optional[str],
     password: Optional[str],
@@ -40,7 +39,7 @@ def search_yacy(
     # Use authentication if either username or password is set
     yacy_auth = None
     if username or password:
-        yacy_auth = HTTPDigestAuth(username, password)
+        yacy_auth = httpx.DigestAuth(username, password)
 
     params = {
         "query": query,
@@ -57,18 +56,19 @@ def search_yacy(
 
     log.debug(f"searching {query_url}")
 
-    response = requests.get(
-        query_url,
-        auth=yacy_auth,
-        headers={
-            "User-Agent": "Open WebUI (https://github.com/open-webui/open-webui) RAG Bot",
-            "Accept": "text/html",
-            "Accept-Encoding": "gzip, deflate",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Connection": "keep-alive",
-        },
-        params=params,
-    )
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            query_url,
+            auth=yacy_auth,
+            headers={
+                "User-Agent": "Open WebUI (https://github.com/open-webui/open-webui) RAG Bot",
+                "Accept": "text/html",
+                "Accept-Encoding": "gzip, deflate",
+                "Accept-Language": "en-US,en;q=0.5",
+                "Connection": "keep-alive",
+            },
+            params=params,
+        )
 
     response.raise_for_status()  # Raise an exception for HTTP errors.
 

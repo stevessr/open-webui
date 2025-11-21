@@ -3,9 +3,19 @@ import time
 import uuid
 from typing import Optional
 
+from sqlalchemy.orm import relationship, joinedload, selectinload
+from sqlalchemy import (
+    ForeignKey,
+    BigInteger,
+    Boolean,
+    Column,
+    String,
+    Text,
+    JSON,
+)
+
 from open_webui.internal.db import Base, get_db
-from open_webui.models.tags import TagModel, Tag, Tags
-from open_webui.models.users import Users, UserNameResponse
+from open_webui.models.users import Users, UserNameResponse, User
 
 
 from pydantic import BaseModel, ConfigDict
@@ -21,10 +31,13 @@ from sqlalchemy.sql import exists
 class MessageReaction(Base):
     __tablename__ = "message_reaction"
     id = Column(Text, primary_key=True)
-    user_id = Column(Text)
-    message_id = Column(Text)
+    user_id = Column(Text, ForeignKey("user.id"))
+    message_id = Column(Text, ForeignKey("message.id"))
     name = Column(Text)
     created_at = Column(BigInteger)
+
+    user = relationship("User", back_populates="reactions")
+    message = relationship("Message", back_populates="reactions")
 
 
 class MessageReactionModel(BaseModel):
@@ -41,7 +54,7 @@ class Message(Base):
     __tablename__ = "message"
     id = Column(Text, primary_key=True)
 
-    user_id = Column(Text)
+    user_id = Column(Text, ForeignKey("user.id"))
     channel_id = Column(Text, nullable=True)
 
     reply_to_id = Column(Text, nullable=True)
@@ -53,6 +66,11 @@ class Message(Base):
 
     created_at = Column(BigInteger)  # time_ns
     updated_at = Column(BigInteger)  # time_ns
+
+    user = relationship("User", back_populates="messages")
+    reactions = relationship(
+        "MessageReaction", back_populates="message", cascade="all, delete-orphan"
+    )
 
 
 class MessageModel(BaseModel):
@@ -235,6 +253,47 @@ class MessageTable:
                         }
                     )
                 )
+            return messages
+
+    def get_thread_messages_eager(
+        self, channel_id: str, parent_id: str, skip: int = 0, limit: int = 50
+    ) -> list[Message]:
+        with get_db() as db:
+            parent_message_exists = (
+                db.query(db.query(Message).filter_by(id=parent_id).exists()).scalar()
+            )
+            if not parent_message_exists:
+                return []
+
+            # Eagerly load replies with their users and reactions
+            replies = (
+                db.query(Message)
+                .options(
+                    joinedload(Message.user),
+                    selectinload(Message.reactions),
+                )
+                .filter(Message.channel_id == channel_id, Message.parent_id == parent_id)
+                .order_by(Message.created_at.desc())
+                .offset(skip)
+                .limit(limit)
+                .all()
+            )
+
+            messages = replies
+            # If we haven't fetched a full page of replies, include the parent message
+            if len(messages) < limit:
+                parent_message = (
+                    db.query(Message)
+                    .options(
+                        joinedload(Message.user),
+                        selectinload(Message.reactions),
+                    )
+                    .filter_by(id=parent_id)
+                    .one()
+                )
+                if parent_message not in messages:
+                    messages.append(parent_message)
+
             return messages
 
     def get_messages_by_parent_id(

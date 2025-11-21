@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass
 from typing import Optional
 
-import requests
+import httpx
 from open_webui.env import SRC_LOG_LEVELS
 from open_webui.retrieval.web.main import SearchResult
 
@@ -19,7 +19,7 @@ class ExaResult:
     text: str
 
 
-def search_exa(
+async def search_exa(
     api_key: str,
     query: str,
     count: int,
@@ -46,11 +46,12 @@ def search_exa(
     }
 
     try:
-        response = requests.post(
-            f"{EXA_API_BASE}/search", headers=headers, json=payload
-        )
-        response.raise_for_status()
-        data = response.json()
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{EXA_API_BASE}/search", headers=headers, json=payload
+            )
+            response.raise_for_status()
+            data = response.json()
 
         results = []
         for result in data["results"]:

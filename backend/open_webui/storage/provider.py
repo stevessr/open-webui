@@ -5,6 +5,8 @@ import logging
 import re
 from abc import ABC, abstractmethod
 from typing import BinaryIO, Tuple, Dict
+import asyncio
+import aiofiles
 
 import boto3
 from botocore.config import Config
@@ -42,63 +44,63 @@ log.setLevel(SRC_LOG_LEVELS["MAIN"])
 
 class StorageProvider(ABC):
     @abstractmethod
-    def get_file(self, file_path: str) -> str:
+    async def get_file(self, file_path: str) -> str:
         pass
 
     @abstractmethod
-    def upload_file(
+    async def upload_file(
         self, file: BinaryIO, filename: str, tags: Dict[str, str]
     ) -> Tuple[bytes, str]:
         pass
 
     @abstractmethod
-    def delete_all_files(self) -> None:
+    async def delete_all_files(self) -> None:
         pass
 
     @abstractmethod
-    def delete_file(self, file_path: str) -> None:
+    async def delete_file(self, file_path: str) -> None:
         pass
 
 
 class LocalStorageProvider(StorageProvider):
     @staticmethod
-    def upload_file(
+    async def upload_file(
         file: BinaryIO, filename: str, tags: Dict[str, str]
     ) -> Tuple[bytes, str]:
-        contents = file.read()
+        contents = await asyncio.to_thread(file.read)
         if not contents:
             raise ValueError(ERROR_MESSAGES.EMPTY_CONTENT)
         file_path = f"{UPLOAD_DIR}/{filename}"
-        with open(file_path, "wb") as f:
-            f.write(contents)
+        async with aiofiles.open(file_path, "wb") as f:
+            await f.write(contents)
         return contents, file_path
 
     @staticmethod
-    def get_file(file_path: str) -> str:
+    async def get_file(file_path: str) -> str:
         """Handles downloading of the file from local storage."""
         return file_path
 
     @staticmethod
-    def delete_file(file_path: str) -> None:
+    async def delete_file(file_path: str) -> None:
         """Handles deletion of the file from local storage."""
         filename = file_path.split("/")[-1]
         file_path = f"{UPLOAD_DIR}/{filename}"
-        if os.path.isfile(file_path):
-            os.remove(file_path)
+        if await asyncio.to_thread(os.path.isfile, file_path):
+            await asyncio.to_thread(os.remove, file_path)
         else:
             log.warning(f"File {file_path} not found in local storage.")
 
     @staticmethod
-    def delete_all_files() -> None:
+    async def delete_all_files() -> None:
         """Handles deletion of all files from local storage."""
-        if os.path.exists(UPLOAD_DIR):
-            for filename in os.listdir(UPLOAD_DIR):
-                file_path = os.path.join(UPLOAD_DIR, filename)
+        if await asyncio.to_thread(os.path.exists, UPLOAD_DIR):
+            for filename in await asyncio.to_thread(os.listdir, UPLOAD_DIR):
+                file_path = await asyncio.to_thread(os.path.join, UPLOAD_DIR, filename)
                 try:
-                    if os.path.isfile(file_path) or os.path.islink(file_path):
-                        os.unlink(file_path)  # Remove the file or link
-                    elif os.path.isdir(file_path):
-                        shutil.rmtree(file_path)  # Remove the directory
+                    if await asyncio.to_thread(os.path.isfile, file_path) or await asyncio.to_thread(os.path.islink, file_path):
+                        await asyncio.to_thread(os.unlink, file_path)  # Remove the file or link
+                    elif await asyncio.to_thread(os.path.isdir, file_path):
+                        await asyncio.to_thread(shutil.rmtree, file_path)  # Remove the directory
                 except Exception as e:
                     log.exception(f"Failed to delete {file_path}. Reason: {e}")
         else:
@@ -145,14 +147,14 @@ class S3StorageProvider(StorageProvider):
         """Only include S3 allowed characters."""
         return re.sub(r"[^a-zA-Z0-9 äöüÄÖÜß\+\-=\._:/@]", "", s)
 
-    def upload_file(
+    async def upload_file(
         self, file: BinaryIO, filename: str, tags: Dict[str, str]
     ) -> Tuple[bytes, str]:
         """Handles uploading of the file to S3 storage."""
-        _, file_path = LocalStorageProvider.upload_file(file, filename, tags)
+        contents, file_path = await LocalStorageProvider.upload_file(file, filename, tags)
         s3_key = os.path.join(self.key_prefix, filename)
         try:
-            self.s3_client.upload_file(file_path, self.bucket_name, s3_key)
+            await asyncio.to_thread(self.s3_client.upload_file, file_path, self.bucket_name, s3_key)
             if S3_ENABLE_TAGGING and tags:
                 sanitized_tags = {
                     self.sanitize_tag_value(k): self.sanitize_tag_value(v)
@@ -163,57 +165,60 @@ class S3StorageProvider(StorageProvider):
                         {"Key": k, "Value": v} for k, v in sanitized_tags.items()
                     ]
                 }
-                self.s3_client.put_object_tagging(
+                await asyncio.to_thread(self.s3_client.put_object_tagging,
                     Bucket=self.bucket_name,
                     Key=s3_key,
                     Tagging=tagging,
                 )
+            
+            async with aiofiles.open(file_path, "rb") as f:
+                content_bytes = await f.read()
             return (
-                open(file_path, "rb").read(),
+                content_bytes,
                 f"s3://{self.bucket_name}/{s3_key}",
             )
         except ClientError as e:
             raise RuntimeError(f"Error uploading file to S3: {e}")
 
-    def get_file(self, file_path: str) -> str:
+    async def get_file(self, file_path: str) -> str:
         """Handles downloading of the file from S3 storage."""
         try:
             s3_key = self._extract_s3_key(file_path)
             local_file_path = self._get_local_file_path(s3_key)
-            self.s3_client.download_file(self.bucket_name, s3_key, local_file_path)
+            await asyncio.to_thread(self.s3_client.download_file, self.bucket_name, s3_key, local_file_path)
             return local_file_path
         except ClientError as e:
             raise RuntimeError(f"Error downloading file from S3: {e}")
 
-    def delete_file(self, file_path: str) -> None:
+    async def delete_file(self, file_path: str) -> None:
         """Handles deletion of the file from S3 storage."""
         try:
             s3_key = self._extract_s3_key(file_path)
-            self.s3_client.delete_object(Bucket=self.bucket_name, Key=s3_key)
+            await asyncio.to_thread(self.s3_client.delete_object, Bucket=self.bucket_name, Key=s3_key)
         except ClientError as e:
             raise RuntimeError(f"Error deleting file from S3: {e}")
 
         # Always delete from local storage
-        LocalStorageProvider.delete_file(file_path)
+        await LocalStorageProvider.delete_file(file_path)
 
-    def delete_all_files(self) -> None:
+    async def delete_all_files(self) -> None:
         """Handles deletion of all files from S3 storage."""
         try:
-            response = self.s3_client.list_objects_v2(Bucket=self.bucket_name)
+            response = await asyncio.to_thread(self.s3_client.list_objects_v2, Bucket=self.bucket_name)
             if "Contents" in response:
                 for content in response["Contents"]:
                     # Skip objects that were not uploaded from open-webui in the first place
                     if not content["Key"].startswith(self.key_prefix):
                         continue
 
-                    self.s3_client.delete_object(
+                    await asyncio.to_thread(self.s3_client.delete_object,
                         Bucket=self.bucket_name, Key=content["Key"]
                     )
         except ClientError as e:
             raise RuntimeError(f"Error deleting all files from S3: {e}")
 
         # Always delete from local storage
-        LocalStorageProvider.delete_all_files()
+        await LocalStorageProvider.delete_all_files()
 
     # The s3 key is the name assigned to an object. It excludes the bucket name, but includes the internal path and the file name.
     def _extract_s3_key(self, full_file_path: str) -> str:
@@ -238,55 +243,55 @@ class GCSStorageProvider(StorageProvider):
             self.gcs_client = storage.Client()
         self.bucket = self.gcs_client.bucket(GCS_BUCKET_NAME)
 
-    def upload_file(
+    async def upload_file(
         self, file: BinaryIO, filename: str, tags: Dict[str, str]
     ) -> Tuple[bytes, str]:
         """Handles uploading of the file to GCS storage."""
-        contents, file_path = LocalStorageProvider.upload_file(file, filename, tags)
+        contents, file_path = await LocalStorageProvider.upload_file(file, filename, tags)
         try:
-            blob = self.bucket.blob(filename)
-            blob.upload_from_filename(file_path)
+            blob = await asyncio.to_thread(self.bucket.blob, filename)
+            await asyncio.to_thread(blob.upload_from_filename, file_path)
             return contents, "gs://" + self.bucket_name + "/" + filename
         except GoogleCloudError as e:
             raise RuntimeError(f"Error uploading file to GCS: {e}")
 
-    def get_file(self, file_path: str) -> str:
+    async def get_file(self, file_path: str) -> str:
         """Handles downloading of the file from GCS storage."""
         try:
             filename = file_path.removeprefix("gs://").split("/")[1]
             local_file_path = f"{UPLOAD_DIR}/{filename}"
-            blob = self.bucket.get_blob(filename)
-            blob.download_to_filename(local_file_path)
+            blob = await asyncio.to_thread(self.bucket.get_blob, filename)
+            await asyncio.to_thread(blob.download_to_filename, local_file_path)
 
             return local_file_path
         except NotFound as e:
             raise RuntimeError(f"Error downloading file from GCS: {e}")
 
-    def delete_file(self, file_path: str) -> None:
+    async def delete_file(self, file_path: str) -> None:
         """Handles deletion of the file from GCS storage."""
         try:
             filename = file_path.removeprefix("gs://").split("/")[1]
-            blob = self.bucket.get_blob(filename)
-            blob.delete()
+            blob = await asyncio.to_thread(self.bucket.get_blob, filename)
+            await asyncio.to_thread(blob.delete)
         except NotFound as e:
             raise RuntimeError(f"Error deleting file from GCS: {e}")
 
         # Always delete from local storage
-        LocalStorageProvider.delete_file(file_path)
+        await LocalStorageProvider.delete_file(file_path)
 
-    def delete_all_files(self) -> None:
+    async def delete_all_files(self) -> None:
         """Handles deletion of all files from GCS storage."""
         try:
-            blobs = self.bucket.list_blobs()
+            blobs = await asyncio.to_thread(self.bucket.list_blobs)
 
             for blob in blobs:
-                blob.delete()
+                await asyncio.to_thread(blob.delete)
 
         except NotFound as e:
             raise RuntimeError(f"Error deleting all files from GCS: {e}")
 
         # Always delete from local storage
-        LocalStorageProvider.delete_all_files()
+        await LocalStorageProvider.delete_all_files()
 
 
 class AzureStorageProvider(StorageProvider):
@@ -310,53 +315,54 @@ class AzureStorageProvider(StorageProvider):
             self.container_name
         )
 
-    def upload_file(
+    async def upload_file(
         self, file: BinaryIO, filename: str, tags: Dict[str, str]
     ) -> Tuple[bytes, str]:
         """Handles uploading of the file to Azure Blob Storage."""
-        contents, file_path = LocalStorageProvider.upload_file(file, filename, tags)
+        contents, file_path = await LocalStorageProvider.upload_file(file, filename, tags)
         try:
-            blob_client = self.container_client.get_blob_client(filename)
-            blob_client.upload_blob(contents, overwrite=True)
+            blob_client = await asyncio.to_thread(self.container_client.get_blob_client, filename)
+            await asyncio.to_thread(blob_client.upload_blob, contents, overwrite=True)
             return contents, f"{self.endpoint}/{self.container_name}/{filename}"
         except Exception as e:
             raise RuntimeError(f"Error uploading file to Azure Blob Storage: {e}")
 
-    def get_file(self, file_path: str) -> str:
+    async def get_file(self, file_path: str) -> str:
         """Handles downloading of the file from Azure Blob Storage."""
         try:
             filename = file_path.split("/")[-1]
             local_file_path = f"{UPLOAD_DIR}/{filename}"
-            blob_client = self.container_client.get_blob_client(filename)
-            with open(local_file_path, "wb") as download_file:
-                download_file.write(blob_client.download_blob().readall())
+            blob_client = await asyncio.to_thread(self.container_client.get_blob_client, filename)
+            blob_data = await asyncio.to_thread(blob_client.download_blob().readall)
+            async with aiofiles.open(local_file_path, "wb") as download_file:
+                await download_file.write(blob_data)
             return local_file_path
         except ResourceNotFoundError as e:
             raise RuntimeError(f"Error downloading file from Azure Blob Storage: {e}")
 
-    def delete_file(self, file_path: str) -> None:
+    async def delete_file(self, file_path: str) -> None:
         """Handles deletion of the file from Azure Blob Storage."""
         try:
             filename = file_path.split("/")[-1]
-            blob_client = self.container_client.get_blob_client(filename)
-            blob_client.delete_blob()
+            blob_client = await asyncio.to_thread(self.container_client.get_blob_client, filename)
+            await asyncio.to_thread(blob_client.delete_blob)
         except ResourceNotFoundError as e:
             raise RuntimeError(f"Error deleting file from Azure Blob Storage: {e}")
 
         # Always delete from local storage
-        LocalStorageProvider.delete_file(file_path)
+        await LocalStorageProvider.delete_file(file_path)
 
-    def delete_all_files(self) -> None:
+    async def delete_all_files(self) -> None:
         """Handles deletion of all files from Azure Blob Storage."""
         try:
-            blobs = self.container_client.list_blobs()
+            blobs = await asyncio.to_thread(self.container_client.list_blobs)
             for blob in blobs:
-                self.container_client.delete_blob(blob.name)
+                await asyncio.to_thread(self.container_client.delete_blob, blob.name)
         except Exception as e:
             raise RuntimeError(f"Error deleting all files from Azure Blob Storage: {e}")
 
         # Always delete from local storage
-        LocalStorageProvider.delete_all_files()
+        await LocalStorageProvider.delete_all_files()
 
 
 def get_storage_provider(storage_provider: str):

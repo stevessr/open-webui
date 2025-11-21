@@ -1,5 +1,6 @@
 
-import requests
+import asyncio
+import aiohttp
 import json
 import os
 import logging
@@ -18,7 +19,7 @@ MAX_HISTORY_LENGTH = 10 # Keep last 10 messages (5 user, 5 assistant)
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def send_to_llm_api(message_text: str) -> str:
+async def send_to_llm_api(message_text: str) -> str:
     """
     Sends a message to the LLM API and returns its response.
     """
@@ -44,9 +45,11 @@ def send_to_llm_api(message_text: str) -> str:
 
     try:
         logging.info(f"Sending message to LLM: {message_text[:100]}...")
-        response = requests.post(LLM_API_URL, headers=headers, json=data, timeout=120)
-        response.raise_for_status()
-        llm_response = response.json()
+        timeout = aiohttp.ClientTimeout(total=120)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(LLM_API_URL, headers=headers, json=data) as response:
+                response.raise_for_status()
+                llm_response = await response.json()
 
         # Adjust based on your LLM API's response structure
         # This example assumes an Ollama-like response with a "response" key
@@ -65,11 +68,11 @@ def send_to_llm_api(message_text: str) -> str:
         else:
             logging.warning(f"Unexpected LLM response structure: {llm_response}")
             return "Error: Unexpected LLM response format."
-    except requests.exceptions.RequestException as e:
+    except aiohttp.ClientError as e:
         logging.error(f"Error communicating with LLM API: {e}")
         return ""
 
-def push_to_ntfy(message: str, title: str = "LLM Response", tags: list = None):
+async def push_to_ntfy(message: str, title: str = "LLM Response", tags: list = None):
     """
     Pushes a message to the ntfy topic.
     """
@@ -85,44 +88,47 @@ def push_to_ntfy(message: str, title: str = "LLM Response", tags: list = None):
 
     try:
         logging.info(f"Pushing response to ntfy topic {NTFY_TOPIC}: {message[:100]}...")
-        response = requests.post(ntfy_url, headers=headers, data=message.encode('utf-8'))
-        response.raise_for_status()
+        async with aiohttp.ClientSession() as session:
+            async with session.post(ntfy_url, headers=headers, data=message.encode('utf-8')) as response:
+                response.raise_for_status()
         logging.info("Successfully pushed message to ntfy.")
-    except requests.exceptions.RequestException as e:
+    except aiohttp.ClientError as e:
         logging.error(f"Error pushing to ntfy: {e}")
 
-def listen_to_ntfy():
+async def listen_to_ntfy():
     """
     Listens to the ntfy topic for new messages, sends them to LLM, and pushes the response.
     """
     listen_url = f"{NTFY_BASE_URL}/{NTFY_TOPIC}/json"
     logging.info(f"Listening for ntfy messages on {listen_url}...")
 
-    try:
-        with requests.get(listen_url, stream=True, timeout=None) as response:
-            response.raise_for_status()
-            for line in response.iter_lines():
-                if line:
-                    try:
-                        message = json.loads(line.decode('utf-8'))
-                        if message.get("event") == "message":
-                            message_text = message.get("message")
-                            if message_text:
-                                logging.info(f"Received ntfy message: {message_text}")
-                                llm_response = send_to_llm_api(message_text)
-                                if llm_response:
-                                    push_to_ntfy(llm_response, title=f"LLM Reply to: {message_text[:50]}...")
-                    except json.JSONDecodeError:
-                        logging.warning(f"Received non-JSON line from ntfy: {line.decode('utf-8')}")
-                    except Exception as e:
-                        logging.error(f"Error processing ntfy message: {e}")
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Error listening to ntfy: {e}. Retrying in 5 seconds...")
-        # Simple reconnect logic, consider exponential backoff for production
-        import time
-        time.sleep(5)
-        listen_to_ntfy() # Recursive call to retry listening
+    while True:
+        try:
+            timeout = aiohttp.ClientTimeout(total=None)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(listen_url) as response:
+                    response.raise_for_status()
+                    async for line in response.content:
+                        if line:
+                            try:
+                                message = json.loads(line.decode('utf-8'))
+                                if message.get("event") == "message":
+                                    message_text = message.get("message")
+                                    if message_text:
+                                        logging.info(f"Received ntfy message: {message_text}")
+                                        llm_response = await send_to_llm_api(message_text)
+                                        if llm_response:
+                                            await push_to_ntfy(llm_response, title=f"LLM Reply to: {message_text[:50]}...")
+                            except json.JSONDecodeError:
+                                logging.warning(f"Received non-JSON line from ntfy: {line.decode('utf-8')}")
+                            except Exception as e:
+                                logging.error(f"Error processing ntfy message: {e}")
+        except aiohttp.ClientError as e:
+            logging.error(f"Error listening to ntfy: {e}. Retrying in 5 seconds...")
+            # Simple reconnect logic, consider exponential backoff for production
+            await asyncio.sleep(5)
+            continue  # Continue the while loop to retry
 
 if __name__ == "__main__":
     logging.info("Starting ntfy-LLM bot...")
-    listen_to_ntfy()
+    asyncio.run(listen_to_ntfy())

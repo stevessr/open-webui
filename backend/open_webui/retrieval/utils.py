@@ -2,11 +2,12 @@ import logging
 import os
 from typing import Optional, Union
 
-import requests
 import hashlib
 from concurrent.futures import ThreadPoolExecutor
 import time
 import re
+import httpx
+import asyncio
 
 from urllib.parse import quote
 from huggingface_hub import snapshot_download
@@ -75,9 +76,9 @@ def get_loader(request, url: str):
         )
 
 
-def get_content_from_url(request, url: str) -> str:
+async def get_content_from_url(request, url: str) -> str:
     loader = get_loader(request, url)
-    docs = loader.load()
+    docs = await loader.load()
     content = " ".join([doc.page_content for doc in docs])
     return content, docs
 
@@ -470,22 +471,24 @@ def get_embedding_function(
             query, **({"prompt": prefix} if prefix else {})
         ).tolist()
     elif embedding_engine in ["ollama", "openai", "azure_openai"]:
-        func = lambda query, prefix=None, user=None: generate_embeddings(
-            engine=embedding_engine,
-            model=embedding_model,
-            text=query,
-            prefix=prefix,
-            url=url,
-            key=key,
-            user=user,
-            azure_api_version=azure_api_version,
-        )
+        # func should now be async
+        async def func_async(query, prefix=None, user=None):
+            return await generate_embeddings(
+                engine=embedding_engine,
+                model=embedding_model,
+                text=query,
+                prefix=prefix,
+                url=url,
+                key=key,
+                user=user,
+                azure_api_version=azure_api_version,
+            )
 
-        def generate_multiple(query, prefix, user, func):
+        async def generate_multiple_async(query, prefix, user, func_async):
             if isinstance(query, list):
                 embeddings = []
                 for i in range(0, len(query), embedding_batch_size):
-                    batch_embeddings = func(
+                    batch_embeddings = await func_async(  # await here
                         query[i : i + embedding_batch_size],
                         prefix=prefix,
                         user=user,
@@ -495,10 +498,10 @@ def get_embedding_function(
                         embeddings.extend(batch_embeddings)
                 return embeddings
             else:
-                return func(query, prefix, user)
+                return await func_async(query, prefix, user)  # await here
 
-        return lambda query, prefix=None, user=None: generate_multiple(
-            query, prefix, user, func
+        return lambda query, prefix=None, user=None: generate_multiple_async(  # this lambda will now return a coroutine
+            query, prefix, user, func_async
         )
     else:
         raise ValueError(f"Unknown embedding engine: {embedding_engine}")
@@ -836,7 +839,7 @@ def get_model_path(model: str, update_model: bool = False):
         return model
 
 
-def generate_openai_batch_embeddings(
+async def generate_openai_batch_embeddings(
     model: str,
     texts: list[str],
     url: str = "https://api.openai.com/v1",
@@ -852,36 +855,37 @@ def generate_openai_batch_embeddings(
         if isinstance(RAG_EMBEDDING_PREFIX_FIELD_NAME, str) and isinstance(prefix, str):
             json_data[RAG_EMBEDDING_PREFIX_FIELD_NAME] = prefix
 
-        r = requests.post(
-            f"{url}/embeddings",
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {key}",
-                **(
-                    {
-                        "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
-                        "X-OpenWebUI-User-Id": user.id,
-                        "X-OpenWebUI-User-Email": user.email,
-                        "X-OpenWebUI-User-Role": user.role,
-                    }
-                    if ENABLE_FORWARD_USER_INFO_HEADERS and user
-                    else {}
-                ),
-            },
-            json=json_data,
-        )
+        async with httpx.AsyncClient() as client:
+            r = await client.post(
+                f"{url}/embeddings",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {key}",
+                    **(
+                        {
+                            "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
+                            "X-OpenWebUI-User-Id": user.id,
+                            "X-OpenWebUI-User-Email": user.email,
+                            "X-OpenWebUI-User-Role": user.role,
+                        }
+                        if ENABLE_FORWARD_USER_INFO_HEADERS and user
+                        else {}
+                    ),
+                },
+                json=json_data,
+            )
         r.raise_for_status()
         data = r.json()
         if "data" in data:
             return [elem["embedding"] for elem in data["data"]]
         else:
-            raise "Something went wrong :/"
+            raise Exception("Something went wrong :/")
     except Exception as e:
         log.exception(f"Error generating openai batch embeddings: {e}")
         return None
 
 
-def generate_azure_openai_batch_embeddings(
+async def generate_azure_openai_batch_embeddings(
     model: str,
     texts: list[str],
     url: str,
@@ -900,42 +904,43 @@ def generate_azure_openai_batch_embeddings(
 
         url = f"{url}/openai/deployments/{model}/embeddings?api-version={version}"
 
-        for _ in range(5):
-            r = requests.post(
-                url,
-                headers={
-                    "Content-Type": "application/json",
-                    "api-key": key,
-                    **(
-                        {
-                            "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
-                            "X-OpenWebUI-User-Id": user.id,
-                            "X-OpenWebUI-User-Email": user.email,
-                            "X-OpenWebUI-User-Role": user.role,
-                        }
-                        if ENABLE_FORWARD_USER_INFO_HEADERS and user
-                        else {}
-                    ),
-                },
-                json=json_data,
-            )
-            if r.status_code == 429:
-                retry = float(r.headers.get("Retry-After", "1"))
-                time.sleep(retry)
-                continue
-            r.raise_for_status()
-            data = r.json()
-            if "data" in data:
-                return [elem["embedding"] for elem in data["data"]]
-            else:
-                raise Exception("Something went wrong :/")
-        return None
+        async with httpx.AsyncClient() as client:
+            for _ in range(5):
+                r = await client.post(
+                    url,
+                    headers={
+                        "Content-Type": "application/json",
+                        "api-key": key,
+                        **(
+                            {
+                                "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
+                                "X-OpenWebUI-User-Id": user.id,
+                                "X-OpenWebUI-User-Email": user.email,
+                                "X-OpenWebUI-User-Role": user.role,
+                            }
+                            if ENABLE_FORWARD_USER_INFO_HEADERS and user
+                            else {}
+                        ),
+                    },
+                    json=json_data,
+                )
+                if r.status_code == 429:
+                    retry = float(r.headers.get("Retry-After", "1"))
+                    await asyncio.sleep(retry)
+                    continue
+                r.raise_for_status()
+                data = r.json()
+                if "data" in data:
+                    return [elem["embedding"] for elem in data["data"]]
+                else:
+                    raise Exception("Something went wrong :/")
+            return None
     except Exception as e:
         log.exception(f"Error generating azure openai batch embeddings: {e}")
         return None
 
 
-def generate_ollama_batch_embeddings(
+async def generate_ollama_batch_embeddings(
     model: str,
     texts: list[str],
     url: str,
@@ -951,37 +956,38 @@ def generate_ollama_batch_embeddings(
         if isinstance(RAG_EMBEDDING_PREFIX_FIELD_NAME, str) and isinstance(prefix, str):
             json_data[RAG_EMBEDDING_PREFIX_FIELD_NAME] = prefix
 
-        r = requests.post(
-            f"{url}/api/embed",
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {key}",
-                **(
-                    {
-                        "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
-                        "X-OpenWebUI-User-Id": user.id,
-                        "X-OpenWebUI-User-Email": user.email,
-                        "X-OpenWebUI-User-Role": user.role,
-                    }
-                    if ENABLE_FORWARD_USER_INFO_HEADERS
-                    else {}
-                ),
-            },
-            json=json_data,
-        )
+        async with httpx.AsyncClient() as client:
+            r = await client.post(
+                f"{url}/api/embed",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {key}",
+                    **(
+                        {
+                            "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
+                            "X-OpenWebUI-User-Id": user.id,
+                            "X-OpenWebUI-User-Email": user.email,
+                            "X-OpenWebUI-User-Role": user.role,
+                        }
+                        if ENABLE_FORWARD_USER_INFO_HEADERS
+                        else {}
+                    ),
+                },
+                json=json_data,
+            )
         r.raise_for_status()
         data = r.json()
 
         if "embeddings" in data:
             return data["embeddings"]
         else:
-            raise "Something went wrong :/"
+            raise Exception("Something went wrong :/")
     except Exception as e:
         log.exception(f"Error generating ollama batch embeddings: {e}")
         return None
 
 
-def generate_embeddings(
+async def generate_embeddings(
     engine: str,
     model: str,
     text: Union[str, list[str]],
@@ -999,7 +1005,7 @@ def generate_embeddings(
             text = f"{prefix}{text}"
 
     if engine == "ollama":
-        embeddings = generate_ollama_batch_embeddings(
+        embeddings = await generate_ollama_batch_embeddings(
             **{
                 "model": model,
                 "texts": text if isinstance(text, list) else [text],
@@ -1011,13 +1017,13 @@ def generate_embeddings(
         )
         return embeddings[0] if isinstance(text, str) else embeddings
     elif engine == "openai":
-        embeddings = generate_openai_batch_embeddings(
+        embeddings = await generate_openai_batch_embeddings(
             model, text if isinstance(text, list) else [text], url, key, prefix, user
         )
         return embeddings[0] if isinstance(text, str) else embeddings
     elif engine == "azure_openai":
         azure_api_version = kwargs.get("azure_api_version", "")
-        embeddings = generate_azure_openai_batch_embeddings(
+        embeddings = await generate_azure_openai_batch_embeddings(
             model,
             text if isinstance(text, list) else [text],
             url,

@@ -6,7 +6,6 @@ from typing import Optional
 
 import aiohttp
 from aiocache import cached
-import requests
 from urllib.parse import quote
 
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
@@ -313,27 +312,29 @@ async def speech(request: Request, user=Depends(get_verified_user)):
         )
 
         r = None
+        session = None
         try:
-            r = requests.post(
-                url=f"{url}/audio/speech",
-                data=body,
-                headers=headers,
-                cookies=cookies,
-                stream=True,
-            )
+            timeout = aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT)
+            async with aiohttp.ClientSession(timeout=timeout, trust_env=True) as session:
+                async with session.post(
+                    url=f"{url}/audio/speech",
+                    data=body,
+                    headers=headers,
+                    cookies=cookies,
+                    ssl=AIOHTTP_CLIENT_SESSION_SSL,
+                ) as r:
+                    r.raise_for_status()
 
-            r.raise_for_status()
+                    # Save the streaming content to a file
+                    with open(file_path, "wb") as f:
+                        async for chunk in r.content.iter_chunked(8192):
+                            f.write(chunk)
 
-            # Save the streaming content to a file
-            with open(file_path, "wb") as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
+                    with open(file_body_path, "w") as f:
+                        json.dump(json.loads(body.decode("utf-8")), f)
 
-            with open(file_body_path, "w") as f:
-                json.dump(json.loads(body.decode("utf-8")), f)
-
-            # Return the saved file
-            return FileResponse(file_path)
+                    # Return the saved file
+                    return FileResponse(file_path)
 
         except Exception as e:
             log.exception(e)
@@ -341,7 +342,7 @@ async def speech(request: Request, user=Depends(get_verified_user)):
             detail = None
             if r is not None:
                 try:
-                    res = r.json()
+                    res = await r.json()
                     if "error" in res:
                         detail = f"External: {res['error']}"
                 except Exception:

@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-import requests
+import httpx
 import json
 from open_webui.retrieval.web.main import SearchResult, get_filtered_results
 from open_webui.env import SRC_LOG_LEVELS
@@ -34,7 +34,7 @@ def _parse_response(response):
     return result
 
 
-def search_bocha(
+async def search_bocha(
     api_key: str, query: str, count: int, filter_list: Optional[list[str]] = None
 ) -> list[SearchResult]:
     """Search using Bocha's Search API and return the results as a list of SearchResult objects.
@@ -50,9 +50,11 @@ def search_bocha(
         {"query": query, "summary": True, "freshness": "noLimit", "count": count}
     )
 
-    response = requests.post(url, headers=headers, data=payload, timeout=5)
-    response.raise_for_status()
-    results = _parse_response(response.json())
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, headers=headers, data=payload, timeout=5)
+        response.raise_for_status()
+        results = _parse_response(response.json())
+
     print(results)
     if filter_list:
         results = get_filtered_results(results, filter_list)

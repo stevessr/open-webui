@@ -4,13 +4,15 @@ import os
 import shutil
 import base64
 import redis
+import asyncio
+import aiofiles
 
 from datetime import datetime
 from pathlib import Path
 from typing import Generic, Union, Optional, TypeVar
 from urllib.parse import urlparse
 
-import requests
+import httpx
 from pydantic import BaseModel
 from sqlalchemy import JSON, Column, DateTime, Integer, func
 from authlib.integrations.starlette_client import OAuth
@@ -859,41 +861,52 @@ if frontend_loader.exists():
 
 CUSTOM_NAME = os.environ.get("CUSTOM_NAME", "")
 
-if CUSTOM_NAME:
-    try:
-        r = requests.get(f"https://api.openwebui.com/api/v1/custom/{CUSTOM_NAME}")
-        data = r.json()
-        if r.ok:
-            if "logo" in data:
-                WEBUI_FAVICON_URL = url = (
-                    f"https://api.openwebui.com{data['logo']}"
-                    if data["logo"][0] == "/"
-                    else data["logo"]
-                )
 
-                r = requests.get(url, stream=True)
-                if r.status_code == 200:
-                    with open(f"{STATIC_DIR}/favicon.png", "wb") as f:
-                        r.raw.decode_content = True
-                        shutil.copyfileobj(r.raw, f)
+async def _load_custom_assets():
+    if CUSTOM_NAME:
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.get(f"https://api.openwebui.com/api/v1/custom/{CUSTOM_NAME}")
+            data = r.json()
+            if r.ok:
+                if "logo" in data:
+                    WEBUI_FAVICON_URL = url = (
+                        f"https://api.openwebui.com{data['logo']}"
+                        if data["logo"][0] == "/"
+                        else data["logo"]
+                    )
 
-            if "splash" in data:
-                url = (
-                    f"https://api.openwebui.com{data['splash']}"
-                    if data["splash"][0] == "/"
-                    else data["splash"]
-                )
+                    async with httpx.AsyncClient(stream=True) as client:
+                        r = await client.get(url, follow_redirects=True)
+                        r.raise_for_status()
 
-                r = requests.get(url, stream=True)
-                if r.status_code == 200:
-                    with open(f"{STATIC_DIR}/splash.png", "wb") as f:
-                        r.raw.decode_content = True
-                        shutil.copyfileobj(r.raw, f)
+                        if r.status_code == 200:
+                            async with aiofiles.open(f"{STATIC_DIR}/favicon.png", "wb") as f:
+                                async for chunk in r.aiter_bytes():
+                                    await f.write(chunk)
 
-            WEBUI_NAME = data["name"]
-    except Exception as e:
-        log.exception(e)
-        pass
+                if "splash" in data:
+                    url = (
+                        f"https://api.openwebui.com{data['splash']}"
+                        if data["splash"][0] == "/"
+                        else data["splash"]
+                    )
+
+                    async with httpx.AsyncClient(stream=True) as client:
+                        r = await client.get(url, follow_redirects=True)
+                        r.raise_for_status()
+                        if r.status_code == 200:
+                            async with aiofiles.open(f"{STATIC_DIR}/splash.png", "wb") as f:
+                                async for chunk in r.aiter_bytes():
+                                    await f.write(chunk)
+
+                global WEBUI_NAME
+                WEBUI_NAME = data["name"]
+        except Exception as e:
+            log.exception(e)
+            pass
+
+asyncio.run(_load_custom_assets())
 
 
 ####################################

@@ -21,7 +21,6 @@ from typing import Optional
 from aiocache import cached
 import aiohttp
 import anyio.to_thread
-import requests
 from redis import Redis
 
 
@@ -571,7 +570,7 @@ async def lifespan(app: FastAPI):
         reset_config()
 
     if LICENSE_KEY:
-        get_license_data(app, LICENSE_KEY)
+        await get_license_data(app, LICENSE_KEY)
 
     # This should be blocking (sync) so functions are not deactivated on first /get_models calls
     # when the first user lands on the / route.
@@ -2162,11 +2161,19 @@ async def oauth_login_callback(provider: str, request: Request, response: Respon
 @app.get("/manifest.json")
 async def get_manifest_json():
     if app.state.EXTERNAL_PWA_MANIFEST_URL:
-        return requests.get(app.state.EXTERNAL_PWA_MANIFEST_URL).json()
-    else:
-        return {
-            "name": app.state.WEBUI_NAME,
-            "short_name": app.state.WEBUI_NAME,
+        try:
+            timeout = aiohttp.ClientTimeout(total=5)
+            async with aiohttp.ClientSession(timeout=timeout, trust_env=True) as session:
+                async with session.get(app.state.EXTERNAL_PWA_MANIFEST_URL) as response:
+                    response.raise_for_status()
+                    return await response.json()
+        except Exception as e:
+            log.error(f"Error fetching external PWA manifest: {e}")
+            # Fallback to default manifest
+            pass
+    return {
+        "name": app.state.WEBUI_NAME,
+        "short_name": app.state.WEBUI_NAME,
             "description": f"{app.state.WEBUI_NAME} is an open, extensible, user-friendly interface for AI that adapts to your workflow.",
             "start_url": "/",
             "display": "standalone",

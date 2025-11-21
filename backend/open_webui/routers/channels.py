@@ -593,23 +593,33 @@ async def get_channel_thread_messages(
             status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_MESSAGES.DEFAULT()
         )
 
-    message_list = Messages.get_messages_by_parent_id(id, message_id, skip, limit)
-    users = {}
+    # Use the new eager loading function
+    message_list = Messages.get_thread_messages_eager(
+        channel_id=id, parent_id=message_id, skip=skip, limit=limit
+    )
 
     messages = []
     for message in message_list:
-        if message.user_id not in users:
-            user = Users.get_user_by_id(message.user_id)
-            users[message.user_id] = user
+        # Format reactions from the eager-loaded data
+        reactions_data = {}
+        for r in message.reactions:
+            if r.name not in reactions_data:
+                reactions_data[r.name] = {"name": r.name, "user_ids": [], "count": 0}
+            reactions_data[r.name]["user_ids"].append(r.user_id)
+            reactions_data[r.name]["count"] += 1
 
         messages.append(
             MessageUserResponse(
                 **{
                     **message.model_dump(),
-                    "reply_count": 0,
-                    "latest_reply_at": None,
-                    "reactions": Messages.get_reactions_by_message_id(message.id),
-                    "user": UserNameResponse(**users[message.user_id].model_dump()),
+                    "reply_count": 0,  # Note: This logic might need a more complex query to be accurate
+                    "latest_reply_at": None,  # Note: This logic might need a more complex query to be accurate
+                    "reactions": list(reactions_data.values()),
+                    "user": (
+                        UserNameResponse.model_validate(message.user)
+                        if message.user
+                        else None
+                    ),
                 }
             )
         )

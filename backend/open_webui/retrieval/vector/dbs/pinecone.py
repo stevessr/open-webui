@@ -1,6 +1,7 @@
 from typing import Optional, List, Dict, Any, Union
 import logging
 import time  # for measuring elapsed time
+import asyncio  # for measuring elapsed time and async operations
 from pinecone import Pinecone, ServerlessSpec
 
 # Add gRPC support for better performance (Pinecone best practice)
@@ -128,7 +129,7 @@ class PineconeClient(VectorDBBase):
             log.error(f"Failed to initialize Pinecone index: {e}")
             raise RuntimeError(f"Failed to initialize Pinecone index: {e}")
 
-    def _retry_pinecone_operation(self, operation_func, max_retries=3):
+    async def _retry_pinecone_operation(self, operation_func, max_retries=3):
         """Retry Pinecone operations with exponential backoff for rate limits and network issues."""
         for attempt in range(max_retries):
             try:
@@ -164,7 +165,9 @@ class PineconeClient(VectorDBBase):
                     f"Pinecone operation failed (attempt {attempt + 1}/{max_retries}), "
                     f"retrying in {delay:.2f}s: {e}"
                 )
-                time.sleep(delay)
+                # Use asyncio.sleep to avoid blocking the event loop
+                loop = asyncio.get_event_loop()
+                loop.run_until_complete(asyncio.sleep(delay))
 
     def _create_points(
         self, items: List[VectorItem], collection_name_with_prefix: str

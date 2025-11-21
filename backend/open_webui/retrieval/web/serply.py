@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 from urllib.parse import urlencode
 
-import requests
+import httpx
 from open_webui.retrieval.web.main import SearchResult, get_filtered_results
 from open_webui.env import SRC_LOG_LEVELS
 
@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
 
 
-def search_serply(
+async def search_serply(
     api_key: str,
     query: str,
     count: int,
@@ -48,8 +48,9 @@ def search_serply(
         "X-Proxy-Location": proxy_location,
     }
 
-    response = requests.request("GET", url, headers=headers)
-    response.raise_for_status()
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, headers=headers)
+        response.raise_for_status()
 
     json_response = response.json()
     log.info(f"results from serply search: {json_response}")
@@ -67,3 +68,4 @@ def search_serply(
         )
         for result in results[:count]
     ]
+

@@ -2,10 +2,11 @@ import logging
 import os
 from pprint import pprint
 from typing import Optional
-import requests
+import httpx
 from open_webui.retrieval.web.main import SearchResult, get_filtered_results
 from open_webui.env import SRC_LOG_LEVELS
 import argparse
+import asyncio
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
@@ -14,7 +15,7 @@ Documentation: https://docs.microsoft.com/en-us/bing/search-apis/bing-web-search
 """
 
 
-def search_bing(
+async def search_bing(
     subscription_key: str,
     endpoint: str,
     locale: str,
@@ -27,9 +28,11 @@ def search_bing(
     headers = {"Ocp-Apim-Subscription-Key": subscription_key}
 
     try:
-        response = requests.get(endpoint, headers=headers, params=params)
-        response.raise_for_status()
-        json_response = response.json()
+        async with httpx.AsyncClient() as client:
+            response = await client.get(endpoint, headers=headers, params=params)
+            response.raise_for_status()
+            json_response = response.json()
+
         results = json_response.get("webPages", {}).get("value", [])
         if filter_list:
             results = get_filtered_results(results, filter_list)
@@ -69,5 +72,7 @@ def main():
 
     args = parser.parse_args()
 
-    results = search_bing(args.locale, args.query, args.count, args.filter)
+    # Since search_bing is now async, we need to run it in an event loop
+    results = asyncio.run(search_bing(args.locale, args.query, args.count, args.filter))
     pprint(results)
+

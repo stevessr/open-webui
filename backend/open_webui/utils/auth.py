@@ -4,9 +4,10 @@ import jwt
 import base64
 import hmac
 import hashlib
-import requests
 import os
 import bcrypt
+import httpx
+import asyncio
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.asymmetric import ed25519
@@ -80,7 +81,7 @@ def override_static(path: str, content: str):
         f.write(base64.b64decode(content))  # Convert Base64 back to raw binary
 
 
-def get_license_data(app, key):
+async def get_license_data(app, key):
     def data_handler(data):
         for k, v in data.items():
             if k == "resources":
@@ -93,12 +94,13 @@ def get_license_data(app, key):
             elif k == "metadata":
                 setattr(app.state, "LICENSE_METADATA", v)
 
-    def handler(u):
-        res = requests.post(
-            f"{u}/api/v1/license/",
-            json={"key": key, "version": "1"},
-            timeout=5,
-        )
+    async def handler(u):
+        async with httpx.AsyncClient() as client:
+            res = await client.post(
+                f"{u}/api/v1/license/",
+                json={"key": key, "version": "1"},
+                timeout=5,
+            )
 
         if getattr(res, "ok", False):
             payload = getattr(res, "json", lambda: {})()
@@ -116,7 +118,7 @@ def get_license_data(app, key):
         ]
         try:
             for u in us:
-                if handler(u):
+                if await handler(u):
                     return True
         except Exception as ex:
             log.exception(f"License: Uncaught Exception: {ex}")

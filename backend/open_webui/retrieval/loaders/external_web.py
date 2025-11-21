@@ -1,4 +1,4 @@
-import requests
+import httpx
 import logging
 from typing import Iterator, List, Union
 
@@ -24,30 +24,31 @@ class ExternalWebLoader(BaseLoader):
         self.urls = web_paths if isinstance(web_paths, list) else [web_paths]
         self.continue_on_failure = continue_on_failure
 
-    def lazy_load(self) -> Iterator[Document]:
+    async def lazy_load(self) -> Iterator[Document]:
         batch_size = 20
-        for i in range(0, len(self.urls), batch_size):
-            urls = self.urls[i : i + batch_size]
-            try:
-                response = requests.post(
-                    self.external_url,
-                    headers={
-                        "User-Agent": "Open WebUI (https://github.com/open-webui/open-webui) External Web Loader",
-                        "Authorization": f"Bearer {self.external_api_key}",
-                    },
-                    json={
-                        "urls": urls,
-                    },
-                )
-                response.raise_for_status()
-                results = response.json()
-                for result in results:
-                    yield Document(
-                        page_content=result.get("page_content", ""),
-                        metadata=result.get("metadata", {}),
+        async with httpx.AsyncClient() as client:
+            for i in range(0, len(self.urls), batch_size):
+                urls = self.urls[i : i + batch_size]
+                try:
+                    response = await client.post(
+                        self.external_url,
+                        headers={
+                            "User-Agent": "Open WebUI (https://github.com/open-webui/open-webui) External Web Loader",
+                            "Authorization": f"Bearer {self.external_api_key}",
+                        },
+                        json={
+                            "urls": urls,
+                        },
                     )
-            except Exception as e:
-                if self.continue_on_failure:
-                    log.error(f"Error extracting content from batch {urls}: {e}")
-                else:
-                    raise e
+                    response.raise_for_status()
+                    results = response.json()
+                    for result in results:
+                        yield Document(
+                            page_content=result.get("page_content", ""),
+                            metadata=result.get("metadata", {}),
+                        )
+                except Exception as e:
+                    if self.continue_on_failure:
+                        log.error(f"Error extracting content from batch {urls}: {e}")
+                    else:
+                        raise e

@@ -11,6 +11,7 @@ from open_webui.utils.misc import throttle
 
 
 from pydantic import BaseModel, ConfigDict
+from sqlalchemy.orm import relationship
 from sqlalchemy import BigInteger, Column, String, Text, Date
 from sqlalchemy import or_
 
@@ -47,6 +48,12 @@ class User(Base):
 
     updated_at = Column(BigInteger)
     created_at = Column(BigInteger)
+
+    messages = relationship("Message", back_populates="user", cascade="all, delete-orphan")
+    reactions = relationship(
+        "MessageReaction", back_populates="user", cascade="all, delete-orphan"
+    )
+
 
 
 class UserSettings(BaseModel):

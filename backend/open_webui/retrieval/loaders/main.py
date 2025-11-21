@@ -1,8 +1,10 @@
-import requests
 import logging
 import ftfy
 import sys
 import json
+import httpx
+import asyncio
+import aiofiles
 
 from azure.identity import DefaultAzureCredential
 from langchain_community.document_loaders import (
@@ -98,9 +100,9 @@ class TikaLoader:
 
         self.extract_images = extract_images
 
-    def load(self) -> list[Document]:
-        with open(self.file_path, "rb") as f:
-            data = f.read()
+    async def load(self) -> list[Document]:
+        async with aiofiles.open(self.file_path, "rb") as f:
+            data = await f.read()
 
         if self.mime_type is not None:
             headers = {"Content-Type": self.mime_type}
@@ -115,7 +117,8 @@ class TikaLoader:
             endpoint += "/"
         endpoint += "tika/text"
 
-        r = requests.put(endpoint, data=data, headers=headers)
+        async with httpx.AsyncClient() as client:
+            r = await client.put(endpoint, content=data, headers=headers)
 
         if r.ok:
             raw_metadata = r.json()
@@ -128,7 +131,7 @@ class TikaLoader:
 
             return [Document(page_content=text, metadata=headers)]
         else:
-            raise Exception(f"Error calling Tika: {r.reason}")
+            raise Exception(f"Error calling Tika: {r.reason_phrase}")
 
 
 class DoclingLoader:
@@ -139,12 +142,12 @@ class DoclingLoader:
 
         self.params = params or {}
 
-    def load(self) -> list[Document]:
-        with open(self.file_path, "rb") as f:
+    async def load(self) -> list[Document]:
+        async with aiofiles.open(self.file_path, "rb") as f:
             files = {
                 "files": (
                     self.file_path,
-                    f,
+                    await f.read(),
                     self.mime_type or "application/octet-stream",
                 )
             }
@@ -201,7 +204,9 @@ class DoclingLoader:
                     params["pipeline"] = self.params.get("pipeline")
 
             endpoint = f"{self.url}/v1/convert/file"
-            r = requests.post(endpoint, files=files, data=params)
+
+            async with httpx.AsyncClient() as client:
+                r = await client.post(endpoint, files=files, data=params)
 
         if r.ok:
             result = r.json()
@@ -214,14 +219,13 @@ class DoclingLoader:
 
             return [Document(page_content=text, metadata=metadata)]
         else:
-            error_msg = f"Error calling Docling API: {r.reason}"
-            if r.text:
-                try:
-                    error_data = r.json()
-                    if "detail" in error_data:
-                        error_msg += f" - {error_data['detail']}"
-                except Exception:
-                    error_msg += f" - {r.text}"
+            error_msg = f"Error calling Docling API: {r.reason_phrase}"
+            try:
+                error_data = r.json()
+                if "detail" in error_data:
+                    error_msg += f" - {error_data['detail']}"
+            except Exception:
+                error_msg += f" - {r.text}"
             raise Exception(f"Error calling Docling: {error_msg}")
 
 
@@ -231,11 +235,11 @@ class Loader:
         self.user = kwargs.get("user", None)
         self.kwargs = kwargs
 
-    def load(
+    async def load(
         self, filename: str, file_content_type: str, file_path: str
     ) -> list[Document]:
         loader = self._get_loader(filename, file_content_type, file_path)
-        docs = loader.load()
+        docs = await loader.load()
 
         return [
             Document(

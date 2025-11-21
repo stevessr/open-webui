@@ -1,4 +1,4 @@
-import requests
+import httpx
 import logging
 from typing import Iterator, List, Literal, Union
 
@@ -52,42 +52,47 @@ class TavilyLoader(BaseLoader):
         self.continue_on_failure = continue_on_failure
         self.api_url = "https://api.tavily.com/extract"
 
-    def lazy_load(self) -> Iterator[Document]:
+    async def lazy_load(self) -> Iterator[Document]:
         """Extract and yield documents from the URLs using Tavily Extract API."""
         batch_size = 20
-        for i in range(0, len(self.urls), batch_size):
-            batch_urls = self.urls[i : i + batch_size]
-            try:
-                headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {self.api_key}",
-                }
-                # Use string for single URL, array for multiple URLs
-                urls_param = batch_urls[0] if len(batch_urls) == 1 else batch_urls
-                payload = {"urls": urls_param, "extract_depth": self.extract_depth}
-                # Make the API call
-                response = requests.post(self.api_url, headers=headers, json=payload)
-                response.raise_for_status()
-                response_data = response.json()
-                # Process successful results
-                for result in response_data.get("results", []):
-                    url = result.get("url", "")
-                    content = result.get("raw_content", "")
-                    if not content:
-                        log.warning(f"No content extracted from {url}")
-                        continue
-                    # Add URLs as metadata
-                    metadata = {"source": url}
-                    yield Document(
-                        page_content=content,
-                        metadata=metadata,
+        async with httpx.AsyncClient() as client:
+            for i in range(0, len(self.urls), batch_size):
+                batch_urls = self.urls[i : i + batch_size]
+                try:
+                    headers = {
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {self.api_key}",
+                    }
+                    # Use string for single URL, array for multiple URLs
+                    urls_param = batch_urls[0] if len(batch_urls) == 1 else batch_urls
+                    payload = {"urls": urls_param, "extract_depth": self.extract_depth}
+                    # Make the API call
+                    response = await client.post(
+                        self.api_url, headers=headers, json=payload
                     )
-                for failed in response_data.get("failed_results", []):
-                    url = failed.get("url", "")
-                    error = failed.get("error", "Unknown error")
-                    log.error(f"Failed to extract content from {url}: {error}")
-            except Exception as e:
-                if self.continue_on_failure:
-                    log.error(f"Error extracting content from batch {batch_urls}: {e}")
-                else:
-                    raise e
+                    response.raise_for_status()
+                    response_data = response.json()
+                    # Process successful results
+                    for result in response_data.get("results", []):
+                        url = result.get("url", "")
+                        content = result.get("raw_content", "")
+                        if not content:
+                            log.warning(f"No content extracted from {url}")
+                            continue
+                        # Add URLs as metadata
+                        metadata = {"source": url}
+                        yield Document(
+                            page_content=content,
+                            metadata=metadata,
+                        )
+                    for failed in response_data.get("failed_results", []):
+                        url = failed.get("url", "")
+                        error = failed.get("error", "Unknown error")
+                        log.error(f"Failed to extract content from {url}: {error}")
+                except Exception as e:
+                    if self.continue_on_failure:
+                        log.error(
+                            f"Error extracting content from batch {batch_urls}: {e}"
+                        )
+                    else:
+                        raise e

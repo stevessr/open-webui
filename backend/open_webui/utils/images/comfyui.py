@@ -2,10 +2,8 @@ import asyncio
 import json
 import logging
 import random
-import requests
 import aiohttp
 import urllib.parse
-import urllib.request
 from typing import Optional
 
 import websocket  # NOTE: websocket-client (https://github.com/websocket-client/websocket-client)
@@ -18,34 +16,42 @@ log.setLevel(SRC_LOG_LEVELS["COMFYUI"])
 default_headers = {"User-Agent": "Mozilla/5.0"}
 
 
-def queue_prompt(prompt, client_id, base_url, api_key):
+async def queue_prompt(prompt, client_id, base_url, api_key):
     log.info("queue_prompt")
     p = {"prompt": prompt, "client_id": client_id}
-    data = json.dumps(p).encode("utf-8")
+    data = json.dumps(p)
     log.debug(f"queue_prompt data: {data}")
     try:
-        req = urllib.request.Request(
-            f"{base_url}/prompt",
-            data=data,
-            headers={**default_headers, "Authorization": f"Bearer {api_key}"},
-        )
-        response = urllib.request.urlopen(req).read()
-        return json.loads(response)
+        timeout = aiohttp.ClientTimeout(total=30)
+        async with aiohttp.ClientSession(timeout=timeout, trust_env=True) as session:
+            async with session.post(
+                f"{base_url}/prompt",
+                data=data,
+                headers={**default_headers, "Authorization": f"Bearer {api_key}"},
+            ) as response:
+                response.raise_for_status()
+                return await response.json()
     except Exception as e:
         log.exception(f"Error while queuing prompt: {e}")
         raise e
 
 
-def get_image(filename, subfolder, folder_type, base_url, api_key):
+async def get_image(filename, subfolder, folder_type, base_url, api_key):
     log.info("get_image")
     data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
     url_values = urllib.parse.urlencode(data)
-    req = urllib.request.Request(
-        f"{base_url}/view?{url_values}",
-        headers={**default_headers, "Authorization": f"Bearer {api_key}"},
-    )
-    with urllib.request.urlopen(req) as response:
-        return response.read()
+    try:
+        timeout = aiohttp.ClientTimeout(total=30)
+        async with aiohttp.ClientSession(timeout=timeout, trust_env=True) as session:
+            async with session.get(
+                f"{base_url}/view?{url_values}",
+                headers={**default_headers, "Authorization": f"Bearer {api_key}"},
+            ) as response:
+                response.raise_for_status()
+                return await response.read()
+    except Exception as e:
+        log.exception(f"Error while getting image: {e}")
+        raise e
 
 
 def get_image_url(filename, subfolder, folder_type, base_url):
@@ -55,19 +61,26 @@ def get_image_url(filename, subfolder, folder_type, base_url):
     return f"{base_url}/view?{url_values}"
 
 
-def get_history(prompt_id, base_url, api_key):
+async def get_history(prompt_id, base_url, api_key):
     log.info("get_history")
 
-    req = urllib.request.Request(
-        f"{base_url}/history/{prompt_id}",
-        headers={**default_headers, "Authorization": f"Bearer {api_key}"},
-    )
-    with urllib.request.urlopen(req) as response:
-        return json.loads(response.read())
+    try:
+        timeout = aiohttp.ClientTimeout(total=30)
+        async with aiohttp.ClientSession(timeout=timeout, trust_env=True) as session:
+            async with session.get(
+                f"{base_url}/history/{prompt_id}",
+                headers={**default_headers, "Authorization": f"Bearer {api_key}"},
+            ) as response:
+                response.raise_for_status()
+                return await response.json()
+    except Exception as e:
+        log.exception(f"Error while getting history: {e}")
+        raise e
 
 
-def get_images(ws, prompt, client_id, base_url, api_key):
-    prompt_id = queue_prompt(prompt, client_id, base_url, api_key)["prompt_id"]
+async def get_images(ws, prompt, client_id, base_url, api_key):
+    prompt_id = await queue_prompt(prompt, client_id, base_url, api_key)
+    prompt_id = prompt_id["prompt_id"]
     output_images = []
     while True:
         out = ws.recv()
@@ -80,7 +93,8 @@ def get_images(ws, prompt, client_id, base_url, api_key):
         else:
             continue  # previews are binary data
 
-    history = get_history(prompt_id, base_url, api_key)[prompt_id]
+    history = await get_history(prompt_id, base_url, api_key)
+    history = history[prompt_id]
     for o in history["outputs"]:
         for node_id in history["outputs"]:
             node_output = history["outputs"][node_id]
@@ -202,9 +216,7 @@ async def comfyui_create_image(
     try:
         log.info("Sending workflow to WebSocket server.")
         log.info(f"Workflow: {workflow}")
-        images = await asyncio.to_thread(
-            get_images, ws, workflow, client_id, base_url, api_key
-        )
+        images = await get_images(ws, workflow, client_id, base_url, api_key)
     except Exception as e:
         log.exception(f"Error while receiving images: {e}")
         images = None
@@ -301,9 +313,7 @@ async def comfyui_edit_image(
     try:
         log.info("Sending workflow to WebSocket server.")
         log.info(f"Workflow: {workflow}")
-        images = await asyncio.to_thread(
-            get_images, ws, workflow, client_id, base_url, api_key
-        )
+        images = await get_images(ws, workflow, client_id, base_url, api_key)
     except Exception as e:
         log.exception(f"Error while receiving images: {e}")
         images = None

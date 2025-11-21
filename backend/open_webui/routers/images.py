@@ -1,4 +1,5 @@
 import asyncio
+import aiofiles
 import base64
 import uuid
 import io
@@ -10,7 +11,7 @@ from pathlib import Path
 from typing import Optional
 
 from urllib.parse import quote
-import requests
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 
@@ -39,27 +40,28 @@ IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 router = APIRouter()
 
 
-def set_image_model(request: Request, model: str):
+async def set_image_model(request: Request, model: str):
     log.info(f"Setting image model to {model}")
     request.app.state.config.IMAGE_GENERATION_MODEL = model
     if request.app.state.config.IMAGE_GENERATION_ENGINE in ["", "automatic1111"]:
         api_auth = get_automatic1111_api_auth(request)
-        r = requests.get(
-            url=f"{request.app.state.config.AUTOMATIC1111_BASE_URL}/sdapi/v1/options",
-            headers={"authorization": api_auth},
-        )
-        options = r.json()
-        if model != options["sd_model_checkpoint"]:
-            options["sd_model_checkpoint"] = model
-            r = requests.post(
+        async with httpx.AsyncClient() as client:
+            r = await client.get(
                 url=f"{request.app.state.config.AUTOMATIC1111_BASE_URL}/sdapi/v1/options",
-                json=options,
                 headers={"authorization": api_auth},
             )
+            options = r.json()
+            if model != options["sd_model_checkpoint"]:
+                options["sd_model_checkpoint"] = model
+                await client.post(
+                    url=f"{request.app.state.config.AUTOMATIC1111_BASE_URL}/sdapi/v1/options",
+                    json=options,
+                    headers={"authorization": api_auth},
+                )
     return request.app.state.config.IMAGE_GENERATION_MODEL
 
 
-def get_image_model(request):
+async def get_image_model(request):
     if request.app.state.config.IMAGE_GENERATION_ENGINE == "openai":
         return (
             request.app.state.config.IMAGE_GENERATION_MODEL
@@ -83,10 +85,11 @@ def get_image_model(request):
         or request.app.state.config.IMAGE_GENERATION_ENGINE == ""
     ):
         try:
-            r = requests.get(
-                url=f"{request.app.state.config.AUTOMATIC1111_BASE_URL}/sdapi/v1/options",
-                headers={"authorization": get_automatic1111_api_auth(request)},
-            )
+            async with httpx.AsyncClient() as client:
+                r = await client.get(
+                    url=f"{request.app.state.config.AUTOMATIC1111_BASE_URL}/sdapi/v1/options",
+                    headers={"authorization": get_automatic1111_api_auth(request)},
+                )
             options = r.json()
             return options["sd_model_checkpoint"]
         except Exception as e:
@@ -184,7 +187,7 @@ async def update_config(
     )
 
     request.app.state.config.IMAGE_GENERATION_ENGINE = form_data.IMAGE_GENERATION_ENGINE
-    set_image_model(request, form_data.IMAGE_GENERATION_MODEL)
+    await set_image_model(request, form_data.IMAGE_GENERATION_MODEL)
     if (
         form_data.IMAGE_SIZE == "auto"
         and form_data.IMAGE_GENERATION_MODEL != "gpt-image-1"
@@ -450,13 +453,14 @@ class CreateImageForm(BaseModel):
 GenerateImageForm = CreateImageForm  # Alias for backward compatibility
 
 
-def get_image_data(data: str, headers=None):
+async def get_image_data(data: str, headers=None):
     try:
         if data.startswith("http://") or data.startswith("https://"):
-            if headers:
-                r = requests.get(data, headers=headers)
-            else:
-                r = requests.get(data)
+            async with httpx.AsyncClient() as client:
+                if headers:
+                    r = await client.get(data, headers=headers)
+                else:
+                    r = await client.get(data)
 
             r.raise_for_status()
             if r.headers["content-type"].split("/")[0] == "image":
@@ -520,7 +524,7 @@ async def image_generations(
         size = form_data.size
 
     width, height = tuple(map(int, size.split("x")))
-    model = get_image_model(request)
+    model = await get_image_model(request)
 
     r = None
     try:
@@ -556,13 +560,12 @@ async def image_generations(
                     f"?api-version={request.app.state.config.IMAGES_OPENAI_API_VERSION}"
                 )
 
-            # Use asyncio.to_thread for the requests.post call
-            r = await asyncio.to_thread(
-                requests.post,
-                url=f"{request.app.state.config.IMAGES_OPENAI_API_BASE_URL}/images/generations{api_version_query_param}",
-                json=data,
-                headers=headers,
-            )
+            async with httpx.AsyncClient() as client:
+                r = await client.post(
+                    url=f"{request.app.state.config.IMAGES_OPENAI_API_BASE_URL}/images/generations{api_version_query_param}",
+                    json=data,
+                    headers=headers,
+                )
 
             r.raise_for_status()
             res = r.json()
@@ -571,11 +574,11 @@ async def image_generations(
 
             for image in res["data"]:
                 if image_url := image.get("url", None):
-                    image_data, content_type = get_image_data(image_url, headers)
+                    image_data, content_type = await get_image_data(image_url, headers)
                 else:
-                    image_data, content_type = get_image_data(image["b64_json"])
+                    image_data, content_type = await get_image_data(image["b64_json"])
 
-                url = upload_image(request, image_data, content_type, data, user)
+                url = await upload_image(request, image_data, content_type, data, user)
                 images.append({"url": url})
             return images
 
@@ -607,13 +610,12 @@ async def image_generations(
                 model = f"{model}:generateContent"
                 data = {"contents": [{"parts": [{"text": form_data.prompt}]}]}
 
-            # Use asyncio.to_thread for the requests.post call
-            r = await asyncio.to_thread(
-                requests.post,
-                url=f"{request.app.state.config.IMAGES_GEMINI_API_BASE_URL}/models/{model}",
-                json=data,
-                headers=headers,
-            )
+            async with httpx.AsyncClient() as client:
+                r = await client.post(
+                    url=f"{request.app.state.config.IMAGES_GEMINI_API_BASE_URL}/models/{model}",
+                    json=data,
+                    headers=headers,
+                )
 
             r.raise_for_status()
             res = r.json()
@@ -622,19 +624,19 @@ async def image_generations(
 
             if model.endswith(":predict"):
                 for image in res["predictions"]:
-                    image_data, content_type = get_image_data(
+                    image_data, content_type = await get_image_data(
                         image["bytesBase64Encoded"]
                     )
-                    url = upload_image(request, image_data, content_type, data, user)
+                    url = await upload_image(request, image_data, content_type, data, user)
                     images.append({"url": url})
             elif model.endswith(":generateContent"):
                 for image in res["candidates"]:
                     for part in image["content"]["parts"]:
                         if part.get("inlineData", {}).get("data"):
-                            image_data, content_type = get_image_data(
+                            image_data, content_type = await get_image_data(
                                 part["inlineData"]["data"]
                             )
-                            url = upload_image(
+                            url = await upload_image(
                                 request, image_data, content_type, data, user
                             )
                             images.append({"url": url})
@@ -699,7 +701,7 @@ async def image_generations(
             or request.app.state.config.IMAGE_GENERATION_ENGINE == ""
         ):
             if form_data.model:
-                set_image_model(request, form_data.model)
+                await set_image_model(request, form_data.model)
 
             data = {
                 "prompt": form_data.prompt,
@@ -717,13 +719,12 @@ async def image_generations(
             if request.app.state.config.AUTOMATIC1111_PARAMS:
                 data = {**data, **request.app.state.config.AUTOMATIC1111_PARAMS}
 
-            # Use asyncio.to_thread for the requests.post call
-            r = await asyncio.to_thread(
-                requests.post,
-                url=f"{request.app.state.config.AUTOMATIC1111_BASE_URL}/sdapi/v1/txt2img",
-                json=data,
-                headers={"authorization": get_automatic1111_api_auth(request)},
-            )
+            async with httpx.AsyncClient() as client:
+                r = await client.post(
+                    url=f"{request.app.state.config.AUTOMATIC1111_BASE_URL}/sdapi/v1/txt2img",
+                    json=data,
+                    headers={"authorization": get_automatic1111_api_auth(request)},
+                )
 
             res = r.json()
             log.debug(f"res: {res}")
@@ -731,8 +732,8 @@ async def image_generations(
             images = []
 
             for image in res["images"]:
-                image_data, content_type = get_image_data(image)
-                url = upload_image(
+                image_data, content_type = await get_image_data(image)
+                url = await upload_image(
                     request,
                     image_data,
                     content_type,
@@ -788,7 +789,8 @@ async def image_edits(
 
         async def load_url_image(data):
             if data.startswith("http://") or data.startswith("https://"):
-                r = await asyncio.to_thread(requests.get, data)
+                async with httpx.AsyncClient() as client:
+                    r = await client.get(data)
                 r.raise_for_status()
 
                 image_data = base64.b64encode(r.content).decode("utf-8")
@@ -801,8 +803,8 @@ async def image_edits(
                 if isinstance(file_response, FileResponse):
                     file_path = file_response.path
 
-                    with open(file_path, "rb") as f:
-                        file_bytes = f.read()
+                    async with aiofiles.open(file_path, "rb") as f:
+                        file_bytes = await f.read()
                         image_data = base64.b64encode(file_bytes).decode("utf-8")
                         mime_type, _ = mimetypes.guess_type(file_path)
 
@@ -865,14 +867,13 @@ async def image_edits(
             if request.app.state.config.IMAGES_EDIT_OPENAI_API_VERSION:
                 url_search_params += f"?api-version={request.app.state.config.IMAGES_EDIT_OPENAI_API_VERSION}"
 
-            # Use asyncio.to_thread for the requests.post call
-            r = await asyncio.to_thread(
-                requests.post,
-                url=f"{request.app.state.config.IMAGES_EDIT_OPENAI_API_BASE_URL}/images/edits{url_search_params}",
-                headers=headers,
-                files=files,
-                data=data,
-            )
+            async with httpx.AsyncClient() as client:
+                r = await client.post(
+                    url=f"{request.app.state.config.IMAGES_EDIT_OPENAI_API_BASE_URL}/images/edits{url_search_params}",
+                    headers=headers,
+                    files=files,
+                    data=data,
+                )
 
             r.raise_for_status()
             res = r.json()
@@ -880,11 +881,11 @@ async def image_edits(
             images = []
             for image in res["data"]:
                 if image_url := image.get("url", None):
-                    image_data, content_type = get_image_data(image_url, headers)
+                    image_data, content_type = await get_image_data(image_url, headers)
                 else:
-                    image_data, content_type = get_image_data(image["b64_json"])
+                    image_data, content_type = await get_image_data(image["b64_json"])
 
-                url = upload_image(request, image_data, content_type, data, user)
+                url = await upload_image(request, image_data, content_type, data, user)
                 images.append({"url": url})
             return images
 
@@ -919,13 +920,12 @@ async def image_edits(
                     ]
                 )
 
-            # Use asyncio.to_thread for the requests.post call
-            r = await asyncio.to_thread(
-                requests.post,
-                url=f"{request.app.state.config.IMAGES_EDIT_GEMINI_API_BASE_URL}/models/{model}",
-                json=data,
-                headers=headers,
-            )
+            async with httpx.AsyncClient() as client:
+                r = await client.post(
+                    url=f"{request.app.state.config.IMAGES_EDIT_GEMINI_API_BASE_URL}/models/{model}",
+                    json=data,
+                    headers=headers,
+                )
 
             r.raise_for_status()
             res = r.json()
@@ -934,10 +934,10 @@ async def image_edits(
             for image in res["candidates"]:
                 for part in image["content"]["parts"]:
                     if part.get("inlineData", {}).get("data"):
-                        image_data, content_type = get_image_data(
+                        image_data, content_type = await get_image_data(
                             part["inlineData"]["data"]
                         )
-                        url = upload_image(
+                        url = await upload_image(
                             request, image_data, content_type, data, user
                         )
                         images.append({"url": url})
@@ -1014,8 +1014,8 @@ async def image_edits(
                         "Authorization": f"Bearer {request.app.state.config.IMAGES_EDIT_COMFYUI_API_KEY}"
                     }
 
-                image_data, content_type = get_image_data(image_url, headers)
-                url = upload_image(
+                image_data, content_type = await get_image_data(image_url, headers)
+                url = await upload_image(
                     request,
                     image_data,
                     content_type,

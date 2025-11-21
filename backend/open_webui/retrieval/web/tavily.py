@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-import requests
+import httpx
 from open_webui.retrieval.web.main import SearchResult, get_filtered_results
 from open_webui.env import SRC_LOG_LEVELS
 
@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
 
 
-def search_tavily(
+async def search_tavily(
     api_key: str,
     query: str,
     count: int,
@@ -32,8 +32,9 @@ def search_tavily(
         "Authorization": f"Bearer {api_key}",
     }
     data = {"query": query, "max_results": count}
-    response = requests.post(url, headers=headers, json=data)
-    response.raise_for_status()
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, headers=headers, json=data)
+        response.raise_for_status()
 
     json_response = response.json()
 
@@ -43,7 +44,7 @@ def search_tavily(
 
     return [
         SearchResult(
-            link=result["url"],
+            link=result["link"],
             title=result.get("title", ""),
             snippet=result.get("content"),
         )

@@ -14,8 +14,8 @@ from datetime import datetime
 from typing import Optional, Union
 from urllib.parse import urlparse
 import aiohttp
+import aiofiles
 from aiocache import cached
-import requests
 from urllib.parse import quote
 
 from open_webui.models.chats import Chats
@@ -467,43 +467,45 @@ async def get_ollama_tags(
         url = request.app.state.config.OLLAMA_BASE_URLS[url_idx]
         key = get_api_key(url_idx, url, request.app.state.config.OLLAMA_API_CONFIGS)
 
-        r = None
         try:
-            r = requests.request(
-                method="GET",
-                url=f"{url}/api/tags",
-                headers={
-                    **({"Authorization": f"Bearer {key}"} if key else {}),
-                    **(
-                        {
-                            "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
-                            "X-OpenWebUI-User-Id": user.id,
-                            "X-OpenWebUI-User-Email": user.email,
-                            "X-OpenWebUI-User-Role": user.role,
-                        }
-                        if ENABLE_FORWARD_USER_INFO_HEADERS and user
-                        else {}
-                    ),
-                },
-            )
-            r.raise_for_status()
+            async with aiohttp.ClientSession(trust_env=True) as session:
+                async with session.get(
+                    f"{url}/api/tags",
+                    headers={
+                        **({"Authorization": f"Bearer {key}"} if key else {}),
+                        **(
+                            {
+                                "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
+                                "X-OpenWebUI-User-Id": user.id,
+                                "X-OpenWebUI-User-Email": user.email,
+                                "X-OpenWebUI-User-Role": user.role,
+                            }
+                            if ENABLE_FORWARD_USER_INFO_HEADERS and user
+                            else {}
+                        ),
+                    },
+                    ssl=AIOHTTP_CLIENT_SESSION_SSL,
+                ) as response:
+                    response.raise_for_status()
+                    models = await response.json()
 
-            models = r.json()
         except Exception as e:
             log.exception(e)
-
-            detail = None
-            if r is not None:
+            # Try to get more specific error details from the response if possible
+            detail = f"Ollama: {e}"
+            status_code = 500
+            if isinstance(e, aiohttp.ClientResponseError):
+                status_code = e.status
                 try:
-                    res = r.json()
+                    res = await e.json()
                     if "error" in res:
                         detail = f"Ollama: {res['error']}"
                 except Exception:
-                    detail = f"Ollama: {e}"
+                    pass  # Keep the original exception detail
 
             raise HTTPException(
-                status_code=r.status_code if r else 500,
-                detail=detail if detail else "Open WebUI: Server Connection Error",
+                status_code=status_code,
+                detail=detail,
             )
 
     if user.role == "user" and not BYPASS_MODEL_ACCESS_CONTROL:
@@ -621,27 +623,28 @@ async def get_ollama_versions(request: Request, url_idx: Optional[int] = None):
         else:
             url = request.app.state.config.OLLAMA_BASE_URLS[url_idx]
 
-            r = None
             try:
-                r = requests.request(method="GET", url=f"{url}/api/version")
-                r.raise_for_status()
-
-                return r.json()
+                async with aiohttp.ClientSession(trust_env=True) as session:
+                    async with session.get(f"{url}/api/version") as response:
+                        response.raise_for_status()
+                        return await response.json()
             except Exception as e:
                 log.exception(e)
 
-                detail = None
-                if r is not None:
+                detail = f"Ollama: {e}"
+                status_code = 500
+                if isinstance(e, aiohttp.ClientResponseError):
+                    status_code = e.status
                     try:
-                        res = r.json()
+                        res = await e.json()
                         if "error" in res:
                             detail = f"Ollama: {res['error']}"
                     except Exception:
-                        detail = f"Ollama: {e}"
+                        pass
 
                 raise HTTPException(
-                    status_code=r.status_code if r else 500,
-                    detail=detail if detail else "Open WebUI: Server Connection Error",
+                    status_code=status_code,
+                    detail=detail,
                 )
     else:
         return {"version": False}
@@ -838,44 +841,45 @@ async def copy_model(
     key = get_api_key(url_idx, url, request.app.state.config.OLLAMA_API_CONFIGS)
 
     try:
-        r = requests.request(
-            method="POST",
-            url=f"{url}/api/copy",
-            headers={
-                "Content-Type": "application/json",
-                **({"Authorization": f"Bearer {key}"} if key else {}),
-                **(
-                    {
-                        "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
-                        "X-OpenWebUI-User-Id": user.id,
-                        "X-OpenWebUI-User-Email": user.email,
-                        "X-OpenWebUI-User-Role": user.role,
-                    }
-                    if ENABLE_FORWARD_USER_INFO_HEADERS and user
-                    else {}
-                ),
-            },
-            data=form_data.model_dump_json(exclude_none=True).encode(),
-        )
-        r.raise_for_status()
-
-        log.debug(f"r.text: {r.text}")
-        return True
+        async with aiohttp.ClientSession(trust_env=True) as session:
+            async with session.post(
+                f"{url}/api/copy",
+                headers={
+                    "Content-Type": "application/json",
+                    **({"Authorization": f"Bearer {key}"} if key else {}),
+                    **(
+                        {
+                            "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
+                            "X-OpenWebUI-User-Id": user.id,
+                            "X-OpenWebUI-User-Email": user.email,
+                            "X-OpenWebUI-User-Role": user.role,
+                        }
+                        if ENABLE_FORWARD_USER_INFO_HEADERS and user
+                        else {}
+                    ),
+                },
+                data=form_data.model_dump_json(exclude_none=True).encode(),
+                ssl=AIOHTTP_CLIENT_SESSION_SSL,
+            ) as response:
+                response.raise_for_status()
+                log.debug(f"copy_model response: {await response.text()}")
+                return True
     except Exception as e:
         log.exception(e)
-
-        detail = None
-        if r is not None:
+        detail = f"Ollama: {e}"
+        status_code = 500
+        if isinstance(e, aiohttp.ClientResponseError):
+            status_code = e.status
             try:
-                res = r.json()
+                res = await e.json()
                 if "error" in res:
                     detail = f"Ollama: {res['error']}"
             except Exception:
-                detail = f"Ollama: {e}"
+                pass
 
         raise HTTPException(
-            status_code=r.status_code if r else 500,
-            detail=detail if detail else "Open WebUI: Server Connection Error",
+            status_code=status_code,
+            detail=detail,
         )
 
 
@@ -908,44 +912,45 @@ async def delete_model(
     key = get_api_key(url_idx, url, request.app.state.config.OLLAMA_API_CONFIGS)
 
     try:
-        r = requests.request(
-            method="DELETE",
-            url=f"{url}/api/delete",
-            data=json.dumps(form_data).encode(),
-            headers={
-                "Content-Type": "application/json",
-                **({"Authorization": f"Bearer {key}"} if key else {}),
-                **(
-                    {
-                        "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
-                        "X-OpenWebUI-User-Id": user.id,
-                        "X-OpenWebUI-User-Email": user.email,
-                        "X-OpenWebUI-User-Role": user.role,
-                    }
-                    if ENABLE_FORWARD_USER_INFO_HEADERS and user
-                    else {}
-                ),
-            },
-        )
-        r.raise_for_status()
-
-        log.debug(f"r.text: {r.text}")
-        return True
+        async with aiohttp.ClientSession(trust_env=True) as session:
+            async with session.delete(
+                f"{url}/api/delete",
+                data=json.dumps(form_data).encode(),
+                headers={
+                    "Content-Type": "application/json",
+                    **({"Authorization": f"Bearer {key}"} if key else {}),
+                    **(
+                        {
+                            "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
+                            "X-OpenWebUI-User-Id": user.id,
+                            "X-OpenWebUI-User-Email": user.email,
+                            "X-OpenWebUI-User-Role": user.role,
+                        }
+                        if ENABLE_FORWARD_USER_INFO_HEADERS and user
+                        else {}
+                    ),
+                },
+                ssl=AIOHTTP_CLIENT_SESSION_SSL,
+            ) as response:
+                response.raise_for_status()
+                log.debug(f"delete_model response: {await response.text()}")
+                return True
     except Exception as e:
         log.exception(e)
-
-        detail = None
-        if r is not None:
+        detail = f"Ollama: {e}"
+        status_code = 500
+        if isinstance(e, aiohttp.ClientResponseError):
+            status_code = e.status
             try:
-                res = r.json()
+                res = await e.json()
                 if "error" in res:
                     detail = f"Ollama: {res['error']}"
             except Exception:
-                detail = f"Ollama: {e}"
+                pass
 
         raise HTTPException(
-            status_code=r.status_code if r else 500,
-            detail=detail if detail else "Open WebUI: Server Connection Error",
+            status_code=status_code,
+            detail=detail,
         )
 
 
@@ -973,43 +978,45 @@ async def show_model_info(
     key = get_api_key(url_idx, url, request.app.state.config.OLLAMA_API_CONFIGS)
 
     try:
-        r = requests.request(
-            method="POST",
-            url=f"{url}/api/show",
-            headers={
-                "Content-Type": "application/json",
-                **({"Authorization": f"Bearer {key}"} if key else {}),
-                **(
-                    {
-                        "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
-                        "X-OpenWebUI-User-Id": user.id,
-                        "X-OpenWebUI-User-Email": user.email,
-                        "X-OpenWebUI-User-Role": user.role,
-                    }
-                    if ENABLE_FORWARD_USER_INFO_HEADERS and user
-                    else {}
-                ),
-            },
-            data=json.dumps(form_data).encode(),
-        )
-        r.raise_for_status()
-
-        return r.json()
+        async with aiohttp.ClientSession(trust_env=True) as session:
+            async with session.post(
+                f"{url}/api/show",
+                headers={
+                    "Content-Type": "application/json",
+                    **({"Authorization": f"Bearer {key}"} if key else {}),
+                    **(
+                        {
+                            "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
+                            "X-OpenWebUI-User-Id": user.id,
+                            "X-OpenWebUI-User-Email": user.email,
+                            "X-OpenWebUI-User-Role": user.role,
+                        }
+                        if ENABLE_FORWARD_USER_INFO_HEADERS and user
+                        else {}
+                    ),
+                },
+                data=json.dumps(form_data).encode(),
+                ssl=AIOHTTP_CLIENT_SESSION_SSL,
+            ) as response:
+                response.raise_for_status()
+                return await response.json()
     except Exception as e:
         log.exception(e)
 
-        detail = None
-        if r is not None:
+        detail = f"Ollama: {e}"
+        status_code = 500
+        if isinstance(e, aiohttp.ClientResponseError):
+            status_code = e.status
             try:
-                res = r.json()
+                res = await e.json()
                 if "error" in res:
                     detail = f"Ollama: {res['error']}"
             except Exception:
-                detail = f"Ollama: {e}"
+                pass
 
         raise HTTPException(
-            status_code=r.status_code if r else 500,
-            detail=detail if detail else "Open WebUI: Server Connection Error",
+            status_code=status_code,
+            detail=detail,
         )
 
 
@@ -1064,44 +1071,45 @@ async def embed(
         form_data.model = form_data.model.replace(f"{prefix_id}.", "")
 
     try:
-        r = requests.request(
-            method="POST",
-            url=f"{url}/api/embed",
-            headers={
-                "Content-Type": "application/json",
-                **({"Authorization": f"Bearer {key}"} if key else {}),
-                **(
-                    {
-                        "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
-                        "X-OpenWebUI-User-Id": user.id,
-                        "X-OpenWebUI-User-Email": user.email,
-                        "X-OpenWebUI-User-Role": user.role,
-                    }
-                    if ENABLE_FORWARD_USER_INFO_HEADERS and user
-                    else {}
-                ),
-            },
-            data=form_data.model_dump_json(exclude_none=True).encode(),
-        )
-        r.raise_for_status()
-
-        data = r.json()
-        return data
+        async with aiohttp.ClientSession(trust_env=True) as session:
+            async with session.post(
+                f"{url}/api/embed",
+                headers={
+                    "Content-Type": "application/json",
+                    **({"Authorization": f"Bearer {key}"} if key else {}),
+                    **(
+                        {
+                            "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
+                            "X-OpenWebUI-User-Id": user.id,
+                            "X-OpenWebUI-User-Email": user.email,
+                            "X-OpenWebUI-User-Role": user.role,
+                        }
+                        if ENABLE_FORWARD_USER_INFO_HEADERS and user
+                        else {}
+                    ),
+                },
+                data=form_data.model_dump_json(exclude_none=True).encode(),
+                ssl=AIOHTTP_CLIENT_SESSION_SSL,
+            ) as response:
+                response.raise_for_status()
+                return await response.json()
     except Exception as e:
         log.exception(e)
 
-        detail = None
-        if r is not None:
+        detail = f"Ollama: {e}"
+        status_code = 500
+        if isinstance(e, aiohttp.ClientResponseError):
+            status_code = e.status
             try:
-                res = r.json()
+                res = await e.json()
                 if "error" in res:
                     detail = f"Ollama: {res['error']}"
             except Exception:
-                detail = f"Ollama: {e}"
+                pass
 
         raise HTTPException(
-            status_code=r.status_code if r else 500,
-            detail=detail if detail else "Open WebUI: Server Connection Error",
+            status_code=status_code,
+            detail=detail,
         )
 
 
@@ -1151,44 +1159,45 @@ async def embeddings(
         form_data.model = form_data.model.replace(f"{prefix_id}.", "")
 
     try:
-        r = requests.request(
-            method="POST",
-            url=f"{url}/api/embeddings",
-            headers={
-                "Content-Type": "application/json",
-                **({"Authorization": f"Bearer {key}"} if key else {}),
-                **(
-                    {
-                        "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
-                        "X-OpenWebUI-User-Id": user.id,
-                        "X-OpenWebUI-User-Email": user.email,
-                        "X-OpenWebUI-User-Role": user.role,
-                    }
-                    if ENABLE_FORWARD_USER_INFO_HEADERS and user
-                    else {}
-                ),
-            },
-            data=form_data.model_dump_json(exclude_none=True).encode(),
-        )
-        r.raise_for_status()
-
-        data = r.json()
-        return data
+        async with aiohttp.ClientSession(trust_env=True) as session:
+            async with session.post(
+                f"{url}/api/embeddings",
+                headers={
+                    "Content-Type": "application/json",
+                    **({"Authorization": f"Bearer {key}"} if key else {}),
+                    **(
+                        {
+                            "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
+                            "X-OpenWebUI-User-Id": user.id,
+                            "X-OpenWebUI-User-Email": user.email,
+                            "X-OpenWebUI-User-Role": user.role,
+                        }
+                        if ENABLE_FORWARD_USER_INFO_HEADERS and user
+                        else {}
+                    ),
+                },
+                data=form_data.model_dump_json(exclude_none=True).encode(),
+                ssl=AIOHTTP_CLIENT_SESSION_SSL,
+            ) as response:
+                response.raise_for_status()
+                return await response.json()
     except Exception as e:
         log.exception(e)
 
-        detail = None
-        if r is not None:
+        detail = f"Ollama: {e}"
+        status_code = 500
+        if isinstance(e, aiohttp.ClientResponseError):
+            status_code = e.status
             try:
-                res = r.json()
+                res = await e.json()
                 if "error" in res:
                     detail = f"Ollama: {res['error']}"
             except Exception:
-                detail = f"Ollama: {e}"
+                pass
 
         raise HTTPException(
-            status_code=r.status_code if r else 500,
-            detail=detail if detail else "Open WebUI: Server Connection Error",
+            status_code=status_code,
+            detail=detail,
         )
 
 
@@ -1687,10 +1696,10 @@ async def download_file_stream(
         ) as response:
             total_size = int(response.headers.get("content-length", 0)) + current_size
 
-            with open(file_path, "ab+") as file:
+            async with aiofiles.open(file_path, "ab+") as file:
                 async for data in response.content.iter_chunked(chunk_size):
                     current_size += len(data)
-                    file.write(data)
+                    await file.write(data)
 
                     done = current_size == total_size
                     progress = round((current_size / total_size) * 100, 2)
@@ -1698,27 +1707,28 @@ async def download_file_stream(
                     yield f'data: {{"progress": {progress}, "completed": {current_size}, "total": {total_size}}}\n\n'
 
                 if done:
-                    file.close()
+                    await file.seek(0)
+                    chunk_size = 1024 * 1024 * 2
+                    hashed = await asyncio.to_thread(calculate_sha256, file, chunk_size)
 
-                    with open(file_path, "rb") as file:
-                        chunk_size = 1024 * 1024 * 2
-                        hashed = calculate_sha256(file, chunk_size)
+                    url = f"{ollama_url}/api/blobs/sha256:{hashed}"
 
-                        url = f"{ollama_url}/api/blobs/sha256:{hashed}"
-                        with requests.Session() as session:
-                            response = session.post(url, data=file, timeout=30)
-
-                            if response.ok:
-                                res = {
-                                    "done": done,
-                                    "blob": f"sha256:{hashed}",
-                                    "name": file_name,
-                                }
-                                os.remove(file_path)
-
-                                yield f"data: {json.dumps(res)}\n\n"
-                            else:
-                                raise "Ollama: Could not create blob, Please try again."
+                    await file.seek(0)
+                    async with session.post(
+                        url, data=file, timeout=aiohttp.ClientTimeout(total=30)
+                    ) as blob_response:
+                        if blob_response.ok:
+                            res = {
+                                "done": done,
+                                "blob": f"sha256:{hashed}",
+                                "name": file_name,
+                            }
+                            os.remove(file_path)
+                            yield f"data: {json.dumps(res)}\n\n"
+                        else:
+                            raise Exception(
+                                "Ollama: Could not create blob, Please try again."
+                            )
 
 
 # url = "https://huggingface.co/TheBloke/stablelm-zephyr-3b-GGUF/resolve/main/stablelm-zephyr-3b.Q2_K.gguf"
@@ -1771,28 +1781,28 @@ async def upload_model(
     file_path = os.path.join(UPLOAD_DIR, filename)
     os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-    # --- P1: save file locally ---
+    # --- P1: save file locally asynchronously ---
     chunk_size = 1024 * 1024 * 2  # 2 MB chunks
-    with open(file_path, "wb") as out_f:
-        while True:
-            chunk = file.file.read(chunk_size)
-            # log.info(f"Chunk: {str(chunk)}") # DEBUG
-            if not chunk:
-                break
-            out_f.write(chunk)
+    try:
+        async with aiofiles.open(file_path, "wb") as out_f:
+            while chunk := await file.read(chunk_size):
+                await out_f.write(chunk)
+    finally:
+        await file.close()
 
     async def file_process_stream():
         nonlocal ollama_url
-        total_size = os.path.getsize(file_path)
-        log.info(f"Total Model Size: {str(total_size)}")  # DEBUG
-
-        # --- P2: SSE progress + calculate sha256 hash ---
-        file_hash = calculate_sha256(file_path, chunk_size)
-        log.info(f"Model Hash: {str(file_hash)}")  # DEBUG
         try:
-            with open(file_path, "rb") as f:
+            total_size = os.path.getsize(file_path)
+            log.info(f"Total Model Size: {str(total_size)}")
+
+            # --- P2: SSE progress + calculate sha256 hash asynchronously ---
+            file_hash = await asyncio.to_thread(calculate_sha256, file_path, chunk_size)
+            log.info(f"Model Hash: {str(file_hash)}")
+
+            async with aiofiles.open(file_path, "rb") as f:
                 bytes_read = 0
-                while chunk := f.read(chunk_size):
+                while chunk := await f.read(chunk_size):
                     bytes_read += len(chunk)
                     progress = round(bytes_read / total_size * 100, 2)
                     data_msg = {
@@ -1802,54 +1812,53 @@ async def upload_model(
                     }
                     yield f"data: {json.dumps(data_msg)}\n\n"
 
-            # --- P3: Upload to ollama /api/blobs ---
-            with open(file_path, "rb") as f:
+            # --- P3: Upload to ollama /api/blobs asynchronously ---
+            async with aiohttp.ClientSession(trust_env=True) as session:
                 url = f"{ollama_url}/api/blobs/sha256:{file_hash}"
-                response = requests.post(url, data=f)
+                async with aiofiles.open(file_path, "rb") as f:
+                    blob_response = await session.post(url, data=f)
 
-            if response.ok:
-                log.info(f"Uploaded to /api/blobs")  # DEBUG
-                # Remove local file
-                os.remove(file_path)
+                if blob_response.ok:
+                    log.info(f"Uploaded to /api/blobs")
+                    os.remove(file_path)
 
-                # Create model in ollama
-                model_name, ext = os.path.splitext(filename)
-                log.info(f"Created Model: {model_name}")  # DEBUG
+                    model_name, ext = os.path.splitext(filename)
+                    log.info(f"Created Model: {model_name}")
 
-                create_payload = {
-                    "model": model_name,
-                    # Reference the file by its original name => the uploaded blob's digest
-                    "files": {filename: f"sha256:{file_hash}"},
-                }
-                log.info(f"Model Payload: {create_payload}")  # DEBUG
-
-                # Call ollama /api/create
-                # https://github.com/ollama/ollama/blob/main/docs/api.md#create-a-model
-                create_resp = requests.post(
-                    url=f"{ollama_url}/api/create",
-                    headers={"Content-Type": "application/json"},
-                    data=json.dumps(create_payload),
-                )
-
-                if create_resp.ok:
-                    log.info(f"API SUCCESS!")  # DEBUG
-                    done_msg = {
-                        "done": True,
-                        "blob": f"sha256:{file_hash}",
-                        "name": filename,
-                        "model_created": model_name,
+                    create_payload = {
+                        "model": model_name,
+                        "modelfile": f"FROM sha256:{file_hash}",
                     }
-                    yield f"data: {json.dumps(done_msg)}\n\n"
-                else:
-                    raise Exception(
-                        f"Failed to create model in Ollama. {create_resp.text}"
-                    )
+                    log.info(f"Model Payload: {create_payload}")
 
-            else:
-                raise Exception("Ollama: Could not create blob, Please try again.")
+                    async with session.post(
+                        url=f"{ollama_url}/api/create",
+                        headers={"Content-Type": "application/json"},
+                        data=json.dumps(create_payload),
+                    ) as create_resp:
+                        if create_resp.ok:
+                            log.info(f"API SUCCESS!")
+                            done_msg = {
+                                "done": True,
+                                "blob": f"sha256:{file_hash}",
+                                "name": filename,
+                                "model_created": model_name,
+                            }
+                            yield f"data: {json.dumps(done_msg)}\n\n"
+                        else:
+                            error_text = await create_resp.text()
+                            raise Exception(
+                                f"Failed to create model in Ollama. {error_text}"
+                            )
+                else:
+                    raise Exception("Ollama: Could not create blob, Please try again.")
 
         except Exception as e:
+            log.exception(e)
             res = {"error": str(e)}
             yield f"data: {json.dumps(res)}\n\n"
+        finally:
+            if os.path.exists(file_path):
+                os.remove(file_path)
 
     return StreamingResponse(file_process_stream(), media_type="text/event-stream")

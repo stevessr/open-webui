@@ -1,7 +1,8 @@
-import requests
+import httpx
 import logging, os
 from typing import Iterator, List, Union
 from urllib.parse import quote
+import aiofiles
 
 from langchain_core.document_loaders import BaseLoader
 from langchain_core.documents import Document
@@ -30,9 +31,9 @@ class ExternalDocumentLoader(BaseLoader):
 
         self.user = user
 
-    def load(self) -> List[Document]:
-        with open(self.file_path, "rb") as f:
-            data = f.read()
+    async def load(self) -> List[Document]:
+        async with aiofiles.open(self.file_path, "rb") as f:
+            data = await f.read()
 
         headers = {}
         if self.mime_type is not None:
@@ -54,13 +55,14 @@ class ExternalDocumentLoader(BaseLoader):
             url = url[:-1]
 
         try:
-            response = requests.put(f"{url}/process", data=data, headers=headers)
+            async with httpx.AsyncClient() as client:
+                response = await client.put(f"{url}/process", content=data, headers=headers)
+            response.raise_for_status()
         except Exception as e:
             log.error(f"Error connecting to endpoint: {e}")
             raise Exception(f"Error connecting to endpoint: {e}")
 
         if response.ok:
-
             response_data = response.json()
             if response_data:
                 if isinstance(response_data, dict):

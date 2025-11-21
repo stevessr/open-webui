@@ -3,6 +3,7 @@ import logging
 import time
 from typing import Optional
 import uuid
+import asyncio
 
 from open_webui.internal.db import Base, get_db
 from open_webui.env import SRC_LOG_LEVELS
@@ -101,7 +102,7 @@ class KnowledgeForm(BaseModel):
 
 
 class KnowledgeTable:
-    def insert_new_knowledge(
+    async def insert_new_knowledge(
         self, user_id: str, form_data: KnowledgeForm
     ) -> Optional[KnowledgeModel]:
         with get_db() as db:
@@ -117,9 +118,9 @@ class KnowledgeTable:
 
             try:
                 result = Knowledge(**knowledge.model_dump())
-                db.add(result)
-                db.commit()
-                db.refresh(result)
+                await asyncio.to_thread(db.add, result)
+                await asyncio.to_thread(db.commit)
+                await asyncio.to_thread(db.refresh, result)
                 if result:
                     return KnowledgeModel.model_validate(result)
                 else:
@@ -127,15 +128,15 @@ class KnowledgeTable:
             except Exception:
                 return None
 
-    def get_knowledge_bases(self) -> list[KnowledgeUserModel]:
+    async def get_knowledge_bases(self) -> list[KnowledgeUserModel]:
         with get_db() as db:
-            all_knowledge = (
-                db.query(Knowledge).order_by(Knowledge.updated_at.desc()).all()
+            all_knowledge = await asyncio.to_thread(
+                db.query(Knowledge).order_by(Knowledge.updated_at.desc()).all
             )
 
             user_ids = list(set(knowledge.user_id for knowledge in all_knowledge))
 
-            users = Users.get_users_by_user_ids(user_ids) if user_ids else []
+            users = await Users.get_users_by_user_ids(user_ids) if user_ids else []
             users_dict = {user.id: user for user in users}
 
             knowledge_bases = []
@@ -151,20 +152,20 @@ class KnowledgeTable:
                 )
             return knowledge_bases
 
-    def check_access_by_user_id(self, id, user_id, permission="write") -> bool:
-        knowledge = self.get_knowledge_by_id(id)
+    async def check_access_by_user_id(self, id, user_id, permission="write") -> bool:
+        knowledge = await self.get_knowledge_by_id(id)
         if not knowledge:
             return False
         if knowledge.user_id == user_id:
             return True
-        user_group_ids = {group.id for group in Groups.get_groups_by_member_id(user_id)}
+        user_group_ids = {group.id for group in await Groups.get_groups_by_member_id(user_id)}
         return has_access(user_id, permission, knowledge.access_control, user_group_ids)
 
-    def get_knowledge_bases_by_user_id(
+    async def get_knowledge_bases_by_user_id(
         self, user_id: str, permission: str = "write"
     ) -> list[KnowledgeUserModel]:
-        knowledge_bases = self.get_knowledge_bases()
-        user_group_ids = {group.id for group in Groups.get_groups_by_member_id(user_id)}
+        knowledge_bases = await self.get_knowledge_bases()
+        user_group_ids = {group.id for group in await Groups.get_groups_by_member_id(user_id)}
         return [
             knowledge_base
             for knowledge_base in knowledge_bases
@@ -174,64 +175,64 @@ class KnowledgeTable:
             )
         ]
 
-    def get_knowledge_by_id(self, id: str) -> Optional[KnowledgeModel]:
+    async def get_knowledge_by_id(self, id: str) -> Optional[KnowledgeModel]:
         try:
             with get_db() as db:
-                knowledge = db.query(Knowledge).filter_by(id=id).first()
+                knowledge = await asyncio.to_thread(db.query(Knowledge).filter_by(id=id).first)
                 return KnowledgeModel.model_validate(knowledge) if knowledge else None
         except Exception:
             return None
 
-    def update_knowledge_by_id(
+    async def update_knowledge_by_id(
         self, id: str, form_data: KnowledgeForm, overwrite: bool = False
     ) -> Optional[KnowledgeModel]:
         try:
             with get_db() as db:
-                knowledge = self.get_knowledge_by_id(id=id)
-                db.query(Knowledge).filter_by(id=id).update(
+                knowledge = await self.get_knowledge_by_id(id=id)
+                await asyncio.to_thread(db.query(Knowledge).filter_by(id=id).update,
                     {
                         **form_data.model_dump(),
                         "updated_at": int(time.time()),
                     }
                 )
-                db.commit()
-                return self.get_knowledge_by_id(id=id)
+                await asyncio.to_thread(db.commit)
+                return await self.get_knowledge_by_id(id=id)
         except Exception as e:
             log.exception(e)
             return None
 
-    def update_knowledge_data_by_id(
+    async def update_knowledge_data_by_id(
         self, id: str, data: dict
     ) -> Optional[KnowledgeModel]:
         try:
             with get_db() as db:
-                knowledge = self.get_knowledge_by_id(id=id)
-                db.query(Knowledge).filter_by(id=id).update(
+                knowledge = await self.get_knowledge_by_id(id=id)
+                await asyncio.to_thread(db.query(Knowledge).filter_by(id=id).update,
                     {
                         "data": data,
                         "updated_at": int(time.time()),
                     }
                 )
-                db.commit()
-                return self.get_knowledge_by_id(id=id)
+                await asyncio.to_thread(db.commit)
+                return await self.get_knowledge_by_id(id=id)
         except Exception as e:
             log.exception(e)
             return None
 
-    def delete_knowledge_by_id(self, id: str) -> bool:
+    async def delete_knowledge_by_id(self, id: str) -> bool:
         try:
             with get_db() as db:
-                db.query(Knowledge).filter_by(id=id).delete()
-                db.commit()
+                await asyncio.to_thread(db.query(Knowledge).filter_by(id=id).delete)
+                await asyncio.to_thread(db.commit)
                 return True
         except Exception:
             return False
 
-    def delete_all_knowledge(self) -> bool:
+    async def delete_all_knowledge(self) -> bool:
         with get_db() as db:
             try:
-                db.query(Knowledge).delete()
-                db.commit()
+                await asyncio.to_thread(db.query(Knowledge).delete)
+                await asyncio.to_thread(db.commit)
 
                 return True
             except Exception:
