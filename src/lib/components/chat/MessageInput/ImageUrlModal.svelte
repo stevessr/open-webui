@@ -51,8 +51,30 @@
 					isLoading = false;
 					// 不清空 imagePreview，仍然显示用户输入的 URL
 					// 只是标记预览失败，但 URL 本身可能是有效的
-					console.warn('Image preview failed to load (possibly due to CORS), but URL may still be valid');
+					console.warn(
+						'Image preview failed to load (possibly due to CORS), but URL may still be valid'
+					);
 					// 不显示错误 toast，因为这可能只是 CORS 问题
+				};
+
+				img.src = imageUrl;
+			} else if (imageUrl.endsWith('content') && imageUrl.match('api/v1/files')) {
+				// 处理特殊的 content 结尾情况
+				console.log('URL ends with "content", attempting preview');
+				isLoading = true;
+				imagePreview = imageUrl;
+
+				const img = new Image();
+				img.crossOrigin = 'anonymous';
+
+				img.onload = () => {
+					isLoading = false;
+					console.log('Image preview loaded successfully for content URL');
+				};
+
+				img.onerror = () => {
+					isLoading = false;
+					console.warn('Image preview failed to load for content URL');
 				};
 
 				img.src = imageUrl;
@@ -104,11 +126,7 @@
 			<h1 class="text-lg font-medium self-center font-primary">
 				{$i18n.t('Add Image URL')}
 			</h1>
-			<button
-				class="self-center"
-				aria-label={$i18n.t('Close modal')}
-				on:click={handleCancel}
-			>
+			<button class="self-center" aria-label={$i18n.t('Close modal')} on:click={handleCancel}>
 				<XMark className={'size-5'} />
 			</button>
 		</div>
@@ -123,7 +141,10 @@
 					}}
 				>
 					<div>
-						<label for="image-url" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+						<label
+							for="image-url"
+							class="block text-sm font-medium text-gray-900 dark:text-white mb-2"
+						>
 							{$i18n.t('Image URL')}
 						</label>
 						<input
@@ -148,7 +169,9 @@
 							<label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
 								{$i18n.t('Preview')}
 							</label>
-							<div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden relative">
+							<div
+								class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden relative"
+							>
 								<img
 									src={imagePreview}
 									alt="Image preview"
@@ -156,9 +179,13 @@
 									class:opacity-50={isLoading}
 								/>
 								{#if isLoading}
-									<div class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+									<div
+										class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800"
+									>
 										<div class="flex flex-col items-center space-y-2">
-											<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+											<div
+												class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"
+											></div>
 											<div class="text-sm text-gray-600 dark:text-gray-400">
 												{$i18n.t('Loading preview...')}
 											</div>
@@ -171,14 +198,18 @@
 
 					<!-- URL 验证状态 -->
 					{#if imageUrl && !isValidUrl}
-						<div class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+						<div
+							class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+						>
 							<p class="text-sm text-red-600 dark:text-red-400">
 								{$i18n.t('Please enter a valid URL')}
 							</p>
 						</div>
 					{/if}
 
-					<div class="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-gray-700">
+					<div
+						class="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-gray-700"
+					>
 						<div class="flex gap-3">
 							<button
 								type="button"
