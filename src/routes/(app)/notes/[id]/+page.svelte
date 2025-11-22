@@ -23,3 +23,4 @@
 	<Background opacity={0.3} />
 	<NoteEditor id={$page.params.id} />
 </div>
+{/if}
