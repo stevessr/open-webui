@@ -7,6 +7,7 @@
 	import { v4 as uuidv4 } from 'uuid';
 	import { createPicker, getAuthToken } from '$lib/utils/google-drive-picker';
 	import { pickAndDownloadFile } from '$lib/utils/onedrive-file-picker';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	import { onMount, tick, getContext, createEventDispatcher, onDestroy } from 'svelte';
 	const dispatch = createEventDispatcher();
@@ -46,6 +47,7 @@
 	import { deleteFileById } from '$lib/apis/files';
 	import { getSessionUser } from '$lib/apis/auths';
 	import { getTools } from '$lib/apis/tools';
+	import { uploadImageToImgBed, getImgBedConfig, type CloudFlareImgBedConfig } from '$lib/utils/cloudflare-imgbed';
 
 	import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
 
@@ -118,6 +120,11 @@
 	let selectedValvesType = 'tool'; // 'tool' or 'function'
 	let selectedValvesItemId = null;
 	let integrationsMenuCloseOnOutsideClick = true;
+
+	// CloudFlare-ImgBed 配置
+	let imgBedConfig: CloudFlareImgBedConfig;
+	let useImgBed = false;
+	let imgBedUploading = false;
 
 	$: if (!showValvesModal) {
 		integrationsMenuCloseOnOutsideClick = true;
@@ -521,6 +528,48 @@
 		}
 	};
 
+	const uploadImageHandler = async (file: File): Promise<string> => {
+		console.log('uploadImageHandler called with:', {
+			useImgBed,
+			imgBedConfig,
+			fileName: file.name
+		});
+
+		if (useImgBed && imgBedConfig) {
+			// 使用 CloudFlare-ImgBed 上传图片
+			try {
+				imgBedUploading = true;
+				const result = await uploadImageToImgBed(imgBedConfig, file);
+				if (result.status && result.url) {
+					toast.success($i18n.t('Image uploaded to ImgBed successfully'));
+					return result.url;
+				} else {
+					throw new Error(result.message || 'Upload failed');
+				}
+			} catch (error) {
+				console.error('ImgBed upload failed:', error);
+				toast.error($i18n.t('ImgBed upload failed, using local storage'));
+				// 降级到本地上传
+				return await uploadLocalImage(file);
+			} finally {
+				imgBedUploading = false;
+			}
+		} else {
+			// 使用本地上传
+			console.log('Using local upload for image');
+			return await uploadLocalImage(file);
+		}
+	};
+
+	const uploadLocalImage = async (file: File): Promise<string> => {
+		const uploadedFile = await uploadFile(localStorage.token, file);
+		if (uploadedFile) {
+			return `${WEBUI_API_BASE_URL}/files/${uploadedFile.id}`;
+		} else {
+			throw new Error('Local upload failed');
+		}
+	};
+
 	const uploadFileHandler = async (file, fullContext: boolean = false) => {
 		if ($_user?.role !== 'admin' && !($_user?.permissions?.chat?.file_upload ?? true)) {
 			toast.error($i18n.t('You do not have permission to upload files.'));
@@ -674,7 +723,7 @@
 				}
 
 				const compressImageHandler = async (imageUrl, settings = {}, config = {}) => {
-					// Quick shortcut so we don’t do unnecessary work.
+					// Quick shortcut so we don't do unnecessary work.
 					const settingsCompression = settings?.imageCompression ?? false;
 					const configWidth = config?.file?.image_compression?.width ?? null;
 					const configHeight = config?.file?.image_compression?.height ?? null;
@@ -715,13 +764,34 @@
 
 					imageUrl = await compressImageHandler(imageUrl, $settings, $config);
 
-					files = [
-						...files,
-						{
-							type: 'image',
-							url: `${imageUrl}`
-						}
-					];
+					// 将 base64 转换为 Blob 以便上传
+					const response = await fetch(imageUrl as string);
+					const blob = await response.blob();
+					const imageFile = new File([blob], file.name, { type: file.type });
+
+					try {
+						// 使用 CloudFlare-ImgBed 或本地上传
+						const uploadedUrl = await uploadImageHandler(imageFile);
+
+						files = [
+							...files,
+							{
+								type: 'image',
+								url: uploadedUrl
+							}
+						];
+						console.log("files is ",files);
+					} catch (error) {
+						console.error('Image upload failed:', error);
+						// 如果上传失败，仍然使用 base64 图片
+						files = [
+							...files,
+							{
+								type: 'image',
+								url: `${imageUrl}`
+							}
+						];
+					}
 				};
 				reader.readAsDataURL(file['type'] === 'image/heic' ? await convertHeicToJpeg(file) : file);
 			} else {
@@ -784,7 +854,24 @@
 	};
 
 	onMount(async () => {
-		suggestions = [
+		// 初始化 CloudFlare-ImgBed 配置
+		const userImgBedConfig = $settings?.imgBedConfig;
+		if (userImgBedConfig) {
+			imgBedConfig = userImgBedConfig;
+		} else {
+			imgBedConfig = getImgBedConfig();
+		}
+		useImgBed = $settings?.useImgBed ?? false;
+
+	// 响应式更新 ImgBed 配置
+	$: if ($settings?.imgBedConfig && $settings?.imgBedConfig.baseUrl) {
+		imgBedConfig = $settings.imgBedConfig;
+	}
+	$: if ($settings?.useImgBed !== undefined) {
+		useImgBed = $settings.useImgBed;
+	}
+
+	suggestions = [
 			{
 				char: '@',
 				render: getSuggestionRenderer(CommandSuggestionList, {
@@ -1068,7 +1155,7 @@
 								<div class="px-3 pt-3 text-left w-full flex flex-col z-10">
 									<div class="flex items-center justify-between w-full">
 										<div class="pl-[1px] flex items-center gap-2 text-sm dark:text-gray-500">
-											<img
+											<ProfileImage
 												alt="model profile"
 												class="size-3.5 max-w-[28px] object-cover rounded-full"
 												src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${$models.find((model) => model.id === atSelectedModel.id).id}&lang=${$i18n.language}`}
@@ -1383,6 +1470,14 @@
 										uploadFilesHandler={() => {
 											filesInputElement.click();
 										}}
+										onUpload={(imageData) => {
+											console.log('MessageInput received onUpload with:', imageData);
+											if (imageData && imageData.type === 'image' && imageData.url) {
+												files = [...files, imageData];
+												console.log('Added image to files array:', files);
+											}
+											dispatch('upload', imageData);
+										}}
 										uploadGoogleDriveHandler={async () => {
 											try {
 												const fileData = await createPicker();
@@ -1417,9 +1512,6 @@
 											} catch (error) {
 												console.error('OneDrive Error:', error);
 											}
-										}}
-										onUpload={async (e) => {
-											dispatch('upload', e);
 										}}
 										onClose={async () => {
 											await tick();
@@ -1535,12 +1627,11 @@
 													>
 														{#if filter?.icon}
 															<div class="size-4 items-center flex justify-center">
-																<img
+																<ProfileImage
 																	src={filter.icon}
-																	class="size-3.5 {filter.icon.includes('svg')
+																	className="size-3.5 {filter.icon.includes('svg')
 																		? 'dark:invert-[80%]'
 																		: ''}"
-																	style="fill: currentColor;"
 																	alt={filter.name}
 																/>
 															</div>
@@ -1787,14 +1878,6 @@
 								</div>
 							</div>
 						</div>
-
-						{#if $config?.license_metadata?.input_footer}
-							<div class=" text-xs text-gray-500 text-center line-clamp-1 marked">
-								{@html DOMPurify.sanitize(marked($config?.license_metadata?.input_footer))}
-							</div>
-						{:else}
-							<div class="mb-1" />
-						{/if}
 					</form>
 				</div>
 			</div>

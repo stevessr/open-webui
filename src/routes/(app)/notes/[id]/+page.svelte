@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { showSidebar } from '$lib/stores';
+	import Background from '$lib/components/Background.svelte';
 
 	import dayjs from '$lib/dayjs';
 	import { createNoteHandler } from '$lib/components/notes/utils';
@@ -18,10 +19,7 @@
 </script>
 
 {#if loaded}
-	<div
-		id="note-container"
-		class="w-full h-full {$showSidebar ? 'md:max-w-[calc(100%-260px)]' : ''}"
-	>
-		<NoteEditor id={$page.params.id} />
-	</div>
-{/if}
+<div id="note-container" class="w-full h-full {$showSidebar ? 'md:max-w-[calc(100%-260px)]' : ''}">
+	<Background opacity={0.3} />
+	<NoteEditor id={$page.params.id} />
+</div>

@@ -39,6 +39,7 @@
 	import Eye from '$lib/components/icons/Eye.svelte';
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
 	import { goto } from '$app/navigation';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	let shiftKey = false;
 
@@ -344,10 +345,10 @@
 										? ''
 										: 'opacity-50 dark:opacity-50'} "
 								>
-									<img
+									<ProfileImage
 										src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model.id}`}
 										alt="modelfile profile"
-										class=" rounded-full w-full h-auto object-cover"
+										className="rounded-full w-full h-auto object-cover"
 									/>
 								</div>
 							</div>
@@ -355,7 +356,7 @@
 							<div class=" flex-1 self-center {(model?.is_active ?? true) ? '' : 'text-gray-500'}">
 								<Tooltip
 									content={marked.parse(
-										!!model?.meta?.description
+										model?.meta?.description
 											? model?.meta?.description
 											: model?.ollama?.digest
 												? `${model?.ollama?.digest} **(${model?.ollama?.modified_at})**`
@@ -368,7 +369,7 @@
 								</Tooltip>
 								<div class=" text-xs overflow-hidden text-ellipsis line-clamp-1 text-gray-500">
 									<span class=" line-clamp-1">
-										{!!model?.meta?.description
+										{model?.meta?.description
 											? model?.meta?.description
 											: model?.ollama?.digest
 												? `${model.id} (${model?.ollama?.digest})`

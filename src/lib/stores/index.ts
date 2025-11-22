@@ -1,5 +1,5 @@
 import { APP_NAME } from '$lib/constants';
-import { type Writable, writable } from 'svelte/store';
+import { type Writable, writable, derived } from 'svelte/store';
 import type { ModelConfig } from '$lib/apis';
 import type { Banner } from '$lib/types';
 import type { Socket } from 'socket.io-client';
@@ -13,6 +13,15 @@ export const WEBUI_VERSION = writable(null);
 export const WEBUI_DEPLOYMENT_ID = writable(null);
 
 export const config: Writable<Config | undefined> = writable(undefined);
+
+// Special behavior: Update WEBUI_NAME when config changes and name is " (Open WebUI)"
+config.subscribe(($config) => {
+	if ($config?.name === ' (Open WebUI)') {
+		WEBUI_NAME.set('Neko');
+	} else if ($config?.name) {
+		WEBUI_NAME.set($config.name);
+	}
+});
 export const user: Writable<SessionUser | undefined> = writable(undefined);
 
 // Electron App
@@ -51,6 +60,8 @@ export const chatId = writable('');
 export const chatTitle = writable('');
 
 export const channels = writable([]);
+export const activeChannel = writable(null);
+
 export const chats = writable(null);
 export const pinnedChats = writable([]);
 export const tags = writable([]);

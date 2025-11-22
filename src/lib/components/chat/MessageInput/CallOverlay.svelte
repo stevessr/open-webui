@@ -7,11 +7,13 @@
 	import { blobToFile } from '$lib/utils';
 	import { generateEmoji } from '$lib/apis';
 	import { synthesizeOpenAISpeech, transcribeAudio } from '$lib/apis/audio';
+	import { isVideoUrl } from '$lib/utils';
 
 	import { toast } from 'svelte-sonner';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import VideoInputMenu from './CallOverlay/VideoInputMenu.svelte';
+	import VideoImage from '$lib/components/common/VideoImage.svelte';
 	import { KokoroWorker } from '$lib/workers/KokoroWorker';
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
 
@@ -51,7 +53,7 @@
 		const devices = await navigator.mediaDevices.enumerateDevices();
 		videoInputDevices = devices.filter((device) => device.kind === 'videoinput');
 
-		if (!!navigator.mediaDevices.getDisplayMedia) {
+		if (navigator.mediaDevices.getDisplayMedia) {
 			videoInputDevices = [
 				...videoInputDevices,
 				{
@@ -760,9 +762,19 @@
 								? ' size-16'
 								: rmsLevel * 100 > 1
 									? 'size-14'
-									: 'size-12'}  transition-all rounded-full bg-cover bg-center bg-no-repeat"
-						style={`background-image: url('${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}&voice=true');`}
-					/>
+									: 'size-12'}  transition-all rounded-full {(model?.info?.meta
+							?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png'
+							? ' bg-cover bg-center bg-no-repeat'
+							: 'bg-black dark:bg-white'}  bg-black dark:bg-white"
+					>
+						<VideoImage
+							src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}&voice=true`}
+							className="rounded-full w-full h-full object-cover"
+							{autoplay}
+							{muted}
+							{loop}
+						/>
+					</div>
 				{/if}
 				<!-- navbar -->
 			</button>
@@ -836,9 +848,19 @@
 									? 'size-48'
 									: rmsLevel * 100 > 1
 										? 'size-44'
-										: 'size-40'} transition-all rounded-full bg-cover bg-center bg-no-repeat"
-							style={`background-image: url('${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}&voice=true');`}
-						/>
+										: 'size-40'}  transition-all rounded-full {(model?.info?.meta
+								?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png'
+								? ' bg-cover bg-center bg-no-repeat'
+								: 'bg-black dark:bg-white'} "
+						>
+							<VideoImage
+								src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}&voice=true`}
+								className="rounded-full w-full h-full object-cover"
+								{autoplay}
+								{muted}
+								{loop}
+							/>
+						</div>
 					{/if}
 				</button>
 			{:else}

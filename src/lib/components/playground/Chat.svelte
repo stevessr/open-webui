@@ -24,6 +24,7 @@
 	import Cog6 from '../icons/Cog6.svelte';
 	import Sidebar from '../common/Sidebar.svelte';
 	import ArrowRight from '../icons/ArrowRight.svelte';
+	import Select from '../common/Select.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -321,16 +322,15 @@
 
 						<div class="flex items-center justify-between gap-2 w-full sm:w-auto">
 							<div class="flex-1">
-								<select
-									class=" bg-transparent border border-gray-100 dark:border-gray-850 rounded-lg py-1 px-2 -mx-0.5 text-sm outline-hidden w-full"
+								<Select
+									className="bg-transparent border border-gray-100 dark:border-gray-850 rounded-lg text-sm outline-hidden w-full"
 									bind:value={selectedModelId}
-								>
-									{#each $models as model}
-										<option value={model.id} class="bg-gray-50 dark:bg-gray-700"
-											>{model.name}</option
-										>
-									{/each}
-								</select>
+									placeholder={$i18n.t('Select a model')}
+									items={$models.map((model) => ({
+										value: model.id,
+										label: model.name
+									}))}
+								/>
 							</div>
 
 							<div class="flex gap-2 shrink-0">

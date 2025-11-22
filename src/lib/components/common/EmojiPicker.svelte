@@ -8,6 +8,7 @@
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	import emojiGroups from '$lib/emoji-groups.json';
 	import emojiShortCodes from '$lib/emoji-shortcodes.json';
@@ -117,7 +118,7 @@
 		<slot />
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Content
-		class="max-w-full w-80 bg-gray-50 dark:bg-gray-850 rounded-lg z-9999 shadow-lg dark:text-white"
+		class="transv2 max-w-full w-80 bg-gray-50 dark:bg-gray-850 rounded-lg z-999 shadow-lg dark:text-white"
 		sideOffset={8}
 		{side}
 		{align}
@@ -158,11 +159,10 @@
 												class="p-1.5 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition"
 												on:click={() => selectEmoji(emojiItem)}
 											>
-												<img
+												<ProfileImage
 													src="{WEBUI_BASE_URL}/assets/emojis/{emojiItem.name.toLowerCase()}.svg"
 													alt={emojiItem.name}
-													class="size-5"
-													loading="lazy"
+													className="size-5"
 												/>
 											</button>
 										</Tooltip>

@@ -18,10 +18,13 @@
 	import Capabilities from '$lib/components/workspace/Models/Capabilities.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import AccessControl from '../common/AccessControl.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import DefaultFiltersSelector from './DefaultFiltersSelector.svelte';
 	import DefaultFeatures from './DefaultFeatures.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
+	import UrlInputModal from '$lib/components/common/UrlInputModal.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -41,6 +44,7 @@
 
 	let showAdvanced = false;
 	let showPreview = false;
+	let showUrlInputModal = false;
 
 	let loaded = false;
 
@@ -430,16 +434,16 @@
 							}}
 						>
 							{#if info.meta.profile_image_url}
-								<img
+								<ProfileImage
 									src={info.meta.profile_image_url}
 									alt="model profile"
-									class="rounded-xl size-72 md:size-60 object-cover shrink-0"
+									className="rounded-xl size-72 md:size-60 object-cover shrink-0"
 								/>
 							{:else}
-								<img
-									src="{WEBUI_BASE_URL}/static/favicon.png"
+								<ProfileImage
+									src={`${WEBUI_BASE_URL}/static/favicon.png`}
 									alt="model profile"
-									class=" rounded-xl size-72 md:size-60 object-cover shrink-0"
+									className=" rounded-xl size-72 md:size-60 object-cover shrink-0"
 								/>
 							{/if}
 
@@ -463,13 +467,18 @@
 									</div>
 								</div>
 							</div>
-
-							<div
-								class="absolute top-0 bottom-0 left-0 right-0 bg-white dark:bg-black rounded-lg opacity-0 group-hover:opacity-20 transition"
-							></div>
 						</button>
 
-						<div class="flex w-full mt-1 justify-end">
+						<div class="flex w-full mt-1 justify-between gap-2">
+							<button
+								class="px-2 py-1 text-gray-500 rounded-lg text-xs"
+								on:click={() => {
+									showUrlInputModal = true;
+								}}
+								type="button"
+							>
+								{$i18n.t('Enter URL')}
+							</button>
 							<button
 								class="px-2 py-1 text-gray-500 rounded-lg text-xs"
 								on:click={() => {
@@ -477,8 +486,8 @@
 								}}
 								type="button"
 							>
-								{$i18n.t('Reset Image')}</button
-							>
+								{$i18n.t('Reset Image')}
+							</button>
 						</div>
 					</div>
 				</div>
@@ -514,22 +523,29 @@
 							<div class=" text-sm font-semibold mb-1">{$i18n.t('Base Model (From)')}</div>
 
 							<div>
-								<select
-									class="text-sm w-full bg-transparent outline-hidden"
+								<Select
+									className="text-sm w-full bg-transparent outline-hidden"
 									placeholder={$i18n.t('Select a base model (e.g. llama3, gpt-4o)')}
 									bind:value={info.base_model_id}
+									items={[
+										{ value: null, label: $i18n.t('Select a base model') },
+										...$models
+											.filter(
+												(m) =>
+													(model ? m.id !== model.id : true) &&
+													!m?.preset &&
+													m?.owned_by !== 'arena' &&
+													!(m?.direct ?? false)
+											)
+											.map((model) => ({
+												value: model.id,
+												label: model.name
+											}))
+									]}
 									on:change={(e) => {
-										addUsage(e.target.value);
+										addUsage(e.detail.value);
 									}}
-									required
-								>
-									<option value={null} class=" text-gray-900"
-										>{$i18n.t('Select a base model')}</option
-									>
-									{#each $models.filter((m) => (model ? m.id !== model.id : true) && !m?.preset && m?.owned_by !== 'arena' && !(m?.direct ?? false)) as model}
-										<option value={model.id} class=" text-gray-900">{model.name}</option>
-									{/each}
-								</select>
+								/>
 							</div>
 						</div>
 					{/if}
@@ -566,10 +582,22 @@
 						{/if}
 					</div>
 
-					<div class=" mt-2 my-1">
-						<div class="">
+					<div class="my-2">
+						<div class="mb-1 flex w-full justify-between items-center">
+							<div class="self-center text-sm font-semibold">{$i18n.t('Tags')}</div>
+							<div class="text-xs text-gray-500">
+								{$i18n.t('智能推荐标签')}
+							</div>
+						</div>
+						<div class="trans p-3 bg-gray-50 dark:bg-gray-950 rounded-xl border border-gray-100 dark:border-gray-850">
 							<Tags
 								tags={info?.meta?.tags ?? []}
+								modelInfo={{
+									owned_by: model?.owned_by,
+									name: model?.name,
+									id: model?.id,
+									base_model_id: info?.base_model_id
+								}}
 								on:delete={(e) => {
 									const tagName = e.detail;
 									info.meta.tags = info.meta.tags.filter((tag) => tag.name !== tagName);
@@ -579,15 +607,23 @@
 									if (!(info?.meta?.tags ?? null)) {
 										info.meta.tags = [{ name: tagName }];
 									} else {
-										info.meta.tags = [...info.meta.tags, { name: tagName }];
+										// 避免重复标签
+										if (!info.meta.tags.some(tag => tag.name === tagName)) {
+											info.meta.tags = [...info.meta.tags, { name: tagName }];
+										}
 									}
 								}}
 							/>
 						</div>
+						{#if (info?.meta?.tags ?? []).length === 0}
+							<div class="mt-1 text-xs text-gray-400 text-center">
+								{$i18n.t('基于模型厂商智能推荐标签')}
+							</div>
+						{/if}
 					</div>
 
 					<div class="my-2">
-						<div class="px-4 py-3 bg-gray-50 dark:bg-gray-950 rounded-3xl">
+						<div class="trans px-4 py-3 bg-gray-50 dark:bg-gray-950 rounded-3xl">
 							<AccessControl
 								bind:accessControl
 								accessRoles={['read', 'write']}
@@ -855,4 +891,14 @@
 			</form>
 		{/if}
 	</div>
+
+	<UrlInputModal
+		bind:show={showUrlInputModal}
+		bind:value={info.meta.profile_image_url}
+		on:submit={(e) => {
+			if (e.detail && e.detail.trim()) {
+				info.meta.profile_image_url = e.detail.trim();
+			}
+		}}
+	/>
 {/if}

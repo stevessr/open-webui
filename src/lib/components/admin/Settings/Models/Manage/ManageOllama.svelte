@@ -23,6 +23,7 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import ModelDeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 
 	let modelUploadInputElement: HTMLInputElement;
 	let showModelDeleteConfirm = false;
@@ -806,20 +807,15 @@
 						<div
 							class="flex-1 mr-2 pr-1.5 rounded-lg bg-gray-50 dark:text-gray-300 dark:bg-gray-850"
 						>
-							<select
-								class="w-full py-2 px-4 text-sm outline-hidden bg-transparent"
+							<Select
+								className="w-full py-2 px-4 text-sm outline-hidden bg-transparent"
 								bind:value={deleteModelTag}
 								placeholder={$i18n.t('Select a model')}
-							>
-								{#if !deleteModelTag}
-									<option value="" disabled selected>{$i18n.t('Select a model')}</option>
-								{/if}
-								{#each ollamaModels as model}
-									<option value={model.id} class="bg-gray-50 dark:bg-gray-700"
-										>{model.name + ' (' + (model.size / 1024 ** 3).toFixed(1) + ' GB)'}</option
-									>
-								{/each}
-							</select>
+								items={ollamaModels.map((m) => ({
+									value: m.id,
+									label: m.name + ' (' + (m.size / 1024 ** 3).toFixed(1) + ' GB)'
+								}))}
+							/>
 						</div>
 						<Tooltip content={$i18n.t('Delete Model')} placement="top">
 							<button

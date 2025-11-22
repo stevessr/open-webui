@@ -14,6 +14,7 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import ModelList from './ModelList.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import Minus from '$lib/components/icons/Minus.svelte';
 	import Plus from '$lib/components/icons/Plus.svelte';
 	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
@@ -186,19 +187,54 @@
 
 						<hr class=" border-gray-100 dark:border-gray-700/10 my-2.5 w-full" />
 
-						<ModelSelector
-							title={$i18n.t('Default Models')}
-							models={$models}
-							bind:modelIds={defaultModelIds}
-						/>
+						<div>
+							<div class="flex flex-col w-full">
+								<div class="mb-1 flex justify-between">
+									<div class="text-xs text-gray-500">{$i18n.t('Default Models')}</div>
+								</div>
 
-						<hr class=" border-gray-100 dark:border-gray-700/10 my-2.5 w-full" />
+								<div class="flex items-center -mr-1">
+									<Select
+										className="w-full py-1 text-sm rounded-lg bg-transparent {selectedModelId
+											? ''
+											: 'text-gray-500'} placeholder:text-gray-300 dark:placeholder:text-gray-700 outline-hidden"
+										bind:value={selectedModelId}
+										placeholder={$i18n.t('Select a model')}
+										items={$models.map((m) => ({ value: m.id, label: m.name }))}
+									/>
+								</div>
 
-						<ModelSelector
-							title={$i18n.t('Default Pinned Models')}
-							models={$models}
-							bind:modelIds={defaultPinnedModelIds}
-						/>
+								<!-- <hr class=" border-gray-100 dark:border-gray-700/10 my-2.5 w-full" /> -->
+
+								{#if defaultModelIds.length > 0}
+									<div class="flex flex-col">
+										{#each defaultModelIds as modelId, modelIdx}
+											<div class=" flex gap-2 w-full justify-between items-center">
+												<div class=" text-sm flex-1 py-1 rounded-lg">
+													{$models.find((model) => model.id === modelId)?.name}
+												</div>
+												<div class="shrink-0">
+													<button
+														type="button"
+														on:click={() => {
+															defaultModelIds = defaultModelIds.filter(
+																(_, idx) => idx !== modelIdx
+															);
+														}}
+													>
+														<Minus strokeWidth="2" className="size-3.5" />
+													</button>
+												</div>
+											</div>
+										{/each}
+									</div>
+								{:else}
+									<div class="text-gray-500 text-xs text-center py-2">
+										{$i18n.t('No models selected')}
+									</div>
+								{/if}
+							</div>
+						</div>
 
 						<div class="flex justify-between pt-3 text-sm font-medium gap-1.5">
 							<Tooltip content={$i18n.t('This will delete all models including custom models')}>

@@ -366,7 +366,7 @@ export const generateInitialsImage = (name) => {
 		console.log(
 			'generateInitialsImage: failed pixel test, fingerprint evasion is likely. Using default image.'
 		);
-		return `${WEBUI_BASE_URL}/user.png`;
+		return `${WEBUI_BASE_URL}/user.gif`;
 	}
 
 	ctx.fillStyle = '#F39C12';
@@ -1594,6 +1594,13 @@ export const decodeString = (str: string) => {
 	}
 };
 
+export const isVideoUrl = (url: string) => {
+	if (!url) return false;
+	const videoExtensions = ['.mp4', '.webm', '.ogg', '.avi', '.mov', '.wmv', '.flv', '.m4v'];
+	const lowerUrl = url.toLowerCase();
+	return videoExtensions.some((ext) => lowerUrl.includes(ext));
+};
+
 export const initMermaid = async () => {
 	const { default: mermaid } = await import('mermaid');
 	mermaid.initialize({
@@ -1629,7 +1636,7 @@ export const renderVegaVisualization = async (spec: string, i18n?: any) => {
 export const getCodeBlockContents = (content: string): object => {
 	const codeBlockContents = content.match(/```[\s\S]*?```/g);
 
-	let codeBlocks = [];
+	const codeBlocks = [];
 
 	let htmlContent = '';
 	let cssContent = '';

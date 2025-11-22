@@ -7,10 +7,20 @@
 	import { toast } from 'svelte-sonner';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import Select from '$lib/components/common/Select.svelte';
+	import DataList from '$lib/components/common/DataList.svelte';
 
 	const i18n = getContext('i18n');
 
 	export let saveHandler: Function;
+
+	let perplexityModelOptions = [
+		{ value: 'sonar', label: $i18n.t('Sonar') },
+		{ value: 'sonar-pro', label: $i18n.t('Sonar Pro') },
+		{ value: 'sonar-reasoning', label: $i18n.t('Sonar Reasoning') },
+		{ value: 'sonar-reasoning-pro', label: $i18n.t('Sonar Reasoning Pro') },
+		{ value: 'sonar-deep-research', label: $i18n.t('Sonar Deep Research') }
+	];
 
 	let webSearchEngines = [
 		'ollama_cloud',
@@ -113,21 +123,18 @@
 							{$i18n.t('Web Search Engine')}
 						</div>
 						<div class="flex items-center relative">
-							<select
-								class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-right"
+							<Select
+								className="dark:bg-gray-900 w-fit text-xs bg-transparent outline-hidden text-right"
 								bind:value={webConfig.WEB_SEARCH_ENGINE}
 								placeholder={$i18n.t('Select a engine')}
-								required
-							>
-								<option disabled selected value="">{$i18n.t('Select a engine')}</option>
-								{#each webSearchEngines as engine}
-									{#if engine === 'duckduckgo' || engine === 'ddgs'}
-										<option value={engine}>DDGS</option>
-									{:else}
-										<option value={engine}>{engine}</option>
-									{/if}
-								{/each}
-							</select>
+								items={[
+									{ value: '', label: $i18n.t('Select a engine'), disabled: true },
+									...webSearchEngines.map((engine) => ({
+										value: engine,
+										label: engine === 'duckduckgo' || engine === 'ddgs' ? 'DDGS' : engine
+									}))
+								]}
+							/>
 						</div>
 					</div>
 
@@ -524,19 +531,13 @@
 									<div class="self-center text-xs font-medium mb-1">
 										{$i18n.t('Perplexity Model')}
 									</div>
-									<input
-										list="perplexity-model-list"
-										class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+									<DataList
 										bind:value={webConfig.PERPLEXITY_MODEL}
+										options={perplexityModelOptions}
+										placeholder={$i18n.t('Select a model')}
+										ariaLabel={$i18n.t('Perplexity Model')}
+										className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 									/>
-
-									<datalist id="perplexity-model-list">
-										<option value="sonar">{$i18n.t('Sonar')}</option>
-										<option value="sonar-pro">{$i18n.t('Sonar Pro')}</option>
-										<option value="sonar-reasoning">{$i18n.t('Sonar Reasoning')}</option>
-										<option value="sonar-reasoning-pro">{$i18n.t('Sonar Reasoning Pro')}</option>
-										<option value="sonar-deep-research">{$i18n.t('Sonar Deep Research')}</option>
-									</datalist>
 								</div>
 							</div>
 
@@ -545,14 +546,15 @@
 									<div class=" self-center text-xs font-medium mb-1">
 										{$i18n.t('Perplexity Search Context Usage')}
 									</div>
-									<select
-										class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+									<Select
+										className="w-full rounded-lg text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 										bind:value={webConfig.PERPLEXITY_SEARCH_CONTEXT_USAGE}
-									>
-										<option value="low">{$i18n.t('Low')}</option>
-										<option value="medium">{$i18n.t('Medium')}</option>
-										<option value="high">{$i18n.t('High')}</option>
-									</select>
+										items={[
+											{ value: 'low', label: $i18n.t('Low') },
+											{ value: 'medium', label: $i18n.t('Medium') },
+											{ value: 'high', label: $i18n.t('High') }
+										]}
+									/>
 								</div>
 							</div>
 						{:else if webConfig.WEB_SEARCH_ENGINE === 'sougou'}
@@ -753,16 +755,18 @@
 							{$i18n.t('Web Loader Engine')}
 						</div>
 						<div class="flex items-center relative">
-							<select
-								class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-right"
+							<Select
+								className="dark:bg-gray-900 w-fit text-xs bg-transparent outline-hidden text-right"
 								bind:value={webConfig.WEB_LOADER_ENGINE}
 								placeholder={$i18n.t('Select a engine')}
-							>
-								<option value="">{$i18n.t('Default')}</option>
-								{#each webLoaderEngines as engine}
-									<option value={engine}>{engine}</option>
-								{/each}
-							</select>
+								items={[
+									{ value: '', label: $i18n.t('Default') },
+									...webLoaderEngines.map((engine) => ({
+										value: engine,
+										label: engine
+									}))
+								]}
+							/>
 						</div>
 					</div>
 

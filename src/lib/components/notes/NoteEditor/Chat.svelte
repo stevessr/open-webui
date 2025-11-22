@@ -48,6 +48,7 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Pencil from '$lib/components/icons/Pencil.svelte';
 	import PencilSquare from '$lib/components/icons/PencilSquare.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -392,7 +393,7 @@ Based on the user's instruction, update and enhance the existing notes or select
 						onSubmit={submitHandler}
 						{onStop}
 					>
-						<div slot="menu" class="flex items-center justify-between gap-2 w-full pr-1">
+						<div slot="menu" class="trans flex items-center justify-between gap-2 w-full pr-1">
 							<div>
 								<Tooltip content={$i18n.t('Edit')} placement="top">
 									<button
@@ -417,16 +418,17 @@ Based on the user's instruction, update and enhance the existing notes or select
 							</div>
 
 							<Tooltip content={selectedModelId}>
-								<select
-									class=" bg-transparent rounded-lg py-1 px-2 -mx-0.5 text-sm outline-hidden w-full text-right pr-5"
+								<Select
+									className="bg-transparent rounded-lg text-sm outline-hidden w-full"
 									bind:value={selectedModelId}
-								>
-									{#each $models.filter((model) => !(model?.info?.meta?.hidden ?? false)) as model}
-										<option value={model.id} class="bg-gray-50 dark:bg-gray-700"
-											>{model.name}</option
-										>
-									{/each}
-								</select>
+									placeholder={$i18n.t('Select a model')}
+									items={$models
+										.filter((model) => !(model?.info?.meta?.hidden ?? false))
+										.map((model) => ({
+											value: model.id,
+											label: model.name
+										}))}
+								/>
 							</Tooltip>
 						</div>
 					</MessageInput>

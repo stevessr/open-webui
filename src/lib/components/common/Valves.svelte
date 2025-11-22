@@ -5,6 +5,7 @@
 
 	import Switch from './Switch.svelte';
 	import MapSelector from './Valves/MapSelector.svelte';
+	import Select from './Select.svelte';
 
 	export let valvesSpec = null;
 	export let valves = {};
@@ -62,19 +63,17 @@
 				<div class="flex mt-0.5 mb-0.5 space-x-2">
 					<div class=" flex-1">
 						{#if valvesSpec.properties[property]?.enum ?? null}
-							<select
-								class="w-full rounded-lg py-2 px-4 text-sm dark:text-gray-300 dark:bg-gray-850 outline-hidden border border-gray-100 dark:border-gray-850"
+							<Select
+								className="w-full rounded-lg text-sm dark:text-gray-300 dark:bg-gray-850 outline-hidden border border-gray-100 dark:border-gray-850"
 								bind:value={valves[property]}
+								items={valvesSpec.properties[property].enum.map((option) => ({
+									value: option,
+									label: option
+								}))}
 								on:change={() => {
 									dispatch('change');
 								}}
-							>
-								{#each valvesSpec.properties[property].enum as option}
-									<option value={option} selected={option === valves[property]}>
-										{option}
-									</option>
-								{/each}
-							</select>
+							/>
 						{:else if (valvesSpec.properties[property]?.type ?? null) === 'boolean'}
 							<div class="flex justify-between items-center">
 								<div class="text-xs text-gray-500">

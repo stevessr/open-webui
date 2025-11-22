@@ -25,6 +25,7 @@
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
 	import { config } from '$lib/stores';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
 	let page = 1;
@@ -101,7 +102,7 @@
 	};
 
 	const shareHandler = async () => {
-		toast.success($i18n.t('Redirecting you to Open WebUI Community'));
+		toast.success($i18n.t('Redirecting you to Neko Community'));
 
 		// remove snapshot from feedbacks
 		const feedbacksToShare = feedbacks.map((f) => {
@@ -292,7 +293,7 @@
 								<div class="flex justify-center">
 									<Tooltip content={feedback?.user?.name}>
 										<div class="shrink-0">
-											<img
+											<ProfileImage
 												src={`${WEBUI_API_BASE_URL}/users/${feedback.user.id}/profile/image`}
 												alt={feedback?.user?.name}
 												class="size-5 rounded-full object-cover shrink-0"

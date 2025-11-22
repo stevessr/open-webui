@@ -4,6 +4,7 @@
 	import { settings } from '$lib/stores';
 	import ImagePreview from './ImagePreview.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import ProfileImage from './ProfileImage.svelte';
 	import { getContext } from 'svelte';
 
 	export let src = '';
@@ -22,6 +23,13 @@
 	$: _src = src.startsWith('/') ? `${WEBUI_BASE_URL}${src}` : src;
 
 	let showImagePreview = false;
+	let isVideo = false;
+
+	$: isVideo =
+		_src &&
+		['.mp4', '.webm', '.ogg', '.avi', '.mov', '.wmv', '.flv', '.m4v'].some((ext) =>
+			_src.toLowerCase().includes(ext)
+		);
 </script>
 
 <ImagePreview bind:show={showImagePreview} src={_src} {alt} />
@@ -30,12 +38,19 @@
 	<button
 		class={className}
 		on:click={() => {
-			showImagePreview = true;
+			if (!isVideo) {
+				showImagePreview = true;
+			}
 		}}
-		aria-label={$i18n.t('Show image preview')}
+		aria-label={isVideo ? $i18n.t('Video content') : $i18n.t('Show image preview')}
 		type="button"
 	>
-		<img src={_src} {alt} class={imageClassName} draggable="false" data-cy="image" />
+		{#if isVideo}
+			<video src={_src} class={imageClassName} controls data-cy="video" title={alt} autoplay muted
+			></video>
+		{:else}
+			<ProfileImage src={_src} className={imageClassName} {alt} />
+		{/if}
 	</button>
 
 	{#if dismissible}

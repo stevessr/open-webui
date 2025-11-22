@@ -1,10 +1,12 @@
 <script>
-	import { getContext, onMount } from 'svelte';
+	import { getContext , onMount } from 'svelte';
+	import { mobile, showArchivedChats, showSidebar, user, settings, config } from '$lib/stores';
+	import Background from '$lib/components/Background.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	const i18n = getContext('i18n');
 
 	import dayjs from '$lib/dayjs';
-	import { mobile, showArchivedChats, showSidebar, user } from '$lib/stores';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 
@@ -95,7 +97,7 @@
 									aria-label="User Menu"
 								>
 									<div class=" self-center">
-										<img
+										<ProfileImage
 											src={`${WEBUI_API_BASE_URL}/users/${$user?.id}/profile/image`}
 											class="size-6 object-cover rounded-full"
 											alt="User profile"
@@ -108,10 +110,5 @@
 					</div>
 				</div>
 			</div>
-		</nav>
 
 		<div class=" pb-1 flex-1 max-h-full overflow-y-auto @container">
-			<Notes />
-		</div>
-	</div>
-{/if}

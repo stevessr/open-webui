@@ -563,7 +563,7 @@ async def create_user(
             name = f"{user_data.name.givenName or ''} {user_data.name.familyName or ''}".strip()
 
     # Get profile image if provided
-    profile_image = "/user.png"
+    profile_image = "/user.gif"
     if user_data.photos and len(user_data.photos) > 0:
         profile_image = user_data.photos[0].value
 

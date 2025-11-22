@@ -27,7 +27,9 @@
 	import Notes from './InputMenu/Notes.svelte';
 	import Knowledge from './InputMenu/Knowledge.svelte';
 	import AttachWebpageModal from './AttachWebpageModal.svelte';
+	import ImageUrlModal from './ImageUrlModal.svelte';
 	import GlobeAlt from '$lib/components/icons/GlobeAlt.svelte';
+	import Photo from '$lib/components/icons/Photo.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -50,6 +52,7 @@
 	let tab = '';
 
 	let showAttachWebpageModal = false;
+	let showImageUrlModal = false;
 
 	let fileUploadEnabled = true;
 	$: fileUploadEnabled =
@@ -106,6 +109,19 @@
 	}}
 />
 
+<ImageUrlModal
+	bind:show={showImageUrlModal}
+	onSubmit={(imageUrl) => {
+		console.log('ImageUrlModal onSubmit called with:', imageUrl);
+		const imageData = {
+			type: 'image',
+			url: imageUrl
+		};
+		console.log('Calling onUpload with imageData:', imageData);
+		onUpload(imageData);
+	}}
+/>
+
 <!-- Hidden file input used to open the camera on mobile -->
 <input
 	id="camera-input"
@@ -130,7 +146,7 @@
 
 	<div slot="content">
 		<DropdownMenu.Content
-			class="w-full max-w-70 rounded-2xl px-1 py-1  border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg max-h-72 overflow-y-auto overflow-x-hidden scrollbar-thin transition"
+			class="transv2 w-full max-w-70 rounded-2xl px-1 py-1  border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg max-h-72 overflow-y-auto overflow-x-hidden scrollbar-thin transition"
 			sideOffset={4}
 			alignOffset={-6}
 			side="bottom"
@@ -203,7 +219,7 @@
 						className="w-full"
 					>
 						<DropdownMenu.Item
-							class="flex gap-2 items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!fileUploadEnabled
+							class="transv2 flex gap-2 items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!fileUploadEnabled
 								? 'opacity-50'
 								: ''}"
 							on:click={() => {
@@ -214,6 +230,29 @@
 						>
 							<GlobeAlt />
 							<div class="line-clamp-1">{$i18n.t('Attach Webpage')}</div>
+						</DropdownMenu.Item>
+					</Tooltip>
+
+					<Tooltip
+						content={fileUploadCapableModels.length !== selectedModels.length
+							? $i18n.t('Model(s) do not support file upload')
+							: !fileUploadEnabled
+								? $i18n.t('You do not have permission to upload files.')
+								: ''}
+						className="w-full"
+					>
+						<DropdownMenu.Item
+							class="transv2 flex gap-2 items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!fileUploadEnabled
+								? 'opacity-50'
+								: ''}"
+							on:click={() => {
+								if (fileUploadEnabled) {
+									showImageUrlModal = true;
+								}
+							}}
+						>
+							<Photo />
+							<div class="line-clamp-1">{$i18n.t('Image URL')}</div>
 						</DropdownMenu.Item>
 					</Tooltip>
 

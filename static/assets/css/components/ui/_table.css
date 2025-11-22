@@ -1,0 +1,109 @@
+/* Table Component Styles */
+
+table {
+  background: transparent !important;
+  border-collapse: collapse !important;
+  border-radius: var(--radius-lg) !important;
+  overflow: hidden !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+thead {
+  background: transparent !important;
+  border-bottom: 2px solid var(--border-primary) !important;
+}
+
+th {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  padding: var(--spacing-3) var(--spacing-4) !important;
+  text-align: left !important;
+  border-bottom: 1px solid var(--border-primary) !important;
+}
+
+tbody {
+  background: var(--bg-primary) !important;
+}
+
+tr {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border-secondary) !important;
+  transition: var(--transition-base) !important;
+}
+
+tr:hover {
+  background: var(--bg-secondary) !important;
+}
+
+tr:last-child {
+  border-bottom: none !important;
+}
+
+td {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  padding: var(--spacing-3) var(--spacing-4) !important;
+  border-bottom: 1px solid var(--border-secondary) !important;
+}
+
+/* Dark theme table adjustments */
+html.dark table {
+  background: transparent !important;
+  border-color: var(--border-primary) !important;
+}
+
+html.dark thead {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--border-primary) !important;
+}
+
+html.dark th {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-primary) !important;
+}
+
+html.dark tbody {
+  background: var(--bg-primary) !important;
+}
+
+html.dark tr {
+  background: transparent !important;
+  border-color: var(--border-secondary) !important;
+}
+
+html.dark tr:hover {
+  background: var(--bg-secondary) !important;
+}
+
+html.dark td {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-secondary) !important;
+}
+
+/* Striped table variant */
+table.striped tbody tr:nth-child(even) {
+  background: var(--bg-secondary) !important;
+}
+
+html.dark table.striped tbody tr:nth-child(even) {
+  background: var(--bg-secondary) !important;
+}
+
+/* Compact table variant */
+table.compact th,
+table.compact td {
+  padding: var(--spacing-2) var(--spacing-3) !important;
+}
+
+/* Bordered table variant */
+table.bordered {
+  border: 1px solid var(--border-primary) !important;
+}
+
+table.bordered th,
+table.bordered td {
+  border: 1px solid var(--border-primary) !important;
+}

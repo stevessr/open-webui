@@ -1,0 +1,8 @@
+/* Rose Pine Theme Styles */
+
+.rose-pine textarea,
+.rose-pine .theme-textarea {
+  background-color: #1f1d2e !important;
+  color: #e0def4 !important;
+  border: 1px solid #403d52 !important;
+}

@@ -34,6 +34,8 @@
 		<script src="/static/loader.js" defer crossorigin="use-credentials"></script>
 		<link rel="stylesheet" href="/static/custom.css" crossorigin="use-credentials" />
 
+		<link rel="stylesheet" type="text/css" href="/assets/inject.css" />
+
 		<script>
 			function resizeIframe(obj) {
 				obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + 'px';
@@ -66,6 +68,15 @@
 				} else if (localStorage.theme === 'her') {
 					document.documentElement.classList.add('her');
 					metaThemeColorTag.setAttribute('content', '#983724');
+				} else if (localStorage.theme === 'macaron') {
+					document.documentElement.classList.add('light');
+					document.documentElement.classList.add('macaron');
+					const link = document.createElement('link');
+					link.rel = 'stylesheet';
+					link.href = '/assets/css/macaron.css';
+					link.id = 'macaron-theme';
+					document.head.appendChild(link);
+					metaThemeColorTag.setAttribute('content', '#f9e6f0');
 				} else {
 					document.documentElement.classList.add('dark');
 					metaThemeColorTag.setAttribute('content', '#171717');
@@ -103,7 +114,7 @@
 			})();
 		</script>
 
-		<title>Open WebUI</title>
+		<title>Neko</title>
 
 		%sveltekit.head%
 	</head>
@@ -192,6 +203,10 @@
 
 	html.her #splash-screen {
 		background: #983724;
+	}
+
+	html.macaron #splash-screen {
+		background: #f9e6f0;
 	}
 
 	#logo-her {

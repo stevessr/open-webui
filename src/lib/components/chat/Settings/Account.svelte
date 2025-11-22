@@ -14,6 +14,7 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import { getUserById } from '$lib/apis/users';
 	import User from '$lib/components/icons/User.svelte';
 	import UserProfileImage from './Account/UserProfileImage.svelte';
@@ -167,8 +168,8 @@
 							<div class=" mb-1 text-xs font-medium">{$i18n.t('Gender')}</div>
 
 							<div class="flex-1">
-								<select
-									class="w-full text-sm dark:text-gray-300 bg-transparent outline-hidden"
+								<Select
+									className="w-full text-sm dark:text-gray-300 bg-transparent outline-hidden"
 									bind:value={_gender}
 									on:change={(e) => {
 										console.log(_gender);
@@ -180,12 +181,14 @@
 											gender = _gender;
 										}
 									}}
-								>
-									<option value="" selected>{$i18n.t('Prefer not to say')}</option>
-									<option value="male">{$i18n.t('Male')}</option>
-									<option value="female">{$i18n.t('Female')}</option>
-									<option value="custom">{$i18n.t('Custom')}</option>
-								</select>
+									placeholder={$i18n.t('Prefer not to say')}
+									items={[
+										{ value: '', label: $i18n.t('Prefer not to say') },
+										{ value: 'male', label: $i18n.t('Male') },
+										{ value: 'female', label: $i18n.t('Female') },
+										{ value: 'custom', label: $i18n.t('Custom') }
+									]}
+								/>
 							</div>
 
 							{#if _gender === 'custom'}

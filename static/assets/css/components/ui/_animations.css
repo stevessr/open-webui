@@ -1,0 +1,82 @@
+/* Animation Utilities */
+
+@keyframes pulse {
+  50% { opacity: 0.65; }
+}
+
+.animate-pulse-fast {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Rainbow text effect */
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes rainbow {
+  to { --angle: 360deg; }
+}
+
+.rainbow-text {
+  background: linear-gradient(45deg,
+      #ff0000,
+      #ff7f00,
+      #ffff00,
+      #00ff00,
+      #0000ff,
+      #4b0082,
+      #9400d3,
+      #ff0000);
+  background-size: 400% 400%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbow-shift 3s ease-in-out infinite;
+}
+
+@keyframes rainbow-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Fallback for browsers that don't support background-clip: text */
+@supports not (-webkit-background-clip: text) {
+  .rainbow-text {
+    background: none;
+    -webkit-text-fill-color: initial;
+    color: #ff6b6b;
+    text-shadow: 0 0 5px #ff6b6b, 0 0 10px #ff6b6b, 0 0 15px #ff6b6b;
+    animation: glow-pulse 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow-pulse {
+    from {
+      text-shadow: 0 0 5px #ff6b6b, 0 0 10px #ff6b6b, 0 0 15px #ff6b6b;
+    }
+    to {
+      text-shadow: 0 0 10px #ff6b6b, 0 0 20px #ff6b6b, 0 0 30px #ff6b6b;
+    }
+  }
+}
+
+/* Tooltip styles */
+.tippy-box {
+  background-color: transparent;
+}
+
+/* Utility classes */
+.trans {
+  background-color: transparent ;
+  backdrop-filter: none !important;
+}
+
+.transv2 {
+  background: transparent ;
+  backdrop-filter: blur(8px) !important;
+}
+
+.little-color {
+  background: rgb(255 255 255 / 25%);
+}

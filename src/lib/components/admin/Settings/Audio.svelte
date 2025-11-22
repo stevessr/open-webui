@@ -14,6 +14,8 @@
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
+	import Select from '$lib/components/common/Select.svelte';
+	import DataList from '$lib/components/common/DataList.svelte';
 
 	import { TTS_RESPONSE_SPLIT } from '$lib/types';
 
@@ -24,6 +26,9 @@
 	const i18n = getContext<Writable<i18nType>>('i18n');
 
 	export let saveHandler: () => void;
+
+	$: modelOptions = models ? models.map(model => ({ value: model.id, label: model.name })) : [];
+	$: voiceOptions = voices ? voices.map(voice => ({ value: voice.id, label: voice.name })) : [];
 
 	// Audio
 	let TTS_OPENAI_API_BASE_URL = '';
@@ -234,18 +239,19 @@
 				<div class="mb-2 py-0.5 flex w-full justify-between">
 					<div class=" self-center text-xs font-medium">{$i18n.t('Speech-to-Text Engine')}</div>
 					<div class="flex items-center relative">
-						<select
-							class="dark:bg-gray-900 cursor-pointer w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-right"
+						<Select
+							className="dark:bg-gray-900 cursor-pointer w-fit text-xs bg-transparent outline-hidden text-right"
 							bind:value={STT_ENGINE}
 							placeholder={$i18n.t('Select an engine')}
-						>
-							<option value="">{$i18n.t('Whisper (Local)')}</option>
-							<option value="openai">{$i18n.t('OpenAI')}</option>
-							<option value="web">{$i18n.t('Web API')}</option>
-							<option value="deepgram">{$i18n.t('Deepgram')}</option>
-							<option value="azure">{$i18n.t('Azure AI Speech')}</option>
-							<option value="mistral">{$i18n.t('MistralAI')}</option>
-						</select>
+							items={[
+								{ value: '', label: $i18n.t('Whisper (Local)') },
+								{ value: 'openai', label: $i18n.t('OpenAI') },
+								{ value: 'web', label: $i18n.t('Web API') },
+								{ value: 'deepgram', label: $i18n.t('Deepgram') },
+								{ value: 'azure', label: $i18n.t('Azure AI Speech') },
+								{ value: 'mistral', label: $i18n.t('MistralAI') }
+							]}
+						/>
 					</div>
 				</div>
 
@@ -269,16 +275,13 @@
 						<div class=" mb-1.5 text-xs font-medium">{$i18n.t('STT Model')}</div>
 						<div class="flex w-full">
 							<div class="flex-1">
-								<input
-									list="model-list"
-									class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+								<DataList
 									bind:value={STT_MODEL}
+									options={[{ value: 'whisper-1', label: 'whisper-1' }]}
 									placeholder={$i18n.t('Select a model')}
+									ariaLabel={$i18n.t('STT Model')}
+									className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 								/>
-
-								<datalist id="model-list">
-									<option value="whisper-1" />
-								</datalist>
 							</div>
 						</div>
 					</div>
@@ -481,7 +484,7 @@
 						</div>
 
 						<div class="mt-2 mb-1 text-xs text-gray-400 dark:text-gray-500">
-							{$i18n.t(`Open WebUI uses faster-whisper internally.`)}
+							{$i18n.t(`Neko uses faster-whisper internally.`)}
 
 							<a
 								class=" hover:underline dark:text-gray-200 text-gray-800"
@@ -505,8 +508,8 @@
 				<div class="mb-2 py-0.5 flex w-full justify-between">
 					<div class=" self-center text-xs font-medium">{$i18n.t('Text-to-Speech Engine')}</div>
 					<div class="flex items-center relative">
-						<select
-							class=" dark:bg-gray-900 w-fit pr-8 cursor-pointer rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-right"
+						<Select
+							className="dark:bg-gray-900 w-fit cursor-pointer text-xs bg-transparent outline-hidden text-right"
 							bind:value={TTS_ENGINE}
 							placeholder={$i18n.t('Select a mode')}
 							on:change={async (e) => {
@@ -514,7 +517,7 @@
 								await getVoices();
 								await getModels();
 
-								if (e.target?.value === 'openai') {
+								if (e.detail?.value === 'openai') {
 									TTS_VOICE = 'alloy';
 									TTS_MODEL = 'tts-1';
 								} else {
@@ -522,13 +525,17 @@
 									TTS_MODEL = '';
 								}
 							}}
-						>
-							<option value="">{$i18n.t('Web API')}</option>
-							<option value="transformers">{$i18n.t('Transformers')} ({$i18n.t('Local')})</option>
-							<option value="openai">{$i18n.t('OpenAI')}</option>
-							<option value="elevenlabs">{$i18n.t('ElevenLabs')}</option>
-							<option value="azure">{$i18n.t('Azure AI Speech')}</option>
-						</select>
+							items={[
+								{ value: '', label: $i18n.t('Web API') },
+								{
+									value: 'transformers',
+									label: $i18n.t('Transformers') + ' (' + $i18n.t('Local') + ')'
+								},
+								{ value: 'openai', label: $i18n.t('OpenAI') },
+								{ value: 'elevenlabs', label: $i18n.t('ElevenLabs') },
+								{ value: 'azure', label: $i18n.t('Azure AI Speech') }
+							]}
+						/>
 					</div>
 				</div>
 
@@ -593,19 +600,17 @@
 							<div class=" mb-1.5 text-xs font-medium">{$i18n.t('TTS Voice')}</div>
 							<div class="flex w-full">
 								<div class="flex-1">
-									<select
-										class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+									<Select
+										className="w-full rounded-lg text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 										bind:value={TTS_VOICE}
-									>
-										<option value="" selected={TTS_VOICE !== ''}>{$i18n.t('Default')}</option>
-										{#each voices as voice}
-											<option
-												value={voice.voiceURI}
-												class="bg-gray-100 dark:bg-gray-700"
-												selected={TTS_VOICE === voice.voiceURI}>{voice.name}</option
-											>
-										{/each}
-									</select>
+										items={[
+											{ value: '', label: $i18n.t('Default') },
+											...voices.map((voice) => ({
+												value: voice.voiceURI,
+												label: voice.name
+											}))
+										]}
+									/>
 								</div>
 							</div>
 						</div>
@@ -614,20 +619,17 @@
 							<div class=" mb-1.5 text-xs font-medium">{$i18n.t('TTS Model')}</div>
 							<div class="flex w-full">
 								<div class="flex-1">
-									<input
-										list="model-list"
-										class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+									<DataList
 										bind:value={TTS_MODEL}
+										options={[{ value: 'tts-1', label: 'tts-1' }]}
 										placeholder={$i18n.t('CMU ARCTIC speaker embedding name')}
+										ariaLabel={$i18n.t('TTS Model')}
+										className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 									/>
-
-									<datalist id="model-list">
-										<option value="tts-1" />
-									</datalist>
 								</div>
 							</div>
 							<div class="mt-2 mb-1 text-xs text-gray-400 dark:text-gray-500">
-								{$i18n.t(`Open WebUI uses SpeechT5 and CMU Arctic speaker embeddings.`)}
+								{$i18n.t(`Neko uses SpeechT5 and CMU Arctic speaker embeddings.`)}
 
 								To learn more about SpeechT5,
 
@@ -656,18 +658,13 @@
 								<div class=" mb-1.5 text-xs font-medium">{$i18n.t('TTS Voice')}</div>
 								<div class="flex w-full">
 									<div class="flex-1">
-										<input
-											list="voice-list"
-											class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+										<DataList
 											bind:value={TTS_VOICE}
+											options={voiceOptions}
 											placeholder={$i18n.t('Select a voice')}
+											ariaLabel={$i18n.t('TTS Voice')}
+											className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 										/>
-
-										<datalist id="voice-list">
-											{#each voices as voice}
-												<option value={voice.id}>{voice.name}</option>
-											{/each}
-										</datalist>
 									</div>
 								</div>
 							</div>
@@ -675,18 +672,13 @@
 								<div class=" mb-1.5 text-xs font-medium">{$i18n.t('TTS Model')}</div>
 								<div class="flex w-full">
 									<div class="flex-1">
-										<input
-											list="tts-model-list"
-											class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
-											bind:value={TTS_MODEL}
-											placeholder={$i18n.t('Select a model')}
-										/>
-
-										<datalist id="tts-model-list">
-											{#each models as model}
-												<option value={model.id} class="bg-gray-50 dark:bg-gray-700" />
-											{/each}
-										</datalist>
+										<DataList
+										bind:value={TTS_MODEL}
+										options={modelOptions}
+										placeholder={$i18n.t('Select a model')}
+										ariaLabel={$i18n.t('TTS Model')}
+										className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+									/>
 									</div>
 								</div>
 							</div>
@@ -713,18 +705,13 @@
 								<div class=" mb-1.5 text-xs font-medium">{$i18n.t('TTS Voice')}</div>
 								<div class="flex w-full">
 									<div class="flex-1">
-										<input
-											list="voice-list"
-											class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+										<DataList
 											bind:value={TTS_VOICE}
+											options={voiceOptions}
 											placeholder={$i18n.t('Select a voice')}
+											ariaLabel={$i18n.t('TTS Voice')}
+											className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 										/>
-
-										<datalist id="voice-list">
-											{#each voices as voice}
-												<option value={voice.id}>{voice.name}</option>
-											{/each}
-										</datalist>
 									</div>
 								</div>
 							</div>
@@ -732,18 +719,13 @@
 								<div class=" mb-1.5 text-xs font-medium">{$i18n.t('TTS Model')}</div>
 								<div class="flex w-full">
 									<div class="flex-1">
-										<input
-											list="tts-model-list"
-											class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
-											bind:value={TTS_MODEL}
-											placeholder={$i18n.t('Select a model')}
-										/>
-
-										<datalist id="tts-model-list">
-											{#each models as model}
-												<option value={model.id} class="bg-gray-50 dark:bg-gray-700" />
-											{/each}
-										</datalist>
+										<DataList
+										bind:value={TTS_MODEL}
+										options={modelOptions}
+										placeholder={$i18n.t('Select a model')}
+										ariaLabel={$i18n.t('TTS Model')}
+										className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+									/>
 									</div>
 								</div>
 							</div>
@@ -754,18 +736,13 @@
 								<div class=" mb-1.5 text-xs font-medium">{$i18n.t('TTS Voice')}</div>
 								<div class="flex w-full">
 									<div class="flex-1">
-										<input
-											list="voice-list"
-											class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+										<DataList
 											bind:value={TTS_VOICE}
+											options={voiceOptions}
 											placeholder={$i18n.t('Select a voice')}
+											ariaLabel={$i18n.t('TTS Voice')}
+											className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 										/>
-
-										<datalist id="voice-list">
-											{#each voices as voice}
-												<option value={voice.id}>{voice.name}</option>
-											{/each}
-										</datalist>
 									</div>
 								</div>
 							</div>
@@ -797,17 +774,15 @@
 				<div class="pt-0.5 flex w-full justify-between">
 					<div class="self-center text-xs font-medium">{$i18n.t('Response splitting')}</div>
 					<div class="flex items-center relative">
-						<select
-							class="dark:bg-gray-900 w-fit pr-8 cursor-pointer rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-right"
+						<Select
+							className="dark:bg-gray-900 w-fit cursor-pointer text-xs bg-transparent outline-hidden text-right"
 							aria-label={$i18n.t('Select how to split message text for TTS requests')}
 							bind:value={TTS_SPLIT_ON}
-						>
-							{#each Object.values(TTS_RESPONSE_SPLIT) as split}
-								<option value={split}
-									>{$i18n.t(split.charAt(0).toUpperCase() + split.slice(1))}</option
-								>
-							{/each}
-						</select>
+							items={Object.values(TTS_RESPONSE_SPLIT).map((split) => ({
+								value: split,
+								label: $i18n.t(split.charAt(0).toUpperCase() + split.slice(1))
+							}))}
+						/>
 					</div>
 				</div>
 				<div class="mt-2 mb-1 text-xs text-gray-400 dark:text-gray-500">

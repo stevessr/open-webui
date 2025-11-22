@@ -63,6 +63,7 @@
 	import Note from '../icons/Note.svelte';
 	import { slide } from 'svelte/transition';
 	import HotkeyHint from '../common/HotkeyHint.svelte';
+	import ProfileImage from '../common/ProfileImage.svelte';
 
 	const BREAKPOINT = 768;
 
@@ -474,7 +475,7 @@
 
 <ChannelModal
 	bind:show={showCreateChannel}
-	onSubmit={async ({ name, access_control }) => {
+	onSubmit={async ({ name, access_control, meta }) => {
 		name = name?.trim();
 		if (!name) {
 			toast.error($i18n.t('Channel name cannot be empty.'));
@@ -483,7 +484,8 @@
 
 		const res = await createNewChannel(localStorage.token, {
 			name: name,
-			access_control: access_control
+			access_control: access_control,
+			meta: meta
 		}).catch((error) => {
 			toast.error(`${error}`);
 			return null;
@@ -559,9 +561,9 @@
 						aria-label={$showSidebar ? $i18n.t('Close Sidebar') : $i18n.t('Open Sidebar')}
 					>
 						<div class=" self-center flex items-center justify-center size-9">
-							<img
+							<ProfileImage
 								src="{WEBUI_BASE_URL}/static/favicon.png"
-								class="sidebar-new-chat-icon size-6 rounded-full group-hover:hidden"
+								className="sidebar-new-chat-icon size-6 rounded-full group-hover:hidden"
 								alt=""
 							/>
 
@@ -693,9 +695,9 @@
 								class=" cursor-pointer flex rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition group"
 							>
 								<div class=" self-center flex items-center justify-center size-9">
-									<img
+									<ProfileImage
 										src={`${WEBUI_API_BASE_URL}/users/${$user?.id}/profile/image`}
-										class=" size-6 object-cover rounded-full"
+										className=" size-6 object-cover rounded-full"
 										alt={$i18n.t('Open User Profile Menu')}
 										aria-label={$i18n.t('Open User Profile Menu')}
 									/>
@@ -736,10 +738,9 @@
 					draggable="false"
 					on:click={newChatHandler}
 				>
-					<img
-						crossorigin="anonymous"
-						src="{WEBUI_BASE_URL}/static/favicon.png"
-						class="sidebar-new-chat-icon size-6 rounded-full"
+					<ProfileImage
+						src={`${WEBUI_BASE_URL}/static/favicon.png`}
+						className="sidebar-new-chat-icon size-6 rounded-full"
 						alt=""
 					/>
 				</a>
@@ -1145,23 +1146,23 @@
 										>
 											{$i18n.t(chat.time_range)}
 											<!-- localisation keys for time_range to be recognized from the i18next parser (so they don't get automatically removed):
-							{$i18n.t('Today')}
-							{$i18n.t('Yesterday')}
-							{$i18n.t('Previous 7 days')}
-							{$i18n.t('Previous 30 days')}
-							{$i18n.t('January')}
-							{$i18n.t('February')}
-							{$i18n.t('March')}
-							{$i18n.t('April')}
-							{$i18n.t('May')}
-							{$i18n.t('June')}
-							{$i18n.t('July')}
-							{$i18n.t('August')}
-							{$i18n.t('September')}
-							{$i18n.t('October')}
-							{$i18n.t('November')}
-							{$i18n.t('December')}
-							-->
+											{$i18n.t('Today')}
+											{$i18n.t('Yesterday')}
+											{$i18n.t('Previous 7 days')}
+											{$i18n.t('Previous 30 days')}
+											{$i18n.t('January')}
+											{$i18n.t('February')}
+											{$i18n.t('March')}
+											{$i18n.t('April')}
+											{$i18n.t('May')}
+											{$i18n.t('June')}
+											{$i18n.t('July')}
+											{$i18n.t('August')}
+											{$i18n.t('September')}
+											{$i18n.t('October')}
+											{$i18n.t('November')}
+											{$i18n.t('December')}
+											-->
 										</div>
 									{/if}
 
@@ -1217,9 +1218,6 @@
 			</div>
 
 			<div class="px-1.5 pt-1.5 pb-2 sticky bottom-0 z-10 -mt-3 sidebar">
-				<div
-					class=" sidebar-bg-gradient-to-t bg-linear-to-t from-gray-50 dark:from-gray-950 to-transparent from-50% pointer-events-none absolute inset-0 -z-10 -mt-6"
-				></div>
 				<div class="flex flex-col font-primary">
 					{#if $user !== undefined && $user !== null}
 						<UserMenu
@@ -1234,11 +1232,10 @@
 								class=" flex items-center rounded-2xl py-2 px-1.5 w-full hover:bg-gray-100/50 dark:hover:bg-gray-900/50 transition"
 							>
 								<div class=" self-center mr-3">
-									<img
+									<ProfileImage
 										src={`${WEBUI_API_BASE_URL}/users/${$user?.id}/profile/image`}
-										class=" size-6 object-cover rounded-full"
+										className=" size-6 object-cover rounded-full"
 										alt={$i18n.t('Open User Profile Menu')}
-										aria-label={$i18n.t('Open User Profile Menu')}
 									/>
 								</div>
 								<div class=" self-center font-medium">{$user?.name}</div>

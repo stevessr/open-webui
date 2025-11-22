@@ -12,6 +12,7 @@
 	import Tooltip from '../common/Tooltip.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -19,11 +20,6 @@
 </script>
 
 <nav class="sticky top-0 z-30 w-full px-1.5 py-1.5 -mb-8 flex items-center drag-region">
-	<div
-		id="navbar-bg-gradient-to-b"
-		class=" bg-linear-to-b via-50% from-white via-white to-transparent dark:from-gray-900 dark:via-gray-900 dark:to-transparent pointer-events-none absolute inset-0 -bottom-7 z-[-1]"
-	></div>
-
 	<div class=" flex max-w-full w-full mx-auto px-1 pt-0.5 bg-transparent">
 		<div class="flex items-center w-full max-w-full">
 			{#if $mobile}
@@ -80,11 +76,10 @@
 							aria-label="User Menu"
 						>
 							<div class=" self-center">
-								<img
+								<ProfileImage
 									src={`${WEBUI_API_BASE_URL}/users/${$user?.id}/profile/image`}
-									class="size-6 object-cover rounded-full"
+									className="size-6 object-cover rounded-full"
 									alt="User profile"
-									draggable="false"
 								/>
 							</div>
 						</button>

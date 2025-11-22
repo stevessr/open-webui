@@ -20,6 +20,7 @@
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import Banners from './Interface/Banners.svelte';
 
 	const dispatch = createEventDispatcher();
@@ -143,8 +144,8 @@
 				<div class=" mb-2.5 flex w-full gap-2">
 					<div class="flex-1">
 						<div class=" text-xs mb-1">{$i18n.t('Local Task Model')}</div>
-						<select
-							class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+						<Select
+							className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 							bind:value={taskConfig.TASK_MODEL}
 							placeholder={$i18n.t('Select a model')}
 							on:change={() => {
@@ -165,21 +166,20 @@
 									}
 								}
 							}}
-						>
-							<option value="" selected>{$i18n.t('Current Model')}</option>
-							{#each models as model}
-								<option value={model.id} class="bg-gray-100 dark:bg-gray-700">
-									{model.name}
-									{model?.connection_type === 'local' ? `(${$i18n.t('Local')})` : ''}
-								</option>
-							{/each}
-						</select>
+							items={[
+								{ value: '', label: $i18n.t('Current Model') },
+								...models.map((model) => ({
+									value: model.id,
+									label: `${model.name}${model?.connection_type === 'local' ? ` (${$i18n.t('Local')})` : ''}`
+								}))
+							]}
+						/>
 					</div>
 
 					<div class="flex-1">
 						<div class=" text-xs mb-1">{$i18n.t('External Task Model')}</div>
-						<select
-							class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+						<Select
+							className="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 							bind:value={taskConfig.TASK_MODEL_EXTERNAL}
 							placeholder={$i18n.t('Select a model')}
 							on:change={() => {
@@ -200,15 +200,14 @@
 									}
 								}
 							}}
-						>
-							<option value="" selected>{$i18n.t('Current Model')}</option>
-							{#each models as model}
-								<option value={model.id} class="bg-gray-100 dark:bg-gray-700">
-									{model.name}
-									{model?.connection_type === 'local' ? `(${$i18n.t('Local')})` : ''}
-								</option>
-							{/each}
-						</select>
+							items={[
+								{ value: '', label: $i18n.t('Current Model') },
+								...models.map((model) => ({
+									value: model.id,
+									label: `${model.name}${model?.connection_type === 'local' ? ` (${$i18n.t('Local')})` : ''}`
+								}))
+							]}
+						/>
 					</div>
 				</div>
 

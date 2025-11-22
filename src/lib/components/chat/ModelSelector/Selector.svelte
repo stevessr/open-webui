@@ -11,6 +11,7 @@
 	import { flyAndScale } from '$lib/utils/transitions';
 	import { createEventDispatcher, onMount, getContext, tick } from 'svelte';
 	import { goto } from '$app/navigation';
+	import apiCache from '$lib/utils/cache';
 
 	import { deleteModel, getOllamaVersion, pullModel, unloadModel } from '$lib/apis/ollama';
 
@@ -63,8 +64,11 @@
 	let show = false;
 	let tags = [];
 
-	let selectedModel = '';
-	$: selectedModel = items.find((item) => item.value === value) ?? '';
+	let selectedModel: {
+		label?: string;
+		[value: string]: any;
+	} | null = null;
+	$: selectedModel = items.find((item) => item.value === value) ?? null;
 
 	let searchValue = '';
 
@@ -105,10 +109,6 @@
 			);
 		}
 	};
-
-	$: if (items) {
-		updateFuse();
-	}
 
 	$: filteredItems = (
 		searchValue
@@ -158,12 +158,6 @@
 						}
 					})
 	).filter((item) => !(item.model?.info?.meta?.hidden ?? false));
-
-	$: if (selectedTag || selectedConnectionType) {
-		resetView();
-	} else {
-		resetView();
-	}
 
 	const resetView = async () => {
 		await tick();
@@ -293,10 +287,17 @@
 					})
 				);
 
+				// 清除模型列表缓存以获取最新列表
+				apiCache.delete(
+					`ollama-models-${localStorage.token}-${$settings?.directConnections ?? 'default'}`
+				);
+
 				models.set(
 					await getModels(
 						localStorage.token,
-						$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
+						$config?.features?.enable_direct_connections
+							? ($settings?.directConnections ?? null)
+							: null
 					)
 				);
 			} else {
@@ -353,10 +354,18 @@
 
 		if (res) {
 			toast.success($i18n.t('Model unloaded successfully'));
+
+			// 清除模型列表缓存以获取最新列表
+			apiCache.delete(
+				`ollama-models-${localStorage.token}-${$settings?.directConnections ?? 'default'}`
+			);
+
 			models.set(
 				await getModels(
 					localStorage.token,
-					$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
+					$config?.features?.enable_direct_connections
+						? ($settings?.directConnections ?? null)
+						: null
 				)
 			);
 		}
@@ -365,11 +374,8 @@
 
 <DropdownMenu.Root
 	bind:open={show}
-	onOpenChange={async () => {
+	onOpenChange={() => {
 		searchValue = '';
-		window.setTimeout(() => document.getElementById('model-search-input')?.focus(), 0);
-
-		resetView();
 	}}
 	closeFocus={false}
 >
@@ -385,14 +391,8 @@
 			false)
 				? 'dark:placeholder-gray-100 placeholder-gray-800'
 				: 'placeholder-gray-400'}"
-			on:mouseenter={async () => {
-				models.set(
-					await getModels(
-						localStorage.token,
-						$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
-					)
-				);
-			}}
+			tabindex="0"
+			role="button"
 		>
 			{#if selectedModel}
 				{selectedModel.label}
@@ -404,10 +404,9 @@
 	</DropdownMenu.Trigger>
 
 	<DropdownMenu.Content
-		class=" z-40 {$mobile
+		class="transv2 z-40 {$mobile
 			? `w-full`
 			: `${className}`} max-w-[calc(100vw-1rem)] justify-start rounded-2xl  bg-white dark:bg-gray-850 dark:text-white shadow-lg  outline-hidden"
-		transition={flyAndScale}
 		side={$mobile ? 'bottom' : 'bottom-start'}
 		sideOffset={2}
 		alignOffset={-1}
@@ -439,9 +438,6 @@
 								// if the user types something, reset to the top selection.
 								selectedModelIdx = 0;
 							}
-
-							const item = document.querySelector(`[data-arrow-selected="true"]`);
-							item?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
 						}}
 					/>
 				</div>
@@ -450,7 +446,7 @@
 			<div class="px-2">
 				{#if tags && items.filter((item) => !(item.model?.info?.meta?.hidden ?? false)).length > 0}
 					<div
-						class=" flex w-full bg-white dark:bg-gray-850 overflow-x-auto scrollbar-none font-[450] mb-0.5"
+						class="trans flex w-full bg-white dark:bg-gray-850 overflow-x-auto scrollbar-none font-[450] mb-0.5"
 						on:wheel={(e) => {
 							if (e.deltaY !== 0) {
 								e.preventDefault();

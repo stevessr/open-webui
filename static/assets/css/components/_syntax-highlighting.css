@@ -1,0 +1,100 @@
+/* 代码语法高亮 */
+.cm-line .ͼb {
+    /* 关键字 */
+    color: var(--syntax-keyword) !important;
+}
+
+.dark .cm-line .ͼb {
+    color: #c678dd !important;
+}
+
+.cm-line .ͼd {
+    /* 数字 */
+    color: var(--syntax-number) !important;
+}
+
+.dark .cm-line .ͼd {
+    color: #e5c07b !important;
+}
+
+.cm-line .ͼe {
+    /* 字符串 */
+    color: var(--syntax-string) !important;
+}
+
+.dark .cm-line .ͼe {
+    color: #98c379 !important;
+}
+
+.cm-line .ͼg {
+    /* 变量 */
+    color: #2ca9e1 !important;
+    font-style: italic;
+}
+
+.dark .cm-line .ͼg {
+    color: #e3adb9 !important;
+}
+
+/* 代码语法高亮 - 扩展 */
+.cm-comment {
+    /* 注释 */
+    color: #7f848e !important;
+    font-style: italic;
+}
+
+.cm-property {
+    color: #61afef !important;
+}
+
+cm-tag {
+    color: #e06c75 !important;
+}
+
+.cm-attribute {
+    color: #d19a66 !important;
+}
+
+.cm-string {
+    color: #98c379 !important;
+}
+
+.cm-operator {
+    color: #56b6c2 !important;
+}
+
+span.ͼc {
+    color: #7d5fff !important;
+}
+
+span.ͼl {
+    color: #6bddcd !important;
+}
+
+span.ͼt {
+    /* 暗色模式下的逗号 */
+    color: #ddb078 !important;
+    ;
+    font-style: italic;
+}
+
+span.ͼr {
+    /* 暗色模式下的函数名 */
+    font-style: italic;
+}
+
+span.ͼf {
+    /* 亮色模式下奇怪的符号 */
+    color: #70a1ff;
+}
+
+span.ͼm {
+    /* 亮色模式下的注释 */
+    color: #f29a76;
+    font-style: italic;
+}
+
+span.ͼw {
+    /* 暗色模式下的注释 */
+    font-style: italic;
+}

@@ -19,7 +19,7 @@
 		bind:this={overlayElement}
 		class="fixed {$showSidebar
 			? 'left-0 md:left-[260px] md:w-[calc(100%-260px)]'
-			: 'left-0'}  fixed top-0 right-0 bottom-0 w-full h-full flex z-9999 touch-none pointer-events-none"
+			: 'left-0'}  fixed top-0 right-0 bottom-0 w-full h-full flex z-999 touch-none pointer-events-none"
 		id="dropzone"
 		role="region"
 		aria-label="Drag and Drop Container"

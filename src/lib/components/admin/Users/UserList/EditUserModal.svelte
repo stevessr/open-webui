@@ -12,6 +12,7 @@
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import UserProfileImage from '$lib/components/chat/Settings/Account/UserProfileImage.svelte';
 
 	const i18n = getContext('i18n');
@@ -137,16 +138,16 @@
 										<div class=" mb-1 text-xs text-gray-500">{$i18n.t('Role')}</div>
 
 										<div class="flex-1">
-											<select
-												class="w-full dark:bg-gray-900 text-sm bg-transparent disabled:text-gray-500 dark:disabled:text-gray-500 outline-hidden"
+											<Select
+												className="w-full dark:bg-gray-900 text-sm bg-transparent disabled:text-gray-500 dark:disabled:text-gray-500 outline-hidden"
 												bind:value={_user.role}
 												disabled={_user.id == sessionUser.id}
-												required
-											>
-												<option value="admin">{$i18n.t('Admin')}</option>
-												<option value="user">{$i18n.t('User')}</option>
-												<option value="pending">{$i18n.t('Pending')}</option>
-											</select>
+												items={[
+													{ value: 'admin', label: $i18n.t('Admin') },
+													{ value: 'user', label: $i18n.t('User') },
+													{ value: 'pending', label: $i18n.t('Pending') }
+												]}
+											/>
 										</div>
 									</div>
 

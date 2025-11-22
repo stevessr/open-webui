@@ -11,6 +11,7 @@
 	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -300,7 +301,7 @@
 		}, 1500); // Debounce for 1.5 seconds
 	};
 
-	$: query, debouncedQueryHandler();
+	$: (query, debouncedQueryHandler());
 
 	onMount(async () => {
 		rankHandler();
@@ -337,7 +338,7 @@
 />
 
 <div
-	class="pt-0.5 pb-1 gap-1 flex flex-col md:flex-row justify-between sticky top-0 z-10 bg-white dark:bg-gray-900"
+	class="trans pt-0.5 pb-1 gap-1 flex flex-col md:flex-row justify-between sticky top-0 z-10 bg-white dark:bg-gray-900"
 >
 	<div class="flex items-center md:self-center text-xl font-medium px-0.5 gap-2 shrink-0">
 		<div>
@@ -503,7 +504,7 @@
 			<tbody class="">
 				{#each sortedModels as model, modelIdx (model.id)}
 					<tr
-						class="bg-white dark:bg-gray-900 dark:border-gray-850 text-xs group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-850/50 transition"
+						class="dark:border-gray-850 text-xs group cursor-pointer transition"
 						on:click={() => openLeaderboardModelModal(model)}
 					>
 						<td class="px-3 py-1.5 text-left font-medium text-gray-900 dark:text-white w-fit">
@@ -514,10 +515,10 @@
 						<td class="px-3 py-1.5 flex flex-col justify-center">
 							<div class="flex items-center gap-2">
 								<div class="shrink-0">
-									<img
+									<ProfileImage
 										src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model.id}`}
 										alt={model.name}
-										class="size-5 rounded-full object-cover shrink-0"
+										className="size-5 rounded-full object-cover shrink-0"
 									/>
 								</div>
 

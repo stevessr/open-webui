@@ -1,0 +1,36 @@
+/* Editor Component Styles */
+
+/* Core Editor Styles */
+.ProseMirror {
+  white-space: pre-wrap;
+  height: 100%;
+  min-height: fit-content;
+  max-height: 100%;
+}
+
+/* Focus Styles */
+.ProseMirror:focus-visible,
+.ProseMirror-focused,
+input:focus {
+  outline: none;
+  position: relative;
+  z-index: 1;
+  border-width: 0px;
+  border-radius: 5%;
+  box-shadow: none;
+  background-color: transparent;
+}
+
+/* Layout Elements */
+#sidebar[data-state='true'],
+.parameter-panel
+{
+  animation: 0.1s ease-in forwards fade-in !important;
+}
+
+/* Animation */
+@keyframes fade-in {
+  0% { opacity: 0; }
+  30% { opacity: 0; }
+  100% { opacity: 1; }
+}
