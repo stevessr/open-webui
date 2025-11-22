@@ -18,9 +18,11 @@
 	export let onDismiss = () => {};
 
 	const i18n = getContext('i18n');
+	let helper: string = '';
+	$: helper = src.startsWith('/') ? `${WEBUI_BASE_URL}${src}` : src;
 
 	let _src = '';
-	$: _src = src.startsWith('/') ? `${WEBUI_BASE_URL}${src}` : src;
+	$: _src = src.includes('api/v1/files') ? `${src}/content` : src;
 
 	let showImagePreview = false;
 	let isVideo = false;
