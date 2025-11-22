@@ -41,14 +41,14 @@ router = APIRouter()
 
 @router.get("/", response_model=list[ChannelModel])
 async def get_channels(user=Depends(get_verified_user)):
-    return await Channels.get_channels_by_user_id(user.id)
+    return Channels.get_channels_by_user_id(user.id)
 
 
 @router.get("/list", response_model=list[ChannelModel])
 async def get_all_channels(user=Depends(get_verified_user)):
     if user.role == "admin":
-        return await Channels.get_channels()
-    return await Channels.get_channels_by_user_id(user.id)
+        return Channels.get_channels()
+    return Channels.get_channels_by_user_id(user.id)
 
 
 ############################
@@ -152,7 +152,7 @@ async def get_channel_messages(id: str, skip: int = 0, limit: int = 50, user=Dep
     messages = []
     for message in message_list:
         if message.user_id not in users:
-            user = await Users.get_user_by_id(message.user_id)
+            user = Users.get_user_by_id(message.user_id)
             users[message.user_id] = user
 
         thread_replies = await Messages.get_thread_replies_by_message_id(message.id)
@@ -467,7 +467,7 @@ async def get_channel_message(id: str, message_id: str, user=Depends(get_verifie
     return MessageUserResponse(
         **{
             **message.model_dump(),
-            "user": UserNameResponse(**(await Users.get_user_by_id(message.user_id)).model_dump()),
+            "user": UserNameResponse(**(Users.get_user_by_id(message.user_id)).model_dump()),
         }
     )
 

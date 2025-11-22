@@ -329,7 +329,7 @@ async def group_to_scim(group: GroupModel, request: Request) -> SCIMGroup:
     """Convert internal Group model to SCIM Group"""
     members = []
     for user_id in group.user_ids:
-        user = await Users.get_user_by_id(user_id)
+        user = Users.get_user_by_id(user_id)
         if user:
             members.append(
                 SCIMGroupMember(
@@ -498,7 +498,7 @@ async def get_user(
     _: bool = Depends(get_scim_auth),
 ):
     """Get SCIM User by ID"""
-    user = await Users.get_user_by_id(user_id)
+    user = Users.get_user_by_id(user_id)
     if not user:
         return scim_error(status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found")
 
@@ -563,7 +563,7 @@ async def update_user(
     _: bool = Depends(get_scim_auth),
 ):
     """Update SCIM User (full update)"""
-    user = await Users.get_user_by_id(user_id)
+    user = Users.get_user_by_id(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -612,7 +612,7 @@ async def patch_user(
     _: bool = Depends(get_scim_auth),
 ):
     """Update SCIM User (partial update)"""
-    user = await Users.get_user_by_id(user_id)
+    user = Users.get_user_by_id(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -659,7 +659,7 @@ async def delete_user(
     _: bool = Depends(get_scim_auth),
 ):
     """Delete SCIM User"""
-    user = await Users.get_user_by_id(user_id)
+    user = Users.get_user_by_id(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

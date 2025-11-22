@@ -560,22 +560,23 @@ class ChatTable:
                 db.query(Chat)
                 # .limit(limit).offset(skip)
                 .order_by(Chat.updated_at.desc())
+                .all
             )
             return [ChatModel.model_validate(chat) for chat in all_chats]
 
     async def get_chats_by_user_id(self, user_id: str) -> list[ChatModel]:
         with get_db() as db:
-            all_chats = await asyncio.to_thread(db.query(Chat).filter_by(user_id=user_id).order_by(Chat.updated_at.desc()))
+            all_chats = await asyncio.to_thread(db.query(Chat).filter_by(user_id=user_id).order_by(Chat.updated_at.desc()).all)
             return [ChatModel.model_validate(chat) for chat in all_chats]
 
     async def get_pinned_chats_by_user_id(self, user_id: str) -> list[ChatModel]:
         with get_db() as db:
-            all_chats = await asyncio.to_thread(db.query(Chat).filter_by(user_id=user_id, pinned=True, archived=False).order_by(Chat.updated_at.desc()))
+            all_chats = await asyncio.to_thread(db.query(Chat).filter_by(user_id=user_id, pinned=True, archived=False).order_by(Chat.updated_at.desc()).all)
             return [ChatModel.model_validate(chat) for chat in all_chats]
 
     async def get_archived_chats_by_user_id(self, user_id: str) -> list[ChatModel]:
         with get_db() as db:
-            all_chats = await asyncio.to_thread(db.query(Chat).filter_by(user_id=user_id, archived=True).order_by(Chat.updated_at.desc()))
+            all_chats = await asyncio.to_thread(db.query(Chat).filter_by(user_id=user_id, archived=True).order_by(Chat.updated_at.desc()).all)
             return [ChatModel.model_validate(chat) for chat in all_chats]
 
     async def get_chats_by_user_id_and_search_text(

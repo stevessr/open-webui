@@ -44,7 +44,7 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
 
 
-def validate_url(url: Union[str, Sequence[str]]):
+async def validate_url(url: Union[str, Sequence[str]]):
     if isinstance(url, str):
         if isinstance(validators.url(url), validators.ValidationError):
             raise ValueError(ERROR_MESSAGES.INVALID_URL)
@@ -345,7 +345,7 @@ class SafeTavilyLoader(BaseLoader, RateLimitMixin, URLProcessingMixin):
         valid_urls = []
         for url in self.web_paths:
             try:
-                await self._safe_process_url_sync(url)
+                self._safe_process_url_sync(url)
                 valid_urls.append(url)
             except Exception as e:
                 log.warning(f"SSL verification failed for {url}: {e!s}")
@@ -470,7 +470,7 @@ class SafePlaywrightURLLoader(PlaywrightURLLoader, RateLimitMixin, URLProcessing
 
             for url in self.urls:
                 try:
-                    await self._safe_process_url_sync(url)
+                    self._safe_process_url_sync(url)
                     page = browser.new_page()
                     response = page.goto(url, timeout=self.playwright_timeout)
                     if response is None:

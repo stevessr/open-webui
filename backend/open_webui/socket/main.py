@@ -238,7 +238,7 @@ async def connect(sid, environ, auth):
         data = decode_token(auth["token"])
 
         if data is not None and "id" in data:
-            user = await Users.get_user_by_id(data["id"])
+            user = Users.get_user_by_id(data["id"])
 
         if user:
             SESSION_POOL[sid] = user.model_dump(exclude=["date_of_birth", "bio", "gender"])
@@ -269,7 +269,7 @@ async def user_join(sid, data):
         USER_POOL[user.id] = [sid]
 
     # Join all the channels
-    channels = await Channels.get_channels_by_user_id(user.id)
+    channels = Channels.get_channels_by_user_id(user.id)
     log.debug(f"{channels=}")
     for channel in channels:
         await sio.enter_room(sid, f"channel:{channel.id}")
@@ -291,7 +291,7 @@ async def join_channel(sid, data):
         return
 
     # Join all the channels
-    channels = await Channels.get_channels_by_user_id(user.id)
+    channels = Channels.get_channels_by_user_id(user.id)
     log.debug(f"{channels=}")
     for channel in channels:
         await sio.enter_room(sid, f"channel:{channel.id}")
@@ -307,7 +307,7 @@ async def join_note(sid, data):
     if token_data is None or "id" not in token_data:
         return
 
-    user = await Users.get_user_by_id(token_data["id"])
+    user = Users.get_user_by_id(token_data["id"])
     if not user:
         return
 

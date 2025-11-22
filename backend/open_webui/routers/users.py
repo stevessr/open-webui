@@ -354,7 +354,7 @@ async def get_user_oauth_sessions_by_id(user_id: str, user=Depends(get_admin_use
 
 @router.get("/{user_id}/profile/image")
 async def get_user_profile_image_by_id(user_id: str, user=Depends(get_verified_user)):
-    user = await Users.get_user_by_id(user_id)
+    user = Users.get_user_by_id(user_id)
     if user:
         if user.profile_image_url:
             # check if it's url or base64
@@ -433,7 +433,7 @@ async def update_user_by_id(
             detail="Could not verify primary admin status.",
         )
 
-    user = await Users.get_user_by_id(user_id)
+    user = Users.get_user_by_id(user_id)
 
     if user:
         if form_data.email.lower() != user.email:
@@ -450,7 +450,7 @@ async def update_user_by_id(
             await Auths.update_user_password_by_id(user_id, hashed)
 
         await Auths.update_email_by_id(user_id, form_data.email.lower())
-        updated_user = await Users.update_user_by_id(
+        updated_user = Users.update_user_by_id(
             user_id,
             {
                 "role": form_data.role,

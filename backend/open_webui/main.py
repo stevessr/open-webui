@@ -1269,10 +1269,10 @@ app.include_router(evaluations.router, prefix="/api/v1/evaluations", tags=["eval
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 
 # SCIM 2.0 API for identity management
+audit_level = AuditLevel.NONE
 if SCIM_ENABLED:
     app.include_router(scim.router, prefix="/api/v1/scim/v2", tags=["scim"])
 
-    audit_level = AuditLevel.NONE
     try:
         if AUDIT_LOG_LEVEL:
             audit_level = AuditLevel(AUDIT_LOG_LEVEL)
@@ -1634,7 +1634,7 @@ async def get_app_config(request: Request):
                 detail="Invalid token",
             )
         if data is not None and "id" in data:
-            user = await Users.get_user_by_id(data["id"])
+            user = Users.get_user_by_id(data["id"])
 
     user_count = Users.get_num_users()
     onboarding = False
