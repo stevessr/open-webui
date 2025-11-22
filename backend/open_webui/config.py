@@ -1076,6 +1076,97 @@ OPENAI_API_BASE_URL = "https://api.openai.com/v1"
 
 
 ####################################
+# GEMINI_API
+####################################
+
+ENABLE_GEMINI_API = PersistentConfig(
+    "ENABLE_GEMINI_API",
+    "gemini.enable",
+    os.environ.get("ENABLE_GEMINI_API", "False").lower() == "true",
+)
+
+GEMINI_API_BASE_URL = os.environ.get(
+    "GEMINI_API_BASE_URL", "https://generativelanguage.googleapis.com/v1beta"
+)
+
+if GEMINI_API_BASE_URL.endswith("/"):
+    GEMINI_API_BASE_URL = GEMINI_API_BASE_URL[:-1]
+
+GEMINI_API_KEYS = os.environ.get("GEMINI_API_KEYS", "")
+GEMINI_API_KEYS = GEMINI_API_KEYS if GEMINI_API_KEYS != "" else GEMINI_API_KEY
+
+GEMINI_API_KEYS = [key.strip() for key in GEMINI_API_KEYS.split(";")]
+GEMINI_API_KEYS = PersistentConfig(
+    "GEMINI_API_KEYS", "gemini.api_keys", GEMINI_API_KEYS
+)
+
+GEMINI_API_BASE_URLS = os.environ.get("GEMINI_API_BASE_URLS", "")
+GEMINI_API_BASE_URLS = (
+    GEMINI_API_BASE_URLS if GEMINI_API_BASE_URLS != "" else GEMINI_API_BASE_URL
+)
+
+GEMINI_API_BASE_URLS = [
+    url.strip() if url != "" else "https://generativelanguage.googleapis.com/v1beta"
+    for url in GEMINI_API_BASE_URLS.split(";")
+]
+GEMINI_API_BASE_URLS = PersistentConfig(
+    "GEMINI_API_BASE_URLS", "gemini.api_base_urls", GEMINI_API_BASE_URLS
+)
+
+GEMINI_API_CONFIGS = PersistentConfig(
+    "GEMINI_API_CONFIGS",
+    "gemini.api_configs",
+    {},
+)
+
+
+####################################
+# ANTHROPIC_API
+####################################
+
+ENABLE_ANTHROPIC_API = PersistentConfig(
+    "ENABLE_ANTHROPIC_API",
+    "anthropic.enable",
+    os.environ.get("ENABLE_ANTHROPIC_API", "False").lower() == "true",
+)
+
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+ANTHROPIC_API_BASE_URL = os.environ.get(
+    "ANTHROPIC_API_BASE_URL", "https://api.anthropic.com"
+)
+
+if ANTHROPIC_API_BASE_URL.endswith("/"):
+    ANTHROPIC_API_BASE_URL = ANTHROPIC_API_BASE_URL[:-1]
+
+ANTHROPIC_API_KEYS = os.environ.get("ANTHROPIC_API_KEYS", "")
+ANTHROPIC_API_KEYS = ANTHROPIC_API_KEYS if ANTHROPIC_API_KEYS != "" else ANTHROPIC_API_KEY
+
+ANTHROPIC_API_KEYS = [key.strip() for key in ANTHROPIC_API_KEYS.split(";")]
+ANTHROPIC_API_KEYS = PersistentConfig(
+    "ANTHROPIC_API_KEYS", "anthropic.api_keys", ANTHROPIC_API_KEYS
+)
+
+ANTHROPIC_API_BASE_URLS = os.environ.get("ANTHROPIC_API_BASE_URLS", "")
+ANTHROPIC_API_BASE_URLS = (
+    ANTHROPIC_API_BASE_URLS if ANTHROPIC_API_BASE_URLS != "" else ANTHROPIC_API_BASE_URL
+)
+
+ANTHROPIC_API_BASE_URLS = [
+    url.strip() if url != "" else "https://api.anthropic.com"
+    for url in ANTHROPIC_API_BASE_URLS.split(";")
+]
+ANTHROPIC_API_BASE_URLS = PersistentConfig(
+    "ANTHROPIC_API_BASE_URLS", "anthropic.api_base_urls", ANTHROPIC_API_BASE_URLS
+)
+
+ANTHROPIC_API_CONFIGS = PersistentConfig(
+    "ANTHROPIC_API_CONFIGS",
+    "anthropic.api_configs",
+    {},
+)
+
+
+####################################
 # MODELS
 ####################################
 
