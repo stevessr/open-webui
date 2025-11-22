@@ -853,6 +853,14 @@
 		shiftKey = false;
 	};
 
+	$: if ($settings?.imgBedConfig && $settings?.imgBedConfig.baseUrl) {
+		imgBedConfig = $settings.imgBedConfig;
+	}
+
+	$: if ($settings?.useImgBed !== undefined) {
+		useImgBed = $settings.useImgBed;
+	}
+
 	onMount(async () => {
 		// 初始化 CloudFlare-ImgBed 配置
 		const userImgBedConfig = $settings?.imgBedConfig;
@@ -862,14 +870,6 @@
 			imgBedConfig = getImgBedConfig();
 		}
 		useImgBed = $settings?.useImgBed ?? false;
-
-	// 响应式更新 ImgBed 配置
-	$: if ($settings?.imgBedConfig && $settings?.imgBedConfig.baseUrl) {
-		imgBedConfig = $settings.imgBedConfig;
-	}
-	$: if ($settings?.useImgBed !== undefined) {
-		useImgBed = $settings.useImgBed;
-	}
 
 	suggestions = [
 			{

@@ -3,7 +3,7 @@ import { type Writable, writable, derived } from 'svelte/store';
 import type { ModelConfig } from '$lib/apis';
 import type { Banner } from '$lib/types';
 import type { Socket } from 'socket.io-client';
-
+import type { CloudFlareImgBedConfig } from '$lib/utils/cloudflare-imgbed';
 import emojiShortCodes from '$lib/emoji-shortcodes.json';
 
 // Backend
@@ -221,6 +221,8 @@ type Settings = {
 	num_batch?: string;
 	num_keep?: string;
 	options?: ModelOptions;
+	useImgBed?: boolean;
+	imgBedConfig?: CloudFlareImgBedConfig;
 };
 
 type ModelOptions = {
