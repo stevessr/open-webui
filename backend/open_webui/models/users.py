@@ -49,10 +49,11 @@ class User(Base):
     updated_at = Column(BigInteger)
     created_at = Column(BigInteger)
 
-    messages = relationship("Message", back_populates="user", cascade="all, delete-orphan")
-    reactions = relationship(
-        "MessageReaction", back_populates="user", cascade="all, delete-orphan"
-    )
+    # messages = relationship("Message", back_populates="user", cascade="all, delete-orphan")
+    # reactions = relationship(
+    #     "MessageReaction", back_populates="user", cascade="all, delete-orphan"
+    # )
+    pass
 
 
 

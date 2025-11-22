@@ -331,12 +331,13 @@ async def chat_completed(request: Request, form_data: dict, user: Any):
     }
 
     try:
-        filter_functions = [
-            Functions.get_function_by_id(filter_id)
-            for filter_id in get_sorted_filter_ids(
-                request, model, metadata.get("filter_ids", [])
-            )
-        ]
+        filter_ids = await get_sorted_filter_ids(
+            request, model, metadata.get("filter_ids", [])
+        )
+
+        filter_functions = []
+        for filter_id in filter_ids:
+            filter_functions.append(await Functions.get_function_by_id(filter_id))
 
         result, _ = await process_filter_functions(
             request=request,
@@ -397,7 +398,7 @@ async def chat_action(request: Request, action_id: str, form_data: dict, user: A
     function_module, _, _ = get_function_module_from_cache(request, action_id)
 
     if hasattr(function_module, "valves") and hasattr(function_module, "Valves"):
-        valves = Functions.get_function_valves_by_id(action_id)
+        valves = await Functions.get_function_valves_by_id(action_id)
         function_module.valves = function_module.Valves(**(valves if valves else {}))
 
     if hasattr(function_module, "action"):
@@ -428,7 +429,7 @@ async def chat_action(request: Request, action_id: str, form_data: dict, user: A
                 try:
                     if hasattr(function_module, "UserValves"):
                         __user__["valves"] = function_module.UserValves(
-                            **Functions.get_user_valves_by_id_and_user_id(
+                            **await Functions.get_user_valves_by_id_and_user_id(
                                 action_id, user.id
                             )
                         )

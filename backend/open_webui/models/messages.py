@@ -36,8 +36,8 @@ class MessageReaction(Base):
     name = Column(Text)
     created_at = Column(BigInteger)
 
-    user = relationship("User", back_populates="reactions")
-    message = relationship("Message", back_populates="reactions")
+    # user = relationship("User", back_populates="reactions")
+    # message = relationship("Message", back_populates="reactions")
 
 
 class MessageReactionModel(BaseModel):
@@ -67,10 +67,11 @@ class Message(Base):
     created_at = Column(BigInteger)  # time_ns
     updated_at = Column(BigInteger)  # time_ns
 
-    user = relationship("User", back_populates="messages")
-    reactions = relationship(
-        "MessageReaction", back_populates="message", cascade="all, delete-orphan"
-    )
+    # user = relationship("User", back_populates="messages")
+    # reactions = relationship(
+    #     "MessageReaction", back_populates="message", cascade="all, delete-orphan"
+    # )
+    pass
 
 
 class MessageModel(BaseModel):

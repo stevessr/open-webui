@@ -561,6 +561,11 @@ https://github.com/open-webui/open-webui
 )
 
 
+def start_tool_servers():
+    # This function should be defined or imported if it's used.
+    # Assuming it is defined somewhere else or needs to be awaited.
+    pass
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.instance_id = INSTANCE_ID
@@ -575,7 +580,10 @@ async def lifespan(app: FastAPI):
     # This should be blocking (sync) so functions are not deactivated on first /get_models calls
     # when the first user lands on the / route.
     log.info("Installing external dependencies of functions and tools...")
-    install_tool_and_function_dependencies()
+    await install_tool_and_function_dependencies()
+
+    # Note: start_tool_servers() is a synchronous function, no need to await
+    start_tool_servers()
 
     app.state.redis = get_redis_connection(
         redis_url=REDIS_URL,

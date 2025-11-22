@@ -115,7 +115,7 @@ async def get_session_user(
             secure=WEBUI_AUTH_COOKIE_SECURE,
         )
 
-    user_permissions = get_permissions(
+    user_permissions = await get_permissions(
         user.id, request.app.state.config.USER_PERMISSIONS
     )
 
@@ -416,7 +416,7 @@ async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
                     secure=WEBUI_AUTH_COOKIE_SECURE,
                 )
 
-                user_permissions = get_permissions(
+                user_permissions = await get_permissions(
                     user.id, request.app.state.config.USER_PERMISSIONS
                 )
 
@@ -547,7 +547,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             secure=WEBUI_AUTH_COOKIE_SECURE,
         )
 
-        user_permissions = get_permissions(
+        user_permissions = await get_permissions(
             user.id, request.app.state.config.USER_PERMISSIONS
         )
 
@@ -656,7 +656,7 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
                     },
                 )
 
-            user_permissions = get_permissions(
+            user_permissions = await get_permissions(
                 user.id, request.app.state.config.USER_PERMISSIONS
             )
 

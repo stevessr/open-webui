@@ -1,7 +1,7 @@
 import logging
+import requests
 from typing import Optional, List, Tuple
 from urllib.parse import quote
-import httpx
 
 
 from open_webui.env import ENABLE_FORWARD_USER_INFO_HEADERS, SRC_LOG_LEVELS
@@ -23,7 +23,7 @@ class ExternalReranker(BaseReranker):
         self.url = url
         self.model = model
 
-    async def predict(
+    def predict(
         self, sentences: List[Tuple[str, str]], user=None
     ) -> Optional[List[float]]:
         query = sentences[0][0]
@@ -40,25 +40,24 @@ class ExternalReranker(BaseReranker):
             log.info(f"ExternalReranker:predict:model {self.model}")
             log.info(f"ExternalReranker:predict:query {query}")
 
-            async with httpx.AsyncClient() as client:
-                r = await client.post(
-                    f"{self.url}",
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": f"Bearer {self.api_key}",
-                        **(
-                            {
-                                "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
-                                "X-OpenWebUI-User-Id": user.id,
-                                "X-OpenWebUI-User-Email": user.email,
-                                "X-OpenWebUI-User-Role": user.role,
-                            }
-                            if ENABLE_FORWARD_USER_INFO_HEADERS and user
-                            else {}
-                        ),
-                    },
-                    json=payload,
-                )
+            r = requests.post(
+                f"{self.url}",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.api_key}",
+                    **(
+                        {
+                            "X-OpenWebUI-User-Name": quote(user.name, safe=" "),
+                            "X-OpenWebUI-User-Id": user.id,
+                            "X-OpenWebUI-User-Email": user.email,
+                            "X-OpenWebUI-User-Role": user.role,
+                        }
+                        if ENABLE_FORWARD_USER_INFO_HEADERS and user
+                        else {}
+                    ),
+                },
+                json=payload,
+            )
 
             r.raise_for_status()
             data = r.json()

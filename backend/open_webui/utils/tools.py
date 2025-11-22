@@ -236,11 +236,11 @@ async def get_tools(
 
             # Set valves for the tool
             if hasattr(module, "valves") and hasattr(module, "Valves"):
-                valves = Tools.get_tool_valves_by_id(tool_id) or {}
+                valves = await Tools.get_tool_valves_by_id(tool_id) or {}
                 module.valves = module.Valves(**valves)
             if hasattr(module, "UserValves"):
                 extra_params["__user__"]["valves"] = module.UserValves(  # type: ignore
-                    **Tools.get_user_valves_by_id_and_user_id(tool_id, user.id)
+                    **(await Tools.get_user_valves_by_id_and_user_id(tool_id, user.id) or {})
                 )
 
             for spec in tool.specs:

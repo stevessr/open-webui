@@ -131,19 +131,19 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
         models = models + arena_models
 
     global_action_ids = [
-        function.id for function in Functions.get_global_action_functions()
+        function.id for function in await Functions.get_global_action_functions()
     ]
     enabled_action_ids = [
         function.id
-        for function in Functions.get_functions_by_type("action", active_only=True)
+        for function in await Functions.get_functions_by_type("action", active_only=True)
     ]
 
     global_filter_ids = [
-        function.id for function in Functions.get_global_filter_functions()
+        function.id for function in await Functions.get_global_filter_functions()
     ]
     enabled_filter_ids = [
         function.id
-        for function in Functions.get_functions_by_type("filter", active_only=True)
+        for function in await Functions.get_functions_by_type("filter", active_only=True)
     ]
 
     custom_models = Models.get_all_models()
@@ -298,7 +298,7 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
 
         model["actions"] = []
         for action_id in action_ids:
-            action_function = Functions.get_function_by_id(action_id)
+            action_function = await Functions.get_function_by_id(action_id)
             if action_function is None:
                 raise Exception(f"Action not found: {action_id}")
 
@@ -309,7 +309,7 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
 
         model["filters"] = []
         for filter_id in filter_ids:
-            filter_function = Functions.get_function_by_id(filter_id)
+            filter_function = await Functions.get_function_by_id(filter_id)
             if filter_function is None:
                 raise Exception(f"Filter not found: {filter_id}")
 

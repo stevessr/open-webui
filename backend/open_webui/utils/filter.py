@@ -22,21 +22,23 @@ def get_function_module(request, function_id, load_from_db=True):
     return function_module
 
 
-def get_sorted_filter_ids(request, model: dict, enabled_filter_ids: list = None):
-    def get_priority(function_id):
-        function = Functions.get_function_by_id(function_id)
+async def get_sorted_filter_ids(request, model: dict, enabled_filter_ids: list = None):
+    async def get_priority(function_id):
+        function = await Functions.get_function_by_id(function_id)
         if function is not None:
-            valves = Functions.get_function_valves_by_id(function_id)
+            valves = await Functions.get_function_valves_by_id(function_id)
             return valves.get("priority", 0) if valves else 0
         return 0
 
-    filter_ids = [function.id for function in Functions.get_global_filter_functions()]
+    filter_ids = [
+        function.id for function in await Functions.get_global_filter_functions()
+    ]
     if "info" in model and "meta" in model["info"]:
         filter_ids.extend(model["info"]["meta"].get("filterIds", []))
         filter_ids = list(set(filter_ids))
     active_filter_ids = [
         function.id
-        for function in Functions.get_functions_by_type("filter", active_only=True)
+        for function in await Functions.get_functions_by_type("filter", active_only=True)
     ]
 
     def get_active_status(filter_id):
@@ -52,7 +54,9 @@ def get_sorted_filter_ids(request, model: dict, enabled_filter_ids: list = None)
     ]
 
     filter_ids = [fid for fid in filter_ids if fid in active_filter_ids]
-    filter_ids.sort(key=get_priority)
+
+    priorities = {fid: await get_priority(fid) for fid in filter_ids}
+    filter_ids.sort(key=lambda x: priorities.get(x, 0))
 
     return filter_ids
 
@@ -82,7 +86,7 @@ async def process_filter_functions(
 
         # Apply valves to the function
         if hasattr(function_module, "valves") and hasattr(function_module, "Valves"):
-            valves = Functions.get_function_valves_by_id(filter_id)
+            valves = await Functions.get_function_valves_by_id(filter_id)
             function_module.valves = function_module.Valves(
                 **(valves if valves else {})
             )
@@ -109,7 +113,7 @@ async def process_filter_functions(
                 if hasattr(function_module, "UserValves"):
                     try:
                         params["__user__"]["valves"] = function_module.UserValves(
-                            **Functions.get_user_valves_by_id_and_user_id(
+                            **await Functions.get_user_valves_by_id_and_user_id(
                                 filter_id, params["__user__"]["id"]
                             )
                         )

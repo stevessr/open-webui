@@ -155,7 +155,7 @@ class ToolsTable:
 
             user_ids = list(set(tool.user_id for tool in all_tools))
 
-            users = await Users.get_users_by_user_ids(user_ids) if user_ids else []
+            users = await asyncio.to_thread(Users.get_users_by_user_ids, user_ids) if user_ids else []
             users_dict = {user.id: user for user in users}
 
             tools = []
@@ -263,15 +263,15 @@ class ToolsTable:
         except Exception:
             return None
 
-        async def delete_tool_by_id(self, id: str) -> bool:
-            try:
-                with get_db() as db:
-                    await asyncio.to_thread(db.query(Tool).filter_by(id=id).delete)
-                    await asyncio.to_thread(db.commit)
-    
-                    return True
-            except Exception:
-                    return False
+    async def delete_tool_by_id(self, id: str) -> bool:
+        try:
+            with get_db() as db:
+                await asyncio.to_thread(db.query(Tool).filter_by(id=id).delete)
+                await asyncio.to_thread(db.commit)
+
+                return True
+        except Exception:
+            return False
 
 
 Tools = ToolsTable()
