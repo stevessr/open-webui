@@ -9,7 +9,7 @@
 
 	export let url: string = '';
 	export let key: string = '';
-	export let config: object = {};
+	export let config: any = {};
 
 	export let idx: number = 0;
 	export let deleteHandler: Function;
@@ -21,21 +21,25 @@
 	};
 
 	let showAdvanced = false;
-	let _enable = config?.enable ?? true;
-	let _modelIds = (config?.model_ids ?? []).join('\n');
 
-	$: if (config) {
-		_enable = config?.enable ?? true;
-		_modelIds = (config?.model_ids ?? []).join('\n');
-	}
+	// Ensure config has default structure
+	if (!config) config = {};
+	if (!config.enable) config.enable = true;
+	if (!config.model_ids) config.model_ids = [];
 
-	$: if (config) {
+	// Helper functions to get/set values
+	const getEnable = () => config?.enable ?? true;
+	const setEnable = (val: boolean) => {
+		config = { ...config, enable: val };
+	};
+
+	const getModelIds = () => (config?.model_ids ?? []).join('\n');
+	const setModelIds = (val: string) => {
 		config = {
 			...config,
-			enable: _enable,
-			model_ids: _modelIds ? _modelIds.split('\n').filter((id) => id.trim() !== '') : []
+			model_ids: val ? val.split('\n').filter((id) => id.trim() !== '') : []
 		};
-	}
+	};
 </script>
 
 <div class="flex flex-col gap-2 py-3">
@@ -184,7 +188,12 @@
 				</div>
 
 				<div>
-					<Switch bind:state={_enable} />
+					<Switch
+						state={getEnable()}
+						on:change={(e) => {
+							setEnable(e.detail);
+						}}
+					/>
 				</div>
 			</div>
 
@@ -218,7 +227,10 @@
 					class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-none resize-none"
 					placeholder={`gemini-1.5-pro\ngemini-1.5-flash`}
 					rows="3"
-					bind:value={_modelIds}
+					value={getModelIds()}
+					on:input={(e) => {
+						setModelIds(e.currentTarget.value);
+					}}
 				/>
 
 				<div class="text-xs text-gray-500">One model ID per line</div>
