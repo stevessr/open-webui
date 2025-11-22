@@ -41,9 +41,7 @@ async def search_google_pse(
 
     async with httpx.AsyncClient() as client:
         while count > 0:
-            num_results_this_page = min(
-                count, 10
-            )  # Google PSE max results per page is 10
+            num_results_this_page = min(count, 10)  # Google PSE max results per page is 10
             params = {
                 "cx": search_engine_id,
                 "q": query,
@@ -55,13 +53,9 @@ async def search_google_pse(
             response.raise_for_status()
             json_response = response.json()
             results = json_response.get("items", [])
-            if (
-                results
-            ):  # check if results are returned. If not, no more pages to fetch.
+            if results:  # check if results are returned. If not, no more pages to fetch.
                 all_results.extend(results)
-                count -= len(
-                    results
-                )  # Decrement count by the number of results fetched in this page.
+                count -= len(results)  # Decrement count by the number of results fetched in this page.
                 start_index += 10  # Increment start index for the next page
             else:
                 break  # No more results from Google PSE, break the loop

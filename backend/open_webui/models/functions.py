@@ -105,9 +105,7 @@ class FunctionValves(BaseModel):
 
 
 class FunctionsTable:
-    async def insert_new_function(
-        self, user_id: str, type: str, form_data: FunctionForm
-    ) -> Optional[FunctionModel]:
+    async def insert_new_function(self, user_id: str, type: str, form_data: FunctionForm) -> Optional[FunctionModel]:
         function = FunctionModel(
             **{
                 **form_data.model_dump(),
@@ -132,9 +130,7 @@ class FunctionsTable:
             log.exception(f"Error creating a new function: {e}")
             return None
 
-    async def sync_functions(
-        self, user_id: str, functions: list[FunctionWithValvesModel]
-    ) -> list[FunctionWithValvesModel]:
+    async def sync_functions(self, user_id: str, functions: list[FunctionWithValvesModel]) -> list[FunctionWithValvesModel]:
         # Synchronize functions for a user by updating existing ones, inserting new ones, and removing those that are no longer present.
         try:
             with get_db() as db:
@@ -148,12 +144,13 @@ class FunctionsTable:
                 # Update or insert functions
                 for func in functions:
                     if func.id in existing_ids:
-                        await asyncio.to_thread(db.query(Function).filter_by(id=func.id).update,
+                        await asyncio.to_thread(
+                            db.query(Function).filter_by(id=func.id).update,
                             {
                                 **func.model_dump(),
                                 "user_id": user_id,
                                 "updated_at": int(time.time()),
-                            }
+                            },
                         )
                     else:
                         new_func = Function(
@@ -172,10 +169,7 @@ class FunctionsTable:
 
                 await asyncio.to_thread(db.commit)
 
-                return [
-                    FunctionModel.model_validate(func)
-                    for func in await asyncio.to_thread(db.query(Function).all)
-                ]
+                return [FunctionModel.model_validate(func) for func in await asyncio.to_thread(db.query(Function).all)]
         except Exception as e:
             log.exception(f"Error syncing functions for user {user_id}: {e}")
             return []
@@ -188,9 +182,7 @@ class FunctionsTable:
         except Exception:
             return None
 
-    async def get_functions(
-        self, active_only=False, include_valves=False
-    ) -> list[FunctionModel | FunctionWithValvesModel]:
+    async def get_functions(self, active_only=False, include_valves=False) -> list[FunctionModel | FunctionWithValvesModel]:
         with get_db() as db:
             if active_only:
                 functions = await asyncio.to_thread(db.query(Function).filter_by(is_active=True).all)
@@ -199,14 +191,9 @@ class FunctionsTable:
                 functions = await asyncio.to_thread(db.query(Function).all)
 
             if include_valves:
-                return [
-                    FunctionWithValvesModel.model_validate(function)
-                    for function in functions
-                ]
+                return [FunctionWithValvesModel.model_validate(function) for function in functions]
             else:
-                return [
-                    FunctionModel.model_validate(function) for function in functions
-                ]
+                return [FunctionModel.model_validate(function) for function in functions]
 
     async def get_function_list(self) -> list[FunctionUserResponse]:
         with get_db() as db:
@@ -220,46 +207,28 @@ class FunctionsTable:
                 FunctionUserResponse.model_validate(
                     {
                         **FunctionModel.model_validate(func).model_dump(),
-                        "user": (
-                            users_dict.get(func.user_id).model_dump()
-                            if func.user_id in users_dict
-                            else None
-                        ),
+                        "user": (users_dict.get(func.user_id).model_dump() if func.user_id in users_dict else None),
                     }
                 )
                 for func in functions
             ]
 
-    async def get_functions_by_type(
-        self, type: str, active_only=False
-    ) -> list[FunctionModel]:
+    async def get_functions_by_type(self, type: str, active_only=False) -> list[FunctionModel]:
         with get_db() as db:
             if active_only:
-                functions = await asyncio.to_thread(
-                    db.query(Function).filter_by(type=type, is_active=True).all
-                )
+                functions = await asyncio.to_thread(db.query(Function).filter_by(type=type, is_active=True).all)
             else:
-                functions = await asyncio.to_thread(
-                    db.query(Function).filter_by(type=type).all
-                )
+                functions = await asyncio.to_thread(db.query(Function).filter_by(type=type).all)
             return [FunctionModel.model_validate(function) for function in functions]
 
     async def get_global_filter_functions(self) -> list[FunctionModel]:
         with get_db() as db:
-            functions = await asyncio.to_thread(
-                db.query(Function)
-                .filter_by(type="filter", is_active=True, is_global=True)
-                .all
-            )
+            functions = await asyncio.to_thread(db.query(Function).filter_by(type="filter", is_active=True, is_global=True).all)
             return [FunctionModel.model_validate(function) for function in functions]
 
     async def get_global_action_functions(self) -> list[FunctionModel]:
         with get_db() as db:
-            functions = await asyncio.to_thread(
-                db.query(Function)
-                .filter_by(type="action", is_active=True, is_global=True)
-                .all
-            )
+            functions = await asyncio.to_thread(db.query(Function).filter_by(type="action", is_active=True, is_global=True).all)
             return [FunctionModel.model_validate(function) for function in functions]
 
     async def get_function_valves_by_id(self, id: str) -> Optional[dict]:
@@ -271,9 +240,7 @@ class FunctionsTable:
                 log.exception(f"Error getting function valves by id {id}: {e}")
                 return None
 
-    async def update_function_valves_by_id(
-        self, id: str, valves: dict
-    ) -> Optional[FunctionValves]:
+    async def update_function_valves_by_id(self, id: str, valves: dict) -> Optional[FunctionValves]:
         with get_db() as db:
             try:
                 function = await asyncio.to_thread(db.get, Function, id)
@@ -285,9 +252,7 @@ class FunctionsTable:
             except Exception:
                 return None
 
-    async def update_function_metadata_by_id(
-        self, id: str, metadata: dict
-    ) -> Optional[FunctionModel]:
+    async def update_function_metadata_by_id(self, id: str, metadata: dict) -> Optional[FunctionModel]:
         with get_db() as db:
             try:
                 function = await asyncio.to_thread(db.get, Function, id)
@@ -308,9 +273,7 @@ class FunctionsTable:
                 log.exception(f"Error updating function metadata by id {id}: {e}")
                 return None
 
-    async def get_user_valves_by_id_and_user_id(
-        self, id: str, user_id: str
-    ) -> Optional[dict]:
+    async def get_user_valves_by_id_and_user_id(self, id: str, user_id: str) -> Optional[dict]:
         try:
             user = await Users.get_user_by_id(user_id)
             user_settings = user.settings.model_dump() if user.settings else {}
@@ -326,9 +289,7 @@ class FunctionsTable:
             log.exception(f"Error getting user values by id {id} and user id {user_id}")
             return None
 
-    async def update_user_valves_by_id_and_user_id(
-        self, id: str, user_id: str, valves: dict
-    ) -> Optional[dict]:
+    async def update_user_valves_by_id_and_user_id(self, id: str, user_id: str, valves: dict) -> Optional[dict]:
         try:
             user = await Users.get_user_by_id(user_id)
             user_settings = user.settings.model_dump() if user.settings else {}
@@ -346,19 +307,18 @@ class FunctionsTable:
 
             return user_settings["functions"]["valves"][id]
         except Exception as e:
-            log.exception(
-                f"Error updating user valves by id {id} and user_id {user_id}: {e}"
-            )
+            log.exception(f"Error updating user valves by id {id} and user_id {user_id}: {e}")
             return None
 
     async def update_function_by_id(self, id: str, updated: dict) -> Optional[FunctionModel]:
         with get_db() as db:
             try:
-                await asyncio.to_thread(db.query(Function).filter_by(id=id).update,
+                await asyncio.to_thread(
+                    db.query(Function).filter_by(id=id).update,
                     {
                         **updated,
                         "updated_at": int(time.time()),
-                    }
+                    },
                 )
                 await asyncio.to_thread(db.commit)
                 return await self.get_function_by_id(id)
@@ -368,11 +328,12 @@ class FunctionsTable:
     async def deactivate_all_functions(self) -> Optional[bool]:
         with get_db() as db:
             try:
-                await asyncio.to_thread(db.query(Function).update,
+                await asyncio.to_thread(
+                    db.query(Function).update,
                     {
                         "is_active": False,
                         "updated_at": int(time.time()),
-                    }
+                    },
                 )
                 await asyncio.to_thread(db.commit)
                 return True

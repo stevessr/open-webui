@@ -31,9 +31,7 @@ class AbstractIntegrationTest:
         path_parts = [part.strip() for part in path_parts if part.strip() != ""]
         query_parts = ""
         if query_params:
-            query_parts = "&".join(
-                [f"{key}={value}" for key, value in query_params.items()]
-            )
+            query_parts = "&".join([f"{key}={value}" for key, value in query_params.items()])
             query_parts = f"?{query_parts}"
         return "/".join(parts + path_parts) + query_parts
 
@@ -91,7 +89,6 @@ class AbstractPostgresTest(AbstractIntegrationTest):
             db = None
             while retries > 0:
                 try:
-
                     db = create_engine(database_url, pool_pre_ping=True)
                     db = db.connect()
                     log.info("postgres is ready!")

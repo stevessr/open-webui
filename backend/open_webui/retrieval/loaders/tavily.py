@@ -67,9 +67,7 @@ class TavilyLoader(BaseLoader):
                     urls_param = batch_urls[0] if len(batch_urls) == 1 else batch_urls
                     payload = {"urls": urls_param, "extract_depth": self.extract_depth}
                     # Make the API call
-                    response = await client.post(
-                        self.api_url, headers=headers, json=payload
-                    )
+                    response = await client.post(self.api_url, headers=headers, json=payload)
                     response.raise_for_status()
                     response_data = response.json()
                     # Process successful results
@@ -91,8 +89,6 @@ class TavilyLoader(BaseLoader):
                         log.error(f"Failed to extract content from {url}: {error}")
                 except Exception as e:
                     if self.continue_on_failure:
-                        log.error(
-                            f"Error extracting content from batch {batch_urls}: {e}"
-                        )
+                        log.error(f"Error extracting content from batch {batch_urls}: {e}")
                     else:
                         raise e

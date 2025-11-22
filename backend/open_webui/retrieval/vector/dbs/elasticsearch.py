@@ -36,11 +36,7 @@ class ElasticsearchClient(VectorDBBase):
             ca_certs=ELASTICSEARCH_CA_CERTS,
             api_key=ELASTICSEARCH_API_KEY,
             cloud_id=ELASTICSEARCH_CLOUD_ID,
-            basic_auth=(
-                (ELASTICSEARCH_USERNAME, ELASTICSEARCH_PASSWORD)
-                if ELASTICSEARCH_USERNAME and ELASTICSEARCH_PASSWORD
-                else None
-            ),
+            basic_auth=((ELASTICSEARCH_USERNAME, ELASTICSEARCH_PASSWORD) if ELASTICSEARCH_USERNAME and ELASTICSEARCH_PASSWORD else None),
             ssl_assert_fingerprint=SSL_ASSERT_FINGERPRINT,
         )
 
@@ -135,9 +131,7 @@ class ElasticsearchClient(VectorDBBase):
     # Status: works
     def has_collection(self, collection_name) -> bool:
         query_body = {"query": {"bool": {"filter": []}}}
-        query_body["query"]["bool"]["filter"].append(
-            {"term": {"collection": collection_name}}
-        )
+        query_body["query"]["bool"]["filter"].append({"term": {"collection": collection_name}})
 
         try:
             result = self.client.count(index=f"{self.index_prefix}*", body=query_body)
@@ -151,37 +145,27 @@ class ElasticsearchClient(VectorDBBase):
         self.client.delete_by_query(index=f"{self.index_prefix}*", body=query)
 
     # Status: works
-    def search(
-        self, collection_name: str, vectors: list[list[float]], limit: int
-    ) -> Optional[SearchResult]:
+    def search(self, collection_name: str, vectors: list[list[float]], limit: int) -> Optional[SearchResult]:
         query = {
             "size": limit,
             "_source": ["text", "metadata"],
             "query": {
                 "script_score": {
-                    "query": {
-                        "bool": {"filter": [{"term": {"collection": collection_name}}]}
-                    },
+                    "query": {"bool": {"filter": [{"term": {"collection": collection_name}}]}},
                     "script": {
                         "source": "cosineSimilarity(params.vector, 'vector') + 1.0",
-                        "params": {
-                            "vector": vectors[0]
-                        },  # Assuming single query vector
+                        "params": {"vector": vectors[0]},  # Assuming single query vector
                     },
                 }
             },
         }
 
-        result = self.client.search(
-            index=self._get_index_name(len(vectors[0])), body=query
-        )
+        result = self.client.search(index=self._get_index_name(len(vectors[0])), body=query)
 
         return self._result_to_search_result(result)
 
     # Status: only tested halfwat
-    def query(
-        self, collection_name: str, filter: dict, limit: Optional[int] = None
-    ) -> Optional[GetResult]:
+    def query(self, collection_name: str, filter: dict, limit: Optional[int] = None) -> Optional[GetResult]:
         if not self.has_collection(collection_name):
             return None
 
@@ -192,9 +176,7 @@ class ElasticsearchClient(VectorDBBase):
 
         for field, value in filter.items():
             query_body["query"]["bool"]["filter"].append({"term": {field: value}})
-        query_body["query"]["bool"]["filter"].append(
-            {"term": {"collection": collection_name}}
-        )
+        query_body["query"]["bool"]["filter"].append({"term": {"collection": collection_name}})
         size = limit if limit else 10
 
         try:
@@ -211,9 +193,7 @@ class ElasticsearchClient(VectorDBBase):
 
     # Status: works
     def _has_index(self, dimension: int):
-        return self.client.indices.exists(
-            index=self._get_index_name(dimension=dimension)
-        )
+        return self.client.indices.exists(index=self._get_index_name(dimension=dimension))
 
     def get_or_create_index(self, dimension: int):
         if not self._has_index(dimension=dimension):
@@ -280,18 +260,13 @@ class ElasticsearchClient(VectorDBBase):
         ids: Optional[list[str]] = None,
         filter: Optional[dict] = None,
     ):
-
-        query = {
-            "query": {"bool": {"filter": [{"term": {"collection": collection_name}}]}}
-        }
+        query = {"query": {"bool": {"filter": [{"term": {"collection": collection_name}}]}}}
         # logic based on chromaDB
         if ids:
             query["query"]["bool"]["filter"].append({"terms": {"_id": ids}})
         elif filter:
             for field, value in filter.items():
-                query["query"]["bool"]["filter"].append(
-                    {"term": {f"metadata.{field}": value}}
-                )
+                query["query"]["bool"]["filter"].append({"term": {f"metadata.{field}": value}})
 
         self.client.delete_by_query(index=f"{self.index_prefix}*", body=query)
 

@@ -45,9 +45,7 @@ class MinerULoader:
 
         # Validate API mode
         if self.api_mode not in ["local", "cloud"]:
-            raise ValueError(
-                f"Invalid API mode: {self.api_mode}. Must be 'local' or 'cloud'"
-            )
+            raise ValueError(f"Invalid API mode: {self.api_mode}. Must be 'local' or 'cloud'")
 
         # Validate Cloud API requirements
         if self.api_mode == "cloud" and not self.api_key:
@@ -103,10 +101,7 @@ class MinerULoader:
         if self.page_ranges:
             # For simplicity, if page_ranges is specified, log a warning
             # Full page range parsing would require parsing the string
-            log.warning(
-                f"Page ranges '{self.page_ranges}' specified but Local API uses different format. "
-                "Consider using start_page_id/end_page_id parameters if needed."
-            )
+            log.warning(f"Page ranges '{self.page_ranges}' specified but Local API uses different format. Consider using start_page_id/end_page_id parameters if needed.")
 
         try:
             async with aiofiles.open(self.file_path, "rb") as f:
@@ -125,9 +120,7 @@ class MinerULoader:
                     response.raise_for_status()
 
         except FileNotFoundError:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail=f"File not found: {self.file_path}"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"File not found: {self.file_path}")
         except httpx.TimeoutException:
             raise HTTPException(
                 status.HTTP_504_GATEWAY_TIMEOUT,
@@ -211,9 +204,7 @@ class MinerULoader:
         result = await self._poll_batch_status(batch_id, filename)
 
         # Step 4: Download and extract markdown from ZIP
-        markdown_content = await self._download_and_extract_zip(
-            result["full_zip_url"], filename
-        )
+        markdown_content = await self._download_and_extract_zip(result["full_zip_url"], filename)
 
         log.info(f"Successfully parsed document with MinerU Cloud API: {filename}")
 
@@ -326,9 +317,7 @@ class MinerULoader:
                     )
                     response.raise_for_status()
         except FileNotFoundError:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail=f"File not found: {self.file_path}"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"File not found: {self.file_path}")
         except httpx.TimeoutException:
             raise HTTPException(
                 status.HTTP_504_GATEWAY_TIMEOUT,
@@ -429,9 +418,7 @@ class MinerULoader:
                 elif state in ["waiting-file", "pending", "running", "converting"]:
                     # Still processing
                     if iteration % 10 == 0:  # Log every 20 seconds
-                        log.info(
-                            f"Processing status: {state} (iteration {iteration + 1}/{max_iterations})"
-                        )
+                        log.info(f"Processing status: {state} (iteration {iteration + 1}/{max_iterations})")
                     await asyncio.sleep(poll_interval)
                 else:
                     log.warning(f"Unknown state: {state}")
@@ -493,9 +480,7 @@ class MinerULoader:
                             try:
                                 async with aiofiles.open(full_path, "r", encoding="utf-8") as f:
                                     markdown_content = await f.read()
-                                if (
-                                    markdown_content
-                                ):  # Use the first non-empty markdown file
+                                if markdown_content:  # Use the first non-empty markdown file
                                     break
                             except Exception as e:
                                 log.warning(f"Failed to read {full_path}: {e}")
@@ -507,13 +492,9 @@ class MinerULoader:
                     # Try to provide more helpful error message
                     md_files = [f for f in all_files if f.endswith(".md")]
                     if md_files:
-                        error_msg = (
-                            f"Found .md files but couldn't read them: {md_files}"
-                        )
+                        error_msg = f"Found .md files but couldn't read them: {md_files}"
                     else:
-                        error_msg = (
-                            f"No .md files found in ZIP. Available files: {all_files}"
-                        )
+                        error_msg = f"No .md files found in ZIP. Available files: {all_files}"
                     raise HTTPException(
                         status.HTTP_502_BAD_GATEWAY,
                         detail=error_msg,
@@ -539,7 +520,5 @@ class MinerULoader:
                 detail="Extracted markdown content is empty",
             )
 
-        log.info(
-            f"Successfully extracted markdown content ({len(markdown_content)} characters)"
-        )
+        log.info(f"Successfully extracted markdown content ({len(markdown_content)} characters)")
         return markdown_content

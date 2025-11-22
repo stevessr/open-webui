@@ -85,15 +85,10 @@ class YoutubeLoader:
             )
             from youtube_transcript_api.proxies import GenericProxyConfig
         except ImportError:
-            raise ImportError(
-                'Could not import "youtube_transcript_api" Python package. '
-                "Please install it with `pip install youtube-transcript-api`."
-            )
+            raise ImportError('Could not import "youtube_transcript_api" Python package. Please install it with `pip install youtube-transcript-api`.')
 
         if self.proxy_url:
-            youtube_proxies = GenericProxyConfig(
-                http_url=self.proxy_url, https_url=self.proxy_url
-            )
+            youtube_proxies = GenericProxyConfig(http_url=self.proxy_url, https_url=self.proxy_url)
             log.debug(f"Using proxy URL: {self.proxy_url[:14]}...")
         else:
             youtube_proxies = None
@@ -112,14 +107,10 @@ class YoutubeLoader:
                 if transcript.is_generated:
                     log.debug(f"Found generated transcript for language '{lang}'")
                     try:
-                        transcript = transcript_list.find_manually_created_transcript(
-                            [lang]
-                        )
+                        transcript = transcript_list.find_manually_created_transcript([lang])
                         log.debug(f"Found manual transcript for language '{lang}'")
                     except NoTranscriptFound:
-                        log.debug(
-                            f"No manual transcript found for language '{lang}', using generated"
-                        )
+                        log.debug(f"No manual transcript found for language '{lang}', using generated")
                         pass
 
                 log.debug(f"Found transcript for language '{lang}'")
@@ -135,11 +126,7 @@ class YoutubeLoader:
 
                 transcript_text = " ".join(
                     map(
-                        lambda transcript_piece: (
-                            transcript_piece.text.strip(" ")
-                            if hasattr(transcript_piece, "text")
-                            else ""
-                        ),
+                        lambda transcript_piece: (transcript_piece.text.strip(" ") if hasattr(transcript_piece, "text") else ""),
                         transcript_pieces,
                     )
                 )
@@ -153,9 +140,7 @@ class YoutubeLoader:
 
         # If we get here, all languages failed
         languages_tried = ", ".join(self.language)
-        log.warning(
-            f"No transcript found for any of the specified languages: {languages_tried}. Verify if the video has transcripts, add more languages if needed."
-        )
+        log.warning(f"No transcript found for any of the specified languages: {languages_tried}. Verify if the video has transcripts, add more languages if needed.")
         raise NoTranscriptFound(self.video_id, self.language, list(transcript_list))
 
     async def aload(self) -> Generator[Document, None, None]:

@@ -104,9 +104,7 @@ class VectorSearchRetriever(BaseRetriever):
         return results
 
 
-def query_doc(
-    collection_name: str, query_embedding: list[float], k: int, user: UserModel = None
-):
+def query_doc(collection_name: str, query_embedding: list[float], k: int, user: UserModel = None):
     try:
         log.debug(f"query_doc:doc {collection_name}")
         result = VECTOR_DB_CLIENT.search(
@@ -150,13 +148,7 @@ def query_doc_with_hybrid_search(
     hybrid_bm25_weight: float,
 ) -> dict:
     try:
-        if (
-            not collection_result
-            or not hasattr(collection_result, "documents")
-            or not collection_result.documents
-            or len(collection_result.documents) == 0
-            or not collection_result.documents[0]
-        ):
+        if not collection_result or not hasattr(collection_result, "documents") or not collection_result.documents or len(collection_result.documents) == 0 or not collection_result.documents[0]:
             log.warning(f"query_doc_with_hybrid_search:no_docs {collection_name}")
             return {"documents": [], "metadatas": [], "distances": []}
 
@@ -175,13 +167,9 @@ def query_doc_with_hybrid_search(
         )
 
         if hybrid_bm25_weight <= 0:
-            ensemble_retriever = EnsembleRetriever(
-                retrievers=[vector_search_retriever], weights=[1.0]
-            )
+            ensemble_retriever = EnsembleRetriever(retrievers=[vector_search_retriever], weights=[1.0])
         elif hybrid_bm25_weight >= 1:
-            ensemble_retriever = EnsembleRetriever(
-                retrievers=[bm25_retriever], weights=[1.0]
-            )
+            ensemble_retriever = EnsembleRetriever(retrievers=[bm25_retriever], weights=[1.0])
         else:
             ensemble_retriever = EnsembleRetriever(
                 retrievers=[bm25_retriever, vector_search_retriever],
@@ -195,9 +183,7 @@ def query_doc_with_hybrid_search(
             r_score=r,
         )
 
-        compression_retriever = ContextualCompressionRetriever(
-            base_compressor=compressor, base_retriever=ensemble_retriever
-        )
+        compression_retriever = ContextualCompressionRetriever(base_compressor=compressor, base_retriever=ensemble_retriever)
 
         result = compression_retriever.invoke(query)
 
@@ -207,9 +193,7 @@ def query_doc_with_hybrid_search(
 
         # retrieve only min(k, k_reranker) items, sort and cut by distance if k < k_reranker
         if k < k_reranker:
-            sorted_items = sorted(
-                zip(distances, metadatas, documents), key=lambda x: x[0], reverse=True
-            )
+            sorted_items = sorted(zip(distances, metadatas, documents), key=lambda x: x[0], reverse=True)
             sorted_items = sorted_items[:k]
 
             if sorted_items:
@@ -223,10 +207,7 @@ def query_doc_with_hybrid_search(
             "metadatas": [metadatas],
         }
 
-        log.info(
-            "query_doc_with_hybrid_search:result "
-            + f'{result["metadatas"]} {result["distances"]}'
-        )
+        log.info("query_doc_with_hybrid_search:result " + f"{result['metadatas']} {result['distances']}")
         return result
     except Exception as e:
         log.exception(f"Error querying doc {collection_name} with hybrid search: {e}")
@@ -259,11 +240,7 @@ def merge_and_sort_query_results(query_results: list[dict], k: int) -> dict:
     combined = dict()  # To store documents with unique document hashes
 
     for data in query_results:
-        if (
-            len(data.get("distances", [])) == 0
-            or len(data.get("documents", [])) == 0
-            or len(data.get("metadatas", [])) == 0
-        ):
+        if len(data.get("distances", [])) == 0 or len(data.get("documents", [])) == 0 or len(data.get("metadatas", [])) == 0:
             continue
 
         distances = data["distances"][0]
@@ -272,9 +249,7 @@ def merge_and_sort_query_results(query_results: list[dict], k: int) -> dict:
 
         for distance, document, metadata in zip(distances, documents, metadatas):
             if isinstance(document, str):
-                doc_hash = hashlib.sha256(
-                    document.encode()
-                ).hexdigest()  # Compute a hash for uniqueness
+                doc_hash = hashlib.sha256(document.encode()).hexdigest()  # Compute a hash for uniqueness
 
                 if doc_hash not in combined.keys():
                     combined[doc_hash] = (distance, document, metadata)
@@ -289,9 +264,7 @@ def merge_and_sort_query_results(query_results: list[dict], k: int) -> dict:
     combined.sort(key=lambda x: x[0], reverse=True)
 
     # Slice to keep only the top k elements
-    sorted_distances, sorted_documents, sorted_metadatas = (
-        zip(*combined[:k]) if combined else ([], [], [])
-    )
+    sorted_distances, sorted_documents, sorted_metadatas = zip(*combined[:k]) if combined else ([], [], [])
 
     # Create and return the output dictionary
     return {
@@ -344,17 +317,13 @@ def query_collection(
 
     # Generate all query embeddings (in one call)
     query_embeddings = embedding_function(queries, prefix=RAG_EMBEDDING_QUERY_PREFIX)
-    log.debug(
-        f"query_collection: processing {len(queries)} queries across {len(collection_names)} collections"
-    )
+    log.debug(f"query_collection: processing {len(queries)} queries across {len(collection_names)} collections")
 
     with ThreadPoolExecutor() as executor:
         future_results = []
         for query_embedding in query_embeddings:
             for collection_name in collection_names:
-                result = executor.submit(
-                    process_query_collection, collection_name, query_embedding
-                )
+                result = executor.submit(process_query_collection, collection_name, query_embedding)
                 future_results.append(result)
         task_results = [future.result() for future in future_results]
 
@@ -387,19 +356,13 @@ def query_collection_with_hybrid_search(
     collection_results = {}
     for collection_name in collection_names:
         try:
-            log.debug(
-                f"query_collection_with_hybrid_search:VECTOR_DB_CLIENT.get:collection {collection_name}"
-            )
-            collection_results[collection_name] = VECTOR_DB_CLIENT.get(
-                collection_name=collection_name
-            )
+            log.debug(f"query_collection_with_hybrid_search:VECTOR_DB_CLIENT.get:collection {collection_name}")
+            collection_results[collection_name] = VECTOR_DB_CLIENT.get(collection_name=collection_name)
         except Exception as e:
             log.exception(f"Failed to fetch collection {collection_name}: {e}")
             collection_results[collection_name] = None
 
-    log.info(
-        f"Starting hybrid search for {len(queries)} queries in {len(collection_names)} collections..."
-    )
+    log.info(f"Starting hybrid search for {len(queries)} queries in {len(collection_names)} collections...")
 
     def process_query(collection_name, query):
         try:
@@ -421,12 +384,7 @@ def query_collection_with_hybrid_search(
 
     # Prepare tasks for all collections and queries
     # Avoid running any tasks for collections that failed to fetch data (have assigned None)
-    tasks = [
-        (cn, q)
-        for cn in collection_names
-        if collection_results[cn] is not None
-        for q in queries
-    ]
+    tasks = [(cn, q) for cn in collection_names if collection_results[cn] is not None for q in queries]
 
     with ThreadPoolExecutor() as executor:
         future_results = [executor.submit(process_query, cn, q) for cn, q in tasks]
@@ -439,9 +397,7 @@ def query_collection_with_hybrid_search(
             results.append(result)
 
     if error and not results:
-        raise Exception(
-            "Hybrid search failed for all collections. Using Non-hybrid search as fallback."
-        )
+        raise Exception("Hybrid search failed for all collections. Using Non-hybrid search as fallback.")
 
     return merge_and_sort_query_results(results, k=k)
 
@@ -456,9 +412,7 @@ def get_embedding_function(
     azure_api_version=None,
 ):
     if embedding_engine == "":
-        return lambda query, prefix=None, user=None: embedding_function.encode(
-            query, **({"prompt": prefix} if prefix else {})
-        ).tolist()
+        return lambda query, prefix=None, user=None: embedding_function.encode(query, **({"prompt": prefix} if prefix else {})).tolist()
     elif embedding_engine in ["ollama", "openai", "azure_openai"]:
         # func should now be async
         async def func_async(query, prefix=None, user=None):
@@ -500,9 +454,7 @@ def get_reranking_function(reranking_engine, reranking_model, reranking_function
     if reranking_function is None:
         return None
     if reranking_engine == "external":
-        return lambda sentences, user=None: reranking_function.predict(
-            sentences, user=user
-        )
+        return lambda sentences, user=None: reranking_function.predict(sentences, user=user)
     else:
         return lambda sentences, user=None: reranking_function.predict(sentences)
 
@@ -521,9 +473,7 @@ def get_sources_from_items(
     full_context=False,
     user: Optional[UserModel] = None,
 ):
-    log.debug(
-        f"items: {items} {queries} {embedding_function} {reranking_function} {full_context}"
-    )
+    log.debug(f"items: {items} {queries} {embedding_function} {reranking_function} {full_context}")
 
     extracted_collections = []
     query_results = []
@@ -540,9 +490,7 @@ def get_sources_from_items(
                 if item.get("file"):
                     # if item has file data, use it
                     query_result = {
-                        "documents": [
-                            [item.get("file", {}).get("data", {}).get("content")]
-                        ],
+                        "documents": [[item.get("file", {}).get("data", {}).get("content")]],
                         "metadatas": [[item.get("file", {}).get("meta", {})]],
                     }
 
@@ -554,29 +502,21 @@ def get_sources_from_items(
                 elif item.get("file"):
                     # If item has file data, use it
                     query_result = {
-                        "documents": [
-                            [item.get("file", {}).get("data", {}).get("content")]
-                        ],
+                        "documents": [[item.get("file", {}).get("data", {}).get("content")]],
                         "metadatas": [[item.get("file", {}).get("meta", {})]],
                     }
                 else:
                     # Fallback to item content
                     query_result = {
                         "documents": [[item.get("content")]],
-                        "metadatas": [
-                            [{"file_id": item.get("id"), "name": item.get("name")}]
-                        ],
+                        "metadatas": [[{"file_id": item.get("id"), "name": item.get("name")}]],
                     }
 
         elif item.get("type") == "note":
             # Note Attached
             note = Notes.get_note_by_id(item.get("id"))
 
-            if note and (
-                user.role == "admin"
-                or note.user_id == user.id
-                or has_access(user.id, "read", note.access_control)
-            ):
+            if note and (user.role == "admin" or note.user_id == user.id or has_access(user.id, "read", note.access_control)):
                 # User has access to the note
                 query_result = {
                     "documents": [[note.data.get("content", {}).get("md", "")]],
@@ -594,12 +534,7 @@ def get_sources_from_items(
                 if messages_map and message_id:
                     # Reconstruct the message list in order
                     message_list = get_message_list(messages_map, message_id)
-                    message_history = "\n".join(
-                        [
-                            f"#### {m.get('role', 'user').capitalize()}\n{m.get('content')}\n"
-                            for m in message_list
-                        ]
-                    )
+                    message_history = "\n".join([f"#### {m.get('role', 'user').capitalize()}\n{m.get('content')}\n" for m in message_list])
 
                     # User has access to the chat
                     query_result = {
@@ -615,25 +550,18 @@ def get_sources_from_items(
                     "metadatas": [[{"url": item.get("url"), "name": item.get("url")}]],
                 }
         elif item.get("type") == "file":
-            if (
-                item.get("context") == "full"
-                or request.app.state.config.BYPASS_EMBEDDING_AND_RETRIEVAL
-            ):
+            if item.get("context") == "full" or request.app.state.config.BYPASS_EMBEDDING_AND_RETRIEVAL:
                 if item.get("file", {}).get("data", {}).get("content", ""):
                     # Manual Full Mode Toggle
                     # Used from chat file modal, we can assume that the file content will be available from item.get("file").get("data", {}).get("content")
                     query_result = {
-                        "documents": [
-                            [item.get("file", {}).get("data", {}).get("content", "")]
-                        ],
+                        "documents": [[item.get("file", {}).get("data", {}).get("content", "")]],
                         "metadatas": [
                             [
                                 {
                                     "file_id": item.get("id"),
                                     "name": item.get("name"),
-                                    **item.get("file")
-                                    .get("data", {})
-                                    .get("metadata", {}),
+                                    **item.get("file").get("data", {}).get("metadata", {}),
                                 }
                             ]
                         ],
@@ -664,21 +592,9 @@ def get_sources_from_items(
             # Manual Full Mode Toggle for Collection
             knowledge_base = Knowledges.get_knowledge_by_id(item.get("id"))
 
-            if knowledge_base and (
-                user.role == "admin"
-                or knowledge_base.user_id == user.id
-                or has_access(user.id, "read", knowledge_base.access_control)
-            ):
-                if (
-                    item.get("context") == "full"
-                    or request.app.state.config.BYPASS_EMBEDDING_AND_RETRIEVAL
-                ):
-                    if knowledge_base and (
-                        user.role == "admin"
-                        or knowledge_base.user_id == user.id
-                        or has_access(user.id, "read", knowledge_base.access_control)
-                    ):
-
+            if knowledge_base and (user.role == "admin" or knowledge_base.user_id == user.id or has_access(user.id, "read", knowledge_base.access_control)):
+                if item.get("context") == "full" or request.app.state.config.BYPASS_EMBEDDING_AND_RETRIEVAL:
+                    if knowledge_base and (user.role == "admin" or knowledge_base.user_id == user.id or has_access(user.id, "read", knowledge_base.access_control)):
                         file_ids = knowledge_base.data.get("file_ids", [])
 
                         documents = []
@@ -746,9 +662,7 @@ def get_sources_from_items(
                                 hybrid_bm25_weight=hybrid_bm25_weight,
                             )
                         except Exception:
-                            log.debug(
-                                "Error when using hybrid search, using non hybrid search as fallback."
-                            )
+                            log.debug("Error when using hybrid search, using non hybrid search as fallback.")
 
                     # fallback to non-hybrid search
                     if not hybrid_search and query_result is None:
@@ -805,11 +719,7 @@ def get_model_path(model: str, update_model: bool = False):
     log.debug(f"snapshot_kwargs: {snapshot_kwargs}")
 
     # Inspiration from upstream sentence_transformers
-    if (
-        os.path.exists(model)
-        or (("\\" in model or model.count("/") > 1)
-        and local_files_only)
-    ):
+    if os.path.exists(model) or (("\\" in model or model.count("/") > 1) and local_files_only):
         # If fully qualified path exists, return input, else set repo_id
         return model
     elif "/" not in model:
@@ -837,9 +747,7 @@ async def generate_openai_batch_embeddings(
     user: UserModel = None,
 ) -> Optional[list[list[float]]]:
     try:
-        log.debug(
-            f"generate_openai_batch_embeddings:model {model} batch size: {len(texts)}"
-        )
+        log.debug(f"generate_openai_batch_embeddings:model {model} batch size: {len(texts)}")
         json_data = {"input": texts, "model": model}
         if isinstance(RAG_EMBEDDING_PREFIX_FIELD_NAME, str) and isinstance(prefix, str):
             json_data[RAG_EMBEDDING_PREFIX_FIELD_NAME] = prefix
@@ -884,9 +792,7 @@ async def generate_azure_openai_batch_embeddings(
     user: UserModel = None,
 ) -> Optional[list[list[float]]]:
     try:
-        log.debug(
-            f"generate_azure_openai_batch_embeddings:deployment {model} batch size: {len(texts)}"
-        )
+        log.debug(f"generate_azure_openai_batch_embeddings:deployment {model} batch size: {len(texts)}")
         json_data = {"input": texts}
         if isinstance(RAG_EMBEDDING_PREFIX_FIELD_NAME, str) and isinstance(prefix, str):
             json_data[RAG_EMBEDDING_PREFIX_FIELD_NAME] = prefix
@@ -938,9 +844,7 @@ async def generate_ollama_batch_embeddings(
     user: UserModel = None,
 ) -> Optional[list[list[float]]]:
     try:
-        log.debug(
-            f"generate_ollama_batch_embeddings:model {model} batch size: {len(texts)}"
-        )
+        log.debug(f"generate_ollama_batch_embeddings:model {model} batch size: {len(texts)}")
         json_data = {"input": texts, "model": model}
         if isinstance(RAG_EMBEDDING_PREFIX_FIELD_NAME, str) and isinstance(prefix, str):
             json_data[RAG_EMBEDDING_PREFIX_FIELD_NAME] = prefix
@@ -1006,9 +910,7 @@ async def generate_embeddings(
         )
         return embeddings[0] if isinstance(text, str) else embeddings
     elif engine == "openai":
-        embeddings = await generate_openai_batch_embeddings(
-            model, text if isinstance(text, list) else [text], url, key, prefix, user
-        )
+        embeddings = await generate_openai_batch_embeddings(model, text if isinstance(text, list) else [text], url, key, prefix, user)
         return embeddings[0] if isinstance(text, str) else embeddings
     elif engine == "azure_openai":
         azure_api_version = kwargs.get("azure_api_version", "")
@@ -1051,16 +953,12 @@ class RerankCompressor(BaseDocumentCompressor):
 
         scores = None
         if reranking:
-            scores = self.reranking_function(
-                [(query, doc.page_content) for doc in documents]
-            )
+            scores = self.reranking_function([(query, doc.page_content) for doc in documents])
         else:
             from sentence_transformers import util
 
             query_embedding = self.embedding_function(query, RAG_EMBEDDING_QUERY_PREFIX)
-            document_embedding = self.embedding_function(
-                [doc.page_content for doc in documents], RAG_EMBEDDING_CONTENT_PREFIX
-            )
+            document_embedding = self.embedding_function([doc.page_content for doc in documents], RAG_EMBEDDING_CONTENT_PREFIX)
             scores = util.cos_sim(query_embedding, document_embedding)[0]
 
         if scores is not None:
@@ -1071,9 +969,7 @@ class RerankCompressor(BaseDocumentCompressor):
                 )
             )
             if self.r_score:
-                docs_with_scores = [
-                    (d, s) for d, s in docs_with_scores if s >= self.r_score
-                ]
+                docs_with_scores = [(d, s) for d, s in docs_with_scores if s >= self.r_score]
 
             result = sorted(docs_with_scores, key=operator.itemgetter(1), reverse=True)
             final_results = []
@@ -1087,7 +983,5 @@ class RerankCompressor(BaseDocumentCompressor):
                 final_results.append(doc)
             return final_results
         else:
-            log.warning(
-                "No valid scores found, check your reranking function. Returning original documents."
-            )
+            log.warning("No valid scores found, check your reranking function. Returning original documents.")
             return documents

@@ -52,12 +52,7 @@ async def search_perplexity_search(
         # Extract citations from the response
         results = json_response.get("results", [])
 
-        return [
-            SearchResult(
-                link=result["url"], title=result["title"], snippet=result["snippet"]
-            )
-            for result in results
-        ]
+        return [SearchResult(link=result["url"], title=result["title"], snippet=result["snippet"]) for result in results]
 
     except Exception as e:
         log.error(f"Error searching with Perplexity Search API: {e}")

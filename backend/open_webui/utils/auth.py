@@ -44,9 +44,7 @@ def verify_signature(payload: str, signature: str) -> bool:
     Verifies the HMAC signature of the received payload.
     """
     try:
-        expected_signature = base64.b64encode(
-            hmac.new(TRUSTED_SIGNATURE_KEY, payload.encode(), hashlib.sha256).digest()
-        ).decode()
+        expected_signature = base64.b64encode(hmac.new(TRUSTED_SIGNATURE_KEY, payload.encode(), hashlib.sha256).digest()).decode()
 
         # Compare securely to prevent timing attacks
         return hmac.compare_digest(expected_signature, signature)
@@ -94,9 +92,7 @@ async def get_license_data(app, key):
             data_handler(payload)
             return True
         else:
-            log.error(
-                f"License: retrieval issue: {getattr(res, 'text', 'unknown error')}"
-            )
+            log.error(f"License: retrieval issue: {getattr(res, 'text', 'unknown error')}")
 
     if key:
         us = [
@@ -218,27 +214,14 @@ def get_current_user(
     # auth by api key
     if token.startswith("sk-"):
         if not request.state.enable_api_key:
-            raise HTTPException(
-                status.HTTP_403_FORBIDDEN, detail=ERROR_MESSAGES.API_KEY_NOT_ALLOWED
-            )
+            raise HTTPException(status.HTTP_403_FORBIDDEN, detail=ERROR_MESSAGES.API_KEY_NOT_ALLOWED)
 
         if request.app.state.config.ENABLE_API_KEY_ENDPOINT_RESTRICTIONS:
-            allowed_paths = [
-                path.strip()
-                for path in str(
-                    request.app.state.config.API_KEY_ALLOWED_ENDPOINTS
-                ).split(",")
-            ]
+            allowed_paths = [path.strip() for path in str(request.app.state.config.API_KEY_ALLOWED_ENDPOINTS).split(",")]
 
             # Check if the request path matches any allowed endpoint.
-            if not any(
-                request.url.path == allowed
-                or request.url.path.startswith(allowed + "/")
-                for allowed in allowed_paths
-            ):
-                raise HTTPException(
-                    status.HTTP_403_FORBIDDEN, detail=ERROR_MESSAGES.API_KEY_NOT_ALLOWED
-                )
+            if not any(request.url.path == allowed or request.url.path.startswith(allowed + "/") for allowed in allowed_paths):
+                raise HTTPException(status.HTTP_403_FORBIDDEN, detail=ERROR_MESSAGES.API_KEY_NOT_ALLOWED)
 
         user = get_current_user_by_api_key(token)
 
@@ -272,9 +255,7 @@ def get_current_user(
                 )
             else:
                 if WEBUI_AUTH_TRUSTED_EMAIL_HEADER:
-                    trusted_email = request.headers.get(
-                        WEBUI_AUTH_TRUSTED_EMAIL_HEADER, ""
-                    ).lower()
+                    trusted_email = request.headers.get(WEBUI_AUTH_TRUSTED_EMAIL_HEADER, "").lower()
                     if trusted_email and user.email != trusted_email:
                         raise HTTPException(
                             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -292,9 +273,7 @@ def get_current_user(
                 # Refresh the user's last active timestamp asynchronously
                 # to prevent blocking the request
                 if background_tasks:
-                    background_tasks.add_task(
-                        Users.update_user_last_active_by_id, user.id
-                    )
+                    background_tasks.add_task(Users.update_user_last_active_by_id, user.id)
             return user
         else:
             raise HTTPException(

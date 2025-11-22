@@ -117,9 +117,7 @@ class MessageResponse(MessageReplyToResponse):
 
 
 class MessageTable:
-    def insert_new_message(
-        self, form_data: MessageForm, channel_id: str, user_id: str
-    ) -> Optional[MessageModel]:
+    def insert_new_message(self, form_data: MessageForm, channel_id: str, user_id: str) -> Optional[MessageModel]:
         with get_db() as db:
             id = str(uuid.uuid4())
 
@@ -151,11 +149,7 @@ class MessageTable:
             if not message:
                 return None
 
-            reply_to_message = (
-                self.get_message_by_id(message.reply_to_id)
-                if message.reply_to_id
-                else None
-            )
+            reply_to_message = self.get_message_by_id(message.reply_to_id) if message.reply_to_id else None
 
             reactions = self.get_reactions_by_message_id(id)
             thread_replies = self.get_thread_replies_by_message_id(id)
@@ -165,12 +159,8 @@ class MessageTable:
                 {
                     **MessageModel.model_validate(message).model_dump(),
                     "user": user.model_dump() if user else None,
-                    "reply_to_message": (
-                        reply_to_message.model_dump() if reply_to_message else None
-                    ),
-                    "latest_reply_at": (
-                        thread_replies[0].created_at if thread_replies else None
-                    ),
+                    "reply_to_message": (reply_to_message.model_dump() if reply_to_message else None),
+                    "latest_reply_at": (thread_replies[0].created_at if thread_replies else None),
                     "reply_count": len(thread_replies),
                     "reactions": reactions,
                 }
@@ -178,29 +168,16 @@ class MessageTable:
 
     def get_thread_replies_by_message_id(self, id: str) -> list[MessageReplyToResponse]:
         with get_db() as db:
-            all_messages = (
-                db.query(Message)
-                .filter_by(parent_id=id)
-                .order_by(Message.created_at.desc())
-                .all()
-            )
+            all_messages = db.query(Message).filter_by(parent_id=id).order_by(Message.created_at.desc()).all()
 
             messages = []
             for message in all_messages:
-                reply_to_message = (
-                    self.get_message_by_id(message.reply_to_id)
-                    if message.reply_to_id
-                    else None
-                )
+                reply_to_message = self.get_message_by_id(message.reply_to_id) if message.reply_to_id else None
                 messages.append(
                     MessageReplyToResponse.model_validate(
                         {
                             **MessageModel.model_validate(message).model_dump(),
-                            "reply_to_message": (
-                                reply_to_message.model_dump()
-                                if reply_to_message
-                                else None
-                            ),
+                            "reply_to_message": (reply_to_message.model_dump() if reply_to_message else None),
                         }
                     )
                 )
@@ -208,52 +185,28 @@ class MessageTable:
 
     def get_reply_user_ids_by_message_id(self, id: str) -> list[str]:
         with get_db() as db:
-            return [
-                message.user_id
-                for message in db.query(Message).filter_by(parent_id=id).all()
-            ]
+            return [message.user_id for message in db.query(Message).filter_by(parent_id=id).all()]
 
-    def get_messages_by_channel_id(
-        self, channel_id: str, skip: int = 0, limit: int = 50
-    ) -> list[MessageReplyToResponse]:
+    def get_messages_by_channel_id(self, channel_id: str, skip: int = 0, limit: int = 50) -> list[MessageReplyToResponse]:
         with get_db() as db:
-            all_messages = (
-                db.query(Message)
-                .filter_by(channel_id=channel_id, parent_id=None)
-                .order_by(Message.created_at.desc())
-                .offset(skip)
-                .limit(limit)
-                .all()
-            )
+            all_messages = db.query(Message).filter_by(channel_id=channel_id, parent_id=None).order_by(Message.created_at.desc()).offset(skip).limit(limit).all()
 
             messages = []
             for message in all_messages:
-                reply_to_message = (
-                    self.get_message_by_id(message.reply_to_id)
-                    if message.reply_to_id
-                    else None
-                )
+                reply_to_message = self.get_message_by_id(message.reply_to_id) if message.reply_to_id else None
                 messages.append(
                     MessageReplyToResponse.model_validate(
                         {
                             **MessageModel.model_validate(message).model_dump(),
-                            "reply_to_message": (
-                                reply_to_message.model_dump()
-                                if reply_to_message
-                                else None
-                            ),
+                            "reply_to_message": (reply_to_message.model_dump() if reply_to_message else None),
                         }
                     )
                 )
             return messages
 
-    def get_thread_messages_eager(
-        self, channel_id: str, parent_id: str, skip: int = 0, limit: int = 50
-    ) -> list[Message]:
+    def get_thread_messages_eager(self, channel_id: str, parent_id: str, skip: int = 0, limit: int = 50) -> list[Message]:
         with get_db() as db:
-            parent_message_exists = (
-                db.query(db.query(Message).filter_by(id=parent_id).exists()).scalar()
-            )
+            parent_message_exists = db.query(db.query(Message).filter_by(id=parent_id).exists()).scalar()
             if not parent_message_exists:
                 return []
 
@@ -288,23 +241,14 @@ class MessageTable:
 
             return messages
 
-    def get_messages_by_parent_id(
-        self, channel_id: str, parent_id: str, skip: int = 0, limit: int = 50
-    ) -> list[MessageReplyToResponse]:
+    def get_messages_by_parent_id(self, channel_id: str, parent_id: str, skip: int = 0, limit: int = 50) -> list[MessageReplyToResponse]:
         with get_db() as db:
             message = db.get(Message, parent_id)
 
             if not message:
                 return []
 
-            all_messages = (
-                db.query(Message)
-                .filter_by(channel_id=channel_id, parent_id=parent_id)
-                .order_by(Message.created_at.desc())
-                .offset(skip)
-                .limit(limit)
-                .all()
-            )
+            all_messages = db.query(Message).filter_by(channel_id=channel_id, parent_id=parent_id).order_by(Message.created_at.desc()).offset(skip).limit(limit).all()
 
             # If length of all_messages is less than limit, then add the parent message
             if len(all_messages) < limit:
@@ -312,28 +256,18 @@ class MessageTable:
 
             messages = []
             for message in all_messages:
-                reply_to_message = (
-                    self.get_message_by_id(message.reply_to_id)
-                    if message.reply_to_id
-                    else None
-                )
+                reply_to_message = self.get_message_by_id(message.reply_to_id) if message.reply_to_id else None
                 messages.append(
                     MessageReplyToResponse.model_validate(
                         {
                             **MessageModel.model_validate(message).model_dump(),
-                            "reply_to_message": (
-                                reply_to_message.model_dump()
-                                if reply_to_message
-                                else None
-                            ),
+                            "reply_to_message": (reply_to_message.model_dump() if reply_to_message else None),
                         }
                     )
                 )
             return messages
 
-    def update_message_by_id(
-        self, id: str, form_data: MessageForm
-    ) -> Optional[MessageModel]:
+    def update_message_by_id(self, id: str, form_data: MessageForm) -> Optional[MessageModel]:
         with get_db() as db:
             message = db.get(Message, id)
             message.content = form_data.content
@@ -350,9 +284,7 @@ class MessageTable:
             db.refresh(message)
             return MessageModel.model_validate(message) if message else None
 
-    def add_reaction_to_message(
-        self, id: str, user_id: str, name: str
-    ) -> Optional[MessageReactionModel]:
+    def add_reaction_to_message(self, id: str, user_id: str, name: str) -> Optional[MessageReactionModel]:
         with get_db() as db:
             reaction_id = str(uuid.uuid4())
             reaction = MessageReactionModel(
@@ -385,13 +317,9 @@ class MessageTable:
 
             return [Reactions(**reaction) for reaction in reactions.values()]
 
-    def remove_reaction_by_id_and_user_id_and_name(
-        self, id: str, user_id: str, name: str
-    ) -> bool:
+    def remove_reaction_by_id_and_user_id_and_name(self, id: str, user_id: str, name: str) -> bool:
         with get_db() as db:
-            db.query(MessageReaction).filter_by(
-                message_id=id, user_id=user_id, name=name
-            ).delete()
+            db.query(MessageReaction).filter_by(message_id=id, user_id=user_id, name=name).delete()
             db.commit()
             return True
 

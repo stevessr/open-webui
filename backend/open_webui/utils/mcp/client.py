@@ -20,13 +20,9 @@ class MCPClient:
                 transport = await exit_stack.enter_async_context(self._streams_context)
                 read_stream, write_stream, _ = transport
 
-                self._session_context = ClientSession(
-                    read_stream, write_stream
-                )  # pylint: disable=W0201
+                self._session_context = ClientSession(read_stream, write_stream)  # pylint: disable=W0201
 
-                self.session = await exit_stack.enter_async_context(
-                    self._session_context
-                )
+                self.session = await exit_stack.enter_async_context(self._session_context)
                 with anyio.fail_after(10):
                     await self.session.initialize()
                 self.exit_stack = exit_stack.pop_all()
@@ -51,15 +47,11 @@ class MCPClient:
             # TODO: handle outputSchema if needed
             outputSchema = getattr(tool, "outputSchema", None)
 
-            tool_specs.append(
-                {"name": name, "description": description, "parameters": inputSchema}
-            )
+            tool_specs.append({"name": name, "description": description, "parameters": inputSchema})
 
         return tool_specs
 
-    async def call_tool(
-        self, function_name: str, function_args: dict
-    ) -> Optional[dict]:
+    async def call_tool(self, function_name: str, function_args: dict) -> Optional[dict]:
         if not self.session:
             raise RuntimeError("MCP client is not connected.")
 

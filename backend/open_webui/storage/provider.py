@@ -47,9 +47,7 @@ class StorageProvider(ABC):
         pass
 
     @abstractmethod
-    async def upload_file(
-        self, file: BinaryIO, filename: str, tags: Dict[str, str]
-    ) -> Tuple[bytes, str]:
+    async def upload_file(self, file: BinaryIO, filename: str, tags: Dict[str, str]) -> Tuple[bytes, str]:
         pass
 
     @abstractmethod
@@ -63,9 +61,7 @@ class StorageProvider(ABC):
 
 class LocalStorageProvider(StorageProvider):
     @staticmethod
-    async def upload_file(
-        file: BinaryIO, filename: str, tags: Dict[str, str]
-    ) -> Tuple[bytes, str]:
+    async def upload_file(file: BinaryIO, filename: str, tags: Dict[str, str]) -> Tuple[bytes, str]:
         contents = await asyncio.to_thread(file.read)
         if not contents:
             raise ValueError(ERROR_MESSAGES.EMPTY_CONTENT)
@@ -146,30 +142,22 @@ class S3StorageProvider(StorageProvider):
         """Only include S3 allowed characters."""
         return re.sub(r"[^a-zA-Z0-9 äöüÄÖÜß\+\-=\._:/@]", "", s)
 
-    async def upload_file(
-        self, file: BinaryIO, filename: str, tags: Dict[str, str]
-    ) -> Tuple[bytes, str]:
+    async def upload_file(self, file: BinaryIO, filename: str, tags: Dict[str, str]) -> Tuple[bytes, str]:
         """Handles uploading of the file to S3 storage."""
         contents, file_path = await LocalStorageProvider.upload_file(file, filename, tags)
         s3_key = os.path.join(self.key_prefix, filename)
         try:
             await asyncio.to_thread(self.s3_client.upload_file, file_path, self.bucket_name, s3_key)
             if S3_ENABLE_TAGGING and tags:
-                sanitized_tags = {
-                    self.sanitize_tag_value(k): self.sanitize_tag_value(v)
-                    for k, v in tags.items()
-                }
-                tagging = {
-                    "TagSet": [
-                        {"Key": k, "Value": v} for k, v in sanitized_tags.items()
-                    ]
-                }
-                await asyncio.to_thread(self.s3_client.put_object_tagging,
+                sanitized_tags = {self.sanitize_tag_value(k): self.sanitize_tag_value(v) for k, v in tags.items()}
+                tagging = {"TagSet": [{"Key": k, "Value": v} for k, v in sanitized_tags.items()]}
+                await asyncio.to_thread(
+                    self.s3_client.put_object_tagging,
                     Bucket=self.bucket_name,
                     Key=s3_key,
                     Tagging=tagging,
                 )
-            
+
             async with aiofiles.open(file_path, "rb") as f:
                 content_bytes = await f.read()
             return (
@@ -210,9 +198,7 @@ class S3StorageProvider(StorageProvider):
                     if not content["Key"].startswith(self.key_prefix):
                         continue
 
-                    await asyncio.to_thread(self.s3_client.delete_object,
-                        Bucket=self.bucket_name, Key=content["Key"]
-                    )
+                    await asyncio.to_thread(self.s3_client.delete_object, Bucket=self.bucket_name, Key=content["Key"])
         except ClientError as e:
             raise RuntimeError(f"Error deleting all files from S3: {e}")
 
@@ -232,9 +218,7 @@ class GCSStorageProvider(StorageProvider):
         self.bucket_name = GCS_BUCKET_NAME
 
         if GOOGLE_APPLICATION_CREDENTIALS_JSON:
-            self.gcs_client = storage.Client.from_service_account_info(
-                info=json.loads(GOOGLE_APPLICATION_CREDENTIALS_JSON)
-            )
+            self.gcs_client = storage.Client.from_service_account_info(info=json.loads(GOOGLE_APPLICATION_CREDENTIALS_JSON))
         else:
             # if no credentials json is provided, credentials will be picked up from the environment
             # if running on local environment, credentials would be user credentials
@@ -242,9 +226,7 @@ class GCSStorageProvider(StorageProvider):
             self.gcs_client = storage.Client()
         self.bucket = self.gcs_client.bucket(GCS_BUCKET_NAME)
 
-    async def upload_file(
-        self, file: BinaryIO, filename: str, tags: Dict[str, str]
-    ) -> Tuple[bytes, str]:
+    async def upload_file(self, file: BinaryIO, filename: str, tags: Dict[str, str]) -> Tuple[bytes, str]:
         """Handles uploading of the file to GCS storage."""
         contents, file_path = await LocalStorageProvider.upload_file(file, filename, tags)
         try:
@@ -301,22 +283,14 @@ class AzureStorageProvider(StorageProvider):
 
         if storage_key:
             # Configure using the Azure Storage Account Endpoint and Key
-            self.blob_service_client = BlobServiceClient(
-                account_url=self.endpoint, credential=storage_key
-            )
+            self.blob_service_client = BlobServiceClient(account_url=self.endpoint, credential=storage_key)
         else:
             # Configure using the Azure Storage Account Endpoint and DefaultAzureCredential
             # If the key is not configured, then the DefaultAzureCredential will be used to support Managed Identity authentication
-            self.blob_service_client = BlobServiceClient(
-                account_url=self.endpoint, credential=DefaultAzureCredential()
-            )
-        self.container_client = self.blob_service_client.get_container_client(
-            self.container_name
-        )
+            self.blob_service_client = BlobServiceClient(account_url=self.endpoint, credential=DefaultAzureCredential())
+        self.container_client = self.blob_service_client.get_container_client(self.container_name)
 
-    async def upload_file(
-        self, file: BinaryIO, filename: str, tags: Dict[str, str]
-    ) -> Tuple[bytes, str]:
+    async def upload_file(self, file: BinaryIO, filename: str, tags: Dict[str, str]) -> Tuple[bytes, str]:
         """Handles uploading of the file to Azure Blob Storage."""
         contents, file_path = await LocalStorageProvider.upload_file(file, filename, tags)
         try:

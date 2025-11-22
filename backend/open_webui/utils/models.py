@@ -47,31 +47,17 @@ async def fetch_openai_models(request: Request, user: UserModel = None):
 
 
 async def get_all_base_models(request: Request, user: UserModel = None):
-    openai_task = (
-        fetch_openai_models(request, user)
-        if request.app.state.config.ENABLE_OPENAI_API
-        else asyncio.sleep(0, result=[])
-    )
-    ollama_task = (
-        fetch_ollama_models(request, user)
-        if request.app.state.config.ENABLE_OLLAMA_API
-        else asyncio.sleep(0, result=[])
-    )
+    openai_task = fetch_openai_models(request, user) if request.app.state.config.ENABLE_OPENAI_API else asyncio.sleep(0, result=[])
+    ollama_task = fetch_ollama_models(request, user) if request.app.state.config.ENABLE_OLLAMA_API else asyncio.sleep(0, result=[])
     function_task = get_function_models(request)
 
-    openai_models, ollama_models, function_models = await asyncio.gather(
-        openai_task, ollama_task, function_task
-    )
+    openai_models, ollama_models, function_models = await asyncio.gather(openai_task, ollama_task, function_task)
 
     return function_models + openai_models + ollama_models
 
 
 async def get_all_models(request, refresh: bool = False, user: UserModel = None):
-    if (
-        request.app.state.MODELS
-        and request.app.state.BASE_MODELS
-        and (request.app.state.config.ENABLE_BASE_MODELS_CACHE and not refresh)
-    ):
+    if request.app.state.MODELS and request.app.state.BASE_MODELS and (request.app.state.config.ENABLE_BASE_MODELS_CACHE and not refresh):
         base_models = request.app.state.BASE_MODELS
     else:
         base_models = await get_all_base_models(request, user=user)
@@ -119,21 +105,11 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
             ]
         models = models + arena_models
 
-    global_action_ids = [
-        function.id for function in await Functions.get_global_action_functions()
-    ]
-    enabled_action_ids = [
-        function.id
-        for function in await Functions.get_functions_by_type("action", active_only=True)
-    ]
+    global_action_ids = [function.id for function in await Functions.get_global_action_functions()]
+    enabled_action_ids = [function.id for function in await Functions.get_functions_by_type("action", active_only=True)]
 
-    global_filter_ids = [
-        function.id for function in await Functions.get_global_filter_functions()
-    ]
-    enabled_filter_ids = [
-        function.id
-        for function in await Functions.get_functions_by_type("filter", active_only=True)
-    ]
+    global_filter_ids = [function.id for function in await Functions.get_global_filter_functions()]
+    enabled_filter_ids = [function.id for function in await Functions.get_functions_by_type("filter", active_only=True)]
 
     custom_models = Models.get_all_models()
     for custom_model in custom_models:
@@ -141,11 +117,7 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
             # Applied directly to a base model
             for model in models:
                 if custom_model.id == model["id"] or (
-                    model.get("owned_by") == "ollama"
-                    and custom_model.id
-                    == model["id"].split(":")[
-                        0
-                    ]  # Ollama may return model ids in different formats (e.g., 'llama3' vs. 'llama3:7b')
+                    model.get("owned_by") == "ollama" and custom_model.id == model["id"].split(":")[0]  # Ollama may return model ids in different formats (e.g., 'llama3' vs. 'llama3:7b')
                 ):
                     if custom_model.is_active:
                         model["name"] = custom_model.name
@@ -157,12 +129,8 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
 
                         if "info" in model:
                             if "meta" in model["info"]:
-                                action_ids.extend(
-                                    model["info"]["meta"].get("actionIds", [])
-                                )
-                                filter_ids.extend(
-                                    model["info"]["meta"].get("filterIds", [])
-                                )
+                                action_ids.extend(model["info"]["meta"].get("actionIds", []))
+                                filter_ids.extend(model["info"]["meta"].get("filterIds", []))
 
                             if "params" in model["info"]:
                                 # Remove params to avoid exposing sensitive info
@@ -173,18 +141,13 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
                     else:
                         models.remove(model)
 
-        elif custom_model.is_active and (
-            custom_model.id not in [model["id"] for model in models]
-        ):
+        elif custom_model.is_active and (custom_model.id not in [model["id"] for model in models]):
             # Custom model based on a base model
             owned_by = "openai"
             pipe = None
 
             for m in models:
-                if (
-                    custom_model.base_model_id == m["id"]
-                    or custom_model.base_model_id == m["id"].split(":")[0]
-                ):
+                if custom_model.base_model_id == m["id"] or custom_model.base_model_id == m["id"].split(":")[0]:
                     owned_by = m.get("owned_by", "unknown")
                     if "pipe" in m:
                         pipe = m["pipe"]
@@ -236,9 +199,7 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
                     "description": function.meta.description,
                     "icon": action.get(
                         "icon_url",
-                        function.meta.manifest.get("icon_url", None)
-                        or getattr(module, "icon_url", None)
-                        or getattr(module, "icon", None),
+                        function.meta.manifest.get("icon_url", None) or getattr(module, "icon_url", None) or getattr(module, "icon", None),
                     ),
                 }
                 for action in actions
@@ -249,9 +210,7 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
                     "id": function.id,
                     "name": function.name,
                     "description": function.meta.description,
-                    "icon": function.meta.manifest.get("icon_url", None)
-                    or getattr(module, "icon_url", None)
-                    or getattr(module, "icon", None),
+                    "icon": function.meta.manifest.get("icon_url", None) or getattr(module, "icon_url", None) or getattr(module, "icon", None),
                 }
             ]
 
@@ -262,9 +221,7 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
                 "id": function.id,
                 "name": function.name,
                 "description": function.meta.description,
-                "icon": function.meta.manifest.get("icon_url", None)
-                or getattr(module, "icon_url", None)
-                or getattr(module, "icon", None),
+                "icon": function.meta.manifest.get("icon_url", None) or getattr(module, "icon_url", None) or getattr(module, "icon", None),
                 "has_user_valves": hasattr(module, "UserValves"),
             }
         ]
@@ -274,16 +231,8 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
         return function_module
 
     for model in models:
-        action_ids = [
-            action_id
-            for action_id in list(set(model.pop("action_ids", []) + global_action_ids))
-            if action_id in enabled_action_ids
-        ]
-        filter_ids = [
-            filter_id
-            for filter_id in list(set(model.pop("filter_ids", []) + global_filter_ids))
-            if filter_id in enabled_filter_ids
-        ]
+        action_ids = [action_id for action_id in list(set(model.pop("action_ids", []) + global_action_ids)) if action_id in enabled_action_ids]
+        filter_ids = [filter_id for filter_id in list(set(model.pop("filter_ids", []) + global_filter_ids)) if filter_id in enabled_filter_ids]
 
         model["actions"] = []
         for action_id in action_ids:
@@ -292,9 +241,7 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
                 raise Exception(f"Action not found: {action_id}")
 
             function_module = get_function_module_by_id(action_id)
-            model["actions"].extend(
-                get_action_items_from_module(action_function, function_module)
-            )
+            model["actions"].extend(get_action_items_from_module(action_function, function_module))
 
         model["filters"] = []
         for filter_id in filter_ids:
@@ -305,9 +252,7 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
             function_module = get_function_module_by_id(filter_id)
 
             if getattr(function_module, "toggle", None):
-                model["filters"].extend(
-                    get_filter_items_from_module(filter_function, function_module)
-                )
+                model["filters"].extend(get_filter_items_from_module(filter_function, function_module))
 
     log.debug(f"get_all_models() returned {len(models)} models")
 
@@ -320,39 +265,27 @@ def check_model_access(user, model):
         if not has_access(
             user.id,
             type="read",
-            access_control=model.get("info", {})
-            .get("meta", {})
-            .get("access_control", {}),
+            access_control=model.get("info", {}).get("meta", {}).get("access_control", {}),
         ):
             raise Exception("Model not found")
     else:
         model_info = Models.get_model_by_id(model.get("id"))
         if not model_info:
             raise Exception("Model not found")
-        elif not (
-            user.id == model_info.user_id
-            or has_access(
-                user.id, type="read", access_control=model_info.access_control
-            )
-        ):
+        elif not (user.id == model_info.user_id or has_access(user.id, type="read", access_control=model_info.access_control)):
             raise Exception("Model not found")
 
 
 def get_filtered_models(models, user):
     # Filter out models that the user does not have access to
-    if (
-        user.role == "user"
-        or (user.role == "admin" and not BYPASS_ADMIN_ACCESS_CONTROL)
-    ) and not BYPASS_MODEL_ACCESS_CONTROL:
+    if (user.role == "user" or (user.role == "admin" and not BYPASS_ADMIN_ACCESS_CONTROL)) and not BYPASS_MODEL_ACCESS_CONTROL:
         filtered_models = []
         for model in models:
             if model.get("arena"):
                 if has_access(
                     user.id,
                     type="read",
-                    access_control=model.get("info", {})
-                    .get("meta", {})
-                    .get("access_control", {}),
+                    access_control=model.get("info", {}).get("meta", {}).get("access_control", {}),
                 ):
                     filtered_models.append(model)
                 continue

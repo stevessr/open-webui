@@ -530,6 +530,7 @@ def start_tool_servers():
     # Assuming it is defined somewhere else or needs to be awaited.
     pass
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.instance_id = INSTANCE_ID
@@ -551,17 +552,13 @@ async def lifespan(app: FastAPI):
 
     app.state.redis = get_redis_connection(
         redis_url=REDIS_URL,
-        redis_sentinels=get_sentinels_from_env(
-            REDIS_SENTINEL_HOSTS, REDIS_SENTINEL_PORT
-        ),
+        redis_sentinels=get_sentinels_from_env(REDIS_SENTINEL_HOSTS, REDIS_SENTINEL_PORT),
         redis_cluster=REDIS_CLUSTER,
         async_mode=True,
     )
 
     if app.state.redis is not None:
-        app.state.redis_task_command_listener = asyncio.create_task(
-            redis_task_command_listener(app)
-        )
+        app.state.redis_task_command_listener = asyncio.create_task(redis_task_command_listener(app))
 
     if THREAD_POOL_SIZE and THREAD_POOL_SIZE > 0:
         limiter = anyio.to_thread.current_default_thread_limiter()
@@ -709,9 +706,7 @@ app.state.config.ENABLE_SIGNUP = ENABLE_SIGNUP
 app.state.config.ENABLE_LOGIN_FORM = ENABLE_LOGIN_FORM
 
 app.state.config.ENABLE_API_KEY = ENABLE_API_KEY
-app.state.config.ENABLE_API_KEY_ENDPOINT_RESTRICTIONS = (
-    ENABLE_API_KEY_ENDPOINT_RESTRICTIONS
-)
+app.state.config.ENABLE_API_KEY_ENDPOINT_RESTRICTIONS = ENABLE_API_KEY_ENDPOINT_RESTRICTIONS
 app.state.config.API_KEY_ALLOWED_ENDPOINTS = API_KEY_ALLOWED_ENDPOINTS
 
 app.state.config.JWT_EXPIRES_IN = JWT_EXPIRES_IN
@@ -820,9 +815,7 @@ app.state.config.DATALAB_MARKER_SKIP_CACHE = DATALAB_MARKER_SKIP_CACHE
 app.state.config.DATALAB_MARKER_FORCE_OCR = DATALAB_MARKER_FORCE_OCR
 app.state.config.DATALAB_MARKER_PAGINATE = DATALAB_MARKER_PAGINATE
 app.state.config.DATALAB_MARKER_STRIP_EXISTING_OCR = DATALAB_MARKER_STRIP_EXISTING_OCR
-app.state.config.DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION = (
-    DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION
-)
+app.state.config.DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION = DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION
 app.state.config.DATALAB_MARKER_FORMAT_LINES = DATALAB_MARKER_FORMAT_LINES
 app.state.config.DATALAB_MARKER_USE_LLM = DATALAB_MARKER_USE_LLM
 app.state.config.DATALAB_MARKER_OUTPUT_FORMAT = DATALAB_MARKER_OUTPUT_FORMAT
@@ -894,9 +887,7 @@ app.state.config.WEB_LOADER_ENGINE = WEB_LOADER_ENGINE
 app.state.config.WEB_LOADER_CONCURRENT_REQUESTS = WEB_LOADER_CONCURRENT_REQUESTS
 
 app.state.config.WEB_SEARCH_TRUST_ENV = WEB_SEARCH_TRUST_ENV
-app.state.config.BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL = (
-    BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL
-)
+app.state.config.BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL = BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL
 app.state.config.BYPASS_WEB_SEARCH_WEB_LOADER = BYPASS_WEB_SEARCH_WEB_LOADER
 
 app.state.config.ENABLE_GOOGLE_DRIVE_INTEGRATION = ENABLE_GOOGLE_DRIVE_INTEGRATION
@@ -957,10 +948,7 @@ try:
         app.state.config.RAG_EMBEDDING_MODEL,
         RAG_EMBEDDING_MODEL_AUTO_UPDATE,
     )
-    if (
-        app.state.config.ENABLE_RAG_HYBRID_SEARCH
-        and not app.state.config.BYPASS_EMBEDDING_AND_RETRIEVAL
-    ):
+    if app.state.config.ENABLE_RAG_HYBRID_SEARCH and not app.state.config.BYPASS_EMBEDDING_AND_RETRIEVAL:
         app.state.rf = get_rf(
             app.state.config.RAG_RERANKING_ENGINE,
             app.state.config.RAG_RERANKING_MODEL,
@@ -979,30 +967,10 @@ app.state.EMBEDDING_FUNCTION = get_embedding_function(
     app.state.config.RAG_EMBEDDING_ENGINE,
     app.state.config.RAG_EMBEDDING_MODEL,
     embedding_function=app.state.ef,
-    url=(
-        app.state.config.RAG_OPENAI_API_BASE_URL
-        if app.state.config.RAG_EMBEDDING_ENGINE == "openai"
-        else (
-            app.state.config.RAG_OLLAMA_BASE_URL
-            if app.state.config.RAG_EMBEDDING_ENGINE == "ollama"
-            else app.state.config.RAG_AZURE_OPENAI_BASE_URL
-        )
-    ),
-    key=(
-        app.state.config.RAG_OPENAI_API_KEY
-        if app.state.config.RAG_EMBEDDING_ENGINE == "openai"
-        else (
-            app.state.config.RAG_OLLAMA_API_KEY
-            if app.state.config.RAG_EMBEDDING_ENGINE == "ollama"
-            else app.state.config.RAG_AZURE_OPENAI_API_KEY
-        )
-    ),
+    url=(app.state.config.RAG_OPENAI_API_BASE_URL if app.state.config.RAG_EMBEDDING_ENGINE == "openai" else (app.state.config.RAG_OLLAMA_BASE_URL if app.state.config.RAG_EMBEDDING_ENGINE == "ollama" else app.state.config.RAG_AZURE_OPENAI_BASE_URL)),
+    key=(app.state.config.RAG_OPENAI_API_KEY if app.state.config.RAG_EMBEDDING_ENGINE == "openai" else (app.state.config.RAG_OLLAMA_API_KEY if app.state.config.RAG_EMBEDDING_ENGINE == "ollama" else app.state.config.RAG_AZURE_OPENAI_API_KEY)),
     embedding_batch_size=app.state.config.RAG_EMBEDDING_BATCH_SIZE,
-    azure_api_version=(
-        app.state.config.RAG_AZURE_OPENAI_API_VERSION
-        if app.state.config.RAG_EMBEDDING_ENGINE == "azure_openai"
-        else None
-    ),
+    azure_api_version=(app.state.config.RAG_AZURE_OPENAI_API_VERSION if app.state.config.RAG_EMBEDDING_ENGINE == "azure_openai" else None),
 )
 
 app.state.RERANKING_FUNCTION = get_reranking_function(
@@ -1022,9 +990,7 @@ app.state.config.CODE_EXECUTION_ENGINE = CODE_EXECUTION_ENGINE
 app.state.config.CODE_EXECUTION_JUPYTER_URL = CODE_EXECUTION_JUPYTER_URL
 app.state.config.CODE_EXECUTION_JUPYTER_AUTH = CODE_EXECUTION_JUPYTER_AUTH
 app.state.config.CODE_EXECUTION_JUPYTER_AUTH_TOKEN = CODE_EXECUTION_JUPYTER_AUTH_TOKEN
-app.state.config.CODE_EXECUTION_JUPYTER_AUTH_PASSWORD = (
-    CODE_EXECUTION_JUPYTER_AUTH_PASSWORD
-)
+app.state.config.CODE_EXECUTION_JUPYTER_AUTH_PASSWORD = CODE_EXECUTION_JUPYTER_AUTH_PASSWORD
 app.state.config.CODE_EXECUTION_JUPYTER_TIMEOUT = CODE_EXECUTION_JUPYTER_TIMEOUT
 
 app.state.config.ENABLE_CODE_INTERPRETER = ENABLE_CODE_INTERPRETER
@@ -1033,12 +999,8 @@ app.state.config.CODE_INTERPRETER_PROMPT_TEMPLATE = CODE_INTERPRETER_PROMPT_TEMP
 
 app.state.config.CODE_INTERPRETER_JUPYTER_URL = CODE_INTERPRETER_JUPYTER_URL
 app.state.config.CODE_INTERPRETER_JUPYTER_AUTH = CODE_INTERPRETER_JUPYTER_AUTH
-app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_TOKEN = (
-    CODE_INTERPRETER_JUPYTER_AUTH_TOKEN
-)
-app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD = (
-    CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD
-)
+app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_TOKEN = CODE_INTERPRETER_JUPYTER_AUTH_TOKEN
+app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD = CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD
 app.state.config.CODE_INTERPRETER_JUPYTER_TIMEOUT = CODE_INTERPRETER_JUPYTER_TIMEOUT
 
 ########################################
@@ -1112,9 +1074,7 @@ app.state.config.AUDIO_STT_AZURE_MAX_SPEAKERS = AUDIO_STT_AZURE_MAX_SPEAKERS
 
 app.state.config.AUDIO_STT_MISTRAL_API_KEY = AUDIO_STT_MISTRAL_API_KEY
 app.state.config.AUDIO_STT_MISTRAL_API_BASE_URL = AUDIO_STT_MISTRAL_API_BASE_URL
-app.state.config.AUDIO_STT_MISTRAL_USE_CHAT_COMPLETIONS = (
-    AUDIO_STT_MISTRAL_USE_CHAT_COMPLETIONS
-)
+app.state.config.AUDIO_STT_MISTRAL_USE_CHAT_COMPLETIONS = AUDIO_STT_MISTRAL_USE_CHAT_COMPLETIONS
 
 app.state.config.TTS_ENGINE = AUDIO_TTS_ENGINE
 
@@ -1160,23 +1120,13 @@ app.state.config.ENABLE_FOLLOW_UP_GENERATION = ENABLE_FOLLOW_UP_GENERATION
 
 app.state.config.TITLE_GENERATION_PROMPT_TEMPLATE = TITLE_GENERATION_PROMPT_TEMPLATE
 app.state.config.TAGS_GENERATION_PROMPT_TEMPLATE = TAGS_GENERATION_PROMPT_TEMPLATE
-app.state.config.IMAGE_PROMPT_GENERATION_PROMPT_TEMPLATE = (
-    IMAGE_PROMPT_GENERATION_PROMPT_TEMPLATE
-)
-app.state.config.FOLLOW_UP_GENERATION_PROMPT_TEMPLATE = (
-    FOLLOW_UP_GENERATION_PROMPT_TEMPLATE
-)
+app.state.config.IMAGE_PROMPT_GENERATION_PROMPT_TEMPLATE = IMAGE_PROMPT_GENERATION_PROMPT_TEMPLATE
+app.state.config.FOLLOW_UP_GENERATION_PROMPT_TEMPLATE = FOLLOW_UP_GENERATION_PROMPT_TEMPLATE
 
-app.state.config.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE = (
-    TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE
-)
+app.state.config.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE = TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE
 app.state.config.QUERY_GENERATION_PROMPT_TEMPLATE = QUERY_GENERATION_PROMPT_TEMPLATE
-app.state.config.AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE = (
-    AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE
-)
-app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH = (
-    AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH
-)
+app.state.config.AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE = AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE
+app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH = AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH
 
 
 ########################################
@@ -1247,9 +1197,7 @@ async def commit_session_after_request(request: Request, call_next):
 @app.middleware("http")
 async def check_url(request: Request, call_next):
     start_time = int(time.time())
-    request.state.token = get_http_authorization_cred(
-        request.headers.get("Authorization")
-    )
+    request.state.token = get_http_authorization_cred(request.headers.get("Authorization"))
 
     request.state.enable_api_key = app.state.config.ENABLE_API_KEY
     response = await call_next(request)
@@ -1260,10 +1208,7 @@ async def check_url(request: Request, call_next):
 
 @app.middleware("http")
 async def inspect_websocket(request: Request, call_next):
-    if (
-        "/ws/socket.io" in request.url.path
-        and request.query_params.get("transport") == "websocket"
-    ):
+    if "/ws/socket.io" in request.url.path and request.query_params.get("transport") == "websocket":
         upgrade = (request.headers.get("Upgrade") or "").lower()
         connection = (request.headers.get("Connection") or "").lower().split(",")
         # Check that there's the correct headers for an upgrade, else reject the connection
@@ -1320,9 +1265,7 @@ app.include_router(folders.router, prefix="/api/v1/folders", tags=["folders"])
 app.include_router(groups.router, prefix="/api/v1/groups", tags=["groups"])
 app.include_router(files.router, prefix="/api/v1/files", tags=["files"])
 app.include_router(functions.router, prefix="/api/v1/functions", tags=["functions"])
-app.include_router(
-    evaluations.router, prefix="/api/v1/evaluations", tags=["evaluations"]
-)
+app.include_router(evaluations.router, prefix="/api/v1/evaluations", tags=["evaluations"])
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 
 # SCIM 2.0 API for identity management
@@ -1352,9 +1295,7 @@ if audit_level != AuditLevel.NONE:
 
 @app.get("/api/models")
 @app.get("/api/v1/models")  # Experimental: Compatibility with OpenAI API
-async def get_models(
-    request: Request, refresh: bool = False, user=Depends(get_verified_user)
-):
+async def get_models(request: Request, refresh: bool = False, user=Depends(get_verified_user)):
     all_models = await get_all_models(request, refresh=refresh, user=user)
 
     models = []
@@ -1364,10 +1305,7 @@ async def get_models(
             continue
 
         try:
-            model_tags = [
-                tag.get("name")
-                for tag in model.get("info", {}).get("meta", {}).get("tags", [])
-            ]
+            model_tags = [tag.get("name") for tag in model.get("info", {}).get("meta", {}).get("tags", [])]
             tags = [tag.get("name") for tag in model.get("tags", [])]
 
             tags = list(set(model_tags + tags))
@@ -1392,9 +1330,7 @@ async def get_models(
 
     models = get_filtered_models(models, user)
 
-    log.debug(
-        f"/api/models returned filtered models accessible to the user: {json.dumps([model.get('id') for model in models])}"
-    )
+    log.debug(f"/api/models returned filtered models accessible to the user: {json.dumps([model.get('id') for model in models])}")
     return {"data": models}
 
 
@@ -1411,9 +1347,7 @@ async def get_base_models(request: Request, user=Depends(get_admin_user)):
 
 @app.post("/api/embeddings")
 @app.post("/api/v1/embeddings")  # Experimental: Compatibility with OpenAI API
-async def embeddings(
-    request: Request, form_data: dict, user=Depends(get_verified_user)
-):
+async def embeddings(request: Request, form_data: dict, user=Depends(get_verified_user)):
     """
     OpenAI-compatible embeddings endpoint.
 
@@ -1460,9 +1394,7 @@ async def chat_completion(
             model_info = Models.get_model_by_id(model_id)
 
             # Check if user has access to the model
-            if not BYPASS_MODEL_ACCESS_CONTROL and (
-                user.role != "admin" or not BYPASS_ADMIN_ACCESS_CONTROL
-            ):
+            if not BYPASS_MODEL_ACCESS_CONTROL and (user.role != "admin" or not BYPASS_ADMIN_ACCESS_CONTROL):
                 try:
                     check_model_access(user, model)
                 except Exception as e:
@@ -1474,14 +1406,10 @@ async def chat_completion(
             request.state.direct = True
             request.state.model = model
 
-        model_info_params = (
-            model_info.params.model_dump() if model_info and model_info.params else {}
-        )
+        model_info_params = model_info.params.model_dump() if model_info and model_info.params else {}
 
         # Chat Params
-        stream_delta_chunk_size = form_data.get("params", {}).get(
-            "stream_delta_chunk_size"
-        )
+        stream_delta_chunk_size = form_data.get("params", {}).get("stream_delta_chunk_size")
         reasoning_tags = form_data.get("params", {}).get("reasoning_tags")
 
         # Model Params
@@ -1507,14 +1435,7 @@ async def chat_completion(
             "params": {
                 "stream_delta_chunk_size": stream_delta_chunk_size,
                 "reasoning_tags": reasoning_tags,
-                "function_calling": (
-                    "native"
-                    if (
-                        form_data.get("params", {}).get("function_calling") == "native"
-                        or model_info_params.get("function_calling") == "native"
-                    )
-                    else "default"
-                ),
+                "function_calling": ("native" if (form_data.get("params", {}).get("function_calling") == "native" or model_info_params.get("function_calling") == "native") else "default"),
             },
         }
 
@@ -1539,9 +1460,7 @@ async def chat_completion(
 
     async def process_chat(request, form_data, user, metadata, model):
         try:
-            form_data, metadata, events = await process_chat_payload(
-                request, form_data, user, metadata, model
-            )
+            form_data, metadata, events = await process_chat_payload(request, form_data, user, metadata, model)
 
             response = await chat_completion_handler(request, form_data, user)
             if metadata.get("chat_id") and metadata.get("message_id"):
@@ -1557,9 +1476,7 @@ async def chat_completion(
                 except:
                     pass
 
-            return await process_chat_response(
-                request, response, form_data, user, metadata, model, events, tasks
-            )
+            return await process_chat_response(request, response, form_data, user, metadata, model, events, tasks)
         except asyncio.CancelledError:
             log.info("Chat processing was cancelled")
             try:
@@ -1609,11 +1526,7 @@ async def chat_completion(
                 log.debug(f"Error cleaning up: {e}")
                 pass
 
-    if (
-        metadata.get("session_id")
-        and metadata.get("chat_id")
-        and metadata.get("message_id")
-    ):
+    if metadata.get("session_id") and metadata.get("chat_id") and metadata.get("message_id"):
         # Asynchronous Chat Processing
         task_id, _ = await create_task(
             request.app.state.redis,
@@ -1631,9 +1544,7 @@ generate_chat_completion = chat_completion
 
 
 @app.post("/api/chat/completed")
-async def chat_completed(
-    request: Request, form_data: dict, user=Depends(get_verified_user)
-):
+async def chat_completed(request: Request, form_data: dict, user=Depends(get_verified_user)):
     try:
         model_item = form_data.pop("model_item", {})
 
@@ -1650,9 +1561,7 @@ async def chat_completed(
 
 
 @app.post("/api/chat/actions/{action_id}")
-async def chat_action(
-    request: Request, action_id: str, form_data: dict, user=Depends(get_verified_user)
-):
+async def chat_action(request: Request, action_id: str, form_data: dict, user=Depends(get_verified_user)):
     try:
         model_item = form_data.pop("model_item", {})
 
@@ -1669,9 +1578,7 @@ async def chat_action(
 
 
 @app.post("/api/tasks/stop/{task_id}")
-async def stop_task_endpoint(
-    request: Request, task_id: str, user=Depends(get_verified_user)
-):
+async def stop_task_endpoint(request: Request, task_id: str, user=Depends(get_verified_user)):
     try:
         result = await stop_task(request.app.state.redis, task_id)
         return result
@@ -1685,9 +1592,7 @@ async def list_tasks_endpoint(request: Request, user=Depends(get_verified_user))
 
 
 @app.get("/api/tasks/chat/{chat_id}")
-async def list_tasks_by_chat_id_endpoint(
-    request: Request, chat_id: str, user=Depends(get_verified_user)
-):
+async def list_tasks_by_chat_id_endpoint(request: Request, chat_id: str, user=Depends(get_verified_user)):
     chat = Chats.get_chat_by_id(chat_id)
     if chat is None or chat.user_id != user.id:
         return {"task_ids": []}
@@ -1743,12 +1648,7 @@ async def get_app_config(request: Request):
         "name": app.state.WEBUI_NAME,
         "version": VERSION,
         "default_locale": str(DEFAULT_LOCALE),
-        "oauth": {
-            "providers": {
-                name: config.get("name", name)
-                for name, config in OAUTH_PROVIDERS.items()
-            }
-        },
+        "oauth": {"providers": {name: config.get("name", name) for name, config in OAUTH_PROVIDERS.items()}},
         "features": {
             "auth": WEBUI_AUTH,
             "auth_trusted_header": bool(app.state.AUTH_TRUSTED_EMAIL_HEADER),
@@ -1855,12 +1755,8 @@ async def get_app_config(request: Request):
                 **(
                     {
                         "metadata": {
-                            "login_footer": app.state.LICENSE_METADATA.get(
-                                "login_footer", ""
-                            ),
-                            "auth_logo_position": app.state.LICENSE_METADATA.get(
-                                "auth_logo_position", ""
-                            ),
+                            "login_footer": app.state.LICENSE_METADATA.get("login_footer", ""),
+                            "auth_logo_position": app.state.LICENSE_METADATA.get("auth_logo_position", ""),
                         }
                     }
                     if app.state.LICENSE_METADATA
@@ -1899,9 +1795,7 @@ async def get_app_version():
 @app.get("/api/version/updates")
 async def get_app_latest_release_version(user=Depends(get_verified_user)):
     if not ENABLE_VERSION_UPDATE_CHECK:
-        log.debug(
-            "Version update check is disabled, returning current version as latest version"
-        )
+        log.debug("Version update check is disabled, returning current version as latest version")
         return {"current": VERSION, "latest": VERSION}
     try:
         timeout = aiohttp.ClientTimeout(total=1)
@@ -1951,9 +1845,7 @@ if len(app.state.config.TOOL_SERVER_CONNECTIONS) > 0:
             auth_type = tool_server_connection.get("auth_type", "none")
 
             if server_id and auth_type == "oauth_2.1":
-                oauth_client_info = tool_server_connection.get("info", {}).get(
-                    "oauth_client_info", ""
-                )
+                oauth_client_info = tool_server_connection.get("info", {}).get("oauth_client_info", "")
 
                 try:
                     oauth_client_info = decrypt_data(oauth_client_info)
@@ -1962,9 +1854,7 @@ if len(app.state.config.TOOL_SERVER_CONNECTIONS) > 0:
                         OAuthClientInformationFull(**oauth_client_info),
                     )
                 except Exception as e:
-                    log.error(
-                        f"Error adding OAuth client for MCP tool server {server_id}: {e}"
-                    )
+                    log.error(f"Error adding OAuth client for MCP tool server {server_id}: {e}")
                     pass
 
 try:
@@ -2010,22 +1900,18 @@ async def register_client(self, request, client_id: str) -> bool:
                 break
 
     if connection is None or connection_idx is None:
-        log.warning(
-            f"Unable to locate MCP tool server configuration for client {client_id} during re-registration"
-        )
+        log.warning(f"Unable to locate MCP tool server configuration for client {client_id} during re-registration")
         return False
 
     server_url = connection.get("url")
     oauth_server_key = (connection.get("config") or {}).get("oauth_server_key")
 
     try:
-        oauth_client_info = (
-            await get_oauth_client_info_with_dynamic_client_registration(
-                request,
-                client_id,
-                server_url,
-                oauth_server_key,
-            )
+        oauth_client_info = await get_oauth_client_info_with_dynamic_client_registration(
+            request,
+            client_id,
+            server_url,
+            oauth_server_key,
         )
     except Exception as e:
         log.error(f"Dynamic client re-registration failed for {client_id}: {e}")
@@ -2036,15 +1922,11 @@ async def register_client(self, request, client_id: str) -> bool:
             **connection,
             "info": {
                 **connection.get("info", {}),
-                "oauth_client_info": encrypt_data(
-                    oauth_client_info.model_dump(mode="json")
-                ),
+                "oauth_client_info": encrypt_data(oauth_client_info.model_dump(mode="json")),
             },
         }
     except Exception as e:
-        log.error(
-            f"Failed to persist updated OAuth client info for tool server {client_id}: {e}"
-        )
+        log.error(f"Failed to persist updated OAuth client info for tool server {client_id}: {e}")
         return False
 
     oauth_client_manager.remove_client(client_id)
@@ -2087,9 +1969,7 @@ async def oauth_client_authorize(
                 detail="OAuth client unavailable after re-registration",
             )
 
-        if not await oauth_client_manager._preflight_authorization_url(
-            client, client_info
-        ):
+        if not await oauth_client_manager._preflight_authorization_url(client, client_info):
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="OAuth client registration is still invalid after re-registration",
@@ -2146,30 +2026,30 @@ async def get_manifest_json():
     return {
         "name": app.state.WEBUI_NAME,
         "short_name": app.state.WEBUI_NAME,
-            "description": f"{app.state.WEBUI_NAME} is an open, extensible, user-friendly interface for AI that adapts to your workflow.",
-            "start_url": "/",
-            "display": "standalone",
-            "background_color": "#343541",
-            "icons": [
-                {
-                    "src": "/static/logo.png",
-                    "type": "image/png",
-                    "sizes": "500x500",
-                    "purpose": "any",
-                },
-                {
-                    "src": "/static/logo.png",
-                    "type": "image/png",
-                    "sizes": "500x500",
-                    "purpose": "maskable",
-                },
-            ],
-            "share_target": {
-                "action": "/",
-                "method": "GET",
-                "params": {"text": "shared"},
+        "description": f"{app.state.WEBUI_NAME} is an open, extensible, user-friendly interface for AI that adapts to your workflow.",
+        "start_url": "/",
+        "display": "standalone",
+        "background_color": "#343541",
+        "icons": [
+            {
+                "src": "/static/logo.png",
+                "type": "image/png",
+                "sizes": "500x500",
+                "purpose": "any",
             },
-        }
+            {
+                "src": "/static/logo.png",
+                "type": "image/png",
+                "sizes": "500x500",
+                "purpose": "maskable",
+            },
+        ],
+        "share_target": {
+            "action": "/",
+            "method": "GET",
+            "params": {"text": "shared"},
+        },
+    }
 
 
 @app.get("/opensearch.xml")
@@ -2235,6 +2115,4 @@ if os.path.exists(FRONTEND_BUILD_DIR):
         name="spa-static-files",
     )
 else:
-    log.warning(
-        f"Frontend build directory not found at '{FRONTEND_BUILD_DIR}'. Serving API only."
-    )
+    log.warning(f"Frontend build directory not found at '{FRONTEND_BUILD_DIR}'. Serving API only.")

@@ -68,9 +68,7 @@ class PromptForm(BaseModel):
 
 
 class PromptsTable:
-    def insert_new_prompt(
-        self, user_id: str, form_data: PromptForm
-    ) -> Optional[PromptModel]:
+    def insert_new_prompt(self, user_id: str, form_data: PromptForm) -> Optional[PromptModel]:
         prompt = PromptModel(
             **{
                 "user_id": user_id,
@@ -123,22 +121,13 @@ class PromptsTable:
 
             return prompts
 
-    def get_prompts_by_user_id(
-        self, user_id: str, permission: str = "write"
-    ) -> list[PromptUserResponse]:
+    def get_prompts_by_user_id(self, user_id: str, permission: str = "write") -> list[PromptUserResponse]:
         prompts = self.get_prompts()
         user_group_ids = {group.id for group in Groups.get_groups_by_member_id(user_id)}
 
-        return [
-            prompt
-            for prompt in prompts
-            if prompt.user_id == user_id
-            or has_access(user_id, permission, prompt.access_control, user_group_ids)
-        ]
+        return [prompt for prompt in prompts if prompt.user_id == user_id or has_access(user_id, permission, prompt.access_control, user_group_ids)]
 
-    def update_prompt_by_command(
-        self, command: str, form_data: PromptForm
-    ) -> Optional[PromptModel]:
+    def update_prompt_by_command(self, command: str, form_data: PromptForm) -> Optional[PromptModel]:
         try:
             with get_db() as db:
                 prompt = db.query(Prompt).filter_by(command=command).first()

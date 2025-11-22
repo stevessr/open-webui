@@ -84,9 +84,4 @@ async def search_searxng(
     sorted_results = sorted(results, key=lambda x: x.get("score", 0), reverse=True)
     if filter_list:
         sorted_results = get_filtered_results(sorted_results, filter_list)
-    return [
-        SearchResult(
-            link=result["url"], title=result.get("title"), snippet=result.get("content")
-        )
-        for result in sorted_results[:count]
-    ]
+    return [SearchResult(link=result["url"], title=result.get("title"), snippet=result.get("content")) for result in sorted_results[:count]]

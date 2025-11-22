@@ -37,9 +37,7 @@ def load_b64_audio_data(b64_str):
             b64_data = b64_str
             header = "data:audio/wav;base64"
         audio_data = base64.b64decode(b64_data)
-        content_type = (
-            header.split(";")[0].split(":")[1] if ";" in header else "audio/wav"
-        )
+        content_type = header.split(";")[0].split(":")[1] if ";" in header else "audio/wav"
         return audio_data, content_type
     except Exception as e:
         print(f"Error decoding base64 audio data: {e}")

@@ -82,9 +82,7 @@ class FolderUpdateForm(BaseModel):
 
 
 class FolderTable:
-    async def insert_new_folder(
-        self, user_id: str, form_data: FolderForm, parent_id: Optional[str] = None
-    ) -> Optional[FolderModel]:
+    async def insert_new_folder(self, user_id: str, form_data: FolderForm, parent_id: Optional[str] = None) -> Optional[FolderModel]:
         with get_db() as db:
             id = str(uuid.uuid4())
             folder = FolderModel(
@@ -110,9 +108,7 @@ class FolderTable:
                 log.exception(f"Error inserting a new folder: {e}")
                 return None
 
-    async def get_folder_by_id_and_user_id(
-        self, id: str, user_id: str
-    ) -> Optional[FolderModel]:
+    async def get_folder_by_id_and_user_id(self, id: str, user_id: str) -> Optional[FolderModel]:
         try:
             with get_db() as db:
                 folder = await asyncio.to_thread(db.query(Folder).filter_by(id=id, user_id=user_id).first)
@@ -124,17 +120,13 @@ class FolderTable:
         except Exception:
             return None
 
-    async def get_children_folders_by_id_and_user_id(
-        self, id: str, user_id: str
-    ) -> Optional[list[FolderModel]]:
+    async def get_children_folders_by_id_and_user_id(self, id: str, user_id: str) -> Optional[list[FolderModel]]:
         try:
             with get_db() as db:
                 folders = []
 
                 async def get_children(folder):
-                    children = await self.get_folders_by_parent_id_and_user_id(
-                        folder.id, user_id
-                    )
+                    children = await self.get_folders_by_parent_id_and_user_id(folder.id, user_id)
                     for child in children:
                         await get_children(child)
                         folders.append(child)
@@ -153,18 +145,11 @@ class FolderTable:
             folders = await asyncio.to_thread(db.query(Folder).filter_by(user_id=user_id).all)
             return [FolderModel.model_validate(folder) for folder in folders]
 
-    async def get_folder_by_parent_id_and_user_id_and_name(
-        self, parent_id: Optional[str], user_id: str, name: str
-    ) -> Optional[FolderModel]:
+    async def get_folder_by_parent_id_and_user_id_and_name(self, parent_id: Optional[str], user_id: str, name: str) -> Optional[FolderModel]:
         try:
             with get_db() as db:
                 # Check if folder exists
-                folder = await asyncio.to_thread(
-                    db.query(Folder)
-                    .filter_by(parent_id=parent_id, user_id=user_id)
-                    .filter(Folder.name.ilike(name))
-                    .first
-                )
+                folder = await asyncio.to_thread(db.query(Folder).filter_by(parent_id=parent_id, user_id=user_id).filter(Folder.name.ilike(name)).first)
 
                 if not folder:
                     return None
@@ -174,15 +159,9 @@ class FolderTable:
             log.error(f"get_folder_by_parent_id_and_user_id_and_name: {e}")
             return None
 
-    async def get_folders_by_parent_id_and_user_id(
-        self, parent_id: Optional[str], user_id: str
-    ) -> list[FolderModel]:
+    async def get_folders_by_parent_id_and_user_id(self, parent_id: Optional[str], user_id: str) -> list[FolderModel]:
         with get_db() as db:
-            folders = await asyncio.to_thread(
-                db.query(Folder)
-                .filter_by(parent_id=parent_id, user_id=user_id)
-                .all
-            )
+            folders = await asyncio.to_thread(db.query(Folder).filter_by(parent_id=parent_id, user_id=user_id).all)
             return [FolderModel.model_validate(folder) for folder in folders]
 
     async def update_folder_parent_id_by_id_and_user_id(
@@ -208,9 +187,7 @@ class FolderTable:
             log.error(f"update_folder: {e}")
             return
 
-    async def update_folder_by_id_and_user_id(
-        self, id: str, user_id: str, form_data: FolderUpdateForm
-    ) -> Optional[FolderModel]:
+    async def update_folder_by_id_and_user_id(self, id: str, user_id: str, form_data: FolderUpdateForm) -> Optional[FolderModel]:
         try:
             with get_db() as db:
                 folder = await asyncio.to_thread(db.query(Folder).filter_by(id=id, user_id=user_id).first)
@@ -254,9 +231,7 @@ class FolderTable:
             log.error(f"update_folder: {e}")
             return
 
-    async def update_folder_is_expanded_by_id_and_user_id(
-        self, id: str, user_id: str, is_expanded: bool
-    ) -> Optional[FolderModel]:
+    async def update_folder_is_expanded_by_id_and_user_id(self, id: str, user_id: str, is_expanded: bool) -> Optional[FolderModel]:
         try:
             with get_db() as db:
                 folder = await asyncio.to_thread(db.query(Folder).filter_by(id=id, user_id=user_id).first)
@@ -286,11 +261,8 @@ class FolderTable:
 
                 # Delete all children folders
                 async def delete_children(folder):
-                    folder_children = await self.get_folders_by_parent_id_and_user_id(
-                        folder.id, user_id
-                    )
+                    folder_children = await self.get_folders_by_parent_id_and_user_id(folder.id, user_id)
                     for folder_child in folder_children:
-
                         await delete_children(folder_child)
                         folder_ids.append(folder_child.id)
 
@@ -311,9 +283,7 @@ class FolderTable:
         name = re.sub(r"[\s_]+", " ", name)
         return name.strip().lower()
 
-    async def search_folders_by_names(
-        self, user_id: str, queries: list[str]
-    ) -> list[FolderModel]:
+    async def search_folders_by_names(self, user_id: str, queries: list[str]) -> list[FolderModel]:
         """
         Search for folders for a user where the name matches any of the queries, treating _ and space as equivalent, case-insensitive.
         """
@@ -329,9 +299,7 @@ class FolderTable:
                     results[folder.id] = FolderModel.model_validate(folder)
 
                     # get children folders
-                    children = await self.get_children_folders_by_id_and_user_id(
-                        folder.id, user_id
-                    )
+                    children = await self.get_children_folders_by_id_and_user_id(folder.id, user_id)
                     for child in children:
                         results[child.id] = child
 
@@ -342,9 +310,7 @@ class FolderTable:
             results = list(results.values())
             return results
 
-    async def search_folders_by_name_contains(
-        self, user_id: str, query: str
-    ) -> list[FolderModel]:
+    async def search_folders_by_name_contains(self, user_id: str, query: str) -> list[FolderModel]:
         """
         Partial match: normalized name contains (as substring) the normalized query.
         """

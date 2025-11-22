@@ -94,9 +94,7 @@ class OpenSearchClient(VectorDBBase):
                 }
             },
         }
-        self.client.indices.create(
-            index=self._get_index_name(collection_name), body=body
-        )
+        self.client.indices.create(index=self._get_index_name(collection_name), body=body)
 
     def _create_batches(self, items: list[VectorItem], batch_size=100):
         for i in range(0, len(items), batch_size):
@@ -112,9 +110,7 @@ class OpenSearchClient(VectorDBBase):
         # We are simply adapting to the norms of the other DBs.
         self.client.indices.delete(index=self._get_index_name(collection_name))
 
-    def search(
-        self, collection_name: str, vectors: list[list[float | int]], limit: int
-    ) -> Optional[SearchResult]:
+    def search(self, collection_name: str, vectors: list[list[float | int]], limit: int) -> Optional[SearchResult]:
         try:
             if not self.has_collection(collection_name):
                 return None
@@ -136,18 +132,14 @@ class OpenSearchClient(VectorDBBase):
                 },
             }
 
-            result = self.client.search(
-                index=self._get_index_name(collection_name), body=query
-            )
+            result = self.client.search(index=self._get_index_name(collection_name), body=query)
 
             return self._result_to_search_result(result)
 
         except Exception:
             return None
 
-    def query(
-        self, collection_name: str, filter: dict, limit: Optional[int] = None
-    ) -> Optional[GetResult]:
+    def query(self, collection_name: str, filter: dict, limit: Optional[int] = None) -> Optional[GetResult]:
         if not self.has_collection(collection_name):
             return None
 
@@ -157,9 +149,7 @@ class OpenSearchClient(VectorDBBase):
         }
 
         for field, value in filter.items():
-            query_body["query"]["bool"]["filter"].append(
-                {"term": {"metadata." + str(field) + ".keyword": value}}
-            )
+            query_body["query"]["bool"]["filter"].append({"term": {"metadata." + str(field) + ".keyword": value}})
 
         size = limit if limit else 10000
 
@@ -182,15 +172,11 @@ class OpenSearchClient(VectorDBBase):
     def get(self, collection_name: str) -> Optional[GetResult]:
         query = {"query": {"match_all": {}}, "_source": ["text", "metadata"]}
 
-        result = self.client.search(
-            index=self._get_index_name(collection_name), body=query
-        )
+        result = self.client.search(index=self._get_index_name(collection_name), body=query)
         return self._result_to_get_result(result)
 
     def insert(self, collection_name: str, items: list[VectorItem]):
-        self._create_index_if_not_exists(
-            collection_name=collection_name, dimension=len(items[0]["vector"])
-        )
+        self._create_index_if_not_exists(collection_name=collection_name, dimension=len(items[0]["vector"]))
 
         for batch in self._create_batches(items):
             actions = [
@@ -210,9 +196,7 @@ class OpenSearchClient(VectorDBBase):
         self.client.indices.refresh(self._get_index_name(collection_name))
 
     def upsert(self, collection_name: str, items: list[VectorItem]):
-        self._create_index_if_not_exists(
-            collection_name=collection_name, dimension=len(items[0]["vector"])
-        )
+        self._create_index_if_not_exists(collection_name=collection_name, dimension=len(items[0]["vector"]))
 
         for batch in self._create_batches(items):
             actions = [
@@ -253,12 +237,8 @@ class OpenSearchClient(VectorDBBase):
                 "query": {"bool": {"filter": []}},
             }
             for field, value in filter.items():
-                query_body["query"]["bool"]["filter"].append(
-                    {"term": {"metadata." + str(field) + ".keyword": value}}
-                )
-            self.client.delete_by_query(
-                index=self._get_index_name(collection_name), body=query_body
-            )
+                query_body["query"]["bool"]["filter"].append({"term": {"metadata." + str(field) + ".keyword": value}})
+            self.client.delete_by_query(index=self._get_index_name(collection_name), body=query_body)
         self.client.indices.refresh(self._get_index_name(collection_name))
 
     def reset(self):

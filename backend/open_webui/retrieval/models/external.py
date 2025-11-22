@@ -21,9 +21,7 @@ class ExternalReranker(BaseReranker):
         self.url = url
         self.model = model
 
-    def predict(
-        self, sentences: List[Tuple[str, str]], user=None
-    ) -> Optional[List[float]]:
+    def predict(self, sentences: List[Tuple[str, str]], user=None) -> Optional[List[float]]:
         query = sentences[0][0]
         docs = [i[1] for i in sentences]
 

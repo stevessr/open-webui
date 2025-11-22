@@ -51,9 +51,7 @@ def migrate_sqlite(migrator: Migrator, database: pw.Database, *, fake=False):
     )
 
     # Populate the new fields from an existing 'timestamp' field
-    migrator.sql(
-        "UPDATE chat SET created_at = timestamp, updated_at = timestamp WHERE timestamp IS NOT NULL"
-    )
+    migrator.sql("UPDATE chat SET created_at = timestamp, updated_at = timestamp WHERE timestamp IS NOT NULL")
 
     # Now that the data has been copied, remove the original 'timestamp' field
     migrator.remove_fields("chat", "timestamp")
@@ -75,9 +73,7 @@ def migrate_external(migrator: Migrator, database: pw.Database, *, fake=False):
     )
 
     # Populate the new fields from an existing 'timestamp' field
-    migrator.sql(
-        "UPDATE chat SET created_at = timestamp, updated_at = timestamp WHERE timestamp IS NOT NULL"
-    )
+    migrator.sql("UPDATE chat SET created_at = timestamp, updated_at = timestamp WHERE timestamp IS NOT NULL")
 
     # Now that the data has been copied, remove the original 'timestamp' field
     migrator.remove_fields("chat", "timestamp")

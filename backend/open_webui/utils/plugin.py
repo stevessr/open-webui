@@ -70,7 +70,6 @@ def replace_imports(content):
 
 
 async def load_tool_module_by_id(tool_id, content=None):
-
     if content is None:
         tool = await Tools.get_tool_by_id(tool_id)
         if not tool:
@@ -181,12 +180,7 @@ async def get_tool_module_from_cache(request, tool_id, load_from_db=True):
             # Update the tool content in the database
             await Tools.update_tool_by_id(tool_id, {"content": content})
 
-        if (
-            hasattr(request.app.state, "TOOL_CONTENTS")
-            and tool_id in request.app.state.TOOL_CONTENTS
-        ) and (
-            hasattr(request.app.state, "TOOLS") and tool_id in request.app.state.TOOLS
-        ):
+        if (hasattr(request.app.state, "TOOL_CONTENTS") and tool_id in request.app.state.TOOL_CONTENTS) and (hasattr(request.app.state, "TOOLS") and tool_id in request.app.state.TOOLS):
             if request.app.state.TOOL_CONTENTS[tool_id] == content:
                 return request.app.state.TOOLS[tool_id], None
 
@@ -226,32 +220,19 @@ async def get_function_module_from_cache(request, function_id, load_from_db=True
             # Update the function content in the database
             await Functions.update_function_by_id(function_id, {"content": content})
 
-        if (
-            hasattr(request.app.state, "FUNCTION_CONTENTS")
-            and function_id in request.app.state.FUNCTION_CONTENTS
-        ) and (
-            hasattr(request.app.state, "FUNCTIONS")
-            and function_id in request.app.state.FUNCTIONS
-        ):
+        if (hasattr(request.app.state, "FUNCTION_CONTENTS") and function_id in request.app.state.FUNCTION_CONTENTS) and (hasattr(request.app.state, "FUNCTIONS") and function_id in request.app.state.FUNCTIONS):
             if request.app.state.FUNCTION_CONTENTS[function_id] == content:
                 return request.app.state.FUNCTIONS[function_id], None, None
 
-        function_module, function_type, frontmatter = await load_function_module_by_id(
-            function_id, content
-        )
+        function_module, function_type, frontmatter = await load_function_module_by_id(function_id, content)
     else:
         # Load from cache (e.g. "stream" hook)
         # This is useful for performance reasons
 
-        if (
-            hasattr(request.app.state, "FUNCTIONS")
-            and function_id in request.app.state.FUNCTIONS
-        ):
+        if hasattr(request.app.state, "FUNCTIONS") and function_id in request.app.state.FUNCTIONS:
             return request.app.state.FUNCTIONS[function_id], None, None
 
-        function_module, function_type, frontmatter = await load_function_module_by_id(
-            function_id
-        )
+        function_module, function_type, frontmatter = await load_function_module_by_id(function_id)
 
     if not hasattr(request.app.state, "FUNCTIONS"):
         request.app.state.FUNCTIONS = {}
@@ -272,10 +253,7 @@ async def install_frontmatter_requirements(requirements: str):
             log.info(f"Installing requirements: {' '.join(req_list)}")
             await asyncio.to_thread(
                 subprocess.check_call,
-                [sys.executable, "-m", "pip", "install"]
-                + PIP_OPTIONS
-                + req_list
-                + PIP_PACKAGE_INDEX_OPTIONS,
+                [sys.executable, "-m", "pip", "install"] + PIP_OPTIONS + req_list + PIP_PACKAGE_INDEX_OPTIONS,
             )
         except Exception as e:
             log.error(f"Error installing packages: {' '.join(req_list)}")

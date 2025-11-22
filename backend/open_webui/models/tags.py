@@ -66,9 +66,7 @@ class TagTable:
                 log.exception(f"Error inserting a new tag: {e}")
                 return None
 
-    async def get_tag_by_name_and_user_id(
-        self, name: str, user_id: str
-    ) -> Optional[TagModel]:
+    async def get_tag_by_name_and_user_id(self, name: str, user_id: str) -> Optional[TagModel]:
         try:
             id = name.replace(" ", "_").lower()
             with get_db() as db:
@@ -82,13 +80,9 @@ class TagTable:
             tags = await asyncio.to_thread(db.query(Tag).filter_by(user_id=user_id).all)
             return [TagModel.model_validate(tag) for tag in tags]
 
-    async def get_tags_by_ids_and_user_id(
-        self, ids: list[str], user_id: str
-    ) -> list[TagModel]:
+    async def get_tags_by_ids_and_user_id(self, ids: list[str], user_id: str) -> list[TagModel]:
         with get_db() as db:
-            tags = await asyncio.to_thread(
-                db.query(Tag).filter(Tag.id.in_(ids), Tag.user_id == user_id).all
-            )
+            tags = await asyncio.to_thread(db.query(Tag).filter(Tag.id.in_(ids), Tag.user_id == user_id).all)
             return [TagModel.model_validate(tag) for tag in tags]
 
     async def delete_tag_by_name_and_user_id(self, name: str, user_id: str) -> bool:

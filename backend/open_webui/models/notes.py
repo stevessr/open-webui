@@ -92,9 +92,7 @@ class NoteTable:
             db.commit()
             return note
 
-    def get_notes(
-        self, skip: Optional[int] = None, limit: Optional[int] = None
-    ) -> list[NoteModel]:
+    def get_notes(self, skip: Optional[int] = None, limit: Optional[int] = None) -> list[NoteModel]:
         with get_db() as db:
             query = db.query(Note).order_by(Note.updated_at.desc())
             if skip is not None:
@@ -134,12 +132,7 @@ class NoteTable:
             user_group_ids = {group.id for group in user_groups}
 
             # Order newest-first. We stream to keep memory usage low.
-            query = (
-                db.query(Note)
-                .order_by(Note.updated_at.desc())
-                .execution_options(stream_results=True)
-                .yield_per(256)
-            )
+            query = db.query(Note).order_by(Note.updated_at.desc()).execution_options(stream_results=True).yield_per(256)
 
             results: list[NoteModel] = []
             n_skipped = 0
@@ -154,9 +147,7 @@ class NoteTable:
                     # We might want to change this behavior later
                     permitted = permission == "read"
                 else:
-                    permitted = has_access(
-                        user_id, permission, note.access_control, user_group_ids
-                    )
+                    permitted = has_access(user_id, permission, note.access_control, user_group_ids)
 
                 if not permitted:
                     continue
@@ -177,9 +168,7 @@ class NoteTable:
             note = db.query(Note).filter(Note.id == id).first()
             return NoteModel.model_validate(note) if note else None
 
-    def update_note_by_id(
-        self, id: str, form_data: NoteUpdateForm
-    ) -> Optional[NoteModel]:
+    def update_note_by_id(self, id: str, form_data: NoteUpdateForm) -> Optional[NoteModel]:
         with get_db() as db:
             note = db.query(Note).filter(Note.id == id).first()
             if not note:

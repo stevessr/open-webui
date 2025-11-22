@@ -77,12 +77,8 @@ async def set_connections_config(
     form_data: ConnectionsConfigForm,
     user=Depends(get_admin_user),
 ):
-    request.app.state.config.ENABLE_DIRECT_CONNECTIONS = (
-        form_data.ENABLE_DIRECT_CONNECTIONS
-    )
-    request.app.state.config.ENABLE_BASE_MODELS_CACHE = (
-        form_data.ENABLE_BASE_MODELS_CACHE
-    )
+    request.app.state.config.ENABLE_DIRECT_CONNECTIONS = form_data.ENABLE_DIRECT_CONNECTIONS
+    request.app.state.config.ENABLE_BASE_MODELS_CACHE = form_data.ENABLE_BASE_MODELS_CACHE
 
     return {
         "ENABLE_DIRECT_CONNECTIONS": request.app.state.config.ENABLE_DIRECT_CONNECTIONS,
@@ -108,16 +104,10 @@ async def register_oauth_client(
         if type:
             oauth_client_id = f"{type}:{form_data.client_id}"
 
-        oauth_client_info = (
-            await get_oauth_client_info_with_dynamic_client_registration(
-                request, oauth_client_id, form_data.url
-            )
-        )
+        oauth_client_info = await get_oauth_client_info_with_dynamic_client_registration(request, oauth_client_id, form_data.url)
         return {
             "status": True,
-            "oauth_client_info": encrypt_data(
-                oauth_client_info.model_dump(mode="json")
-            ),
+            "oauth_client_info": encrypt_data(oauth_client_info.model_dump(mode="json")),
         }
     except Exception as e:
         log.debug(f"Failed to register OAuth client: {e}")
@@ -175,9 +165,7 @@ async def set_tool_servers_config(
                 pass
 
     # Set new tool server connections
-    request.app.state.config.TOOL_SERVER_CONNECTIONS = [
-        connection.model_dump() for connection in form_data.TOOL_SERVER_CONNECTIONS
-    ]
+    request.app.state.config.TOOL_SERVER_CONNECTIONS = [connection.model_dump() for connection in form_data.TOOL_SERVER_CONNECTIONS]
 
     await set_tool_servers(request)
 
@@ -189,9 +177,7 @@ async def set_tool_servers_config(
 
             if auth_type == "oauth_2.1" and server_id:
                 try:
-                    oauth_client_info = connection.get("info", {}).get(
-                        "oauth_client_info", ""
-                    )
+                    oauth_client_info = connection.get("info", {}).get("oauth_client_info", "")
                     oauth_client_info = decrypt_data(oauth_client_info)
 
                     request.app.state.oauth_client_manager.add_client(
@@ -208,9 +194,7 @@ async def set_tool_servers_config(
 
 
 @router.post("/tool_servers/verify")
-async def verify_tool_servers_config(
-    request: Request, form_data: ToolServerConnection, user=Depends(get_admin_user)
-):
+async def verify_tool_servers_config(request: Request, form_data: ToolServerConnection, user=Depends(get_admin_user)):
     """
     Verify the connection to the tool server.
     """
@@ -219,30 +203,18 @@ async def verify_tool_servers_config(
             if form_data.auth_type == "oauth_2.1":
                 discovery_urls = get_discovery_urls(form_data.url)
                 for discovery_url in discovery_urls:
-                    log.debug(
-                        f"Trying to fetch OAuth 2.1 discovery document from {discovery_url}"
-                    )
+                    log.debug(f"Trying to fetch OAuth 2.1 discovery document from {discovery_url}")
                     async with aiohttp.ClientSession(trust_env=True) as session:
-                        async with session.get(
-                            discovery_url
-                        ) as oauth_server_metadata_response:
+                        async with session.get(discovery_url) as oauth_server_metadata_response:
                             if oauth_server_metadata_response.status == 200:
                                 try:
-                                    oauth_server_metadata = (
-                                        OAuthMetadata.model_validate(
-                                            await oauth_server_metadata_response.json()
-                                        )
-                                    )
+                                    oauth_server_metadata = OAuthMetadata.model_validate(await oauth_server_metadata_response.json())
                                     return {
                                         "status": True,
-                                        "oauth_server_metadata": oauth_server_metadata.model_dump(
-                                            mode="json"
-                                        ),
+                                        "oauth_server_metadata": oauth_server_metadata.model_dump(mode="json"),
                                     }
                                 except Exception as e:
-                                    log.info(
-                                        f"Failed to parse OAuth 2.1 discovery document: {e}"
-                                    )
+                                    log.info(f"Failed to parse OAuth 2.1 discovery document: {e}")
                                     raise HTTPException(
                                         status_code=400,
                                         detail=f"Failed to parse OAuth 2.1 discovery document from {discovery_url}",
@@ -361,52 +333,27 @@ async def get_code_execution_config(request: Request, user=Depends(get_admin_use
 
 
 @router.post("/code_execution", response_model=CodeInterpreterConfigForm)
-async def set_code_execution_config(
-    request: Request, form_data: CodeInterpreterConfigForm, user=Depends(get_admin_user)
-):
-
+async def set_code_execution_config(request: Request, form_data: CodeInterpreterConfigForm, user=Depends(get_admin_user)):
     request.app.state.config.ENABLE_CODE_EXECUTION = form_data.ENABLE_CODE_EXECUTION
 
     request.app.state.config.CODE_EXECUTION_ENGINE = form_data.CODE_EXECUTION_ENGINE
-    request.app.state.config.CODE_EXECUTION_JUPYTER_URL = (
-        form_data.CODE_EXECUTION_JUPYTER_URL
-    )
-    request.app.state.config.CODE_EXECUTION_JUPYTER_AUTH = (
-        form_data.CODE_EXECUTION_JUPYTER_AUTH
-    )
-    request.app.state.config.CODE_EXECUTION_JUPYTER_AUTH_TOKEN = (
-        form_data.CODE_EXECUTION_JUPYTER_AUTH_TOKEN
-    )
-    request.app.state.config.CODE_EXECUTION_JUPYTER_AUTH_PASSWORD = (
-        form_data.CODE_EXECUTION_JUPYTER_AUTH_PASSWORD
-    )
-    request.app.state.config.CODE_EXECUTION_JUPYTER_TIMEOUT = (
-        form_data.CODE_EXECUTION_JUPYTER_TIMEOUT
-    )
+    request.app.state.config.CODE_EXECUTION_JUPYTER_URL = form_data.CODE_EXECUTION_JUPYTER_URL
+    request.app.state.config.CODE_EXECUTION_JUPYTER_AUTH = form_data.CODE_EXECUTION_JUPYTER_AUTH
+    request.app.state.config.CODE_EXECUTION_JUPYTER_AUTH_TOKEN = form_data.CODE_EXECUTION_JUPYTER_AUTH_TOKEN
+    request.app.state.config.CODE_EXECUTION_JUPYTER_AUTH_PASSWORD = form_data.CODE_EXECUTION_JUPYTER_AUTH_PASSWORD
+    request.app.state.config.CODE_EXECUTION_JUPYTER_TIMEOUT = form_data.CODE_EXECUTION_JUPYTER_TIMEOUT
 
     request.app.state.config.ENABLE_CODE_INTERPRETER = form_data.ENABLE_CODE_INTERPRETER
     request.app.state.config.CODE_INTERPRETER_ENGINE = form_data.CODE_INTERPRETER_ENGINE
-    request.app.state.config.CODE_INTERPRETER_PROMPT_TEMPLATE = (
-        form_data.CODE_INTERPRETER_PROMPT_TEMPLATE
-    )
+    request.app.state.config.CODE_INTERPRETER_PROMPT_TEMPLATE = form_data.CODE_INTERPRETER_PROMPT_TEMPLATE
 
-    request.app.state.config.CODE_INTERPRETER_JUPYTER_URL = (
-        form_data.CODE_INTERPRETER_JUPYTER_URL
-    )
+    request.app.state.config.CODE_INTERPRETER_JUPYTER_URL = form_data.CODE_INTERPRETER_JUPYTER_URL
 
-    request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH = (
-        form_data.CODE_INTERPRETER_JUPYTER_AUTH
-    )
+    request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH = form_data.CODE_INTERPRETER_JUPYTER_AUTH
 
-    request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_TOKEN = (
-        form_data.CODE_INTERPRETER_JUPYTER_AUTH_TOKEN
-    )
-    request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD = (
-        form_data.CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD
-    )
-    request.app.state.config.CODE_INTERPRETER_JUPYTER_TIMEOUT = (
-        form_data.CODE_INTERPRETER_JUPYTER_TIMEOUT
-    )
+    request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_TOKEN = form_data.CODE_INTERPRETER_JUPYTER_AUTH_TOKEN
+    request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD = form_data.CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD
+    request.app.state.config.CODE_INTERPRETER_JUPYTER_TIMEOUT = form_data.CODE_INTERPRETER_JUPYTER_TIMEOUT
 
     return {
         "ENABLE_CODE_EXECUTION": request.app.state.config.ENABLE_CODE_EXECUTION,
@@ -444,9 +391,7 @@ async def get_models_config(request: Request, user=Depends(get_admin_user)):
 
 
 @router.post("/models", response_model=ModelsConfigForm)
-async def set_models_config(
-    request: Request, form_data: ModelsConfigForm, user=Depends(get_admin_user)
-):
+async def set_models_config(request: Request, form_data: ModelsConfigForm, user=Depends(get_admin_user)):
     request.app.state.config.DEFAULT_MODELS = form_data.DEFAULT_MODELS
     request.app.state.config.MODEL_ORDER_LIST = form_data.MODEL_ORDER_LIST
     return {

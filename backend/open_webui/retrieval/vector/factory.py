@@ -8,7 +8,6 @@ from open_webui.retrieval.vector.type import VectorType
 
 
 class Vector:
-
     @staticmethod
     def get_vector(vector_type: str) -> VectorDBBase:
         """

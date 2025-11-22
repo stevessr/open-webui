@@ -104,15 +104,11 @@ class AuthsTable:
 
             id = str(uuid.uuid4())
 
-            auth = AuthModel(
-                **{"id": id, "email": email, "password": password, "active": True}
-            )
+            auth = AuthModel(**{"id": id, "email": email, "password": password, "active": True})
             result = Auth(**auth.model_dump())
             db.add(result)
 
-            user = Users.insert_new_user(
-                id, name, email, profile_image_url, role, oauth_sub
-            )
+            user = Users.insert_new_user(id, name, email, profile_image_url, role, oauth_sub)
 
             db.commit()
             db.refresh(result)
@@ -168,9 +164,7 @@ class AuthsTable:
     def update_user_password_by_id(self, id: str, new_password: str) -> bool:
         try:
             with get_db() as db:
-                result = (
-                    db.query(Auth).filter_by(id=id).update({"password": new_password})
-                )
+                result = db.query(Auth).filter_by(id=id).update({"password": new_password})
                 db.commit()
                 return True if result == 1 else False
         except Exception:

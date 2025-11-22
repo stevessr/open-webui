@@ -49,9 +49,7 @@ router = APIRouter()
 ############################
 
 
-async def has_access_to_file(
-    file_id: Optional[str], access_type: str, user=Depends(get_verified_user)
-) -> bool:
+async def has_access_to_file(file_id: Optional[str], access_type: str, user=Depends(get_verified_user)) -> bool:
     file = await Files.get_file_by_id(file_id)
     log.debug(f"Checking if user has {access_type} access to file")
 
@@ -65,9 +63,7 @@ async def has_access_to_file(
     knowledge_base_id = file.meta.get("collection_name") if file.meta else None
 
     if knowledge_base_id:
-        knowledge_bases = await Knowledges.get_knowledge_bases_by_user_id(
-            user.id, access_type
-        )
+        knowledge_bases = await Knowledges.get_knowledge_bases_by_user_id(user.id, access_type)
         for knowledge_base in knowledge_bases:
             if knowledge_base.id == knowledge_base_id:
                 has_access = True
@@ -84,41 +80,23 @@ async def has_access_to_file(
 async def process_uploaded_file(request, file, file_path, file_item, file_metadata, user):
     try:
         if file.content_type:
-            stt_supported_content_types = getattr(
-                request.app.state.config, "STT_SUPPORTED_CONTENT_TYPES", []
-            )
+            stt_supported_content_types = getattr(request.app.state.config, "STT_SUPPORTED_CONTENT_TYPES", [])
 
-            if any(
-                fnmatch(file.content_type, content_type)
-                for content_type in (
-                    stt_supported_content_types
-                    if stt_supported_content_types
-                    and any(t.strip() for t in stt_supported_content_types)
-                    else ["audio/*", "video/webm"]
-                )
-            ):
+            if any(fnmatch(file.content_type, content_type) for content_type in (stt_supported_content_types if stt_supported_content_types and any(t.strip() for t in stt_supported_content_types) else ["audio/*", "video/webm"])):
                 file_path = await Storage.get_file(file_path)
                 result = await transcribe(request, file_path, file_metadata)
 
                 await process_file(
                     request,
-                    ProcessFileForm(
-                        file_id=file_item.id, content=result.get("text", "")
-                    ),
+                    ProcessFileForm(file_id=file_item.id, content=result.get("text", "")),
                     user=user,
                 )
-            elif (not file.content_type.startswith(("image/", "video/"))) or (
-                request.app.state.config.CONTENT_EXTRACTION_ENGINE == "external"
-            ):
+            elif (not file.content_type.startswith(("image/", "video/"))) or (request.app.state.config.CONTENT_EXTRACTION_ENGINE == "external"):
                 await process_file(request, ProcessFileForm(file_id=file_item.id), user=user)
             else:
-                raise Exception(
-                    f"File type {file.content_type} is not supported for processing"
-                )
+                raise Exception(f"File type {file.content_type} is not supported for processing")
         else:
-            log.info(
-                f"File type {file.content_type} is not provided, but trying to process anyway"
-            )
+            log.info(f"File type {file.content_type} is not provided, but trying to process anyway")
             await process_file(request, ProcessFileForm(file_id=file_item.id), user=user)
     except Exception as e:
         log.error(f"Error processing file: {file_item.id}")
@@ -182,16 +160,12 @@ async def upload_file_handler(
         file_extension = file_extension[1:] if file_extension else ""
 
         if process and request.app.state.config.ALLOWED_FILE_EXTENSIONS:
-            request.app.state.config.ALLOWED_FILE_EXTENSIONS = [
-                ext for ext in request.app.state.config.ALLOWED_FILE_EXTENSIONS if ext
-            ]
+            request.app.state.config.ALLOWED_FILE_EXTENSIONS = [ext for ext in request.app.state.config.ALLOWED_FILE_EXTENSIONS if ext]
 
             if file_extension not in request.app.state.config.ALLOWED_FILE_EXTENSIONS:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=ERROR_MESSAGES.DEFAULT(
-                        f"File type {file_extension} is not allowed"
-                    ),
+                    detail=ERROR_MESSAGES.DEFAULT(f"File type {file_extension} is not allowed"),
                 )
 
         # replace filename with uuid
@@ -312,9 +286,7 @@ async def search_files(
         files = await Files.get_files_by_user_id(user.id)
 
     # Get matching files
-    matching_files = [
-        file for file in files if fnmatch(file.filename.lower(), filename.lower())
-    ]
+    matching_files = [file for file in files if fnmatch(file.filename.lower(), filename.lower())]
 
     if not matching_files:
         raise HTTPException(
@@ -372,11 +344,7 @@ async def get_file_by_id(id: str, user=Depends(get_verified_user)):
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or await has_access_to_file(id, "read", user)
-    ):
+    if file.user_id == user.id or user.role == "admin" or await has_access_to_file(id, "read", user):
         return file
     else:
         raise HTTPException(
@@ -386,9 +354,7 @@ async def get_file_by_id(id: str, user=Depends(get_verified_user)):
 
 
 @router.get("/{id}/process/status")
-async def get_file_process_status(
-    id: str, stream: bool = Query(False), user=Depends(get_verified_user)
-):
+async def get_file_process_status(id: str, stream: bool = Query(False), user=Depends(get_verified_user)):
     file = await Files.get_file_by_id(id)
 
     if not file:
@@ -397,11 +363,7 @@ async def get_file_process_status(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or await has_access_to_file(id, "read", user)
-    ):
+    if file.user_id == user.id or user.role == "admin" or await has_access_to_file(id, "read", user):
         if stream:
             MAX_FILE_PROCESSING_DURATION = 3600 * 2
 
@@ -457,11 +419,7 @@ async def get_file_data_content_by_id(id: str, user=Depends(get_verified_user)):
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or await has_access_to_file(id, "read", user)
-    ):
+    if file.user_id == user.id or user.role == "admin" or await has_access_to_file(id, "read", user):
         return {"content": file.data.get("content", "")}
     else:
         raise HTTPException(
@@ -480,9 +438,7 @@ class ContentForm(BaseModel):
 
 
 @router.post("/{id}/data/content/update")
-async def update_file_data_content_by_id(
-    request: Request, id: str, form_data: ContentForm, user=Depends(get_verified_user)
-):
+async def update_file_data_content_by_id(request: Request, id: str, form_data: ContentForm, user=Depends(get_verified_user)):
     file = await Files.get_file_by_id(id)
 
     if not file:
@@ -491,11 +447,7 @@ async def update_file_data_content_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or await has_access_to_file(id, "write", user)
-    ):
+    if file.user_id == user.id or user.role == "admin" or await has_access_to_file(id, "write", user):
         try:
             await process_file(
                 request,
@@ -521,9 +473,7 @@ async def update_file_data_content_by_id(
 
 
 @router.get("/{id}/content")
-async def get_file_content_by_id(
-    id: str, user=Depends(get_verified_user), attachment: bool = Query(False)
-):
+async def get_file_content_by_id(id: str, user=Depends(get_verified_user), attachment: bool = Query(False)):
     file = await Files.get_file_by_id(id)
 
     if not file:
@@ -532,11 +482,7 @@ async def get_file_content_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or await has_access_to_file(id, "read", user)
-    ):
+    if file.user_id == user.id or user.role == "admin" or await has_access_to_file(id, "read", user):
         try:
             file_path = await Storage.get_file(file.path)
             file_path = Path(file_path)
@@ -553,21 +499,13 @@ async def get_file_content_by_id(
                 headers = {}
 
                 if attachment:
-                    headers["Content-Disposition"] = (
-                        f"attachment; filename*=UTF-8''{encoded_filename}"
-                    )
+                    headers["Content-Disposition"] = f"attachment; filename*=UTF-8''{encoded_filename}"
                 else:
-                    if content_type == "application/pdf" or filename.lower().endswith(
-                        ".pdf"
-                    ):
-                        headers["Content-Disposition"] = (
-                            f"inline; filename*=UTF-8''{encoded_filename}"
-                        )
+                    if content_type == "application/pdf" or filename.lower().endswith(".pdf"):
+                        headers["Content-Disposition"] = f"inline; filename*=UTF-8''{encoded_filename}"
                         content_type = "application/pdf"
                     elif content_type != "text/plain":
-                        headers["Content-Disposition"] = (
-                            f"attachment; filename*=UTF-8''{encoded_filename}"
-                        )
+                        headers["Content-Disposition"] = f"attachment; filename*=UTF-8''{encoded_filename}"
 
                 return FileResponse(file_path, headers=headers, media_type=content_type)
 
@@ -607,11 +545,7 @@ async def get_html_file_content_by_id(id: str, user=Depends(get_verified_user)):
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or has_access_to_file(id, "read", user)
-    ):
+    if file.user_id == user.id or user.role == "admin" or has_access_to_file(id, "read", user):
         try:
             file_path = Storage.get_file(file.path)
             file_path = Path(file_path)
@@ -649,19 +583,13 @@ async def get_file_content_by_id(id: str, user=Depends(get_verified_user)):
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or await has_access_to_file(id, "read", user)
-    ):
+    if file.user_id == user.id or user.role == "admin" or await has_access_to_file(id, "read", user):
         file_path = file.path
 
         # Handle Unicode filenames
         filename = file.meta.get("name", file.filename)
         encoded_filename = quote(filename)  # RFC5987 encoding
-        headers = {
-            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
-        }
+        headers = {"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"}
 
         if file_path:
             file_path = await Storage.get_file(file_path)
@@ -711,12 +639,7 @@ async def delete_file_by_id(id: str, user=Depends(get_verified_user)):
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or has_access_to_file(id, "write", user)
-    ):
-
+    if file.user_id == user.id or user.role == "admin" or has_access_to_file(id, "write", user):
         result = Files.delete_file_by_id(id)
         if result:
             try:

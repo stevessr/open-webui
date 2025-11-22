@@ -39,9 +39,7 @@ def validate_model_id(model_id: str) -> bool:
 ###########################
 
 
-@router.get(
-    "/list", response_model=list[ModelUserResponse]
-)  # do NOT use "/" as path, conflicts with main.py
+@router.get("/list", response_model=list[ModelUserResponse])  # do NOT use "/" as path, conflicts with main.py
 async def get_models(id: Optional[str] = None, user=Depends(get_verified_user)):
     if user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL:
         return Models.get_models()
@@ -70,9 +68,7 @@ async def create_new_model(
     form_data: ModelForm,
     user=Depends(get_verified_user),
 ):
-    if user.role != "admin" and not has_permission(
-        user.id, "workspace.models", request.app.state.config.USER_PERMISSIONS
-    ):
+    if user.role != "admin" and not has_permission(user.id, "workspace.models", request.app.state.config.USER_PERMISSIONS):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ERROR_MESSAGES.UNAUTHORIZED,
@@ -122,9 +118,7 @@ class ModelsImportForm(BaseModel):
 
 
 @router.post("/import", response_model=bool)
-async def import_models(
-    user: str = Depends(get_admin_user), form_data: ModelsImportForm = (...)
-):
+async def import_models(user: str = Depends(get_admin_user), form_data: ModelsImportForm = (...)):
     try:
         data = form_data.models
         if isinstance(data, list):
@@ -139,9 +133,7 @@ async def import_models(
                         model_data["meta"] = model_data.get("meta", {})
                         model_data["params"] = model_data.get("params", {})
 
-                        updated_model = ModelForm(
-                            **{**existing_model.model_dump(), **model_data}
-                        )
+                        updated_model = ModelForm(**{**existing_model.model_dump(), **model_data})
                         Models.update_model_by_id(model_id, updated_model)
                     else:
                         # Insert new model
@@ -167,9 +159,7 @@ class SyncModelsForm(BaseModel):
 
 
 @router.post("/sync", response_model=list[ModelModel])
-async def sync_models(
-    request: Request, form_data: SyncModelsForm, user=Depends(get_admin_user)
-):
+async def sync_models(request: Request, form_data: SyncModelsForm, user=Depends(get_admin_user)):
     return Models.sync_models(user.id, form_data.models)
 
 
@@ -183,11 +173,7 @@ async def sync_models(
 async def get_model_by_id(id: str, user=Depends(get_verified_user)):
     model = Models.get_model_by_id(id)
     if model:
-        if (
-            (user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL)
-            or model.user_id == user.id
-            or has_access(user.id, "read", model.access_control)
-        ):
+        if (user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL) or model.user_id == user.id or has_access(user.id, "read", model.access_control):
             return model
     else:
         raise HTTPException(
@@ -238,11 +224,7 @@ async def get_model_profile_image(id: str, user=Depends(get_verified_user)):
 async def toggle_model_by_id(id: str, user=Depends(get_verified_user)):
     model = Models.get_model_by_id(id)
     if model:
-        if (
-            user.role == "admin"
-            or model.user_id == user.id
-            or has_access(user.id, "write", model.access_control)
-        ):
+        if user.role == "admin" or model.user_id == user.id or has_access(user.id, "write", model.access_control):
             model = Models.toggle_model_by_id(id)
 
             if model:
@@ -283,11 +265,7 @@ async def update_model_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        model.user_id != user.id
-        and not has_access(user.id, "write", model.access_control)
-        and user.role != "admin"
-    ):
+    if model.user_id != user.id and not has_access(user.id, "write", model.access_control) and user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
@@ -311,11 +289,7 @@ async def delete_model_by_id(id: str, user=Depends(get_verified_user)):
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        user.role != "admin"
-        and model.user_id != user.id
-        and not has_access(user.id, "write", model.access_control)
-    ):
+    if user.role != "admin" and model.user_id != user.id and not has_access(user.id, "write", model.access_control):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ERROR_MESSAGES.UNAUTHORIZED,

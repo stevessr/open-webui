@@ -109,9 +109,7 @@ class ToolValves(BaseModel):
 
 
 class ToolsTable:
-    async def insert_new_tool(
-        self, user_id: str, form_data: ToolForm, specs: list[dict]
-    ) -> Optional[ToolModel]:
+    async def insert_new_tool(self, user_id: str, form_data: ToolForm, specs: list[dict]) -> Optional[ToolModel]:
         with get_db() as db:
             tool = ToolModel(
                 **{
@@ -146,9 +144,7 @@ class ToolsTable:
 
     async def get_tools(self) -> list[ToolUserModel]:
         with get_db() as db:
-            all_tools = await asyncio.to_thread(
-                db.query(Tool).order_by(Tool.updated_at.desc()).all
-            )
+            all_tools = await asyncio.to_thread(db.query(Tool).order_by(Tool.updated_at.desc()).all)
 
             user_ids = list(set(tool.user_id for tool in all_tools))
 
@@ -168,18 +164,11 @@ class ToolsTable:
                 )
             return tools
 
-    async def get_tools_by_user_id(
-        self, user_id: str, permission: str = "write"
-    ) -> list[ToolUserModel]:
+    async def get_tools_by_user_id(self, user_id: str, permission: str = "write") -> list[ToolUserModel]:
         tools = await self.get_tools()
         user_group_ids = {group.id for group in await Groups.get_groups_by_member_id(user_id)}
 
-        return [
-            tool
-            for tool in tools
-            if tool.user_id == user_id
-            or has_access(user_id, permission, tool.access_control, user_group_ids)
-        ]
+        return [tool for tool in tools if tool.user_id == user_id or has_access(user_id, permission, tool.access_control, user_group_ids)]
 
     async def get_tool_valves_by_id(self, id: str) -> Optional[dict]:
         try:
@@ -193,17 +182,13 @@ class ToolsTable:
     async def update_tool_valves_by_id(self, id: str, valves: dict) -> Optional[ToolValves]:
         try:
             with get_db() as db:
-                await asyncio.to_thread(db.query(Tool).filter_by(id=id).update,
-                    {"valves": valves, "updated_at": int(time.time())}
-                )
+                await asyncio.to_thread(db.query(Tool).filter_by(id=id).update, {"valves": valves, "updated_at": int(time.time())})
                 await asyncio.to_thread(db.commit)
                 return await self.get_tool_by_id(id)
         except Exception:
             return None
 
-    async def get_user_valves_by_id_and_user_id(
-        self, id: str, user_id: str
-    ) -> Optional[dict]:
+    async def get_user_valves_by_id_and_user_id(self, id: str, user_id: str) -> Optional[dict]:
         try:
             user = await Users.get_user_by_id(user_id)
             user_settings = user.settings.model_dump() if user.settings else {}
@@ -216,14 +201,10 @@ class ToolsTable:
 
             return user_settings["tools"]["valves"].get(id, {})
         except Exception as e:
-            log.exception(
-                f"Error getting user values by id {id} and user_id {user_id}: {e}"
-            )
+            log.exception(f"Error getting user values by id {id} and user_id {user_id}: {e}")
             return None
 
-    async def update_user_valves_by_id_and_user_id(
-        self, id: str, user_id: str, valves: dict
-    ) -> Optional[dict]:
+    async def update_user_valves_by_id_and_user_id(self, id: str, user_id: str, valves: dict) -> Optional[dict]:
         try:
             user = await Users.get_user_by_id(user_id)
             user_settings = user.settings.model_dump() if user.settings else {}
@@ -241,17 +222,13 @@ class ToolsTable:
 
             return user_settings["tools"]["valves"][id]
         except Exception as e:
-            log.exception(
-                f"Error updating user valves by id {id} and user_id {user_id}: {e}"
-            )
+            log.exception(f"Error updating user valves by id {id} and user_id {user_id}: {e}")
             return None
 
     async def update_tool_by_id(self, id: str, updated: dict) -> Optional[ToolModel]:
         try:
             with get_db() as db:
-                await asyncio.to_thread(db.query(Tool).filter_by(id=id).update,
-                    {**updated, "updated_at": int(time.time())}
-                )
+                await asyncio.to_thread(db.query(Tool).filter_by(id=id).update, {**updated, "updated_at": int(time.time())})
                 await asyncio.to_thread(db.commit)
 
                 tool = await asyncio.to_thread(db.get, Tool, id)

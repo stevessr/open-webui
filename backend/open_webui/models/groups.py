@@ -87,9 +87,7 @@ class GroupUpdateForm(GroupForm, UserIdsForm):
 
 
 class GroupTable:
-    async def insert_new_group(
-        self, user_id: str, form_data: GroupForm
-    ) -> Optional[GroupModel]:
+    async def insert_new_group(self, user_id: str, form_data: GroupForm) -> Optional[GroupModel]:
         with get_db() as db:
             group = GroupModel(
                 **{
@@ -116,21 +114,15 @@ class GroupTable:
 
     async def get_groups(self) -> list[GroupModel]:
         with get_db() as db:
-            all_groups = await asyncio.to_thread(
-                db.query(Group).order_by(Group.updated_at.desc()).all
-            )
+            all_groups = await asyncio.to_thread(db.query(Group).order_by(Group.updated_at.desc()).all)
             return [GroupModel.model_validate(group) for group in all_groups]
 
     async def get_groups_by_member_id(self, user_id: str) -> list[GroupModel]:
         with get_db() as db:
             all_groups = await asyncio.to_thread(
                 db.query(Group)
-                .filter(
-                    func.json_array_length(Group.user_ids) > 0
-                )  # Ensure array exists
-                .filter(
-                    Group.user_ids.cast(String).like(f'%"{user_id}"%')
-                )  # String-based check
+                .filter(func.json_array_length(Group.user_ids) > 0)  # Ensure array exists
+                .filter(Group.user_ids.cast(String).like(f'%"{user_id}"%'))  # String-based check
                 .order_by(Group.updated_at.desc())
                 .all
             )
@@ -151,17 +143,16 @@ class GroupTable:
         else:
             return None
 
-    async def update_group_by_id(
-        self, id: str, form_data: GroupUpdateForm, overwrite: bool = False
-    ) -> Optional[GroupModel]:
+    async def update_group_by_id(self, id: str, form_data: GroupUpdateForm, overwrite: bool = False) -> Optional[GroupModel]:
         try:
             with get_db() as db:
-                knowledge = await self.get_group_by_id(id=id) # This was originally a knowledge call. Corrected to group.
-                await asyncio.to_thread(db.query(Group).filter_by(id=id).update,
+                await self.get_group_by_id(id=id)
+                await asyncio.to_thread(
+                    db.query(Group).filter_by(id=id).update,
                     {
                         **form_data.model_dump(),
                         "updated_at": int(time.time()),
-                    }
+                    },
                 )
                 await asyncio.to_thread(db.commit)
                 return await self.get_group_by_id(id=id)
@@ -195,11 +186,12 @@ class GroupTable:
 
                 for group in groups:
                     group.user_ids.remove(user_id)
-                    await asyncio.to_thread(db.query(Group).filter_by(id=group.id).update,
+                    await asyncio.to_thread(
+                        db.query(Group).filter_by(id=group.id).update,
                         {
                             "user_ids": group.user_ids,
                             "updated_at": int(time.time()),
-                        }
+                        },
                     )
                     await asyncio.to_thread(db.commit)
 
@@ -207,10 +199,7 @@ class GroupTable:
             except Exception:
                 return False
 
-    async def create_groups_by_group_names(
-        self, user_id: str, group_names: list[str]
-    ) -> list[GroupModel]:
-
+    async def create_groups_by_group_names(self, user_id: str, group_names: list[str]) -> list[GroupModel]:
         # check for existing groups
         existing_groups = await self.get_groups()
         existing_group_names = {group.name for group in existing_groups}
@@ -251,22 +240,24 @@ class GroupTable:
                 for group in existing_groups:
                     if group.id not in group_ids:
                         group.user_ids.remove(user_id)
-                        await asyncio.to_thread(db.query(Group).filter_by(id=group.id).update,
+                        await asyncio.to_thread(
+                            db.query(Group).filter_by(id=group.id).update,
                             {
                                 "user_ids": group.user_ids,
                                 "updated_at": int(time.time()),
-                            }
+                            },
                         )
 
                 # Add user to new groups
                 for group in groups:
                     if user_id not in group.user_ids:
                         group.user_ids.append(user_id)
-                        await asyncio.to_thread(db.query(Group).filter_by(id=group.id).update,
+                        await asyncio.to_thread(
+                            db.query(Group).filter_by(id=group.id).update,
                             {
                                 "user_ids": group.user_ids,
                                 "updated_at": int(time.time()),
-                            }
+                            },
                         )
 
                 await asyncio.to_thread(db.commit)
@@ -275,9 +266,7 @@ class GroupTable:
                 log.exception(e)
                 return False
 
-    async def add_users_to_group(
-        self, id: str, user_ids: Optional[list[str]] = None
-    ) -> Optional[GroupModel]:
+    async def add_users_to_group(self, id: str, user_ids: Optional[list[str]] = None) -> Optional[GroupModel]:
         try:
             with get_db() as db:
                 group = await asyncio.to_thread(db.query(Group).filter_by(id=id).first)
@@ -303,9 +292,7 @@ class GroupTable:
             log.exception(e)
             return None
 
-    async def remove_users_from_group(
-        self, id: str, user_ids: Optional[list[str]] = None
-    ) -> Optional[GroupModel]:
+    async def remove_users_from_group(self, id: str, user_ids: Optional[list[str]] = None) -> Optional[GroupModel]:
         try:
             with get_db() as db:
                 group = await asyncio.to_thread(db.query(Group).filter_by(id=id).first)

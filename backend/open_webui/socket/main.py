@@ -47,11 +47,7 @@ SOCKETIO_CORS_ORIGINS = "*" if CORS_ALLOW_ORIGIN == ["*"] else CORS_ALLOW_ORIGIN
 
 if WEBSOCKET_MANAGER == "redis":
     if WEBSOCKET_SENTINEL_HOSTS:
-        mgr = socketio.AsyncRedisManager(
-            get_sentinel_url_from_env(
-                WEBSOCKET_REDIS_URL, WEBSOCKET_SENTINEL_HOSTS, WEBSOCKET_SENTINEL_PORT
-            )
-        )
+        mgr = socketio.AsyncRedisManager(get_sentinel_url_from_env(WEBSOCKET_REDIS_URL, WEBSOCKET_SENTINEL_HOSTS, WEBSOCKET_SENTINEL_PORT))
     else:
         mgr = socketio.AsyncRedisManager(WEBSOCKET_REDIS_URL)
     sio = socketio.AsyncServer(
@@ -81,16 +77,12 @@ if WEBSOCKET_MANAGER == "redis":
     log.debug("Using Redis to manage websockets.")
     REDIS = get_redis_connection(
         redis_url=WEBSOCKET_REDIS_URL,
-        redis_sentinels=get_sentinels_from_env(
-            WEBSOCKET_SENTINEL_HOSTS, WEBSOCKET_SENTINEL_PORT
-        ),
+        redis_sentinels=get_sentinels_from_env(WEBSOCKET_SENTINEL_HOSTS, WEBSOCKET_SENTINEL_PORT),
         redis_cluster=WEBSOCKET_REDIS_CLUSTER,
         async_mode=True,
     )
 
-    redis_sentinels = get_sentinels_from_env(
-        WEBSOCKET_SENTINEL_HOSTS, WEBSOCKET_SENTINEL_PORT
-    )
+    redis_sentinels = get_sentinels_from_env(WEBSOCKET_SENTINEL_HOSTS, WEBSOCKET_SENTINEL_PORT)
     SESSION_POOL = RedisDict(
         f"{REDIS_KEY_PREFIX}:session_pool",
         redis_url=WEBSOCKET_REDIS_URL,
@@ -136,22 +128,16 @@ YDOC_MANAGER = YdocManager(
 
 async def periodic_usage_pool_cleanup():
     max_retries = 2
-    retry_delay = random.uniform(
-        WEBSOCKET_REDIS_LOCK_TIMEOUT / 2, WEBSOCKET_REDIS_LOCK_TIMEOUT
-    )
+    retry_delay = random.uniform(WEBSOCKET_REDIS_LOCK_TIMEOUT / 2, WEBSOCKET_REDIS_LOCK_TIMEOUT)
     for attempt in range(max_retries + 1):
         if aquire_func():
             break
         else:
             if attempt < max_retries:
-                log.debug(
-                    f"Cleanup lock already exists. Retry {attempt + 1} after {retry_delay}s..."
-                )
+                log.debug(f"Cleanup lock already exists. Retry {attempt + 1} after {retry_delay}s...")
                 await asyncio.sleep(retry_delay)
             else:
-                log.warning(
-                    "Failed to acquire cleanup lock after retries. Skipping cleanup."
-                )
+                log.warning("Failed to acquire cleanup lock after retries. Skipping cleanup.")
                 return
 
     log.debug("Running periodic_cleanup")
@@ -165,11 +151,7 @@ async def periodic_usage_pool_cleanup():
             send_usage = False
             for model_id, connections in list(USAGE_POOL.items()):
                 # Creating a list of sids to remove if they have timed out
-                expired_sids = [
-                    sid
-                    for sid, details in connections.items()
-                    if now - details["updated_at"] > TIMEOUT_DURATION
-                ]
+                expired_sids = [sid for sid, details in connections.items() if now - details["updated_at"] > TIMEOUT_DURATION]
 
                 for sid in expired_sids:
                     del connections[sid]
@@ -227,9 +209,7 @@ def get_session_ids_from_room(room):
 def get_user_ids_from_room(room):
     active_session_ids = get_session_ids_from_room(room)
 
-    active_user_ids = list(
-        set([SESSION_POOL.get(session_id)["id"] for session_id in active_session_ids])
-    )
+    active_user_ids = list(set([SESSION_POOL.get(session_id)["id"] for session_id in active_session_ids]))
     return active_user_ids
 
 
@@ -263,9 +243,7 @@ async def connect(sid, environ, auth):
             user = Users.get_user_by_id(data["id"])
 
         if user:
-            SESSION_POOL[sid] = user.model_dump(
-                exclude=["date_of_birth", "bio", "gender"]
-            )
+            SESSION_POOL[sid] = user.model_dump(exclude=["date_of_birth", "bio", "gender"])
             if user.id in USER_POOL:
                 USER_POOL[user.id] = USER_POOL[user.id] + [sid]
             else:
@@ -274,7 +252,6 @@ async def connect(sid, environ, auth):
 
 @sio.on("user-join")
 async def user_join(sid, data):
-
     auth = data["auth"] if "auth" in data else None
     if not auth or "token" not in auth:
         return
@@ -341,11 +318,7 @@ async def join_note(sid, data):
         log.error(f"Note {data['note_id']} not found for user {user.id}")
         return
 
-    if (
-        user.role != "admin"
-        and user.id != note.user_id
-        and not has_access(user.id, type="read", access_control=note.access_control)
-    ):
+    if user.role != "admin" and user.id != note.user_id and not has_access(user.id, type="read", access_control=note.access_control):
         log.error(f"User {user.id} does not have access to note {data['note_id']}")
         return
 
@@ -396,16 +369,8 @@ async def ydoc_document_join(sid, data):
                 log.error(f"Note {note_id} not found")
                 return
 
-            if (
-                user.get("role") != "admin"
-                and user.get("id") != note.user_id
-                and not has_access(
-                    user.get("id"), type="read", access_control=note.access_control
-                )
-            ):
-                log.error(
-                    f"User {user.get('id')} does not have access to note {note_id}"
-                )
+            if user.get("role") != "admin" and user.get("id") != note.user_id and not has_access(user.get("id"), type="read", access_control=note.access_control):
+                log.error(f"User {user.get('id')} does not have access to note {note_id}")
                 return
 
         user_id = data.get("user_id", sid)
@@ -466,13 +431,7 @@ async def document_save_handler(document_id, data, user):
             log.error(f"Note {note_id} not found")
             return
 
-        if (
-            user.get("role") != "admin"
-            and user.get("id") != note.user_id
-            and not has_access(
-                user.get("id"), type="read", access_control=note.access_control
-            )
-        ):
+        if user.get("role") != "admin" and user.get("id") != note.user_id and not has_access(user.get("id"), type="read", access_control=note.access_control):
             log.error(f"User {user.get('id')} does not have access to note {note_id}")
             return
 
@@ -553,9 +512,7 @@ async def yjs_document_update(sid, data):
 
         async def debounced_save():
             await asyncio.sleep(0.5)
-            await document_save_handler(
-                document_id, data.get("data", {}), SESSION_POOL.get(sid)
-            )
+            await document_save_handler(document_id, data.get("data", {}), SESSION_POOL.get(sid))
 
         if data.get("data"):
             await create_task(REDIS, debounced_save(), document_id)
@@ -586,10 +543,7 @@ async def yjs_document_leave(sid, data):
             room=f"doc_{document_id}",
         )
 
-        if (
-            await YDOC_MANAGER.document_exists(document_id)
-            and len(await YDOC_MANAGER.get_users(document_id)) == 0
-        ):
+        if await YDOC_MANAGER.document_exists(document_id) and len(await YDOC_MANAGER.get_users(document_id)) == 0:
             log.info(f"Cleaning up document {document_id} as no users are left")
             await YDOC_MANAGER.clear_document(document_id)
 
@@ -639,16 +593,7 @@ def get_event_emitter(request_info, update_db=True):
     async def __event_emitter__(event_data):
         user_id = request_info["user_id"]
 
-        session_ids = list(
-            set(
-                USER_POOL.get(user_id, [])
-                + (
-                    [request_info.get("session_id")]
-                    if request_info.get("session_id")
-                    else []
-                )
-            )
-        )
+        session_ids = list(set(USER_POOL.get(user_id, []) + ([request_info.get("session_id")] if request_info.get("session_id") else [])))
 
         chat_id = request_info.get("chat_id", None)
         message_id = request_info.get("message_id", None)
@@ -667,11 +612,7 @@ def get_event_emitter(request_info, update_db=True):
         ]
 
         await asyncio.gather(*emit_tasks)
-        if (
-            update_db
-            and message_id
-            and not request_info.get("chat_id", "").startswith("local:")
-        ):
+        if update_db and message_id and not request_info.get("chat_id", "").startswith("local:"):
             if "type" in event_data and event_data["type"] == "status":
                 Chats.add_message_status_to_chat_by_id_and_message_id(
                     request_info["chat_id"],

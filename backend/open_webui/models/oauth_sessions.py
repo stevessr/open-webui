@@ -26,9 +26,7 @@ class OAuthSession(Base):
     id = Column(Text, primary_key=True)
     user_id = Column(Text, nullable=False)
     provider = Column(Text, nullable=False)
-    token = Column(
-        Text, nullable=False
-    )  # JSON with access_token, id_token, refresh_token
+    token = Column(Text, nullable=False)  # JSON with access_token, id_token, refresh_token
     expires_at = Column(BigInteger, nullable=False)
     created_at = Column(BigInteger, nullable=False)
     updated_at = Column(BigInteger, nullable=False)
@@ -154,17 +152,11 @@ class OAuthSessionTable:
             log.error(f"Error getting OAuth session by ID: {e}")
             return None
 
-    def get_session_by_id_and_user_id(
-        self, session_id: str, user_id: str
-    ) -> Optional[OAuthSessionModel]:
+    def get_session_by_id_and_user_id(self, session_id: str, user_id: str) -> Optional[OAuthSessionModel]:
         """Get OAuth session by ID and user ID"""
         try:
             with get_db() as db:
-                session = (
-                    db.query(OAuthSession)
-                    .filter_by(id=session_id, user_id=user_id)
-                    .first()
-                )
+                session = db.query(OAuthSession).filter_by(id=session_id, user_id=user_id).first()
                 if session:
                     session.token = self._decrypt_token(session.token)
                     return OAuthSessionModel.model_validate(session)
@@ -174,17 +166,11 @@ class OAuthSessionTable:
             log.error(f"Error getting OAuth session by ID: {e}")
             return None
 
-    def get_session_by_provider_and_user_id(
-        self, provider: str, user_id: str
-    ) -> Optional[OAuthSessionModel]:
+    def get_session_by_provider_and_user_id(self, provider: str, user_id: str) -> Optional[OAuthSessionModel]:
         """Get OAuth session by provider and user ID"""
         try:
             with get_db() as db:
-                session = (
-                    db.query(OAuthSession)
-                    .filter_by(provider=provider, user_id=user_id)
-                    .first()
-                )
+                session = db.query(OAuthSession).filter_by(provider=provider, user_id=user_id).first()
                 if session:
                     session.token = self._decrypt_token(session.token)
                     return OAuthSessionModel.model_validate(session)
@@ -211,9 +197,7 @@ class OAuthSessionTable:
             log.error(f"Error getting OAuth sessions by user ID: {e}")
             return []
 
-    def update_session_by_id(
-        self, session_id: str, token: dict
-    ) -> Optional[OAuthSessionModel]:
+    def update_session_by_id(self, session_id: str, token: dict) -> Optional[OAuthSessionModel]:
         """Update OAuth session tokens"""
         try:
             with get_db() as db:

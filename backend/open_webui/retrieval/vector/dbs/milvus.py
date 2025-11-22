@@ -109,9 +109,7 @@ class MilvusClient(VectorDBBase):
             description="vector",
         )
         schema.add_field(field_name="data", datatype=DataType.JSON, description="data")
-        schema.add_field(
-            field_name="metadata", datatype=DataType.JSON, description="metadata"
-        )
+        schema.add_field(field_name="metadata", datatype=DataType.JSON, description="metadata")
 
         index_params = self.client.prepare_index_params()
 
@@ -140,11 +138,7 @@ class MilvusClient(VectorDBBase):
         elif index_type in ["FLAT", "AUTOINDEX"]:
             log.info(f"Using {index_type} index with no specific build-time params.")
         else:
-            log.warning(
-                f"Unsupported MILVUS_INDEX_TYPE: '{index_type}'. "
-                f"Supported types: HNSW, IVF_FLAT, DISKANN, FLAT, AUTOINDEX. "
-                f"Milvus will use its default for the collection if this type is not directly supported for index creation."
-            )
+            log.warning(f"Unsupported MILVUS_INDEX_TYPE: '{index_type}'. Supported types: HNSW, IVF_FLAT, DISKANN, FLAT, AUTOINDEX. Milvus will use its default for the collection if this type is not directly supported for index creation.")
             # For unsupported types, pass the type directly to Milvus; it might handle it or use a default.
             # If Milvus errors out, the user needs to correct the MILVUS_INDEX_TYPE env var.
 
@@ -160,27 +154,19 @@ class MilvusClient(VectorDBBase):
             schema=schema,
             index_params=index_params,
         )
-        log.info(
-            f"Successfully created collection '{self.collection_prefix}_{collection_name}' with index type '{index_type}' and metric '{metric_type}'."
-        )
+        log.info(f"Successfully created collection '{self.collection_prefix}_{collection_name}' with index type '{index_type}' and metric '{metric_type}'.")
 
     def has_collection(self, collection_name: str) -> bool:
         # Check if the collection exists based on the collection name.
         collection_name = collection_name.replace("-", "_")
-        return self.client.has_collection(
-            collection_name=f"{self.collection_prefix}_{collection_name}"
-        )
+        return self.client.has_collection(collection_name=f"{self.collection_prefix}_{collection_name}")
 
     def delete_collection(self, collection_name: str):
         # Delete the collection based on the collection name.
         collection_name = collection_name.replace("-", "_")
-        return self.client.drop_collection(
-            collection_name=f"{self.collection_prefix}_{collection_name}"
-        )
+        return self.client.drop_collection(collection_name=f"{self.collection_prefix}_{collection_name}")
 
-    def search(
-        self, collection_name: str, vectors: list[list[float | int]], limit: int
-    ) -> Optional[SearchResult]:
+    def search(self, collection_name: str, vectors: list[list[float | int]], limit: int) -> Optional[SearchResult]:
         # Search for the nearest neighbor items based on the vectors and return 'limit' number of results.
         collection_name = collection_name.replace("-", "_")
         # For some index types like IVF_FLAT, search params like nprobe can be set.
@@ -201,25 +187,16 @@ class MilvusClient(VectorDBBase):
         # Construct the filter string for querying
         collection_name = collection_name.replace("-", "_")
         if not self.has_collection(collection_name):
-            log.warning(
-                f"Query attempted on non-existent collection: {self.collection_prefix}_{collection_name}"
-            )
+            log.warning(f"Query attempted on non-existent collection: {self.collection_prefix}_{collection_name}")
             return None
-        filter_string = " && ".join(
-            [
-                f'metadata["{key}"] == {json.dumps(value)}'
-                for key, value in filter.items()
-            ]
-        )
+        filter_string = " && ".join([f'metadata["{key}"] == {json.dumps(value)}' for key, value in filter.items()])
 
         collection = Collection(f"{self.collection_prefix}_{collection_name}")
         collection.load()
         all_results = []
 
         try:
-            log.info(
-                f"Querying collection {self.collection_prefix}_{collection_name} with filter: '{filter_string}', limit: {limit}"
-            )
+            log.info(f"Querying collection {self.collection_prefix}_{collection_name} with filter: '{filter_string}', limit: {limit}")
 
             iterator = collection.query_iterator(
                 filter=filter_string,
@@ -242,17 +219,13 @@ class MilvusClient(VectorDBBase):
             return self._result_to_get_result([all_results])
 
         except Exception as e:
-            log.exception(
-                f"Error querying collection {self.collection_prefix}_{collection_name} with filter '{filter_string}' and limit {limit}: {e}"
-            )
+            log.exception(f"Error querying collection {self.collection_prefix}_{collection_name} with filter '{filter_string}' and limit {limit}: {e}")
             return None
 
     def get(self, collection_name: str) -> Optional[GetResult]:
         # Get all the items in the collection. This can be very resource-intensive for large collections.
         collection_name = collection_name.replace("-", "_")
-        log.warning(
-            f"Fetching ALL items from collection '{self.collection_prefix}_{collection_name}'. This might be slow for large collections."
-        )
+        log.warning(f"Fetching ALL items from collection '{self.collection_prefix}_{collection_name}'. This might be slow for large collections.")
         # Using query with a trivial filter to get all items.
         # This will use the paginated query logic.
         return self.query(collection_name=collection_name, filter={}, limit=-1)
@@ -260,26 +233,14 @@ class MilvusClient(VectorDBBase):
     def insert(self, collection_name: str, items: list[VectorItem]):
         # Insert the items into the collection, if the collection does not exist, it will be created.
         collection_name = collection_name.replace("-", "_")
-        if not self.client.has_collection(
-            collection_name=f"{self.collection_prefix}_{collection_name}"
-        ):
-            log.info(
-                f"Collection {self.collection_prefix}_{collection_name} does not exist. Creating now."
-            )
+        if not self.client.has_collection(collection_name=f"{self.collection_prefix}_{collection_name}"):
+            log.info(f"Collection {self.collection_prefix}_{collection_name} does not exist. Creating now.")
             if not items:
-                log.error(
-                    f"Cannot create collection {self.collection_prefix}_{collection_name} without items to determine dimension."
-                )
-                raise ValueError(
-                    "Cannot create Milvus collection without items to determine vector dimension."
-                )
-            self._create_collection(
-                collection_name=collection_name, dimension=len(items[0]["vector"])
-            )
+                log.error(f"Cannot create collection {self.collection_prefix}_{collection_name} without items to determine dimension.")
+                raise ValueError("Cannot create Milvus collection without items to determine vector dimension.")
+            self._create_collection(collection_name=collection_name, dimension=len(items[0]["vector"]))
 
-        log.info(
-            f"Inserting {len(items)} items into collection {self.collection_prefix}_{collection_name}."
-        )
+        log.info(f"Inserting {len(items)} items into collection {self.collection_prefix}_{collection_name}.")
         return self.client.insert(
             collection_name=f"{self.collection_prefix}_{collection_name}",
             data=[
@@ -296,26 +257,14 @@ class MilvusClient(VectorDBBase):
     def upsert(self, collection_name: str, items: list[VectorItem]):
         # Update the items in the collection, if the items are not present, insert them. If the collection does not exist, it will be created.
         collection_name = collection_name.replace("-", "_")
-        if not self.client.has_collection(
-            collection_name=f"{self.collection_prefix}_{collection_name}"
-        ):
-            log.info(
-                f"Collection {self.collection_prefix}_{collection_name} does not exist for upsert. Creating now."
-            )
+        if not self.client.has_collection(collection_name=f"{self.collection_prefix}_{collection_name}"):
+            log.info(f"Collection {self.collection_prefix}_{collection_name} does not exist for upsert. Creating now.")
             if not items:
-                log.error(
-                    f"Cannot create collection {self.collection_prefix}_{collection_name} for upsert without items to determine dimension."
-                )
-                raise ValueError(
-                    "Cannot create Milvus collection for upsert without items to determine vector dimension."
-                )
-            self._create_collection(
-                collection_name=collection_name, dimension=len(items[0]["vector"])
-            )
+                log.error(f"Cannot create collection {self.collection_prefix}_{collection_name} for upsert without items to determine dimension.")
+                raise ValueError("Cannot create Milvus collection for upsert without items to determine vector dimension.")
+            self._create_collection(collection_name=collection_name, dimension=len(items[0]["vector"]))
 
-        log.info(
-            f"Upserting {len(items)} items into collection {self.collection_prefix}_{collection_name}."
-        )
+        log.info(f"Upserting {len(items)} items into collection {self.collection_prefix}_{collection_name}.")
         return self.client.upsert(
             collection_name=f"{self.collection_prefix}_{collection_name}",
             data=[
@@ -338,44 +287,29 @@ class MilvusClient(VectorDBBase):
         # Delete the items from the collection based on the ids or filter.
         collection_name = collection_name.replace("-", "_")
         if not self.has_collection(collection_name):
-            log.warning(
-                f"Delete attempted on non-existent collection: {self.collection_prefix}_{collection_name}"
-            )
+            log.warning(f"Delete attempted on non-existent collection: {self.collection_prefix}_{collection_name}")
             return None
 
         if ids:
-            log.info(
-                f"Deleting items by IDs from {self.collection_prefix}_{collection_name}. IDs: {ids}"
-            )
+            log.info(f"Deleting items by IDs from {self.collection_prefix}_{collection_name}. IDs: {ids}")
             return self.client.delete(
                 collection_name=f"{self.collection_prefix}_{collection_name}",
                 ids=ids,
             )
         elif filter:
-            filter_string = " && ".join(
-                [
-                    f'metadata["{key}"] == {json.dumps(value)}'
-                    for key, value in filter.items()
-                ]
-            )
-            log.info(
-                f"Deleting items by filter from {self.collection_prefix}_{collection_name}. Filter: {filter_string}"
-            )
+            filter_string = " && ".join([f'metadata["{key}"] == {json.dumps(value)}' for key, value in filter.items()])
+            log.info(f"Deleting items by filter from {self.collection_prefix}_{collection_name}. Filter: {filter_string}")
             return self.client.delete(
                 collection_name=f"{self.collection_prefix}_{collection_name}",
                 filter=filter_string,
             )
         else:
-            log.warning(
-                f"Delete operation on {self.collection_prefix}_{collection_name} called without IDs or filter. No action taken."
-            )
+            log.warning(f"Delete operation on {self.collection_prefix}_{collection_name} called without IDs or filter. No action taken.")
             return None
 
     def reset(self):
         # Resets the database. This will delete all collections and item entries that match the prefix.
-        log.warning(
-            f"Resetting Milvus: Deleting all collections with prefix '{self.collection_prefix}'."
-        )
+        log.warning(f"Resetting Milvus: Deleting all collections with prefix '{self.collection_prefix}'.")
         collection_names = self.client.list_collections()
         deleted_collections = []
         for collection_name_full in collection_names:

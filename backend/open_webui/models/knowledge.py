@@ -97,9 +97,7 @@ class KnowledgeForm(BaseModel):
 
 
 class KnowledgeTable:
-    async def insert_new_knowledge(
-        self, user_id: str, form_data: KnowledgeForm
-    ) -> Optional[KnowledgeModel]:
+    async def insert_new_knowledge(self, user_id: str, form_data: KnowledgeForm) -> Optional[KnowledgeModel]:
         with get_db() as db:
             knowledge = KnowledgeModel(
                 **{
@@ -125,9 +123,7 @@ class KnowledgeTable:
 
     async def get_knowledge_bases(self) -> list[KnowledgeUserModel]:
         with get_db() as db:
-            all_knowledge = await asyncio.to_thread(
-                db.query(Knowledge).order_by(Knowledge.updated_at.desc()).all
-            )
+            all_knowledge = await asyncio.to_thread(db.query(Knowledge).order_by(Knowledge.updated_at.desc()).all)
 
             user_ids = list(set(knowledge.user_id for knowledge in all_knowledge))
 
@@ -156,19 +152,10 @@ class KnowledgeTable:
         user_group_ids = {group.id for group in await Groups.get_groups_by_member_id(user_id)}
         return has_access(user_id, permission, knowledge.access_control, user_group_ids)
 
-    async def get_knowledge_bases_by_user_id(
-        self, user_id: str, permission: str = "write"
-    ) -> list[KnowledgeUserModel]:
+    async def get_knowledge_bases_by_user_id(self, user_id: str, permission: str = "write") -> list[KnowledgeUserModel]:
         knowledge_bases = await self.get_knowledge_bases()
         user_group_ids = {group.id for group in await Groups.get_groups_by_member_id(user_id)}
-        return [
-            knowledge_base
-            for knowledge_base in knowledge_bases
-            if knowledge_base.user_id == user_id
-            or has_access(
-                user_id, permission, knowledge_base.access_control, user_group_ids
-            )
-        ]
+        return [knowledge_base for knowledge_base in knowledge_bases if knowledge_base.user_id == user_id or has_access(user_id, permission, knowledge_base.access_control, user_group_ids)]
 
     async def get_knowledge_by_id(self, id: str) -> Optional[KnowledgeModel]:
         try:
@@ -178,17 +165,16 @@ class KnowledgeTable:
         except Exception:
             return None
 
-    async def update_knowledge_by_id(
-        self, id: str, form_data: KnowledgeForm, overwrite: bool = False
-    ) -> Optional[KnowledgeModel]:
+    async def update_knowledge_by_id(self, id: str, form_data: KnowledgeForm, overwrite: bool = False) -> Optional[KnowledgeModel]:
         try:
             with get_db() as db:
                 knowledge = await self.get_knowledge_by_id(id=id)
-                await asyncio.to_thread(db.query(Knowledge).filter_by(id=id).update,
+                await asyncio.to_thread(
+                    db.query(Knowledge).filter_by(id=id).update,
                     {
                         **form_data.model_dump(),
                         "updated_at": int(time.time()),
-                    }
+                    },
                 )
                 await asyncio.to_thread(db.commit)
                 return await self.get_knowledge_by_id(id=id)
@@ -196,17 +182,16 @@ class KnowledgeTable:
             log.exception(e)
             return None
 
-    async def update_knowledge_data_by_id(
-        self, id: str, data: dict
-    ) -> Optional[KnowledgeModel]:
+    async def update_knowledge_data_by_id(self, id: str, data: dict) -> Optional[KnowledgeModel]:
         try:
             with get_db() as db:
                 knowledge = await self.get_knowledge_by_id(id=id)
-                await asyncio.to_thread(db.query(Knowledge).filter_by(id=id).update,
+                await asyncio.to_thread(
+                    db.query(Knowledge).filter_by(id=id).update,
                     {
                         "data": data,
                         "updated_at": int(time.time()),
-                    }
+                    },
                 )
                 await asyncio.to_thread(db.commit)
                 return await self.get_knowledge_by_id(id=id)

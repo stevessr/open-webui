@@ -75,7 +75,6 @@ class AuditLogger:
         log_level: str = "INFO",
         extra: Optional[dict] = None,
     ):
-
         entry = asdict(audit_entry)
 
         if extra:
@@ -107,15 +106,11 @@ class AuditContext:
 
     def add_request_chunk(self, chunk: bytes):
         if len(self.request_body) < self.max_body_size:
-            self.request_body.extend(
-                chunk[: self.max_body_size - len(self.request_body)]
-            )
+            self.request_body.extend(chunk[: self.max_body_size - len(self.request_body)])
 
     def add_response_chunk(self, chunk: bytes):
         if len(self.response_body) < self.max_body_size:
-            self.response_body.extend(
-                chunk[: self.max_body_size - len(self.response_body)]
-            )
+            self.response_body.extend(chunk[: self.max_body_size - len(self.response_body)])
 
 
 class AuditLoggingMiddleware:
@@ -178,9 +173,7 @@ class AuditLoggingMiddleware:
             await self.app(scope, receive_wrapper, send_wrapper)
 
     @asynccontextmanager
-    async def _audit_context(
-        self, request: Request
-    ) -> AsyncGenerator[AuditContext, None]:
+    async def _audit_context(self, request: Request) -> AsyncGenerator[AuditContext, None]:
         """
         async context manager that ensures that an audit log entry is recorded after the request is processed.
         """
@@ -194,9 +187,7 @@ class AuditLoggingMiddleware:
         auth_header = request.headers.get("Authorization")
 
         try:
-            user = get_current_user(
-                request, None, None, get_http_authorization_cred(auth_header)
-            )
+            user = get_current_user(request, None, None, get_http_authorization_cred(auth_header))
             return user
         except Exception as e:
             logger.debug(f"Failed to get authenticated user: {e!s}")
@@ -204,10 +195,7 @@ class AuditLoggingMiddleware:
         return None
 
     def _should_skip_auditing(self, request: Request) -> bool:
-        if (
-            request.method not in {"POST", "PUT", "PATCH", "DELETE"}
-            or AUDIT_LOG_LEVEL == "NONE"
-        ):
+        if request.method not in {"POST", "PUT", "PATCH", "DELETE"} or AUDIT_LOG_LEVEL == "NONE":
             return True
 
         ALWAYS_LOG_ENDPOINTS = {
@@ -225,9 +213,7 @@ class AuditLoggingMiddleware:
             return True
 
         # match either /api/<resource>/...(for the endpoint /api/chat case) or /api/v1/<resource>/...
-        pattern = re.compile(
-            r"^/api(?:/v1)?/(" + "|".join(self.excluded_paths) + r")\b"
-        )
+        pattern = re.compile(r"^/api(?:/v1)?/(" + "|".join(self.excluded_paths) + r")\b")
         if pattern.match(request.url.path):
             return True
 
@@ -250,9 +236,7 @@ class AuditLoggingMiddleware:
         try:
             user = await self._get_authenticated_user(request)
 
-            user = (
-                user.model_dump(include={"id", "name", "email", "role"}) if user else {}
-            )
+            user = user.model_dump(include={"id", "name", "email", "role"}) if user else {}
 
             request_body = context.request_body.decode("utf-8", errors="replace")
             response_body = context.response_body.decode("utf-8", errors="replace")

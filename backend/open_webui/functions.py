@@ -46,9 +46,7 @@ async def get_function_module_by_id(request: Request, pipe_id: str):
 
         if valves:
             try:
-                function_module.valves = Valves(
-                    **{k: v for k, v in valves.items() if v is not None}
-                )
+                function_module.valves = Valves(**{k: v for k, v in valves.items() if v is not None})
             except Exception as e:
                 log.exception(f"Error loading valves for function {pipe_id}: {e}")
                 raise e
@@ -87,12 +85,10 @@ async def get_function_models(request):
                     log.exception(e)
                     sub_pipes = []
 
-                log.debug(
-                    f"get_function_models: function '{pipe.id}' is a manifold of {sub_pipes}"
-                )
+                log.debug(f"get_function_models: function '{pipe.id}' is a manifold of {sub_pipes}")
 
                 for p in sub_pipes:
-                    sub_pipe_id = f'{pipe.id}.{p["id"]}'
+                    sub_pipe_id = f"{pipe.id}.{p['id']}"
                     sub_pipe_name = p["name"]
 
                     if hasattr(function_module, "name"):
@@ -114,9 +110,7 @@ async def get_function_models(request):
             else:
                 pipe_flag = {"type": "pipe"}
 
-                log.debug(
-                    f"get_function_models: function '{pipe.id}' is a single pipe {{ 'id': {pipe.id}, 'name': {pipe.name} }}"
-                )
+                log.debug(f"get_function_models: function '{pipe.id}' is a single pipe {{ 'id': {pipe.id}, 'name': {pipe.name} }}")
 
                 pipe_models.append(
                     {
@@ -136,9 +130,7 @@ async def get_function_models(request):
     return pipe_models
 
 
-async def generate_function_chat_completion(
-    request, form_data, user, models: dict = {}
-):
+async def generate_function_chat_completion(request, form_data, user, models: dict = {}):
     async def execute_pipe(pipe, params):
         if inspect.iscoroutinefunction(pipe):
             return await pipe(**params)
@@ -185,9 +177,7 @@ async def generate_function_chat_completion(
 
         # Get the signature of the function
         sig = inspect.signature(function_module.pipe)
-        params = {"body": form_data} | {
-            k: v for k, v in extra_params.items() if k in sig.parameters
-        }
+        params = {"body": form_data} | {k: v for k, v in extra_params.items() if k in sig.parameters}
 
         if "__user__" in params and hasattr(function_module, "UserValves"):
             user_valves = await Functions.get_user_valves_by_id_and_user_id(pipe_id, user.id)
@@ -292,7 +282,7 @@ async def generate_function_chat_completion(
 
             except Exception as e:
                 log.error(f"Error: {e}")
-                yield f"data: {json.dumps({'error': {'detail':str(e)}})}\n\n"
+                yield f"data: {json.dumps({'error': {'detail': str(e)}})}\n\n"
                 return
 
             if isinstance(res, str):
@@ -308,9 +298,7 @@ async def generate_function_chat_completion(
                     yield process_line(form_data, line)
 
             if isinstance(res, str) or isinstance(res, Generator):
-                finish_message = openai_chat_chunk_message_template(
-                    form_data["model"], ""
-                )
+                finish_message = openai_chat_chunk_message_template(form_data["model"], "")
                 finish_message["choices"][0]["finish_reason"] = "stop"
                 yield f"data: {json.dumps(finish_message)}\n\n"
                 yield "data: [DONE]"

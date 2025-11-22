@@ -173,24 +173,12 @@ class FilesTable:
 
     async def get_files_by_ids(self, ids: list[str]) -> list[FileModel]:
         with get_db() as db:
-            files = await asyncio.to_thread(
-                db.query(File)
-                .filter(File.id.in_(ids))
-                .order_by(File.updated_at.desc())
-                .all
-            )
+            files = await asyncio.to_thread(db.query(File).filter(File.id.in_(ids)).order_by(File.updated_at.desc()).all)
             return [FileModel.model_validate(file) for file in files]
 
     async def get_file_metadatas_by_ids(self, ids: list[str]) -> list[FileMetadataResponse]:
         with get_db() as db:
-            files = await asyncio.to_thread(
-                db.query(
-                    File.id, File.hash, File.meta, File.created_at, File.updated_at
-                )
-                .filter(File.id.in_(ids))
-                .order_by(File.updated_at.desc())
-                .all
-            )
+            files = await asyncio.to_thread(db.query(File.id, File.hash, File.meta, File.created_at, File.updated_at).filter(File.id.in_(ids)).order_by(File.updated_at.desc()).all)
             return [
                 FileMetadataResponse(
                     id=file.id,
@@ -226,7 +214,6 @@ class FilesTable:
                 await asyncio.to_thread(db.commit)
                 return FileModel.model_validate(file)
             except Exception:
-
                 return None
 
     async def update_file_metadata_by_id(self, id: str, meta: dict) -> Optional[FileModel]:

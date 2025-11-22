@@ -31,9 +31,7 @@ async def search_ollama_cloud(
 
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{url}/api/web_search", headers=headers, json=payload
-            )
+            response = await client.post(f"{url}/api/web_search", headers=headers, json=payload)
             response.raise_for_status()
             data = response.json()
 

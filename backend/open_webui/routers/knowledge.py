@@ -48,16 +48,11 @@ async def get_knowledge(user=Depends(get_verified_user)):
     for knowledge_base in knowledge_bases:
         files = []
         if knowledge_base.data:
-            files = Files.get_file_metadatas_by_ids(
-                knowledge_base.data.get("file_ids", [])
-            )
+            files = Files.get_file_metadatas_by_ids(knowledge_base.data.get("file_ids", []))
 
             # Check if all files exist
             if len(files) != len(knowledge_base.data.get("file_ids", [])):
-                missing_files = list(
-                    set(knowledge_base.data.get("file_ids", []))
-                    - set([file.id for file in files])
-                )
+                missing_files = list(set(knowledge_base.data.get("file_ids", [])) - set([file.id for file in files]))
                 if missing_files:
                     data = knowledge_base.data or {}
                     file_ids = data.get("file_ids", [])
@@ -66,9 +61,7 @@ async def get_knowledge(user=Depends(get_verified_user)):
                         file_ids.remove(missing_file)
 
                     data["file_ids"] = file_ids
-                    Knowledges.update_knowledge_data_by_id(
-                        id=knowledge_base.id, data=data
-                    )
+                    Knowledges.update_knowledge_data_by_id(id=knowledge_base.id, data=data)
 
                     files = Files.get_file_metadatas_by_ids(file_ids)
 
@@ -96,16 +89,11 @@ async def get_knowledge_list(user=Depends(get_verified_user)):
     for knowledge_base in knowledge_bases:
         files = []
         if knowledge_base.data:
-            files = Files.get_file_metadatas_by_ids(
-                knowledge_base.data.get("file_ids", [])
-            )
+            files = Files.get_file_metadatas_by_ids(knowledge_base.data.get("file_ids", []))
 
             # Check if all files exist
             if len(files) != len(knowledge_base.data.get("file_ids", [])):
-                missing_files = list(
-                    set(knowledge_base.data.get("file_ids", []))
-                    - set([file.id for file in files])
-                )
+                missing_files = list(set(knowledge_base.data.get("file_ids", [])) - set([file.id for file in files]))
                 if missing_files:
                     data = knowledge_base.data or {}
                     file_ids = data.get("file_ids", [])
@@ -114,9 +102,7 @@ async def get_knowledge_list(user=Depends(get_verified_user)):
                         file_ids.remove(missing_file)
 
                     data["file_ids"] = file_ids
-                    Knowledges.update_knowledge_data_by_id(
-                        id=knowledge_base.id, data=data
-                    )
+                    Knowledges.update_knowledge_data_by_id(id=knowledge_base.id, data=data)
 
                     files = Files.get_file_metadatas_by_ids(file_ids)
 
@@ -135,12 +121,8 @@ async def get_knowledge_list(user=Depends(get_verified_user)):
 
 
 @router.post("/create", response_model=Optional[KnowledgeResponse])
-async def create_new_knowledge(
-    request: Request, form_data: KnowledgeForm, user=Depends(get_verified_user)
-):
-    if user.role != "admin" and not has_permission(
-        user.id, "workspace.knowledge", request.app.state.config.USER_PERMISSIONS
-    ):
+async def create_new_knowledge(request: Request, form_data: KnowledgeForm, user=Depends(get_verified_user)):
+    if user.role != "admin" and not has_permission(user.id, "workspace.knowledge", request.app.state.config.USER_PERMISSIONS):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ERROR_MESSAGES.UNAUTHORIZED,
@@ -191,16 +173,12 @@ async def reindex_knowledge_files(request: Request, user=Depends(get_verified_us
     for knowledge_base in knowledge_bases:
         # -- Robust error handling for missing or invalid data
         if not knowledge_base.data or not isinstance(knowledge_base.data, dict):
-            log.warning(
-                f"Knowledge base {knowledge_base.id} has no data or invalid data ({knowledge_base.data!r}). Deleting."
-            )
+            log.warning(f"Knowledge base {knowledge_base.id} has no data or invalid data ({knowledge_base.data!r}). Deleting.")
             try:
                 Knowledges.delete_knowledge_by_id(id=knowledge_base.id)
                 deleted_knowledge_bases.append(knowledge_base.id)
             except Exception as e:
-                log.error(
-                    f"Failed to delete invalid knowledge base {knowledge_base.id}: {e}"
-                )
+                log.error(f"Failed to delete invalid knowledge base {knowledge_base.id}: {e}")
             continue
 
         try:
@@ -208,9 +186,7 @@ async def reindex_knowledge_files(request: Request, user=Depends(get_verified_us
             files = Files.get_files_by_ids(file_ids)
             try:
                 if VECTOR_DB_CLIENT.has_collection(collection_name=knowledge_base.id):
-                    VECTOR_DB_CLIENT.delete_collection(
-                        collection_name=knowledge_base.id
-                    )
+                    VECTOR_DB_CLIENT.delete_collection(collection_name=knowledge_base.id)
             except Exception as e:
                 log.error(f"Error deleting collection {knowledge_base.id}: {e!s}")
                 continue  # Skip, don't raise
@@ -220,15 +196,11 @@ async def reindex_knowledge_files(request: Request, user=Depends(get_verified_us
                 try:
                     process_file(
                         request,
-                        ProcessFileForm(
-                            file_id=file.id, collection_name=knowledge_base.id
-                        ),
+                        ProcessFileForm(file_id=file.id, collection_name=knowledge_base.id),
                         user=user,
                     )
                 except Exception as e:
-                    log.error(
-                        f"Error processing file {file.filename} (ID: {file.id}): {e!s}"
-                    )
+                    log.error(f"Error processing file {file.filename} (ID: {file.id}): {e!s}")
                     failed_files.append({"file_id": file.id, "error": str(e)})
                     continue
 
@@ -238,15 +210,11 @@ async def reindex_knowledge_files(request: Request, user=Depends(get_verified_us
             continue
 
         if failed_files:
-            log.warning(
-                f"Failed to process {len(failed_files)} files in knowledge base {knowledge_base.id}"
-            )
+            log.warning(f"Failed to process {len(failed_files)} files in knowledge base {knowledge_base.id}")
             for failed in failed_files:
                 log.warning(f"File ID: {failed['file_id']}, Error: {failed['error']}")
 
-    log.info(
-        f"Reindexing completed. Deleted {len(deleted_knowledge_bases)} invalid knowledge bases: {deleted_knowledge_bases}"
-    )
+    log.info(f"Reindexing completed. Deleted {len(deleted_knowledge_bases)} invalid knowledge bases: {deleted_knowledge_bases}")
     return True
 
 
@@ -264,13 +232,7 @@ async def get_knowledge_by_id(id: str, user=Depends(get_verified_user)):
     knowledge = Knowledges.get_knowledge_by_id(id=id)
 
     if knowledge:
-
-        if (
-            user.role == "admin"
-            or knowledge.user_id == user.id
-            or has_access(user.id, "read", knowledge.access_control)
-        ):
-
+        if user.role == "admin" or knowledge.user_id == user.id or has_access(user.id, "read", knowledge.access_control):
             file_ids = knowledge.data.get("file_ids", []) if knowledge.data else []
             files = Files.get_file_metadatas_by_ids(file_ids)
 
@@ -304,11 +266,7 @@ async def update_knowledge_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
     # Is the user the original creator, in a group with write access, or an admin
-    if (
-        knowledge.user_id != user.id
-        and not has_access(user.id, "write", knowledge.access_control)
-        and user.role != "admin"
-    ):
+    if knowledge.user_id != user.id and not has_access(user.id, "write", knowledge.access_control) and user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
@@ -366,11 +324,7 @@ def add_file_to_knowledge_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        knowledge.user_id != user.id
-        and not has_access(user.id, "write", knowledge.access_control)
-        and user.role != "admin"
-    ):
+    if knowledge.user_id != user.id and not has_access(user.id, "write", knowledge.access_control) and user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
@@ -450,12 +404,7 @@ def update_file_from_knowledge_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        knowledge.user_id != user.id
-        and not has_access(user.id, "write", knowledge.access_control)
-        and user.role != "admin"
-    ):
-
+    if knowledge.user_id != user.id and not has_access(user.id, "write", knowledge.access_control) and user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
@@ -469,9 +418,7 @@ def update_file_from_knowledge_by_id(
         )
 
     # Remove content from the vector database
-    VECTOR_DB_CLIENT.delete(
-        collection_name=knowledge.id, filter={"file_id": form_data.file_id}
-    )
+    VECTOR_DB_CLIENT.delete(collection_name=knowledge.id, filter={"file_id": form_data.file_id})
 
     # Add content to the vector database
     try:
@@ -522,11 +469,7 @@ def remove_file_from_knowledge_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        knowledge.user_id != user.id
-        and not has_access(user.id, "write", knowledge.access_control)
-        and user.role != "admin"
-    ):
+    if knowledge.user_id != user.id and not has_access(user.id, "write", knowledge.access_control) and user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
@@ -541,9 +484,7 @@ def remove_file_from_knowledge_by_id(
 
     # Remove content from the vector database
     try:
-        VECTOR_DB_CLIENT.delete(
-            collection_name=knowledge.id, filter={"file_id": form_data.file_id}
-        )
+        VECTOR_DB_CLIENT.delete(collection_name=knowledge.id, filter={"file_id": form_data.file_id})
     except Exception as e:
         log.debug("This was most likely caused by bypassing embedding processing")
         log.debug(e)
@@ -611,11 +552,7 @@ async def delete_knowledge_by_id(id: str, user=Depends(get_verified_user)):
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        knowledge.user_id != user.id
-        and not has_access(user.id, "write", knowledge.access_control)
-        and user.role != "admin"
-    ):
+    if knowledge.user_id != user.id and not has_access(user.id, "write", knowledge.access_control) and user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
@@ -674,11 +611,7 @@ async def reset_knowledge_by_id(id: str, user=Depends(get_verified_user)):
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        knowledge.user_id != user.id
-        and not has_access(user.id, "write", knowledge.access_control)
-        and user.role != "admin"
-    ):
+    if knowledge.user_id != user.id and not has_access(user.id, "write", knowledge.access_control) and user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
@@ -717,11 +650,7 @@ def add_files_to_knowledge_batch(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        knowledge.user_id != user.id
-        and not has_access(user.id, "write", knowledge.access_control)
-        and user.role != "admin"
-    ):
+    if knowledge.user_id != user.id and not has_access(user.id, "write", knowledge.access_control) and user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
@@ -747,9 +676,7 @@ def add_files_to_knowledge_batch(
             user=user,
         )
     except Exception as e:
-        log.error(
-            f"add_files_to_knowledge_batch: Exception occurred: {e}", exc_info=True
-        )
+        log.error(f"add_files_to_knowledge_batch: Exception occurred: {e}", exc_info=True)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     # Add successful files to knowledge base

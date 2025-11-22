@@ -41,23 +41,13 @@ async def format_code(form_data: CodeForm, user=Depends(get_admin_user)):
 
 
 @router.post("/code/execute")
-async def execute_code(
-    request: Request, form_data: CodeForm, user=Depends(get_verified_user)
-):
+async def execute_code(request: Request, form_data: CodeForm, user=Depends(get_verified_user)):
     if request.app.state.config.CODE_EXECUTION_ENGINE == "jupyter":
         output = await execute_code_jupyter(
             request.app.state.config.CODE_EXECUTION_JUPYTER_URL,
             form_data.code,
-            (
-                request.app.state.config.CODE_EXECUTION_JUPYTER_AUTH_TOKEN
-                if request.app.state.config.CODE_EXECUTION_JUPYTER_AUTH == "token"
-                else None
-            ),
-            (
-                request.app.state.config.CODE_EXECUTION_JUPYTER_AUTH_PASSWORD
-                if request.app.state.config.CODE_EXECUTION_JUPYTER_AUTH == "password"
-                else None
-            ),
+            (request.app.state.config.CODE_EXECUTION_JUPYTER_AUTH_TOKEN if request.app.state.config.CODE_EXECUTION_JUPYTER_AUTH == "token" else None),
+            (request.app.state.config.CODE_EXECUTION_JUPYTER_AUTH_PASSWORD if request.app.state.config.CODE_EXECUTION_JUPYTER_AUTH == "password" else None),
             request.app.state.config.CODE_EXECUTION_JUPYTER_TIMEOUT,
         )
 
@@ -74,9 +64,7 @@ class MarkdownForm(BaseModel):
 
 
 @router.post("/markdown")
-async def get_html_from_markdown(
-    form_data: MarkdownForm, user=Depends(get_verified_user)
-):
+async def get_html_from_markdown(form_data: MarkdownForm, user=Depends(get_verified_user)):
     return {"html": markdown.markdown(form_data.md)}
 
 
@@ -86,9 +74,7 @@ class ChatForm(BaseModel):
 
 
 @router.post("/pdf")
-async def download_chat_as_pdf(
-    form_data: ChatTitleMessagesForm, user=Depends(get_verified_user)
-):
+async def download_chat_as_pdf(form_data: ChatTitleMessagesForm, user=Depends(get_verified_user)):
     try:
         pdf_bytes = PDFGenerator(form_data).generate_chat_pdf()
 

@@ -47,9 +47,7 @@ async def search_exa(
 
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{EXA_API_BASE}/search", headers=headers, json=payload
-            )
+            response = await client.post(f"{EXA_API_BASE}/search", headers=headers, json=payload)
             response.raise_for_status()
             data = response.json()
 

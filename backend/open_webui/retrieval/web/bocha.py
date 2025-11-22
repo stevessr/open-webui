@@ -26,17 +26,14 @@ def _parse_response(response):
                         "summary": item.get("summary", ""),
                         "siteName": item.get("siteName", ""),
                         "siteIcon": item.get("siteIcon", ""),
-                        "datePublished": item.get("datePublished", "")
-                        or item.get("dateLastCrawled", ""),
+                        "datePublished": item.get("datePublished", "") or item.get("dateLastCrawled", ""),
                     }
                     for item in webPages["value"]
                 ]
     return result
 
 
-async def search_bocha(
-    api_key: str, query: str, count: int, filter_list: Optional[list[str]] = None
-) -> list[SearchResult]:
+async def search_bocha(api_key: str, query: str, count: int, filter_list: Optional[list[str]] = None) -> list[SearchResult]:
     """Search using Bocha's Search API and return the results as a list of SearchResult objects.
 
     Args:
@@ -46,9 +43,7 @@ async def search_bocha(
     url = "https://api.bochaai.com/v1/web-search?utm_source=ollama"
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
 
-    payload = json.dumps(
-        {"query": query, "summary": True, "freshness": "noLimit", "count": count}
-    )
+    payload = json.dumps({"query": query, "summary": True, "freshness": "noLimit", "count": count})
 
     async with httpx.AsyncClient() as client:
         response = await client.post(url, headers=headers, data=payload, timeout=5)
@@ -59,9 +54,4 @@ async def search_bocha(
     if filter_list:
         results = get_filtered_results(results, filter_list)
 
-    return [
-        SearchResult(
-            link=result["url"], title=result.get("name"), snippet=result.get("summary")
-        )
-        for result in results.get("webpage", [])[:count]
-    ]
+    return [SearchResult(link=result["url"], title=result.get("name"), snippet=result.get("summary")) for result in results.get("webpage", [])[:count]]

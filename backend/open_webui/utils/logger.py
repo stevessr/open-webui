@@ -33,12 +33,7 @@ def stdout_format(record: "Record") -> str:
         extra_format = " - {extra[extra_json]}"
     else:
         extra_format = ""
-    return (
-        "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
-        "<level>{level: <8}</level> | "
-        "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
-        "<level>{message}</level>" + extra_format + "\n{exception}"
-    )
+    return "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>" + extra_format + "\n{exception}"
 
 
 class InterceptHandler(logging.Handler):
@@ -63,9 +58,7 @@ class InterceptHandler(logging.Handler):
             frame = frame.f_back
             depth += 1
 
-        logger.opt(depth=depth, exception=record.exc_info).bind(
-            **self._get_extras()
-        ).log(level, record.getMessage())
+        logger.opt(depth=depth, exception=record.exc_info).bind(**self._get_extras()).log(level, record.getMessage())
         if ENABLE_OTEL and ENABLE_OTEL_LOGS:
             from open_webui.utils.telemetry.logs import otel_handler
 
@@ -144,9 +137,7 @@ def start_logger():
         except Exception as e:
             logger.error(f"Failed to initialize audit log file handler: {e!s}")
 
-    logging.basicConfig(
-        handlers=[InterceptHandler()], level=GLOBAL_LOG_LEVEL, force=True
-    )
+    logging.basicConfig(handlers=[InterceptHandler()], level=GLOBAL_LOG_LEVEL, force=True)
 
     for uvicorn_logger_name in ["uvicorn", "uvicorn.error"]:
         uvicorn_logger = logging.getLogger(uvicorn_logger_name)

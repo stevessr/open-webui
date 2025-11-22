@@ -79,9 +79,7 @@ async def get_group_by_id(id: str, user=Depends(get_admin_user)):
 
 
 @router.post("/id/{id}/update", response_model=Optional[GroupResponse])
-async def update_group_by_id(
-    id: str, form_data: GroupUpdateForm, user=Depends(get_admin_user)
-):
+async def update_group_by_id(id: str, form_data: GroupUpdateForm, user=Depends(get_admin_user)):
     try:
         if form_data.user_ids:
             form_data.user_ids = Users.get_valid_user_ids(form_data.user_ids)
@@ -108,9 +106,7 @@ async def update_group_by_id(
 
 
 @router.post("/id/{id}/users/add", response_model=Optional[GroupResponse])
-async def add_user_to_group(
-    id: str, form_data: UserIdsForm, user=Depends(get_admin_user)
-):
+async def add_user_to_group(id: str, form_data: UserIdsForm, user=Depends(get_admin_user)):
     try:
         if form_data.user_ids:
             form_data.user_ids = Users.get_valid_user_ids(form_data.user_ids)
@@ -132,9 +128,7 @@ async def add_user_to_group(
 
 
 @router.post("/id/{id}/users/remove", response_model=Optional[GroupResponse])
-async def remove_users_from_group(
-    id: str, form_data: UserIdsForm, user=Depends(get_admin_user)
-):
+async def remove_users_from_group(id: str, form_data: UserIdsForm, user=Depends(get_admin_user)):
     try:
         group = Groups.remove_users_from_group(id, form_data.user_ids)
         if group:

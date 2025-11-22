@@ -89,6 +89,4 @@ class ExternalDocumentLoader(BaseLoader):
             else:
                 raise Exception("Error loading document: No content returned")
         else:
-            raise Exception(
-                f"Error loading document: {response.status_code} {response.text}"
-            )
+            raise Exception(f"Error loading document: {response.status_code} {response.text}")

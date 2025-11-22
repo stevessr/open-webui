@@ -150,43 +150,23 @@ class DoclingLoader:
 
             if self.params:
                 if self.params.get("do_picture_description"):
-                    params["do_picture_description"] = self.params.get(
-                        "do_picture_description"
-                    )
+                    params["do_picture_description"] = self.params.get("do_picture_description")
 
-                    picture_description_mode = self.params.get(
-                        "picture_description_mode", ""
-                    ).lower()
+                    picture_description_mode = self.params.get("picture_description_mode", "").lower()
 
-                    if picture_description_mode == "local" and self.params.get(
-                        "picture_description_local", {}
-                    ):
-                        params["picture_description_local"] = json.dumps(
-                            self.params.get("picture_description_local", {})
-                        )
+                    if picture_description_mode == "local" and self.params.get("picture_description_local", {}):
+                        params["picture_description_local"] = json.dumps(self.params.get("picture_description_local", {}))
 
-                    elif picture_description_mode == "api" and self.params.get(
-                        "picture_description_api", {}
-                    ):
-                        params["picture_description_api"] = json.dumps(
-                            self.params.get("picture_description_api", {})
-                        )
+                    elif picture_description_mode == "api" and self.params.get("picture_description_api", {}):
+                        params["picture_description_api"] = json.dumps(self.params.get("picture_description_api", {}))
 
                 params["do_ocr"] = self.params.get("do_ocr")
 
                 params["force_ocr"] = self.params.get("force_ocr")
 
-                if (
-                    self.params.get("do_ocr")
-                    and self.params.get("ocr_engine")
-                    and self.params.get("ocr_lang")
-                ):
+                if self.params.get("do_ocr") and self.params.get("ocr_engine") and self.params.get("ocr_lang"):
                     params["ocr_engine"] = self.params.get("ocr_engine")
-                    params["ocr_lang"] = [
-                        lang.strip()
-                        for lang in self.params.get("ocr_lang").split(",")
-                        if lang.strip()
-                    ]
+                    params["ocr_lang"] = [lang.strip() for lang in self.params.get("ocr_lang").split(",") if lang.strip()]
 
                 if self.params.get("pdf_backend"):
                     params["pdf_backend"] = self.params.get("pdf_backend")
@@ -229,18 +209,11 @@ class Loader:
         self.user = kwargs.get("user", None)
         self.kwargs = kwargs
 
-    async def load(
-        self, filename: str, file_content_type: str, file_path: str
-    ) -> list[Document]:
+    async def load(self, filename: str, file_content_type: str, file_path: str) -> list[Document]:
         loader = self._get_loader(filename, file_content_type, file_path)
         docs = await loader.load()
 
-        return [
-            Document(
-                page_content=ftfy.fix_text(doc.page_content), metadata=doc.metadata
-            )
-            for doc in docs
-        ]
+        return [Document(page_content=ftfy.fix_text(doc.page_content), metadata=doc.metadata) for doc in docs]
 
     def _is_text_file(self, file_ext: str, file_content_type: str) -> bool:
         return file_ext in known_source_ext or (
@@ -253,11 +226,7 @@ class Loader:
     def _get_loader(self, filename: str, file_content_type: str, file_path: str):
         file_ext = filename.split(".")[-1].lower()
 
-        if (
-            self.engine == "external"
-            and self.kwargs.get("EXTERNAL_DOCUMENT_LOADER_URL")
-            and self.kwargs.get("EXTERNAL_DOCUMENT_LOADER_API_KEY")
-        ):
+        if self.engine == "external" and self.kwargs.get("EXTERNAL_DOCUMENT_LOADER_URL") and self.kwargs.get("EXTERNAL_DOCUMENT_LOADER_API_KEY"):
             loader = ExternalDocumentLoader(
                 file_path=file_path,
                 url=self.kwargs.get("EXTERNAL_DOCUMENT_LOADER_URL"),
@@ -312,16 +281,10 @@ class Loader:
                 skip_cache=self.kwargs.get("DATALAB_MARKER_SKIP_CACHE", False),
                 force_ocr=self.kwargs.get("DATALAB_MARKER_FORCE_OCR", False),
                 paginate=self.kwargs.get("DATALAB_MARKER_PAGINATE", False),
-                strip_existing_ocr=self.kwargs.get(
-                    "DATALAB_MARKER_STRIP_EXISTING_OCR", False
-                ),
-                disable_image_extraction=self.kwargs.get(
-                    "DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION", False
-                ),
+                strip_existing_ocr=self.kwargs.get("DATALAB_MARKER_STRIP_EXISTING_OCR", False),
+                disable_image_extraction=self.kwargs.get("DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION", False),
                 format_lines=self.kwargs.get("DATALAB_MARKER_FORMAT_LINES", False),
-                output_format=self.kwargs.get(
-                    "DATALAB_MARKER_OUTPUT_FORMAT", "markdown"
-                ),
+                output_format=self.kwargs.get("DATALAB_MARKER_OUTPUT_FORMAT", "markdown"),
             )
         elif self.engine == "docling" and self.kwargs.get("DOCLING_SERVER_URL"):
             if self._is_text_file(file_ext, file_content_type):
@@ -367,9 +330,7 @@ class Loader:
                     api_endpoint=self.kwargs.get("DOCUMENT_INTELLIGENCE_ENDPOINT"),
                     azure_credential=DefaultAzureCredential(),
                 )
-        elif self.engine == "mineru" and file_ext in [
-            "pdf"
-        ]:  # MinerU currently only supports PDF
+        elif self.engine == "mineru" and file_ext in ["pdf"]:  # MinerU currently only supports PDF
             loader = MinerULoader(
                 file_path=file_path,
                 api_mode=self.kwargs.get("MINERU_API_MODE", "local"),
@@ -378,10 +339,7 @@ class Loader:
                 params=self.kwargs.get("MINERU_PARAMS", {}),
             )
         elif (
-            self.engine == "mistral_ocr"
-            and self.kwargs.get("MISTRAL_OCR_API_KEY") != ""
-            and file_ext
-            in ["pdf"]  # Mistral OCR currently only supports PDF and images
+            self.engine == "mistral_ocr" and self.kwargs.get("MISTRAL_OCR_API_KEY") != "" and file_ext in ["pdf"]  # Mistral OCR currently only supports PDF and images
         ):
             loader = MistralLoader(
                 base_url=self.kwargs.get("MISTRAL_OCR_API_BASE_URL"),
@@ -390,9 +348,7 @@ class Loader:
             )
         else:
             if file_ext == "pdf":
-                loader = PyPDFLoader(
-                    file_path, extract_images=self.kwargs.get("PDF_EXTRACT_IMAGES")
-                )
+                loader = PyPDFLoader(file_path, extract_images=self.kwargs.get("PDF_EXTRACT_IMAGES"))
             elif file_ext == "csv":
                 loader = CSVLoader(file_path, autodetect_encoding=True)
             elif file_ext == "rst":
@@ -405,11 +361,7 @@ class Loader:
                 loader = TextLoader(file_path, autodetect_encoding=True)
             elif file_content_type == "application/epub+zip":
                 loader = UnstructuredEPubLoader(file_path)
-            elif (
-                file_content_type
-                == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                or file_ext == "docx"
-            ):
+            elif file_content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" or file_ext == "docx":
                 loader = Docx2txtLoader(file_path)
             elif file_content_type in [
                 "application/vnd.ms-excel",

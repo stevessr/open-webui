@@ -52,9 +52,7 @@ def _build_meter_provider(resource: Resource) -> MeterProvider:
     """Return a configured MeterProvider."""
     headers = []
     if OTEL_METRICS_BASIC_AUTH_USERNAME and OTEL_METRICS_BASIC_AUTH_PASSWORD:
-        auth_string = (
-            f"{OTEL_METRICS_BASIC_AUTH_USERNAME}:{OTEL_METRICS_BASIC_AUTH_PASSWORD}"
-        )
+        auth_string = f"{OTEL_METRICS_BASIC_AUTH_USERNAME}:{OTEL_METRICS_BASIC_AUTH_PASSWORD}"
         auth_header = b64encode(auth_string.encode()).decode()
         headers = [("authorization", f"Basic {auth_header}")]
 
@@ -62,9 +60,7 @@ def _build_meter_provider(resource: Resource) -> MeterProvider:
     if OTEL_METRICS_OTLP_SPAN_EXPORTER == "http":
         readers: List[PeriodicExportingMetricReader] = [
             PeriodicExportingMetricReader(
-                OTLPHttpMetricExporter(
-                    endpoint=OTEL_METRICS_EXPORTER_OTLP_ENDPOINT, headers=headers
-                ),
+                OTLPHttpMetricExporter(endpoint=OTEL_METRICS_EXPORTER_OTLP_ENDPOINT, headers=headers),
                 export_interval_millis=_EXPORT_INTERVAL_MILLIS,
             )
         ]

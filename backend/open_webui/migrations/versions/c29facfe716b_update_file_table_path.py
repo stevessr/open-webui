@@ -37,20 +37,14 @@ def upgrade():
     # Fetch and process `meta` data from the table, add values to the new `path` column as necessary.
     # We will use SQLAlchemy core bindings to ensure safety across different databases.
 
-    file_table = table(
-        "file", column("id", String), column("meta", JSON), column("path", Text)
-    )
+    file_table = table("file", column("id", String), column("meta", JSON), column("path", Text))
 
     # Create connection to the database
     connection = op.get_bind()
 
     # Get the rows where `meta` has a path and `path` column is null (new column)
     # Loop through each row in the result set to update the path
-    results = connection.execute(
-        sa.select(file_table.c.id, file_table.c.meta).where(
-            and_(file_table.c.path.is_(None), file_table.c.meta.isnot(None))
-        )
-    ).fetchall()
+    results = connection.execute(sa.select(file_table.c.id, file_table.c.meta).where(and_(file_table.c.path.is_(None), file_table.c.meta.isnot(None)))).fetchall()
 
     # Iterate over each row to extract and update the `path` from `meta` column
     for row in results:
@@ -59,11 +53,7 @@ def upgrade():
             path = row.meta.get("path")
 
             # Update the `file` table with the new `path` value
-            connection.execute(
-                file_table.update()
-                .where(file_table.c.id == row.id)
-                .values({"path": path})
-            )
+            connection.execute(file_table.update().where(file_table.c.id == row.id).values({"path": path}))
 
 
 def downgrade():
@@ -72,6 +62,4 @@ def downgrade():
 
     # 2. Revert the `meta` column back to Text/JSONField
     with op.batch_alter_table("file", schema=None) as batch_op:
-        batch_op.alter_column(
-            "meta", type_=sa.Text(), existing_type=sa.JSON(), existing_nullable=True
-        )
+        batch_op.alter_column("meta", type_=sa.Text(), existing_type=sa.JSON(), existing_nullable=True)

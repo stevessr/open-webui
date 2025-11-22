@@ -74,11 +74,7 @@ def httpx_response_hook(span: Span, request: RequestInfo, response: ResponseInfo
     """
 
     span.set_attribute(SpanAttributes.HTTP_STATUS_CODE, response.status_code)
-    span.set_status(
-        StatusCode.ERROR
-        if response.status_code >= status.HTTP_400_BAD_REQUEST
-        else StatusCode.OK
-    )
+    span.set_status(StatusCode.ERROR if response.status_code >= status.HTTP_400_BAD_REQUEST else StatusCode.OK)
 
 
 async def httpx_async_request_hook(span: Span, request: RequestInfo):
@@ -89,9 +85,7 @@ async def httpx_async_request_hook(span: Span, request: RequestInfo):
     httpx_request_hook(span, request)
 
 
-async def httpx_async_response_hook(
-    span: Span, request: RequestInfo, response: ResponseInfo
-):
+async def httpx_async_response_hook(span: Span, request: RequestInfo, response: ResponseInfo):
     """
     Async Response Hook
     """
@@ -113,20 +107,14 @@ def aiohttp_request_hook(span: Span, request: TraceRequestStartParams):
     )
 
 
-def aiohttp_response_hook(
-    span: Span, response: Union[TraceRequestExceptionParams, TraceRequestEndParams]
-):
+def aiohttp_response_hook(span: Span, response: Union[TraceRequestExceptionParams, TraceRequestEndParams]):
     """
     Aiohttp Response Hook
     """
 
     if isinstance(response, TraceRequestEndParams):
         span.set_attribute(SpanAttributes.HTTP_STATUS_CODE, response.response.status)
-        span.set_status(
-            StatusCode.ERROR
-            if response.response.status >= status.HTTP_400_BAD_REQUEST
-            else StatusCode.OK
-        )
+        span.set_status(StatusCode.ERROR if response.response.status >= status.HTTP_400_BAD_REQUEST else StatusCode.OK)
     elif isinstance(response, TraceRequestExceptionParams):
         span.set_status(StatusCode.ERROR)
         span.set_attribute(SpanAttributes.ERROR_MESSAGE, str(response.exception))

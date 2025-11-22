@@ -121,9 +121,7 @@ async def generate_direct_chat_completion(
                     pass
 
             # Return the streaming response
-            return StreamingResponse(
-                event_generator(), media_type="text/event-stream", background=background
-            )
+            return StreamingResponse(event_generator(), media_type="text/event-stream", background=background)
         else:
             raise Exception(str(res))
     else:
@@ -179,9 +177,7 @@ async def generate_chat_completion(
     model = models[model_id]
 
     if getattr(request.state, "direct", False):
-        return await generate_direct_chat_completion(
-            request, form_data, user=user, models=models
-        )
+        return await generate_direct_chat_completion(request, form_data, user=user, models=models)
     else:
         # Check if user has access to the model
         if not bypass_filter and user.role == "user":
@@ -194,21 +190,13 @@ async def generate_chat_completion(
             model_ids = model.get("info", {}).get("meta", {}).get("model_ids")
             filter_mode = model.get("info", {}).get("meta", {}).get("filter_mode")
             if model_ids and filter_mode == "exclude":
-                model_ids = [
-                    model["id"]
-                    for model in list(request.app.state.MODELS.values())
-                    if model.get("owned_by") != "arena" and model["id"] not in model_ids
-                ]
+                model_ids = [model["id"] for model in list(request.app.state.MODELS.values()) if model.get("owned_by") != "arena" and model["id"] not in model_ids]
 
             selected_model_id = None
             if isinstance(model_ids, list) and model_ids:
                 selected_model_id = random.choice(model_ids)
             else:
-                model_ids = [
-                    model["id"]
-                    for model in list(request.app.state.MODELS.values())
-                    if model.get("owned_by") != "arena"
-                ]
+                model_ids = [model["id"] for model in list(request.app.state.MODELS.values()) if model.get("owned_by") != "arena"]
                 selected_model_id = random.choice(model_ids)
 
             form_data["model"] = selected_model_id
@@ -220,9 +208,7 @@ async def generate_chat_completion(
                     async for chunk in stream:
                         yield chunk
 
-                response = await generate_chat_completion(
-                    request, form_data, user, bypass_filter=True
-                )
+                response = await generate_chat_completion(request, form_data, user, bypass_filter=True)
                 return StreamingResponse(
                     stream_wrapper(response.body_iterator),
                     media_type="text/event-stream",
@@ -230,19 +216,13 @@ async def generate_chat_completion(
                 )
             else:
                 return {
-                    **(
-                        await generate_chat_completion(
-                            request, form_data, user, bypass_filter=True
-                        )
-                    ),
+                    **(await generate_chat_completion(request, form_data, user, bypass_filter=True)),
                     "selected_model_id": selected_model_id,
                 }
 
         if model.get("pipe"):
             # Below does not require bypass_filter because this is the only route the uses this function and it is already bypassing the filter
-            return await generate_function_chat_completion(
-                request, form_data, user=user, models=models
-            )
+            return await generate_function_chat_completion(request, form_data, user=user, models=models)
         if model.get("owned_by") == "ollama":
             # Using /ollama/api/chat endpoint
             form_data = convert_payload_openai_to_ollama(form_data)
@@ -314,9 +294,7 @@ async def chat_completed(request: Request, form_data: dict, user: Any):
     }
 
     try:
-        filter_ids = await get_sorted_filter_ids(
-            request, model, metadata.get("filter_ids", [])
-        )
+        filter_ids = await get_sorted_filter_ids(request, model, metadata.get("filter_ids", []))
 
         filter_functions = []
         for filter_id in filter_ids:
@@ -411,11 +389,7 @@ async def chat_action(request: Request, action_id: str, form_data: dict, user: A
 
                 try:
                     if hasattr(function_module, "UserValves"):
-                        __user__["valves"] = function_module.UserValves(
-                            **await Functions.get_user_valves_by_id_and_user_id(
-                                action_id, user.id
-                            )
-                        )
+                        __user__["valves"] = function_module.UserValves(**await Functions.get_user_valves_by_id_and_user_id(action_id, user.id))
                 except Exception as e:
                     log.exception(f"Failed to get user values: {e}")
 

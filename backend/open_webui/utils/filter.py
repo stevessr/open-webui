@@ -15,9 +15,7 @@ def get_function_module(request, function_id, load_from_db=True):
     """
     Get the function module by its ID.
     """
-    function_module, _, _ = get_function_module_from_cache(
-        request, function_id, load_from_db
-    )
+    function_module, _, _ = get_function_module_from_cache(request, function_id, load_from_db)
     return function_module
 
 
@@ -29,16 +27,11 @@ async def get_sorted_filter_ids(request, model: dict, enabled_filter_ids: list =
             return valves.get("priority", 0) if valves else 0
         return 0
 
-    filter_ids = [
-        function.id for function in await Functions.get_global_filter_functions()
-    ]
+    filter_ids = [function.id for function in await Functions.get_global_filter_functions()]
     if "info" in model and "meta" in model["info"]:
         filter_ids.extend(model["info"]["meta"].get("filterIds", []))
         filter_ids = list(set(filter_ids))
-    active_filter_ids = [
-        function.id
-        for function in await Functions.get_functions_by_type("filter", active_only=True)
-    ]
+    active_filter_ids = [function.id for function in await Functions.get_functions_by_type("filter", active_only=True)]
 
     def get_active_status(filter_id):
         function_module = get_function_module(request, filter_id)
@@ -48,9 +41,7 @@ async def get_sorted_filter_ids(request, model: dict, enabled_filter_ids: list =
 
         return True
 
-    active_filter_ids = [
-        filter_id for filter_id in active_filter_ids if get_active_status(filter_id)
-    ]
+    active_filter_ids = [filter_id for filter_id in active_filter_ids if get_active_status(filter_id)]
 
     filter_ids = [fid for fid in filter_ids if fid in active_filter_ids]
 
@@ -60,9 +51,7 @@ async def get_sorted_filter_ids(request, model: dict, enabled_filter_ids: list =
     return filter_ids
 
 
-async def process_filter_functions(
-    request, filter_functions, filter_type, form_data, extra_params
-):
+async def process_filter_functions(request, filter_functions, filter_type, form_data, extra_params):
     skip_files = None
 
     for function in filter_functions:
@@ -71,9 +60,7 @@ async def process_filter_functions(
         if not filter:
             continue
 
-        function_module = get_function_module(
-            request, filter_id, load_from_db=(filter_type != "stream")
-        )
+        function_module = get_function_module(request, filter_id, load_from_db=(filter_type != "stream"))
         # Prepare handler function
         handler = getattr(function_module, filter_type, None)
         if not handler:
@@ -86,9 +73,7 @@ async def process_filter_functions(
         # Apply valves to the function
         if hasattr(function_module, "valves") and hasattr(function_module, "Valves"):
             valves = await Functions.get_function_valves_by_id(filter_id)
-            function_module.valves = function_module.Valves(
-                **(valves if valves else {})
-            )
+            function_module.valves = function_module.Valves(**(valves if valves else {}))
 
         try:
             # Prepare parameters
@@ -111,11 +96,7 @@ async def process_filter_functions(
             if "__user__" in sig.parameters:
                 if hasattr(function_module, "UserValves"):
                     try:
-                        params["__user__"]["valves"] = function_module.UserValves(
-                            **await Functions.get_user_valves_by_id_and_user_id(
-                                filter_id, params["__user__"]["id"]
-                            )
-                        )
+                        params["__user__"]["valves"] = function_module.UserValves(**await Functions.get_user_valves_by_id_and_user_id(filter_id, params["__user__"]["id"]))
                     except Exception as e:
                         log.exception(f"Failed to get user values: {e}")
 

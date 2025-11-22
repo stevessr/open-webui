@@ -9,9 +9,7 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
 
 
-async def search_kagi(
-    api_key: str, query: str, count: int, filter_list: Optional[list[str]] = None
-) -> list[SearchResult]:
+async def search_kagi(api_key: str, query: str, count: int, filter_list: Optional[list[str]] = None) -> list[SearchResult]:
     """Search using Kagi's Search API and return the results as a list of SearchResult objects.
 
     The Search API will inherit the settings in your account, including results personalization and snippet length.
@@ -34,13 +32,7 @@ async def search_kagi(
 
     search_results = json_response.get("data", [])
 
-    results = [
-        SearchResult(
-            link=result["url"], title=result["title"], snippet=result.get("snippet")
-        )
-        for result in search_results
-        if result["t"] == 0
-    ]
+    results = [SearchResult(link=result["url"], title=result["title"], snippet=result.get("snippet")) for result in search_results if result["t"] == 0]
 
     print(results)
 

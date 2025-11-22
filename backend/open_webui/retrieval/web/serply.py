@@ -55,9 +55,7 @@ async def search_serply(
     json_response = response.json()
     log.info(f"results from serply search: {json_response}")
 
-    results = sorted(
-        json_response.get("results", []), key=lambda x: x.get("realPosition", 0)
-    )
+    results = sorted(json_response.get("results", []), key=lambda x: x.get("realPosition", 0))
     if filter_list:
         results = get_filtered_results(results, filter_list)
     return [
@@ -68,4 +66,3 @@ async def search_serply(
         )
         for result in results[:count]
     ]
-

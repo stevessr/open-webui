@@ -54,9 +54,7 @@ class MistralLoader:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File not found at {file_path}")
 
-        self.base_url = (
-            base_url.rstrip("/") if base_url else "https://api.mistral.ai/v1"
-        )
+        self.base_url = base_url.rstrip("/") if base_url else "https://api.mistral.ai/v1"
         self.api_key = api_key
         self.file_path = file_path
         self.timeout = timeout
@@ -66,18 +64,10 @@ class MistralLoader:
         # PERFORMANCE OPTIMIZATION: Differentiated timeouts for different operations
         # This prevents long-running OCR operations from affecting quick operations
         # and improves user experience by failing fast on operations that should be quick
-        self.upload_timeout = min(
-            timeout, 120
-        )  # Cap upload at 2 minutes - prevents hanging on large files
-        self.url_timeout = (
-            30  # URL requests should be fast - fail quickly if API is slow
-        )
-        self.ocr_timeout = (
-            timeout  # OCR can take the full timeout - this is the heavy operation
-        )
-        self.cleanup_timeout = (
-            30  # Cleanup should be quick - don't hang on file deletion
-        )
+        self.upload_timeout = min(timeout, 120)  # Cap upload at 2 minutes - prevents hanging on large files
+        self.url_timeout = 30  # URL requests should be fast - fail quickly if API is slow
+        self.ocr_timeout = timeout  # OCR can take the full timeout - this is the heavy operation
+        self.cleanup_timeout = 30  # Cleanup should be quick - don't hang on file deletion
 
         # PERFORMANCE OPTIMIZATION: Pre-compute file info to avoid repeated filesystem calls
         # This avoids multiple os.path.basename() and os.path.getsize() calls during processing
@@ -118,9 +108,7 @@ class MistralLoader:
             log.error(f"JSON decode error: {json_err} - Response: {response.text}")
             raise  # Re-raise after logging
 
-    async def _handle_response_async(
-        self, response: aiohttp.ClientResponse
-    ) -> Dict[str, Any]:
+    async def _handle_response_async(self, response: aiohttp.ClientResponse) -> Dict[str, Any]:
         """Async version of response handling with better error info."""
         try:
             response.raise_for_status()
@@ -131,9 +119,7 @@ class MistralLoader:
                 if response.status == 204:
                     return {}
                 text = await response.text()
-                raise ValueError(
-                    f"Unexpected content type: {content_type}, body: {text[:200]}..."
-                )
+                raise ValueError(f"Unexpected content type: {content_type}, body: {text[:200]}...")
 
             return await response.json()
 
@@ -177,9 +163,7 @@ class MistralLoader:
                 status_code = error.response.status_code
                 return status_code >= 500 or status_code == 429
             return False
-        if isinstance(
-            error, (aiohttp.ClientConnectionError, aiohttp.ServerTimeoutError)
-        ):
+        if isinstance(error, (aiohttp.ClientConnectionError, aiohttp.ServerTimeoutError)):
             return True  # Async network/timeout errors are retryable
         if isinstance(error, aiohttp.ClientResponseError):
             return error.status >= 500 or error.status == 429
@@ -204,10 +188,7 @@ class MistralLoader:
                 # PERFORMANCE OPTIMIZATION: Exponential backoff with cap
                 # Prevents overwhelming the server while ensuring reasonable retry delays
                 wait_time = min((2**attempt) + 0.5, 30)  # Cap at 30 seconds
-                log.warning(
-                    f"Retryable error (attempt {attempt + 1}/{self.max_retries}): {e}. "
-                    f"Retrying in {wait_time}s..."
-                )
+                log.warning(f"Retryable error (attempt {attempt + 1}/{self.max_retries}): {e}. Retrying in {wait_time}s...")
                 await asyncio.sleep(wait_time)
 
     async def _retry_request_async(self, request_func, *args, **kwargs):
@@ -226,10 +207,7 @@ class MistralLoader:
 
                 # PERFORMANCE OPTIMIZATION: Non-blocking exponential backoff
                 wait_time = min((2**attempt) + 0.5, 30)  # Cap at 30 seconds
-                log.warning(
-                    f"Retryable error (attempt {attempt + 1}/{self.max_retries}): {e}. "
-                    f"Retrying in {wait_time}s..."
-                )
+                log.warning(f"Retryable error (attempt {attempt + 1}/{self.max_retries}): {e}. Retrying in {wait_time}s...")
                 await asyncio.sleep(wait_time)  # Non-blocking wait
 
     async def _upload_file_async(self, session: aiohttp.ClientSession) -> str:
@@ -252,13 +230,9 @@ class MistralLoader:
                     content_type="application/pdf",
                 )
             )
-            file_part.set_content_disposition(
-                "form-data", name="file", filename=self.file_name
-            )
+            file_part.set_content_disposition("form-data", name="file", filename=self.file_name)
 
-            self._debug_log(
-                f"Uploading file: {self.file_name} ({self.file_size:,} bytes)"
-            )
+            self._debug_log(f"Uploading file: {self.file_name} ({self.file_size:,} bytes)")
 
             async with session.post(
                 url,
@@ -277,9 +251,7 @@ class MistralLoader:
         log.info(f"File uploaded successfully. File ID: {file_id}")
         return file_id
 
-    async def _get_signed_url_async(
-        self, session: aiohttp.ClientSession, file_id: str
-    ) -> str:
+    async def _get_signed_url_async(self, session: aiohttp.ClientSession, file_id: str) -> str:
         """Async signed URL retrieval."""
         url = f"{self.base_url}/files/{file_id}/url"
         params = {"expiry": 1}
@@ -305,9 +277,7 @@ class MistralLoader:
         self._debug_log("Signed URL received successfully")
         return signed_url
 
-    async def _process_ocr_async(
-        self, session: aiohttp.ClientSession, signed_url: str
-    ) -> Dict[str, Any]:
+    async def _process_ocr_async(self, session: aiohttp.ClientSession, signed_url: str) -> Dict[str, Any]:
         """Async OCR processing with timing metrics."""
         url = f"{self.base_url}/ocr"
 
@@ -345,9 +315,7 @@ class MistralLoader:
 
         return await self._retry_request_async(ocr_request)
 
-    async def _delete_file_async(
-        self, session: aiohttp.ClientSession, file_id: str
-    ) -> None:
+    async def _delete_file_async(self, session: aiohttp.ClientSession, file_id: str) -> None:
         """Async file deletion with error tolerance."""
         try:
 
@@ -356,9 +324,7 @@ class MistralLoader:
                 async with session.delete(
                     url=f"{self.base_url}/files/{file_id}",
                     headers=self.headers,
-                    timeout=aiohttp.ClientTimeout(
-                        total=self.cleanup_timeout
-                    ),  # Shorter timeout for cleanup
+                    timeout=aiohttp.ClientTimeout(total=self.cleanup_timeout),  # Shorter timeout for cleanup
                 ) as response:
                     return await self._handle_response_async(response)
 
@@ -421,9 +387,7 @@ class MistralLoader:
 
             if page_content is None or page_index is None:
                 skipped_pages += 1
-                self._debug_log(
-                    f"Skipping page due to missing 'markdown' or 'index'. Data keys: {list(page_data.keys())}"
-                )
+                self._debug_log(f"Skipping page due to missing 'markdown' or 'index'. Data keys: {list(page_data.keys())}")
                 continue
 
             # Clean up content efficiently with early exit for empty content
@@ -454,15 +418,11 @@ class MistralLoader:
             )
 
         if skipped_pages > 0:
-            log.info(
-                f"Processed {len(documents)} pages, skipped {skipped_pages} empty/invalid pages"
-            )
+            log.info(f"Processed {len(documents)} pages, skipped {skipped_pages} empty/invalid pages")
 
         if not documents:
             # Case where pages existed but none had valid markdown/index
-            log.warning(
-                "OCR response contained pages, but none had valid content/index."
-            )
+            log.warning("OCR response contained pages, but none had valid content/index.")
             return [
                 Document(
                     page_content="No valid text content found in document",
@@ -501,9 +461,7 @@ class MistralLoader:
                 documents = self._process_results(ocr_response)
 
                 total_time = time.time() - start_time
-                log.info(
-                    f"Async OCR workflow completed in {total_time:.2f}s, produced {len(documents)} documents"
-                )
+                log.info(f"Async OCR workflow completed in {total_time:.2f}s, produced {len(documents)} documents")
 
                 return documents
 
@@ -546,9 +504,7 @@ class MistralLoader:
         if not loaders:
             return []
 
-        log.info(
-            f"Starting concurrent processing of {len(loaders)} files with max {max_concurrent} concurrent"
-        )
+        log.info(f"Starting concurrent processing of {len(loaders)} files with max {max_concurrent} concurrent")
         start_time = time.time()
 
         # Use semaphore to control concurrency
@@ -584,15 +540,9 @@ class MistralLoader:
         # MONITORING: Log comprehensive batch processing statistics
         total_time = time.time() - start_time
         total_docs = sum(len(docs) for docs in processed_results)
-        success_count = sum(
-            1 for result in results if not isinstance(result, Exception)
-        )
+        success_count = sum(1 for result in results if not isinstance(result, Exception))
         failure_count = len(results) - success_count
 
-        log.info(
-            f"Batch processing completed in {total_time:.2f}s: "
-            f"{success_count} files succeeded, {failure_count} files failed, "
-            f"produced {total_docs} total documents"
-        )
+        log.info(f"Batch processing completed in {total_time:.2f}s: {success_count} files succeeded, {failure_count} files failed, produced {total_docs} total documents")
 
         return processed_results

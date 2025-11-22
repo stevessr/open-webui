@@ -217,9 +217,7 @@ class SCIMPatchRequest(BaseModel):
     Operations: List[SCIMPatchOperation]
 
 
-def get_scim_auth(
-    request: Request, authorization: Optional[str] = Header(None)
-) -> bool:
+def get_scim_auth(request: Request, authorization: Optional[str] = Header(None)) -> bool:
     """
     Verify SCIM authentication
     Checks for SCIM-specific bearer token configured in the system
@@ -248,9 +246,7 @@ def get_scim_auth(
 
         # Check if SCIM is enabled
         scim_enabled = getattr(request.app.state, "SCIM_ENABLED", False)
-        log.info(
-            f"SCIM auth check - raw SCIM_ENABLED: {scim_enabled}, type: {type(scim_enabled)}"
-        )
+        log.info(f"SCIM auth check - raw SCIM_ENABLED: {scim_enabled}, type: {type(scim_enabled)}")
         # Handle both PersistentConfig and direct value
         if hasattr(scim_enabled, "value"):
             scim_enabled = scim_enabled.value
@@ -318,20 +314,12 @@ def user_to_scim(user: UserModel, request: Request) -> SCIMUser:
         displayName=user.name,
         emails=[SCIMEmail(value=user.email)],
         active=user.role != "pending",
-        photos=(
-            [SCIMPhoto(value=user.profile_image_url)]
-            if user.profile_image_url
-            else None
-        ),
+        photos=([SCIMPhoto(value=user.profile_image_url)] if user.profile_image_url else None),
         groups=groups if groups else None,
         meta=SCIMMeta(
             resourceType=SCIM_RESOURCE_TYPE_USER,
-            created=datetime.fromtimestamp(
-                user.created_at, tz=timezone.utc
-            ).isoformat(),
-            lastModified=datetime.fromtimestamp(
-                user.updated_at, tz=timezone.utc
-            ).isoformat(),
+            created=datetime.fromtimestamp(user.created_at, tz=timezone.utc).isoformat(),
+            lastModified=datetime.fromtimestamp(user.updated_at, tz=timezone.utc).isoformat(),
             location=f"{request.base_url}api/v1/scim/v2/Users/{user.id}",
         ),
     )
@@ -357,12 +345,8 @@ def group_to_scim(group: GroupModel, request: Request) -> SCIMGroup:
         members=members,
         meta=SCIMMeta(
             resourceType=SCIM_RESOURCE_TYPE_GROUP,
-            created=datetime.fromtimestamp(
-                group.created_at, tz=timezone.utc
-            ).isoformat(),
-            lastModified=datetime.fromtimestamp(
-                group.updated_at, tz=timezone.utc
-            ).isoformat(),
+            created=datetime.fromtimestamp(group.created_at, tz=timezone.utc).isoformat(),
+            lastModified=datetime.fromtimestamp(group.updated_at, tz=timezone.utc).isoformat(),
             location=f"{request.base_url}api/v1/scim/v2/Groups/{group.id}",
         ),
     )
@@ -516,9 +500,7 @@ async def get_user(
     """Get SCIM User by ID"""
     user = Users.get_user_by_id(user_id)
     if not user:
-        return scim_error(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found"
-        )
+        return scim_error(status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found")
 
     return user_to_scim(user, request)
 
@@ -600,9 +582,7 @@ async def update_user(
         if user_data.name.formatted:
             update_data["name"] = user_data.name.formatted
         elif user_data.name.givenName or user_data.name.familyName:
-            update_data["name"] = (
-                f"{user_data.name.givenName or ''} {user_data.name.familyName or ''}".strip()
-            )
+            update_data["name"] = f"{user_data.name.givenName or ''} {user_data.name.familyName or ''}".strip()
 
     if user_data.emails and len(user_data.emails) > 0:
         update_data["email"] = user_data.emails[0].value

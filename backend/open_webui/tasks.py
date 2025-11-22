@@ -100,9 +100,7 @@ async def create_task(redis, coroutine, id=None):
     task = asyncio.create_task(coroutine)  # Create the task
 
     # Add a done callback for cleanup
-    task.add_done_callback(
-        lambda t: asyncio.create_task(cleanup_task(redis, task_id, id))
-    )
+    task.add_done_callback(lambda t: asyncio.create_task(cleanup_task(redis, task_id, id)))
     tasks[task_id] = task
 
     # If an ID is provided, associate the task with that ID

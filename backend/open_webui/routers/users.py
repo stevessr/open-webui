@@ -125,9 +125,7 @@ async def get_user_groups(user=Depends(get_verified_user)):
 
 @router.get("/permissions")
 async def get_user_permissisions(request: Request, user=Depends(get_verified_user)):
-    user_permissions = get_permissions(
-        user.id, request.app.state.config.USER_PERMISSIONS
-    )
+    user_permissions = get_permissions(user.id, request.app.state.config.USER_PERMISSIONS)
 
     return user_permissions
 
@@ -190,25 +188,15 @@ class UserPermissions(BaseModel):
 @router.get("/default/permissions", response_model=UserPermissions)
 async def get_default_user_permissions(request: Request, user=Depends(get_admin_user)):
     return {
-        "workspace": WorkspacePermissions(
-            **request.app.state.config.USER_PERMISSIONS.get("workspace", {})
-        ),
-        "sharing": SharingPermissions(
-            **request.app.state.config.USER_PERMISSIONS.get("sharing", {})
-        ),
-        "chat": ChatPermissions(
-            **request.app.state.config.USER_PERMISSIONS.get("chat", {})
-        ),
-        "features": FeaturesPermissions(
-            **request.app.state.config.USER_PERMISSIONS.get("features", {})
-        ),
+        "workspace": WorkspacePermissions(**request.app.state.config.USER_PERMISSIONS.get("workspace", {})),
+        "sharing": SharingPermissions(**request.app.state.config.USER_PERMISSIONS.get("sharing", {})),
+        "chat": ChatPermissions(**request.app.state.config.USER_PERMISSIONS.get("chat", {})),
+        "features": FeaturesPermissions(**request.app.state.config.USER_PERMISSIONS.get("features", {})),
     }
 
 
 @router.post("/default/permissions")
-async def update_default_user_permissions(
-    request: Request, form_data: UserPermissions, user=Depends(get_admin_user)
-):
+async def update_default_user_permissions(request: Request, form_data: UserPermissions, user=Depends(get_admin_user)):
     request.app.state.config.USER_PERMISSIONS = form_data.model_dump()
     return request.app.state.config.USER_PERMISSIONS
 
@@ -236,9 +224,7 @@ async def get_user_settings_by_session_user(user=Depends(get_verified_user)):
 
 
 @router.post("/user/settings/update", response_model=UserSettings)
-async def update_user_settings_by_session_user(
-    request: Request, form_data: UserSettings, user=Depends(get_verified_user)
-):
+async def update_user_settings_by_session_user(request: Request, form_data: UserSettings, user=Depends(get_verified_user)):
     updated_user_settings = form_data.model_dump()
     if (
         user.role != "admin"
@@ -285,9 +271,7 @@ async def get_user_info_by_session_user(user=Depends(get_verified_user)):
 
 
 @router.post("/user/info/update", response_model=Optional[dict])
-async def update_user_info_by_session_user(
-    form_data: dict, user=Depends(get_verified_user)
-):
+async def update_user_info_by_session_user(form_data: dict, user=Depends(get_verified_user)):
     user = Users.get_user_by_id(user.id)
     if user:
         if user.info is None:

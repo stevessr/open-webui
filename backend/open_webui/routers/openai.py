@@ -137,11 +137,7 @@ async def get_headers_and_cookies(
                 "X-OpenWebUI-User-Id": user.id,
                 "X-OpenWebUI-User-Email": user.email,
                 "X-OpenWebUI-User-Role": user.role,
-                **(
-                    {"X-OpenWebUI-Chat-Id": metadata.get("chat_id")}
-                    if metadata and metadata.get("chat_id")
-                    else {}
-                ),
+                **({"X-OpenWebUI-Chat-Id": metadata.get("chat_id")} if metadata and metadata.get("chat_id") else {}),
             }
             if ENABLE_FORWARD_USER_INFO_HEADERS
             else {}
@@ -193,9 +189,7 @@ def get_microsoft_entra_id_access_token():
     Returns the token string or None if authentication fails.
     """
     try:
-        token_provider = get_bearer_token_provider(
-            DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
-        )
+        token_provider = get_bearer_token_provider(DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default")
         return token_provider()
     except Exception as e:
         log.error(f"Error getting Microsoft Entra ID access token: {e}")
@@ -229,40 +223,23 @@ class OpenAIConfigForm(BaseModel):
 
 
 @router.post("/config/update")
-async def update_config(
-    request: Request, form_data: OpenAIConfigForm, user=Depends(get_admin_user)
-):
+async def update_config(request: Request, form_data: OpenAIConfigForm, user=Depends(get_admin_user)):
     request.app.state.config.ENABLE_OPENAI_API = form_data.ENABLE_OPENAI_API
     request.app.state.config.OPENAI_API_BASE_URLS = form_data.OPENAI_API_BASE_URLS
     request.app.state.config.OPENAI_API_KEYS = form_data.OPENAI_API_KEYS
 
     # Check if API KEYS length is same than API URLS length
-    if len(request.app.state.config.OPENAI_API_KEYS) != len(
-        request.app.state.config.OPENAI_API_BASE_URLS
-    ):
-        if len(request.app.state.config.OPENAI_API_KEYS) > len(
-            request.app.state.config.OPENAI_API_BASE_URLS
-        ):
-            request.app.state.config.OPENAI_API_KEYS = (
-                request.app.state.config.OPENAI_API_KEYS[
-                    : len(request.app.state.config.OPENAI_API_BASE_URLS)
-                ]
-            )
+    if len(request.app.state.config.OPENAI_API_KEYS) != len(request.app.state.config.OPENAI_API_BASE_URLS):
+        if len(request.app.state.config.OPENAI_API_KEYS) > len(request.app.state.config.OPENAI_API_BASE_URLS):
+            request.app.state.config.OPENAI_API_KEYS = request.app.state.config.OPENAI_API_KEYS[: len(request.app.state.config.OPENAI_API_BASE_URLS)]
         else:
-            request.app.state.config.OPENAI_API_KEYS += [""] * (
-                len(request.app.state.config.OPENAI_API_BASE_URLS)
-                - len(request.app.state.config.OPENAI_API_KEYS)
-            )
+            request.app.state.config.OPENAI_API_KEYS += [""] * (len(request.app.state.config.OPENAI_API_BASE_URLS) - len(request.app.state.config.OPENAI_API_KEYS))
 
     request.app.state.config.OPENAI_API_CONFIGS = form_data.OPENAI_API_CONFIGS
 
     # Remove the API configs that are not in the API URLS
     keys = list(map(str, range(len(request.app.state.config.OPENAI_API_BASE_URLS))))
-    request.app.state.config.OPENAI_API_CONFIGS = {
-        key: value
-        for key, value in request.app.state.config.OPENAI_API_CONFIGS.items()
-        if key in keys
-    }
+    request.app.state.config.OPENAI_API_CONFIGS = {key: value for key, value in request.app.state.config.OPENAI_API_CONFIGS.items() if key in keys}
 
     return {
         "ENABLE_OPENAI_API": request.app.state.config.ENABLE_OPENAI_API,
@@ -276,9 +253,7 @@ async def update_config(
 async def speech(request: Request, user=Depends(get_verified_user)):
     idx = None
     try:
-        idx = request.app.state.config.OPENAI_API_BASE_URLS.index(
-            "https://api.openai.com/v1"
-        )
+        idx = request.app.state.config.OPENAI_API_BASE_URLS.index("https://api.openai.com/v1")
 
         body = await request.body()
         name = hashlib.sha256(body).hexdigest()
@@ -299,9 +274,7 @@ async def speech(request: Request, user=Depends(get_verified_user)):
             request.app.state.config.OPENAI_API_CONFIGS.get(url, {}),  # Legacy support
         )
 
-        headers, cookies = await get_headers_and_cookies(
-            request, url, key, api_config, user=user
-        )
+        headers, cookies = await get_headers_and_cookies(request, url, key, api_config, user=user)
 
         r = None
         session = None
@@ -381,9 +354,7 @@ async def get_all_models_responses(request: Request, user: UserModel) -> list:
         else:
             api_config = request.app.state.config.OPENAI_API_CONFIGS.get(
                 str(idx),
-                request.app.state.config.OPENAI_API_CONFIGS.get(
-                    url, {}
-                ),  # Legacy support
+                request.app.state.config.OPENAI_API_CONFIGS.get(url, {}),  # Legacy support
             )
 
             enable = api_config.get("enable", True)
@@ -413,9 +384,7 @@ async def get_all_models_responses(request: Request, user: UserModel) -> list:
                         ],
                     }
 
-                    request_tasks.append(
-                        asyncio.ensure_future(asyncio.sleep(0, model_list))
-                    )
+                    request_tasks.append(asyncio.ensure_future(asyncio.sleep(0, model_list)))
             else:
                 request_tasks.append(asyncio.ensure_future(asyncio.sleep(0, None)))
 
@@ -426,18 +395,14 @@ async def get_all_models_responses(request: Request, user: UserModel) -> list:
             url = request.app.state.config.OPENAI_API_BASE_URLS[idx]
             api_config = request.app.state.config.OPENAI_API_CONFIGS.get(
                 str(idx),
-                request.app.state.config.OPENAI_API_CONFIGS.get(
-                    url, {}
-                ),  # Legacy support
+                request.app.state.config.OPENAI_API_CONFIGS.get(url, {}),  # Legacy support
             )
 
             connection_type = api_config.get("connection_type", "external")
             prefix_id = api_config.get("prefix_id", None)
             tags = api_config.get("tags", [])
 
-            model_list = (
-                response if isinstance(response, list) else response.get("data", [])
-            )
+            model_list = response if isinstance(response, list) else response.get("data", [])
             if not isinstance(model_list, list):
                 # Catch non-list responses
                 model_list = []
@@ -448,9 +413,7 @@ async def get_all_models_responses(request: Request, user: UserModel) -> list:
                     del model["name"]
 
                 if prefix_id:
-                    model["id"] = (
-                        f"{prefix_id}.{model.get('id', model.get('name', ''))}"
-                    )
+                    model["id"] = f"{prefix_id}.{model.get('id', model.get('name', ''))}"
 
                 if tags:
                     model["tags"] = tags
@@ -468,9 +431,7 @@ async def get_filtered_models(models, user):
     for model in models.get("data", []):
         model_info = Models.get_model_by_id(model["id"])
         if model_info:
-            if user.id == model_info.user_id or has_access(
-                user.id, type="read", access_control=model_info.access_control
-            ):
+            if user.id == model_info.user_id or has_access(user.id, type="read", access_control=model_info.access_control):
                 filtered_models.append(model)
     return filtered_models
 
@@ -518,11 +479,7 @@ async def get_all_models(request: Request, user: UserModel) -> dict[str, list]:
                 for model in model_list:
                     model_id = model.get("id") or model.get("name")
 
-                    if (
-                        "api.openai.com"
-                        in request.app.state.config.OPENAI_API_BASE_URLS[idx]
-                        and not is_supported_openai_models(model_id)
-                    ):
+                    if "api.openai.com" in request.app.state.config.OPENAI_API_BASE_URLS[idx] and not is_supported_openai_models(model_id):
                         # Skip unwanted OpenAI models
                         continue
 
@@ -547,9 +504,7 @@ async def get_all_models(request: Request, user: UserModel) -> dict[str, list]:
 
 @router.get("/models")
 @router.get("/models/{url_idx}")
-async def get_models(
-    request: Request, url_idx: Optional[int] = None, user=Depends(get_verified_user)
-):
+async def get_models(request: Request, url_idx: Optional[int] = None, user=Depends(get_verified_user)):
     models = {
         "data": [],
     }
@@ -571,9 +526,7 @@ async def get_models(
             timeout=aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST),
         ) as session:
             try:
-                headers, cookies = await get_headers_and_cookies(
-                    request, url, key, api_config, user=user
-                )
+                headers, cookies = await get_headers_and_cookies(request, url, key, api_config, user=user)
 
                 if api_config.get("azure", False):
                     models = {
@@ -620,9 +573,7 @@ async def get_models(
             except aiohttp.ClientError as e:
                 # ClientError covers all aiohttp requests issues
                 log.exception(f"Client error: {e!s}")
-                raise HTTPException(
-                    status_code=500, detail="Open WebUI: Server Connection Error"
-                )
+                raise HTTPException(status_code=500, detail="Open WebUI: Server Connection Error")
             except Exception as e:
                 log.exception(f"Unexpected error: {e}")
                 error_detail = f"Unexpected error: {e!s}"
@@ -657,9 +608,7 @@ async def verify_connection(
         timeout=aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST),
     ) as session:
         try:
-            headers, cookies = await get_headers_and_cookies(
-                request, url, key, api_config, user=user
-            )
+            headers, cookies = await get_headers_and_cookies(request, url, key, api_config, user=user)
 
             if api_config.get("azure", False):
                 # Only set api-key header if not using Azure Entra ID authentication
@@ -681,13 +630,9 @@ async def verify_connection(
 
                     if r.status != 200:
                         if isinstance(response_data, (dict, list)):
-                            return JSONResponse(
-                                status_code=r.status, content=response_data
-                            )
+                            return JSONResponse(status_code=r.status, content=response_data)
                         else:
-                            return PlainTextResponse(
-                                status_code=r.status, content=response_data
-                            )
+                            return PlainTextResponse(status_code=r.status, content=response_data)
 
                     return response_data
             else:
@@ -704,27 +649,19 @@ async def verify_connection(
 
                     if r.status != 200:
                         if isinstance(response_data, (dict, list)):
-                            return JSONResponse(
-                                status_code=r.status, content=response_data
-                            )
+                            return JSONResponse(status_code=r.status, content=response_data)
                         else:
-                            return PlainTextResponse(
-                                status_code=r.status, content=response_data
-                            )
+                            return PlainTextResponse(status_code=r.status, content=response_data)
 
                     return response_data
 
         except aiohttp.ClientError as e:
             # ClientError covers all aiohttp requests issues
             log.exception(f"Client error: {e!s}")
-            raise HTTPException(
-                status_code=500, detail="Open WebUI: Server Connection Error"
-            )
+            raise HTTPException(status_code=500, detail="Open WebUI: Server Connection Error")
         except Exception as e:
             log.exception(f"Unexpected error: {e}")
-            raise HTTPException(
-                status_code=500, detail="Open WebUI: Server Connection Error"
-            )
+            raise HTTPException(status_code=500, detail="Open WebUI: Server Connection Error")
 
 
 def get_azure_allowed_params(api_version: str) -> set[str]:
@@ -761,9 +698,7 @@ def get_azure_allowed_params(api_version: str) -> set[str]:
         if api_version >= "2024-09-01-preview":
             allowed_params.add("stream_options")
     except ValueError:
-        log.debug(
-            f"Invalid API version {api_version} for Azure OpenAI. Defaulting to allowed parameters."
-        )
+        log.debug(f"Invalid API version {api_version} for Azure OpenAI. Defaulting to allowed parameters.")
 
     return allowed_params
 
@@ -787,9 +722,7 @@ def convert_to_azure_payload(url, payload: dict, api_version: str):
 
         # Remove temperature if not 1 for o-series models
         if "temperature" in payload and payload["temperature"] != 1:
-            log.debug(
-                f"Removing temperature parameter for o-series model {model} as only default value (1) is supported"
-            )
+            log.debug(f"Removing temperature parameter for o-series model {model} as only default value (1) is supported")
             del payload["temperature"]
 
     # Filter out unsupported parameters
@@ -833,12 +766,7 @@ async def generate_chat_completion(
 
         # Check if user has access to the model
         if not bypass_filter and user.role == "user":
-            if not (
-                user.id == model_info.user_id
-                or has_access(
-                    user.id, type="read", access_control=model_info.access_control
-                )
-            ):
+            if not (user.id == model_info.user_id or has_access(user.id, type="read", access_control=model_info.access_control)):
                 raise HTTPException(
                     status_code=403,
                     detail="Model not found",
@@ -863,9 +791,7 @@ async def generate_chat_completion(
     # Get the API config for the model
     api_config = request.app.state.config.OPENAI_API_CONFIGS.get(
         str(idx),
-        request.app.state.config.OPENAI_API_CONFIGS.get(
-            request.app.state.config.OPENAI_API_BASE_URLS[idx], {}
-        ),  # Legacy support
+        request.app.state.config.OPENAI_API_CONFIGS.get(request.app.state.config.OPENAI_API_BASE_URLS[idx], {}),  # Legacy support
     )
 
     prefix_id = api_config.get("prefix_id", None)
@@ -898,13 +824,9 @@ async def generate_chat_completion(
 
     # Convert the modified body back to JSON
     if "logit_bias" in payload:
-        payload["logit_bias"] = json.loads(
-            convert_logit_bias_input_to_json(payload["logit_bias"])
-        )
+        payload["logit_bias"] = json.loads(convert_logit_bias_input_to_json(payload["logit_bias"]))
 
-    headers, cookies = await get_headers_and_cookies(
-        request, url, key, api_config, metadata, user=user
-    )
+    headers, cookies = await get_headers_and_cookies(request, url, key, api_config, metadata, user=user)
 
     if api_config.get("azure", False):
         api_version = api_config.get("api_version", "2023-03-15-preview")
@@ -928,9 +850,7 @@ async def generate_chat_completion(
     response = None
 
     try:
-        session = aiohttp.ClientSession(
-            trust_env=True, timeout=aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT)
-        )
+        session = aiohttp.ClientSession(trust_env=True, timeout=aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT))
 
         r = await session.request(
             method="POST",
@@ -948,9 +868,7 @@ async def generate_chat_completion(
                 r.content,
                 status_code=r.status,
                 headers=dict(r.headers),
-                background=BackgroundTask(
-                    cleanup_response, response=r, session=session
-                ),
+                background=BackgroundTask(cleanup_response, response=r, session=session),
             )
         else:
             try:
@@ -1011,9 +929,7 @@ async def embeddings(request: Request, form_data: dict, user):
     session = None
     streaming = False
 
-    headers, cookies = await get_headers_and_cookies(
-        request, url, key, api_config, user=user
-    )
+    headers, cookies = await get_headers_and_cookies(request, url, key, api_config, user=user)
     try:
         session = aiohttp.ClientSession(trust_env=True)
         r = await session.request(
@@ -1030,9 +946,7 @@ async def embeddings(request: Request, form_data: dict, user):
                 r.content,
                 status_code=r.status,
                 headers=dict(r.headers),
-                background=BackgroundTask(
-                    cleanup_response, response=r, session=session
-                ),
+                background=BackgroundTask(cleanup_response, response=r, session=session),
             )
         else:
             try:
@@ -1044,9 +958,7 @@ async def embeddings(request: Request, form_data: dict, user):
                 if isinstance(response_data, (dict, list)):
                     return JSONResponse(status_code=r.status, content=response_data)
                 else:
-                    return PlainTextResponse(
-                        status_code=r.status, content=response_data
-                    )
+                    return PlainTextResponse(status_code=r.status, content=response_data)
 
             return response_data
     except Exception as e:
@@ -1073,9 +985,7 @@ async def proxy(path: str, request: Request, user=Depends(get_verified_user)):
     key = request.app.state.config.OPENAI_API_KEYS[idx]
     api_config = request.app.state.config.OPENAI_API_CONFIGS.get(
         str(idx),
-        request.app.state.config.OPENAI_API_CONFIGS.get(
-            request.app.state.config.OPENAI_API_BASE_URLS[idx], {}
-        ),  # Legacy support
+        request.app.state.config.OPENAI_API_CONFIGS.get(request.app.state.config.OPENAI_API_BASE_URLS[idx], {}),  # Legacy support
     )
 
     r = None
@@ -1083,9 +993,7 @@ async def proxy(path: str, request: Request, user=Depends(get_verified_user)):
     streaming = False
 
     try:
-        headers, cookies = await get_headers_and_cookies(
-            request, url, key, api_config, user=user
-        )
+        headers, cookies = await get_headers_and_cookies(request, url, key, api_config, user=user)
 
         if api_config.get("azure", False):
             api_version = api_config.get("api_version", "2023-03-15-preview")
@@ -1122,9 +1030,7 @@ async def proxy(path: str, request: Request, user=Depends(get_verified_user)):
                 r.content,
                 status_code=r.status,
                 headers=dict(r.headers),
-                background=BackgroundTask(
-                    cleanup_response, response=r, session=session
-                ),
+                background=BackgroundTask(cleanup_response, response=r, session=session),
             )
         else:
             try:
@@ -1136,9 +1042,7 @@ async def proxy(path: str, request: Request, user=Depends(get_verified_user)):
                 if isinstance(response_data, (dict, list)):
                     return JSONResponse(status_code=r.status, content=response_data)
                 else:
-                    return PlainTextResponse(
-                        status_code=r.status, content=response_data
-                    )
+                    return PlainTextResponse(status_code=r.status, content=response_data)
 
             return response_data
 

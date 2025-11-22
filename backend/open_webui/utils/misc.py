@@ -48,9 +48,7 @@ def get_message_list(messages_map, message_id):
     message_list = []
 
     while current_message:
-        message_list.insert(
-            0, current_message
-        )  # Insert the message at the beginning of the list
+        message_list.insert(0, current_message)  # Insert the message at the beginning of the list
         parent_id = current_message.get("parentId")  # Use .get() for safety
         current_message = messages_map.get(parent_id) if parent_id else None
 
@@ -58,12 +56,7 @@ def get_message_list(messages_map, message_id):
 
 
 def get_messages_content(messages: list[dict]) -> str:
-    return "\n".join(
-        [
-            f"{message['role'].upper()}: {get_content_from_message(message)}"
-            for message in messages
-        ]
-    )
+    return "\n".join([f"{message['role'].upper()}: {get_content_from_message(message)}" for message in messages])
 
 
 def get_last_user_message_item(messages: list[dict]) -> Optional[dict]:
@@ -143,9 +136,7 @@ def replace_system_message_content(content: str, messages: list[dict]) -> dict:
     return messages
 
 
-def add_or_update_system_message(
-    content: str, messages: list[dict], append: bool = False
-):
+def add_or_update_system_message(content: str, messages: list[dict], append: bool = False):
     """
     Adds a new system message at the beginning of the messages list
     or updates the existing system message at the beginning.
@@ -183,9 +174,7 @@ def add_or_update_user_message(content: str, messages: list[dict], append: bool 
     return messages
 
 
-def prepend_to_first_user_message_content(
-    content: str, messages: list[dict]
-) -> list[dict]:
+def prepend_to_first_user_message_content(content: str, messages: list[dict]) -> list[dict]:
     for message in messages:
         if message["role"] == "user":
             message = update_message_content(message, content, append=False)
@@ -410,16 +399,12 @@ def parse_ollama_modelfile(model_text):
     data = {"base_model_id": None, "params": {}}
 
     # Parse base model
-    base_model_match = re.search(
-        r"^FROM\s+(\w+)", model_text, re.MULTILINE | re.IGNORECASE
-    )
+    base_model_match = re.search(r"^FROM\s+(\w+)", model_text, re.MULTILINE | re.IGNORECASE)
     if base_model_match:
         data["base_model_id"] = base_model_match.group(1)
 
     # Parse template
-    template_match = re.search(
-        r'TEMPLATE\s+"""(.+?)"""', model_text, re.DOTALL | re.IGNORECASE
-    )
+    template_match = re.search(r'TEMPLATE\s+"""(.+?)"""', model_text, re.DOTALL | re.IGNORECASE)
     if template_match:
         data["params"] = {"template": template_match.group(1).strip()}
 
@@ -453,12 +438,8 @@ def parse_ollama_modelfile(model_text):
         data["params"]["adapter"] = adapter_match.group(1)
 
     # Parse system description
-    system_desc_match = re.search(
-        r'SYSTEM\s+"""(.+?)"""', model_text, re.DOTALL | re.IGNORECASE
-    )
-    system_desc_match_single = re.search(
-        r"SYSTEM\s+([^\n]+)", model_text, re.IGNORECASE
-    )
+    system_desc_match = re.search(r'SYSTEM\s+"""(.+?)"""', model_text, re.DOTALL | re.IGNORECASE)
+    system_desc_match_single = re.search(r"SYSTEM\s+([^\n]+)", model_text, re.IGNORECASE)
 
     if system_desc_match:
         data["params"]["system"] = system_desc_match.group(1).strip()
@@ -534,7 +515,5 @@ def throttle(interval: float = 10.0):
 
 def extract_urls(text: str) -> list[str]:
     # Regex pattern to match URLs
-    url_pattern = re.compile(
-        r"(https?://[^\s]+)", re.IGNORECASE
-    )  # Matches http and https URLs
+    url_pattern = re.compile(r"(https?://[^\s]+)", re.IGNORECASE)  # Matches http and https URLs
     return url_pattern.findall(text)
