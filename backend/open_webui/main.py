@@ -1473,7 +1473,7 @@ async def chat_completion(
                                 "model": model_id,
                             },
                         )
-                except Exception as e:
+                except Exception:
                     pass
 
             return await process_chat_response(request, response, form_data, user, metadata, model, events, tasks)
