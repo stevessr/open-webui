@@ -7,6 +7,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     AsyncGenerator,
+    ClassVar,
     Dict,
     MutableMapping,
     Optional,
@@ -118,7 +119,7 @@ class AuditLoggingMiddleware:
     ASGI middleware that intercepts HTTP requests and responses to perform audit logging. It captures request/response bodies (depending on audit level), headers, HTTP methods, and user information, then logs a structured audit entry at the end of the request cycle.
     """
 
-    AUDITED_METHODS = {"PUT", "PATCH", "DELETE", "POST"}
+    AUDITED_METHODS: ClassVar[set[str]] = {"PUT", "PATCH", "DELETE", "POST"}
 
     def __init__(
         self,

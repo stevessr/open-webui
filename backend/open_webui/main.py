@@ -564,7 +564,7 @@ async def lifespan(app: FastAPI):
         limiter = anyio.to_thread.current_default_thread_limiter()
         limiter.total_tokens = THREAD_POOL_SIZE
 
-    _ = asyncio.create_task(periodic_usage_pool_cleanup())
+    asyncio.create_task(periodic_usage_pool_cleanup())  # noqa: RUF006
 
     if app.state.config.ENABLE_BASE_MODELS_CACHE:
         await get_all_models(
