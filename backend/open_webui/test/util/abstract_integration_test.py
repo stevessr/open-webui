@@ -39,11 +39,17 @@ class AbstractIntegrationTest:
         parts = [part.strip() for part in parts if part.strip() != ""]
         path_parts = path.split("/")
         path_parts = [part.strip() for part in path_parts if part.strip() != ""]
+
+        # Build the path
+        path_str = "/".join(parts + path_parts)
+        if not path_str.startswith("/"):
+            path_str = "/" + path_str
+
         query_parts = ""
         if query_params:
             query_parts = "&".join([f"{key}={value}" for key, value in query_params.items()])
             query_parts = f"?{query_parts}"
-        return "/".join(parts + path_parts) + query_parts
+        return path_str + query_parts
 
     @classmethod
     def setup_class(cls):

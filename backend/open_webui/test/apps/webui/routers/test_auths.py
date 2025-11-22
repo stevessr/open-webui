@@ -23,6 +23,48 @@ class TestAuths(AbstractPostgresTest):
             "email": "john.doe@openwebui.com",
             "role": "user",
             "profile_image_url": "/user.gif",
+            "last_active_at": None,
+            "updated_at": None,
+            "created_at": None,
+            "api_key": None,
+            "settings": None,
+            "info": None,
+            "oauth_sub": None,
+            "bio": None,
+            "date_of_birth": None,
+            "expires_at": None,
+            "gender": None,
+            "permissions": {
+                "chat": {
+                    "call": True,
+                    "continue_response": True,
+                    "controls": True,
+                    "delete": True,
+                    "download": True,
+                    "edit": True,
+                    "file_upload": True,
+                    "model_selector": True,
+                    "new": True,
+                    "overview": True,
+                    "pin": True,
+                    "share": True,
+                    "stop_generation": True,
+                    "temporary": True,
+                    "visibility": True,
+                },
+                "workspace": {
+                    "functions": True,
+                    "knowledge": True,
+                    "models": True,
+                    "prompts": True,
+                    "tools": True,
+                },
+                "features": {
+                    "code_interpreter": True,
+                    "image_generation": True,
+                    "web_search": True,
+                },
+            },
         }
 
     def test_update_profile(self):
@@ -92,6 +134,13 @@ class TestAuths(AbstractPostgresTest):
         assert data["profile_image_url"] == "/user.gif"
         assert data["token"] is not None and len(data["token"]) > 0
         assert data["token_type"] == "Bearer"
+
+        # Check for new fields
+        assert "permissions" in data
+        assert "last_active_at" in data
+        assert "updated_at" in data
+        assert "created_at" in data
+
 
     def test_signup(self):
         response = self.fast_api_client.post(

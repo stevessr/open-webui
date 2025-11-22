@@ -42,9 +42,9 @@ def validate_model_id(model_id: str) -> bool:
 @router.get("/list", response_model=list[ModelUserResponse])  # do NOT use "/" as path, conflicts with main.py
 async def get_models(id: Optional[str] = None, user=Depends(get_verified_user)):
     if user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL:
-        return Models.get_models()
+        return await Models.get_models()
     else:
-        return Models.get_models_by_user_id(user.id)
+        return await Models.get_models_by_user_id(user.id)
 
 
 ###########################
@@ -54,7 +54,7 @@ async def get_models(id: Optional[str] = None, user=Depends(get_verified_user)):
 
 @router.get("/base", response_model=list[ModelResponse])
 async def get_base_models(user=Depends(get_admin_user)):
-    return Models.get_base_models()
+    return await Models.get_base_models()
 
 
 ############################
@@ -105,7 +105,7 @@ async def create_new_model(
 
 @router.get("/export", response_model=list[ModelModel])
 async def export_models(user=Depends(get_admin_user)):
-    return Models.get_models()
+    return await Models.get_models()
 
 
 ############################

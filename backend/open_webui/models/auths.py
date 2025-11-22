@@ -179,11 +179,11 @@ class AuthsTable:
         except Exception:
             return False
 
-    def delete_auth_by_id(self, id: str) -> bool:
+    async def delete_auth_by_id(self, id: str) -> bool:
         try:
             with get_db() as db:
                 # Delete User
-                result = Users.delete_user_by_id(id)
+                result = await Users.delete_user_by_id(id)
 
                 if result:
                     db.query(Auth).filter_by(id=id).delete()

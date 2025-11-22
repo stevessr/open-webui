@@ -13,13 +13,13 @@ class TestModels(AbstractPostgresTest):
 
     def test_models(self):
         with mock_webui_user(id="2"):
-            response = self.fast_api_client.get(self.create_url("/"))
+            response = self.fast_api_client.get(self.create_url("/list"))
         assert response.status_code == 200
-        assert len(response.json()["data"]) == 0
+        assert len(response.json()) == 0
 
         with mock_webui_user(id="2"):
             response = self.fast_api_client.post(
-                self.create_url("/add"),
+                self.create_url("/create"),
                 json={
                     "id": "my-model",
                     "base_model_id": "base-model-id",
@@ -36,22 +36,22 @@ class TestModels(AbstractPostgresTest):
         assert response.status_code == 200
 
         with mock_webui_user(id="2"):
-            response = self.fast_api_client.get(self.create_url("/"))
+            response = self.fast_api_client.get(self.create_url("/list"))
         assert response.status_code == 200
-        assert len(response.json()["data"]) == 1
+        assert len(response.json()) == 1
 
         with mock_webui_user(id="2"):
-            response = self.fast_api_client.get(self.create_url(query_params={"id": "my-model"}))
+            response = self.fast_api_client.get(self.create_url("/model", query_params={"id": "my-model"}))
         assert response.status_code == 200
-        data = response.json()["data"][0]
+        data = response.json()
         assert data["id"] == "my-model"
         assert data["name"] == "Hello World"
 
         with mock_webui_user(id="2"):
-            response = self.fast_api_client.delete(self.create_url("/delete?id=my-model"))
+            response = self.fast_api_client.delete(self.create_url("/model/delete", query_params={"id": "my-model"}))
         assert response.status_code == 200
 
         with mock_webui_user(id="2"):
-            response = self.fast_api_client.get(self.create_url("/"))
+            response = self.fast_api_client.get(self.create_url("/list"))
         assert response.status_code == 200
-        assert len(response.json()["data"]) == 0
+        assert len(response.json()) == 0

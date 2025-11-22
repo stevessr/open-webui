@@ -58,6 +58,7 @@ class TestPrompts(AbstractPostgresTest):
                     "command": "irrelevant for request",
                     "title": "Hello World Updated",
                     "content": "description Updated",
+                    "access_control": None
                 },
             )
         assert response.status_code == 200
