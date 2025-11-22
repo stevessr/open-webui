@@ -33,11 +33,11 @@ log.setLevel(SRC_LOG_LEVELS["MAIN"])
 router = APIRouter()
 
 
-def get_tool_module(request, tool_id, load_from_db=True):
+async def get_tool_module(request, tool_id, load_from_db=True):
     """
     Get the tool module by its ID.
     """
-    tool_module, _ = get_tool_module_from_cache(request, tool_id, load_from_db)
+    tool_module, _ = await get_tool_module_from_cache(request, tool_id, load_from_db)
     return tool_module
 
 
@@ -52,7 +52,7 @@ async def get_tools(request: Request, user=Depends(get_verified_user)):
 
     # Local Tools
     for tool in await Tools.get_tools():
-        tool_module = get_tool_module(request, tool.id)
+        tool_module = await get_tool_module(request, tool.id)
         tools.append(
             ToolUserResponse(
                 **{

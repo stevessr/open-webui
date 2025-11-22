@@ -190,7 +190,7 @@ class ToolsTable:
 
     async def get_user_valves_by_id_and_user_id(self, id: str, user_id: str) -> Optional[dict]:
         try:
-            user = await Users.get_user_by_id(user_id)
+            user = Users.get_user_by_id(user_id)
             user_settings = user.settings.model_dump() if user.settings else {}
 
             # Check if user has "tools" and "valves" settings
@@ -206,7 +206,7 @@ class ToolsTable:
 
     async def update_user_valves_by_id_and_user_id(self, id: str, user_id: str, valves: dict) -> Optional[dict]:
         try:
-            user = await Users.get_user_by_id(user_id)
+            user = Users.get_user_by_id(user_id)
             user_settings = user.settings.model_dump() if user.settings else {}
 
             # Check if user has "tools" and "valves" settings
@@ -218,7 +218,7 @@ class ToolsTable:
             user_settings["tools"]["valves"][id] = valves
 
             # Update the user settings in the database
-            await Users.update_user_by_id(user_id, {"settings": user_settings})
+            Users.update_user_by_id(user_id, {"settings": user_settings})
 
             return user_settings["tools"]["valves"][id]
         except Exception as e:

@@ -1441,7 +1441,7 @@ async def chat_completion(
 
         if metadata.get("chat_id") and (user and user.role != "admin"):
             if not metadata["chat_id"].startswith("local:"):
-                chat = Chats.get_chat_by_id_and_user_id(metadata["chat_id"], user.id)
+                chat = await Chats.get_chat_by_id_and_user_id(metadata["chat_id"], user.id)
                 if chat is None:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
@@ -1593,7 +1593,7 @@ async def list_tasks_endpoint(request: Request, user=Depends(get_verified_user))
 
 @app.get("/api/tasks/chat/{chat_id}")
 async def list_tasks_by_chat_id_endpoint(request: Request, chat_id: str, user=Depends(get_verified_user)):
-    chat = Chats.get_chat_by_id(chat_id)
+    chat = await await Chats.get_chat_by_id(chat_id)
     if chat is None or chat.user_id != user.id:
         return {"task_ids": []}
 

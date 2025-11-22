@@ -713,7 +713,7 @@ async def get_group(
     _: bool = Depends(get_scim_auth),
 ):
     """Get SCIM Group by ID"""
-    group = Groups.get_group_by_id(group_id)
+    group = await Groups.get_group_by_id(group_id)
     if not group:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -782,7 +782,7 @@ async def update_group(
     _: bool = Depends(get_scim_auth),
 ):
     """Update SCIM Group (full update)"""
-    group = Groups.get_group_by_id(group_id)
+    group = await Groups.get_group_by_id(group_id)
     if not group:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -821,7 +821,7 @@ async def patch_group(
     _: bool = Depends(get_scim_auth),
 ):
     """Update SCIM Group (partial update)"""
-    group = Groups.get_group_by_id(group_id)
+    group = await Groups.get_group_by_id(group_id)
     if not group:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -880,7 +880,7 @@ async def delete_group(
     _: bool = Depends(get_scim_auth),
 ):
     """Delete SCIM Group"""
-    group = Groups.get_group_by_id(group_id)
+    group = await Groups.get_group_by_id(group_id)
     if not group:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

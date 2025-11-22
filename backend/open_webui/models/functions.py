@@ -200,7 +200,7 @@ class FunctionsTable:
             functions = await asyncio.to_thread(db.query(Function).order_by(Function.updated_at.desc()).all)
             user_ids = list(set(func.user_id for func in functions))
 
-            users = await Users.get_users_by_user_ids(user_ids) if user_ids else []
+            users = Users.get_users_by_user_ids(user_ids) if user_ids else []
             users_dict = {user.id: user for user in users}
 
             return [
@@ -275,7 +275,7 @@ class FunctionsTable:
 
     async def get_user_valves_by_id_and_user_id(self, id: str, user_id: str) -> Optional[dict]:
         try:
-            user = await Users.get_user_by_id(user_id)
+            user = Users.get_user_by_id(user_id)
             user_settings = user.settings.model_dump() if user.settings else {}
 
             # Check if user has "functions" and "valves" settings
@@ -291,7 +291,7 @@ class FunctionsTable:
 
     async def update_user_valves_by_id_and_user_id(self, id: str, user_id: str, valves: dict) -> Optional[dict]:
         try:
-            user = await Users.get_user_by_id(user_id)
+            user = Users.get_user_by_id(user_id)
             user_settings = user.settings.model_dump() if user.settings else {}
 
             # Check if user has "functions" and "valves" settings
@@ -303,7 +303,7 @@ class FunctionsTable:
             user_settings["functions"]["valves"][id] = valves
 
             # Update the user settings in the database
-            await Users.update_user_by_id(user_id, {"settings": user_settings})
+            Users.update_user_by_id(user_id, {"settings": user_settings})
 
             return user_settings["functions"]["valves"][id]
         except Exception as e:

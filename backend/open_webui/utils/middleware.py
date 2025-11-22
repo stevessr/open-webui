@@ -673,7 +673,7 @@ async def chat_image_generation_handler(request: Request, form_data: dict, extra
     if not chat_id:
         return form_data
 
-    chat = Chats.get_chat_by_id_and_user_id(chat_id, user.id)
+    chat = await Chats.get_chat_by_id_and_user_id(chat_id, user.id)
 
     __event_emitter__ = extra_params["__event_emitter__"]
     await __event_emitter__(
@@ -1051,7 +1051,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
     # Check if the request has chat_id and is inside of a folder
     chat_id = metadata.get("chat_id", None)
     if chat_id and user:
-        chat = Chats.get_chat_by_id_and_user_id(chat_id, user.id)
+        chat = await Chats.get_chat_by_id_and_user_id(chat_id, user.id)
         if chat and chat.folder_id:
             folder = Folders.get_folder_by_id_and_user_id(chat.folder_id, user.id)
 
