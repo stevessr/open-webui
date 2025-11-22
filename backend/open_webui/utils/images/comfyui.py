@@ -1,11 +1,10 @@
-import asyncio
 import json
 import logging
 import random
-import aiohttp
 import urllib.parse
 from typing import Optional
 
+import aiohttp
 import websocket  # NOTE: websocket-client (https://github.com/websocket-client/websocket-client)
 from open_webui.env import SRC_LOG_LEVELS
 from pydantic import BaseModel

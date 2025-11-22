@@ -1,15 +1,11 @@
-import json
 import time
 import uuid
 from typing import Optional
 
 from open_webui.internal.db import Base, get_db
 from open_webui.utils.access_control import has_access
-
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import BigInteger, Boolean, Column, String, Text, JSON
-from sqlalchemy import or_, func, select, and_, text
-from sqlalchemy.sql import exists
+from sqlalchemy import JSON, BigInteger, Column, Text
 
 ####################
 # Channel DB Schema

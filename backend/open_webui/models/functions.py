@@ -1,13 +1,13 @@
+import asyncio
 import logging
 import time
 from typing import Optional
 
-from open_webui.internal.db import Base, JSONField, get_db
-from open_webui.models.users import Users, UserModel
 from open_webui.env import SRC_LOG_LEVELS
+from open_webui.internal.db import Base, JSONField, get_db
+from open_webui.models.users import UserModel, Users
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import BigInteger, Boolean, Column, String, Text, Index
-import asyncio
+from sqlalchemy import BigInteger, Boolean, Column, Index, String, Text
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -322,7 +322,7 @@ class FunctionsTable:
                 user_settings["functions"]["valves"] = {}
 
             return user_settings["functions"]["valves"].get(id, {})
-        except Exception as e:
+        except Exception:
             log.exception(f"Error getting user values by id {id} and user id {user_id}")
             return None
 

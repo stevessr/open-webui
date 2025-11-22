@@ -6,9 +6,8 @@ from typing import Optional
 
 import aiohttp
 import websockets
-from pydantic import BaseModel
-
 from open_webui.env import SRC_LOG_LEVELS
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 logger.setLevel(SRC_LOG_LEVELS["MAIN"])

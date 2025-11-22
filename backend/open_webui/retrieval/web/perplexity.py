@@ -1,9 +1,9 @@
 import logging
-from typing import Optional, Literal
-import httpx
+from typing import Literal, Optional
 
-from open_webui.retrieval.web.main import SearchResult, get_filtered_results
+import httpx
 from open_webui.env import SRC_LOG_LEVELS
+from open_webui.retrieval.web.main import SearchResult, get_filtered_results
 
 MODELS = Literal[
     "sonar",
@@ -83,7 +83,7 @@ async def search_perplexity(
         for i, citation in enumerate(citations[:count]):
             # Extract content from the response to use as snippet
             content = ""
-            if "choices" in json_response and json_response["choices"]:
+            if json_response.get("choices"):
                 if i == 0:
                     content = json_response["choices"][0]["message"]["content"]
 

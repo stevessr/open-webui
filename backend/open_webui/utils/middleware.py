@@ -1,124 +1,95 @@
-import time
-import logging
-import sys
-import os
-import base64
-import textwrap
-
-import asyncio
-from aiocache import cached
-from typing import Any, Optional
-import random
-import json
-import html
-import inspect
-import re
 import ast
-
-from uuid import uuid4
+import asyncio
+import html
+import json
+import logging
+import re
+import sys
+import textwrap
+import time
 from concurrent.futures import ThreadPoolExecutor
+from typing import Optional
+from uuid import uuid4
 
-
-from fastapi import Request, HTTPException
+from fastapi import HTTPException, Request
 from fastapi.responses import HTMLResponse
-from starlette.responses import Response, StreamingResponse, JSONResponse
-
-
-from open_webui.models.oauth_sessions import OAuthSessions
+from open_webui.config import (
+    CODE_INTERPRETER_BLOCKED_MODULES,
+    DEFAULT_CODE_INTERPRETER_PROMPT,
+    DEFAULT_TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE,
+)
+from open_webui.constants import TASKS
+from open_webui.env import (
+    CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES,
+    CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE,
+    ENABLE_QUERIES_CACHE,
+    ENABLE_REALTIME_CHAT_SAVE,
+    GLOBAL_LOG_LEVEL,
+    SRC_LOG_LEVELS,
+)
 from open_webui.models.chats import Chats
 from open_webui.models.folders import Folders
-from open_webui.models.users import Users
-from open_webui.socket.main import (
-    get_event_call,
-    get_event_emitter,
-    get_active_status_by_user_id,
-)
-from open_webui.routers.tasks import (
-    generate_queries,
-    generate_title,
-    generate_follow_ups,
-    generate_image_prompt,
-    generate_chat_tags,
-)
-from open_webui.routers.retrieval import (
-    process_web_search,
-    SearchForm,
-)
+from open_webui.models.functions import Functions
+from open_webui.models.users import UserModel, Users
+from open_webui.retrieval.utils import get_sources_from_items
 from open_webui.routers.images import (
-    image_generations,
     CreateImageForm,
-    image_edits,
     EditImageForm,
+    image_edits,
+    image_generations,
 )
+from open_webui.routers.memories import QueryMemoryForm, query_memory
 from open_webui.routers.pipelines import (
     process_pipeline_inlet_filter,
-    process_pipeline_outlet_filter,
 )
-from open_webui.routers.memories import query_memory, QueryMemoryForm
-
-from open_webui.utils.webhook import post_webhook
+from open_webui.routers.retrieval import (
+    SearchForm,
+    process_web_search,
+)
+from open_webui.routers.tasks import (
+    generate_chat_tags,
+    generate_follow_ups,
+    generate_image_prompt,
+    generate_queries,
+    generate_title,
+)
+from open_webui.socket.main import (
+    get_active_status_by_user_id,
+    get_event_call,
+    get_event_emitter,
+)
+from open_webui.utils.chat import generate_chat_completion
+from open_webui.utils.code_interpreter import execute_code_jupyter
 from open_webui.utils.files import (
-    get_audio_url_from_base64,
     get_file_url_from_base64,
     get_image_url_from_base64,
 )
-
-
-from open_webui.models.users import UserModel
-from open_webui.models.functions import Functions
-from open_webui.models.models import Models
-
-from open_webui.retrieval.utils import get_sources_from_items
-
-
-from open_webui.utils.chat import generate_chat_completion
+from open_webui.utils.filter import (
+    get_sorted_filter_ids,
+    process_filter_functions,
+)
+from open_webui.utils.mcp.client import MCPClient
+from open_webui.utils.misc import (
+    add_or_update_system_message,
+    add_or_update_user_message,
+    convert_logit_bias_input_to_json,
+    deep_update,
+    get_content_from_message,
+    get_last_assistant_message,
+    get_last_user_message,
+    get_last_user_message_item,
+    get_message_list,
+    get_system_message,
+)
+from open_webui.utils.payload import apply_system_prompt_to_body
 from open_webui.utils.task import (
     get_task_model_id,
     rag_template,
     tools_function_calling_generation_template,
 )
-from open_webui.utils.misc import (
-    deep_update,
-    extract_urls,
-    get_message_list,
-    add_or_update_system_message,
-    add_or_update_user_message,
-    get_last_user_message,
-    get_last_user_message_item,
-    get_last_assistant_message,
-    get_system_message,
-    prepend_to_first_user_message_content,
-    convert_logit_bias_input_to_json,
-    get_content_from_message,
-)
 from open_webui.utils.tools import get_tools, get_updated_tool_function
-from open_webui.utils.plugin import load_function_module_by_id
-from open_webui.utils.filter import (
-    get_sorted_filter_ids,
-    process_filter_functions,
-)
-from open_webui.utils.code_interpreter import execute_code_jupyter
-from open_webui.utils.payload import apply_system_prompt_to_body
-from open_webui.utils.mcp.client import MCPClient
-
-
-from open_webui.config import (
-    CACHE_DIR,
-    DEFAULT_TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE,
-    DEFAULT_CODE_INTERPRETER_PROMPT,
-    CODE_INTERPRETER_BLOCKED_MODULES,
-)
-from open_webui.env import (
-    SRC_LOG_LEVELS,
-    GLOBAL_LOG_LEVEL,
-    CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE,
-    CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES,
-    BYPASS_MODEL_ACCESS_CONTROL,
-    ENABLE_REALTIME_CHAT_SAVE,
-    ENABLE_QUERIES_CACHE,
-)
-from open_webui.constants import TASKS
-
+from open_webui.utils.webhook import post_webhook
+from starlette.responses import JSONResponse, StreamingResponse
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
@@ -598,7 +569,7 @@ async def chat_web_search_handler(
             response = response[bracket_start:bracket_end]
             queries = json.loads(response)
             queries = queries.get("queries", [])
-        except Exception as e:
+        except Exception:
             queries = [response]
 
         if ENABLE_QUERIES_CACHE:
@@ -785,7 +756,7 @@ async def chat_image_generation_handler(
                     response = response[bracket_start:bracket_end]
                     response = json.loads(response)
                     prompt = response.get("prompt", [])
-                except Exception as e:
+                except Exception:
                     prompt = user_message
 
             except Exception as e:
@@ -836,7 +807,7 @@ async def chat_image_generation_handler(
                 {
                     "type": "status",
                     "data": {
-                        "description": f"An error occurred while generating an image",
+                        "description": "An error occurred while generating an image",
                         "done": True,
                     },
                 }
@@ -889,7 +860,7 @@ async def chat_image_generation_handler(
                 {
                     "type": "status",
                     "data": {
-                        "description": f"An error occurred while generating an image",
+                        "description": "An error occurred while generating an image",
                         "done": True,
                     },
                 }
@@ -938,7 +909,7 @@ async def chat_completion_files_handler(
 
                     queries_response = queries_response[bracket_start:bracket_end]
                     queries_response = json.loads(queries_response)
-                except Exception as e:
+                except Exception:
                     queries_response = {"queries": [queries_response]}
 
                 queries = queries_response.get("queries", [])
@@ -1229,22 +1200,22 @@ async def process_chat_payload(request, form_data, user, metadata, model):
 
     features = form_data.pop("features", None)
     if features:
-        if "memory" in features and features["memory"]:
+        if features.get("memory"):
             form_data = await chat_memory_handler(
                 request, form_data, extra_params, user
             )
 
-        if "web_search" in features and features["web_search"]:
+        if features.get("web_search"):
             form_data = await chat_web_search_handler(
                 request, form_data, extra_params, user
             )
 
-        if "image_generation" in features and features["image_generation"]:
+        if features.get("image_generation"):
             form_data = await chat_image_generation_handler(
                 request, form_data, extra_params, user
             )
 
-        if "code_interpreter" in features and features["code_interpreter"]:
+        if features.get("code_interpreter"):
             form_data["messages"] = add_or_update_user_message(
                 (
                     request.app.state.config.CODE_INTERPRETER_PROMPT_TEMPLATE
@@ -1581,8 +1552,7 @@ async def process_chat_response(
         if message and "model" in message:
             if tasks and messages:
                 if (
-                    TASKS.FOLLOW_UP_GENERATION in tasks
-                    and tasks[TASKS.FOLLOW_UP_GENERATION]
+                    tasks.get(TASKS.FOLLOW_UP_GENERATION)
                 ):
                     res = await generate_follow_ups(
                         request,
@@ -1634,7 +1604,7 @@ async def process_chat_response(
                                     },
                                 )
 
-                        except Exception as e:
+                        except Exception:
                             pass
 
                 if not metadata.get("chat_id", "").startswith(
@@ -1681,7 +1651,7 @@ async def process_chat_response(
                                     title = json.loads(title_string).get(
                                         "title", user_message
                                     )
-                                except Exception as e:
+                                except Exception:
                                     title = ""
 
                                 if not title:
@@ -1710,7 +1680,7 @@ async def process_chat_response(
                                 }
                             )
 
-                    if TASKS.TAGS_GENERATION in tasks and tasks[TASKS.TAGS_GENERATION]:
+                    if tasks.get(TASKS.TAGS_GENERATION):
                         res = await generate_chat_tags(
                             request,
                             {
@@ -1749,7 +1719,7 @@ async def process_chat_response(
                                         "data": tags,
                                     }
                                 )
-                            except Exception as e:
+                            except Exception:
                                 pass
 
     event_emitter = None
@@ -2333,7 +2303,7 @@ async def process_chat_response(
                     last_assistant_message = get_last_assistant_message(
                         form_data["messages"]
                     )
-            except Exception as e:
+            except Exception:
                 pass
 
             content = (

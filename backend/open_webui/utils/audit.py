@@ -1,7 +1,8 @@
+import re
+import uuid
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from enum import Enum
-import re
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -11,7 +12,6 @@ from typing import (
     Optional,
     cast,
 )
-import uuid
 
 from asgiref.typing import (
     ASGI3Application,
@@ -19,15 +19,15 @@ from asgiref.typing import (
     ASGIReceiveEvent,
     ASGISendCallable,
     ASGISendEvent,
+)
+from asgiref.typing import (
     Scope as ASGIScope,
 )
 from loguru import logger
-from starlette.requests import Request
-
 from open_webui.env import AUDIT_LOG_LEVEL, MAX_BODY_LOG_SIZE
-from open_webui.utils.auth import get_current_user, get_http_authorization_cred
 from open_webui.models.users import UserModel
-
+from open_webui.utils.auth import get_current_user, get_http_authorization_cred
+from starlette.requests import Request
 
 if TYPE_CHECKING:
     from loguru import Logger
@@ -199,7 +199,7 @@ class AuditLoggingMiddleware:
             )
             return user
         except Exception as e:
-            logger.debug(f"Failed to get authenticated user: {str(e)}")
+            logger.debug(f"Failed to get authenticated user: {e!s}")
 
         return None
 
@@ -280,4 +280,4 @@ class AuditLoggingMiddleware:
 
             self.audit_logger.write(entry)
         except Exception as e:
-            logger.error(f"Failed to log audit entry: {str(e)}")
+            logger.error(f"Failed to log audit entry: {e!s}")

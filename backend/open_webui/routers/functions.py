@@ -1,31 +1,27 @@
-import os
-import re
-
 import logging
-import aiohttp
-from pathlib import Path
+import re
 from typing import Optional
 
+import aiohttp
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from open_webui.config import CACHE_DIR
+from open_webui.constants import ERROR_MESSAGES
+from open_webui.env import SRC_LOG_LEVELS
 from open_webui.models.functions import (
     FunctionForm,
     FunctionModel,
     FunctionResponse,
+    Functions,
     FunctionUserResponse,
     FunctionWithValvesModel,
-    Functions,
 )
+from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.plugin import (
+    get_function_module_from_cache,
     load_function_module_by_id,
     replace_imports,
-    get_function_module_from_cache,
 )
-from open_webui.config import CACHE_DIR
-from open_webui.constants import ERROR_MESSAGES
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from open_webui.utils.auth import get_admin_user, get_verified_user
-from open_webui.env import SRC_LOG_LEVELS
 from pydantic import BaseModel, HttpUrl
-
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MAIN"])

@@ -1,82 +1,71 @@
 import base64
-import copy
+import fnmatch
 import hashlib
+import json
 import logging
 import mimetypes
+import re
 import sys
 import urllib
 import uuid
-import json
 from datetime import datetime, timedelta
-
-import re
-import fnmatch
-import time
-import secrets
-from cryptography.fernet import Fernet
-
+from typing import Optional
 
 import aiohttp
 from authlib.integrations.starlette_client import OAuth
+from authlib.oauth2.rfc6749.errors import OAuth2Error
 from authlib.oidc.core import UserInfo
+from cryptography.fernet import Fernet
 from fastapi import (
     HTTPException,
     status,
 )
-from starlette.responses import RedirectResponse
-from typing import Optional
-
-
-from open_webui.models.auths import Auths
-from open_webui.models.oauth_sessions import OAuthSessions
-from open_webui.models.users import Users
-
-
-from open_webui.models.groups import Groups, GroupModel, GroupUpdateForm, GroupForm
+from mcp.shared.auth import (
+    OAuthClientMetadata,
+    OAuthMetadata,
+)
 from open_webui.config import (
     DEFAULT_USER_ROLE,
-    ENABLE_OAUTH_SIGNUP,
-    OAUTH_MERGE_ACCOUNTS_BY_EMAIL,
-    OAUTH_PROVIDERS,
-    ENABLE_OAUTH_ROLE_MANAGEMENT,
-    ENABLE_OAUTH_GROUP_MANAGEMENT,
     ENABLE_OAUTH_GROUP_CREATION,
-    OAUTH_BLOCKED_GROUPS,
-    OAUTH_GROUPS_SEPARATOR,
-    OAUTH_ROLES_CLAIM,
-    OAUTH_SUB_CLAIM,
-    OAUTH_GROUPS_CLAIM,
-    OAUTH_EMAIL_CLAIM,
-    OAUTH_PICTURE_CLAIM,
-    OAUTH_USERNAME_CLAIM,
-    OAUTH_ALLOWED_ROLES,
+    ENABLE_OAUTH_GROUP_MANAGEMENT,
+    ENABLE_OAUTH_ROLE_MANAGEMENT,
+    ENABLE_OAUTH_SIGNUP,
+    JWT_EXPIRES_IN,
     OAUTH_ADMIN_ROLES,
     OAUTH_ALLOWED_DOMAINS,
+    OAUTH_ALLOWED_ROLES,
+    OAUTH_BLOCKED_GROUPS,
+    OAUTH_EMAIL_CLAIM,
+    OAUTH_GROUPS_CLAIM,
+    OAUTH_GROUPS_SEPARATOR,
+    OAUTH_MERGE_ACCOUNTS_BY_EMAIL,
+    OAUTH_PICTURE_CLAIM,
+    OAUTH_PROVIDERS,
+    OAUTH_ROLES_CLAIM,
+    OAUTH_SUB_CLAIM,
     OAUTH_UPDATE_PICTURE_ON_LOGIN,
+    OAUTH_USERNAME_CLAIM,
     WEBHOOK_URL,
-    JWT_EXPIRES_IN,
     AppConfig,
 )
 from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
 from open_webui.env import (
     AIOHTTP_CLIENT_SESSION_SSL,
-    WEBUI_NAME,
+    ENABLE_OAUTH_EMAIL_FALLBACK,
+    ENABLE_OAUTH_ID_TOKEN_COOKIE,
+    OAUTH_CLIENT_INFO_ENCRYPTION_KEY,
     WEBUI_AUTH_COOKIE_SAME_SITE,
     WEBUI_AUTH_COOKIE_SECURE,
-    ENABLE_OAUTH_ID_TOKEN_COOKIE,
-    ENABLE_OAUTH_EMAIL_FALLBACK,
-    OAUTH_CLIENT_INFO_ENCRYPTION_KEY,
+    WEBUI_NAME,
 )
+from open_webui.models.auths import Auths
+from open_webui.models.groups import GroupForm, GroupModel, Groups, GroupUpdateForm
+from open_webui.models.oauth_sessions import OAuthSessions
+from open_webui.models.users import Users
+from open_webui.utils.auth import create_token, get_password_hash
 from open_webui.utils.misc import parse_duration
-from open_webui.utils.auth import get_password_hash, create_token
 from open_webui.utils.webhook import post_webhook
-
-from mcp.shared.auth import (
-    OAuthClientMetadata,
-    OAuthMetadata,
-)
-
-from authlib.oauth2.rfc6749.errors import OAuth2Error
+from starlette.responses import RedirectResponse
 
 
 class OAuthClientInformationFull(OAuthClientMetadata):
@@ -90,7 +79,7 @@ class OAuthClientInformationFull(OAuthClientMetadata):
     server_metadata: Optional[OAuthMetadata] = None  # Fetched from the OAuth server
 
 
-from open_webui.env import SRC_LOG_LEVELS, GLOBAL_LOG_LEVEL
+from open_webui.env import GLOBAL_LOG_LEVEL, SRC_LOG_LEVELS
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
@@ -348,7 +337,7 @@ async def get_oauth_client_info_with_dynamic_client_registration(
                         log.error(
                             f"Dynamic client registration failed at {registration_url}: {oauth_client_registration_response.status} - {error_text}"
                         )
-                    except Exception as e:
+                    except Exception:
                         pass
 
                     log.error(f"Error parsing client registration response: {e}")

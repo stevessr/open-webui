@@ -1,15 +1,15 @@
-import requests
-import aiohttp
 import asyncio
 import logging
 import os
 import sys
 import time
-from typing import List, Dict, Any
 from contextlib import asynccontextmanager
+from typing import Any, Dict, List
 
+import aiohttp
+import requests
 from langchain_core.documents import Document
-from open_webui.env import SRC_LOG_LEVELS, GLOBAL_LOG_LEVEL
+from open_webui.env import GLOBAL_LOG_LEVEL, SRC_LOG_LEVELS
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)

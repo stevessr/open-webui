@@ -7,24 +7,15 @@ NOTE: This is an experimental implementation and may not fully comply with SCIM 
 
 import logging
 import uuid
-import time
-from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query, Header, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, ConfigDict
-
-from open_webui.models.users import Users, UserModel
-from open_webui.models.groups import Groups, GroupModel
-from open_webui.utils.auth import (
-    get_admin_user,
-    get_current_user,
-    decode_token,
-    get_verified_user,
-)
-from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import SRC_LOG_LEVELS
+from open_webui.models.groups import GroupModel, Groups
+from open_webui.models.users import UserModel, Users
+from pydantic import BaseModel, ConfigDict, Field
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MAIN"])

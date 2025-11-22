@@ -10,37 +10,38 @@ import random
 import re
 import time
 from datetime import datetime
-
 from typing import Optional, Union
-from urllib.parse import urlparse
-import aiohttp
+from urllib.parse import quote, urlparse
+
 import aiofiles
+import aiohttp
 from aiocache import cached
-from urllib.parse import quote
-
-from open_webui.models.chats import Chats
-from open_webui.models.users import UserModel
-
-from open_webui.env import (
-    ENABLE_FORWARD_USER_INFO_HEADERS,
-)
-
 from fastapi import (
+    APIRouter,
     Depends,
-    FastAPI,
     File,
     HTTPException,
     Request,
     UploadFile,
-    APIRouter,
 )
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, ConfigDict, validator
-from starlette.background import BackgroundTask
-
-
+from open_webui.config import (
+    UPLOAD_DIR,
+)
+from open_webui.constants import ERROR_MESSAGES
+from open_webui.env import (
+    AIOHTTP_CLIENT_SESSION_SSL,
+    AIOHTTP_CLIENT_TIMEOUT,
+    AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST,
+    BYPASS_MODEL_ACCESS_CONTROL,
+    ENABLE_FORWARD_USER_INFO_HEADERS,
+    MODELS_CACHE_TTL,
+    SRC_LOG_LEVELS,
+)
 from open_webui.models.models import Models
+from open_webui.models.users import UserModel
+from open_webui.utils.access_control import has_access
+from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.misc import (
     calculate_sha256,
 )
@@ -49,23 +50,8 @@ from open_webui.utils.payload import (
     apply_model_params_to_body_openai,
     apply_system_prompt_to_body,
 )
-from open_webui.utils.auth import get_admin_user, get_verified_user
-from open_webui.utils.access_control import has_access
-
-
-from open_webui.config import (
-    UPLOAD_DIR,
-)
-from open_webui.env import (
-    ENV,
-    SRC_LOG_LEVELS,
-    MODELS_CACHE_TTL,
-    AIOHTTP_CLIENT_SESSION_SSL,
-    AIOHTTP_CLIENT_TIMEOUT,
-    AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST,
-    BYPASS_MODEL_ACCESS_CONTROL,
-)
-from open_webui.constants import ERROR_MESSAGES
+from pydantic import BaseModel, ConfigDict, validator
+from starlette.background import BackgroundTask
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["OLLAMA"])
@@ -170,7 +156,7 @@ async def send_post_request(
                 log.error(f"Failed to parse error response: {e}")
                 raise HTTPException(
                     status_code=r.status,
-                    detail=f"Open WebUI: Server Connection Error",
+                    detail="Open WebUI: Server Connection Error",
                 )
 
         r.raise_for_status()  # Raises an error for bad responses (4xx, 5xx)
@@ -274,13 +260,13 @@ async def verify_connection(
                 data = await r.json()
                 return data
         except aiohttp.ClientError as e:
-            log.exception(f"Client error: {str(e)}")
+            log.exception(f"Client error: {e!s}")
             raise HTTPException(
                 status_code=500, detail="Open WebUI: Server Connection Error"
             )
         except Exception as e:
             log.exception(f"Unexpected error: {e}")
-            error_detail = f"Unexpected error: {str(e)}"
+            error_detail = f"Unexpected error: {e!s}"
             raise HTTPException(status_code=500, detail=error_detail)
 
 
@@ -1331,8 +1317,7 @@ async def generate_chat_completion(
     if isinstance(form_data, BaseModel):
         payload = {**form_data.model_dump(exclude_none=True)}
 
-    if "metadata" in payload:
-        del payload["metadata"]
+    payload.pop("metadata", None)
 
     model_id = payload["model"]
     model_info = Models.get_model_by_id(model_id)
@@ -1439,8 +1424,7 @@ async def generate_openai_completion(
         )
 
     payload = {**form_data.model_dump(exclude_none=True, exclude=["metadata"])}
-    if "metadata" in payload:
-        del payload["metadata"]
+    payload.pop("metadata", None)
 
     model_id = form_data.model
     if ":" not in model_id:
@@ -1518,8 +1502,7 @@ async def generate_openai_chat_completion(
         )
 
     payload = {**completion_form.model_dump(exclude_none=True, exclude=["metadata"])}
-    if "metadata" in payload:
-        del payload["metadata"]
+    payload.pop("metadata", None)
 
     model_id = completion_form.model
     if ":" not in model_id:
@@ -1794,11 +1777,11 @@ async def upload_model(
         nonlocal ollama_url
         try:
             total_size = os.path.getsize(file_path)
-            log.info(f"Total Model Size: {str(total_size)}")
+            log.info(f"Total Model Size: {total_size!s}")
 
             # --- P2: SSE progress + calculate sha256 hash asynchronously ---
             file_hash = await asyncio.to_thread(calculate_sha256, file_path, chunk_size)
-            log.info(f"Model Hash: {str(file_hash)}")
+            log.info(f"Model Hash: {file_hash!s}")
 
             async with aiofiles.open(file_path, "rb") as f:
                 bytes_read = 0
@@ -1819,7 +1802,7 @@ async def upload_model(
                     blob_response = await session.post(url, data=f)
 
                 if blob_response.ok:
-                    log.info(f"Uploaded to /api/blobs")
+                    log.info("Uploaded to /api/blobs")
                     os.remove(file_path)
 
                     model_name, ext = os.path.splitext(filename)
@@ -1837,7 +1820,7 @@ async def upload_model(
                         data=json.dumps(create_payload),
                     ) as create_resp:
                         if create_resp.ok:
-                            log.info(f"API SUCCESS!")
+                            log.info("API SUCCESS!")
                             done_msg = {
                                 "done": True,
                                 "blob": f"sha256:{file_hash}",

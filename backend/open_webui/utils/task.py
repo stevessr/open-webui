@@ -1,16 +1,13 @@
 import logging
 import math
 import re
-from datetime import datetime
-from typing import Optional, Any
 import uuid
+from datetime import datetime
+from typing import Any, Optional
 
-
-from open_webui.utils.misc import get_last_user_message, get_messages_content
-
-from open_webui.env import SRC_LOG_LEVELS
 from open_webui.config import DEFAULT_RAG_TEMPLATE
-
+from open_webui.env import SRC_LOG_LEVELS
+from open_webui.utils.misc import get_last_user_message, get_messages_content
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
@@ -66,7 +63,7 @@ def prompt_template(template: str, user: Optional[Any] = None) -> str:
                             < (birth_date.month, birth_date.day)
                         )
                     )
-                except Exception as e:
+                except Exception:
                     pass
 
             USER_VARIABLES = {

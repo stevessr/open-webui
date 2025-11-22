@@ -1,32 +1,25 @@
+import logging
+import os
+from typing import Optional
+
+import aiofiles
+import aiohttp
+import httpx
 from fastapi import (
+    APIRouter,
     Depends,
-    FastAPI,
     File,
     Form,
     HTTPException,
     Request,
     UploadFile,
     status,
-    APIRouter,
 )
-import aiohttp
-import os
-import logging
-import httpx
-import asyncio
-import aiofiles
-from pydantic import BaseModel
-from starlette.responses import FileResponse
-from typing import Optional
-
-from open_webui.env import SRC_LOG_LEVELS, AIOHTTP_CLIENT_SESSION_SSL
 from open_webui.config import CACHE_DIR
-from open_webui.constants import ERROR_MESSAGES
-
-
+from open_webui.env import AIOHTTP_CLIENT_SESSION_SSL, SRC_LOG_LEVELS
 from open_webui.routers.openai import get_all_models_responses
-
 from open_webui.utils.auth import get_admin_user
+from pydantic import BaseModel
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MAIN"])
@@ -97,7 +90,7 @@ async def process_pipeline_inlet_filter(request, payload, user, models):
                 ) as response:
                     payload = await response.json()
                     response.raise_for_status()
-            except aiohttp.ClientResponseError as e:
+            except aiohttp.ClientResponseError:
                 res = (
                     await response.json()
                     if response.content_type == "application/json"
@@ -150,7 +143,7 @@ async def process_pipeline_outlet_filter(request, payload, user, models):
                 ) as response:
                     payload = await response.json()
                     response.raise_for_status()
-            except aiohttp.ClientResponseError as e:
+            except aiohttp.ClientResponseError:
                 try:
                     res = (
                         await response.json()

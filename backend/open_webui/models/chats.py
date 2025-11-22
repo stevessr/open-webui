@@ -1,19 +1,26 @@
+import asyncio
 import logging
-import json
 import time
 import uuid
 from typing import Optional
-import asyncio
 
-from open_webui.internal.db import Base, get_db
-from open_webui.models.tags import TagModel, Tag, Tags
-from open_webui.models.folders import Folders
 from open_webui.env import SRC_LOG_LEVELS
-
+from open_webui.internal.db import Base, get_db
+from open_webui.models.folders import Folders
+from open_webui.models.tags import TagModel, Tags
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import BigInteger, Boolean, Column, String, Text, JSON, Index
-from sqlalchemy import or_, func, select, and_, text
-from sqlalchemy.sql import exists
+from sqlalchemy import (
+    JSON,
+    BigInteger,
+    Boolean,
+    Column,
+    Index,
+    String,
+    Text,
+    and_,
+    or_,
+    text,
+)
 from sqlalchemy.sql.expression import bindparam
 
 ####################
@@ -897,7 +904,7 @@ class ChatTable:
                 # SQLite JSON1 querying for tags within the meta JSON field
                 query = query.filter(
                     text(
-                        f"EXISTS (SELECT 1 FROM json_each(Chat.meta, '$.tags') WHERE json_each.value = :tag_id)"
+                        "EXISTS (SELECT 1 FROM json_each(Chat.meta, '$.tags') WHERE json_each.value = :tag_id)"
                     )
                 ).params(tag_id=tag_id)
             elif db.bind.dialect.name == "postgresql":
@@ -951,7 +958,7 @@ class ChatTable:
                 # SQLite JSON1 support for querying the tags inside the `meta` JSON field
                 query = query.filter(
                     text(
-                        f"EXISTS (SELECT 1 FROM json_each(Chat.meta, '$.tags') WHERE json_each.value = :tag_id)"
+                        "EXISTS (SELECT 1 FROM json_each(Chat.meta, '$.tags') WHERE json_each.value = :tag_id)"
                     )
                 ).params(tag_id=tag_id)
 

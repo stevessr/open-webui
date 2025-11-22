@@ -1,15 +1,13 @@
 # tasks.py
 import asyncio
-from typing import Dict
-from uuid import uuid4
 import json
 import logging
-from redis.asyncio import Redis
-from fastapi import Request
 from typing import Dict, List, Optional
+from uuid import uuid4
 
-from open_webui.env import SRC_LOG_LEVELS, REDIS_KEY_PREFIX
+from redis.asyncio import Redis
 
+from open_webui.env import REDIS_KEY_PREFIX, SRC_LOG_LEVELS
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MAIN"])

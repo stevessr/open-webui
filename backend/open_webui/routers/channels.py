@@ -1,46 +1,33 @@
-import json
 import logging
 from typing import Optional
 
-
-from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
-from pydantic import BaseModel
-
-
-from open_webui.socket.main import sio, get_user_ids_from_room
-from open_webui.models.users import Users, UserNameResponse
-
-from open_webui.models.groups import Groups
-from open_webui.models.channels import (
-    Channels,
-    ChannelModel,
-    ChannelForm,
-    ChannelResponse,
-)
-from open_webui.models.messages import (
-    Messages,
-    MessageModel,
-    MessageResponse,
-    MessageForm,
-)
-
-
-from open_webui.config import ENABLE_ADMIN_CHAT_ACCESS, ENABLE_ADMIN_EXPORT
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import SRC_LOG_LEVELS
-
-
+from open_webui.models.channels import (
+    ChannelForm,
+    ChannelModel,
+    ChannelResponse,
+    Channels,
+)
+from open_webui.models.messages import (
+    MessageForm,
+    MessageModel,
+    MessageResponse,
+    Messages,
+)
+from open_webui.models.users import UserNameResponse, Users
+from open_webui.socket.main import get_user_ids_from_room, sio
+from open_webui.utils.access_control import get_users_with_access, has_access
+from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.channels import extract_mentions, replace_mentions
+from open_webui.utils.chat import generate_chat_completion
 from open_webui.utils.models import (
     get_all_models,
     get_filtered_models,
 )
-from open_webui.utils.chat import generate_chat_completion
-
-
-from open_webui.utils.auth import get_admin_user, get_verified_user
-from open_webui.utils.access_control import has_access, get_users_with_access
 from open_webui.utils.webhook import post_webhook
-from open_webui.utils.channels import extract_mentions, replace_mentions
+from pydantic import BaseModel
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -294,7 +281,7 @@ async def model_response_handler(request, channel, message, user):
                             "parent_id": (
                                 message.parent_id if message.parent_id else message.id
                             ),
-                            "content": f"",
+                            "content": "",
                             "data": {},
                             "meta": {
                                 "model_id": model_id,

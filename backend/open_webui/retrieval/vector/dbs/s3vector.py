@@ -1,15 +1,16 @@
-from open_webui.retrieval.vector.utils import process_metadata
-from open_webui.retrieval.vector.main import (
-    VectorDBBase,
-    VectorItem,
-    GetResult,
-    SearchResult,
-)
+import logging
+from typing import Any, Dict, List, Optional, Union
+
+import boto3
 from open_webui.config import S3_VECTOR_BUCKET_NAME, S3_VECTOR_REGION
 from open_webui.env import SRC_LOG_LEVELS
-from typing import List, Optional, Dict, Any, Union
-import logging
-import boto3
+from open_webui.retrieval.vector.main import (
+    GetResult,
+    SearchResult,
+    VectorDBBase,
+    VectorItem,
+)
+from open_webui.retrieval.vector.utils import process_metadata
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
@@ -388,7 +389,7 @@ class S3VectorClient(VectorDBBase):
             )
 
         except Exception as e:
-            log.error(f"Error searching collection '{collection_name}': {str(e)}")
+            log.error(f"Error searching collection '{collection_name}': {e!s}")
             # Handle specific AWS exceptions
             if hasattr(e, "response") and "Error" in e.response:
                 error_code = e.response["Error"]["Code"]
@@ -396,7 +397,7 @@ class S3VectorClient(VectorDBBase):
                     log.warning(f"Collection '{collection_name}' not found")
                     return None
                 elif error_code == "ValidationException":
-                    log.error(f"Invalid query vector dimensions or parameters")
+                    log.error("Invalid query vector dimensions or parameters")
                     return None
                 elif error_code == "AccessDeniedException":
                     log.error(
@@ -475,7 +476,7 @@ class S3VectorClient(VectorDBBase):
                 return GetResult(ids=[[]], documents=[[]], metadatas=[[]])
 
         except Exception as e:
-            log.error(f"Error querying collection '{collection_name}': {str(e)}")
+            log.error(f"Error querying collection '{collection_name}': {e!s}")
             # Handle specific AWS exceptions
             if hasattr(e, "response") and "Error" in e.response:
                 error_code = e.response["Error"]["Code"]
@@ -580,7 +581,7 @@ class S3VectorClient(VectorDBBase):
 
         except Exception as e:
             log.error(
-                f"Error retrieving vectors from collection '{collection_name}': {str(e)}"
+                f"Error retrieving vectors from collection '{collection_name}': {e!s}"
             )
             # Handle specific AWS exceptions
             if hasattr(e, "response") and "Error" in e.response:

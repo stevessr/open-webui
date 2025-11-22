@@ -1,25 +1,24 @@
-from elasticsearch import Elasticsearch, BadRequestError
 from typing import Optional
-import ssl
-from elasticsearch.helpers import bulk, scan
 
-from open_webui.retrieval.vector.utils import process_metadata
-from open_webui.retrieval.vector.main import (
-    VectorDBBase,
-    VectorItem,
-    SearchResult,
-    GetResult,
-)
+from elasticsearch import Elasticsearch
+from elasticsearch.helpers import bulk, scan
 from open_webui.config import (
-    ELASTICSEARCH_URL,
-    ELASTICSEARCH_CA_CERTS,
     ELASTICSEARCH_API_KEY,
-    ELASTICSEARCH_USERNAME,
-    ELASTICSEARCH_PASSWORD,
+    ELASTICSEARCH_CA_CERTS,
     ELASTICSEARCH_CLOUD_ID,
     ELASTICSEARCH_INDEX_PREFIX,
+    ELASTICSEARCH_PASSWORD,
+    ELASTICSEARCH_URL,
+    ELASTICSEARCH_USERNAME,
     SSL_ASSERT_FINGERPRINT,
 )
+from open_webui.retrieval.vector.main import (
+    GetResult,
+    SearchResult,
+    VectorDBBase,
+    VectorItem,
+)
+from open_webui.retrieval.vector.utils import process_metadata
 
 
 class ElasticsearchClient(VectorDBBase):
@@ -47,7 +46,7 @@ class ElasticsearchClient(VectorDBBase):
 
     # Status: works
     def _get_index_name(self, dimension: int) -> str:
-        return f"{self.index_prefix}_d{str(dimension)}"
+        return f"{self.index_prefix}_d{dimension!s}"
 
     # Status: works
     def _scan_result_to_get_result(self, result) -> GetResult:
@@ -144,7 +143,7 @@ class ElasticsearchClient(VectorDBBase):
             result = self.client.count(index=f"{self.index_prefix}*", body=query_body)
 
             return result.body["count"] > 0
-        except Exception as e:
+        except Exception:
             return None
 
     def delete_collection(self, collection_name: str):
@@ -207,7 +206,7 @@ class ElasticsearchClient(VectorDBBase):
 
             return self._result_to_get_result(result)
 
-        except Exception as e:
+        except Exception:
             return None
 
     # Status: works

@@ -1,50 +1,37 @@
+import asyncio
+import copy
 import inspect
+import json
 import logging
 import re
-import inspect
-import aiohttp
-import asyncio
-import yaml
-import json
-
-from pydantic import BaseModel
-from pydantic.fields import FieldInfo
+from functools import partial, update_wrapper
 from typing import (
     Any,
     Awaitable,
     Callable,
-    get_type_hints,
-    get_args,
-    get_origin,
     Dict,
     List,
-    Tuple,
-    Union,
     Optional,
-    Type,
+    Tuple,
+    get_type_hints,
 )
-from functools import update_wrapper, partial
 
-
+import aiohttp
+import yaml
 from fastapi import Request
-from pydantic import BaseModel, Field, create_model
-
 from langchain_core.utils.function_calling import (
     convert_to_openai_function as convert_pydantic_model_to_openai_function_spec,
 )
-
-
+from open_webui.env import (
+    AIOHTTP_CLIENT_SESSION_TOOL_SERVER_SSL,
+    AIOHTTP_CLIENT_TIMEOUT,
+    AIOHTTP_CLIENT_TIMEOUT_TOOL_SERVER_DATA,
+    SRC_LOG_LEVELS,
+)
 from open_webui.models.tools import Tools
 from open_webui.models.users import UserModel
 from open_webui.utils.plugin import load_tool_module_by_id
-from open_webui.env import (
-    SRC_LOG_LEVELS,
-    AIOHTTP_CLIENT_TIMEOUT,
-    AIOHTTP_CLIENT_TIMEOUT_TOOL_SERVER_DATA,
-    AIOHTTP_CLIENT_SESSION_TOOL_SERVER_SSL,
-)
-
-import copy
+from pydantic import BaseModel, Field, create_model
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])

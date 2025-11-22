@@ -1,15 +1,11 @@
-from datetime import datetime
-from io import BytesIO
-from pathlib import Path
-from typing import Dict, Any, List
-from html import escape
-
-from markdown import markdown
-
 import site
-from fpdf import FPDF
+from datetime import datetime
+from html import escape
+from pathlib import Path
+from typing import Any, Dict, List
 
-from open_webui.env import STATIC_DIR, FONTS_DIR
+from fpdf import FPDF
+from open_webui.env import FONTS_DIR, STATIC_DIR
 from open_webui.models.chats import ChatTitleMessagesForm
 
 
@@ -36,7 +32,7 @@ class PDFGenerator:
         try:
             date_time = datetime.fromtimestamp(timestamp)
             return date_time.strftime("%Y-%m-%d, %H:%M:%S")
-        except (ValueError, TypeError) as e:
+        except (ValueError, TypeError):
             # Log the error if necessary
             return ""
 

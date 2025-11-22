@@ -18,35 +18,32 @@ high-cardinality label sets.
 from __future__ import annotations
 
 import time
-from typing import Dict, List, Sequence, Any
 from base64 import b64encode
+from typing import Dict, List, Sequence
 
 from fastapi import FastAPI, Request
+from open_webui.env import (
+    OTEL_METRICS_BASIC_AUTH_PASSWORD,
+    OTEL_METRICS_BASIC_AUTH_USERNAME,
+    OTEL_METRICS_EXPORTER_OTLP_ENDPOINT,
+    OTEL_METRICS_EXPORTER_OTLP_INSECURE,
+    OTEL_METRICS_OTLP_SPAN_EXPORTER,
+)
+from open_webui.models.users import Users
+from open_webui.socket.main import get_active_user_ids
 from opentelemetry import metrics
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
     OTLPMetricExporter,
 )
-
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     OTLPMetricExporter as OTLPHttpMetricExporter,
 )
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.view import View
 from opentelemetry.sdk.metrics.export import (
     PeriodicExportingMetricReader,
 )
+from opentelemetry.sdk.metrics.view import View
 from opentelemetry.sdk.resources import Resource
-
-from open_webui.env import (
-    OTEL_SERVICE_NAME,
-    OTEL_METRICS_EXPORTER_OTLP_ENDPOINT,
-    OTEL_METRICS_BASIC_AUTH_USERNAME,
-    OTEL_METRICS_BASIC_AUTH_PASSWORD,
-    OTEL_METRICS_OTLP_SPAN_EXPORTER,
-    OTEL_METRICS_EXPORTER_OTLP_INSECURE,
-)
-from open_webui.socket.main import get_active_user_ids
-from open_webui.models.users import Users
 
 _EXPORT_INTERVAL_MILLIS = 10_000  # 10 seconds
 

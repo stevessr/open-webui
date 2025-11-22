@@ -1,18 +1,16 @@
-import time
-import logging
-import uuid
-from typing import Optional, List
 import base64
 import hashlib
 import json
+import logging
+import time
+import uuid
+from typing import List, Optional
 
 from cryptography.fernet import Fernet
-
+from open_webui.env import OAUTH_SESSION_TOKEN_ENCRYPTION_KEY, SRC_LOG_LEVELS
 from open_webui.internal.db import Base, get_db
-from open_webui.env import SRC_LOG_LEVELS, OAUTH_SESSION_TOKEN_ENCRYPTION_KEY
-
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import BigInteger, Column, String, Text, Index
+from sqlalchemy import BigInteger, Column, Index, Text
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])

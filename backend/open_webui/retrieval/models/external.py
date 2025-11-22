@@ -1,12 +1,10 @@
 import logging
-import requests
-from typing import Optional, List, Tuple
+from typing import List, Optional, Tuple
 from urllib.parse import quote
 
-
+import requests
 from open_webui.env import ENABLE_FORWARD_USER_INFO_HEADERS, SRC_LOG_LEVELS
 from open_webui.retrieval.models.base_reranker import BaseReranker
-
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])

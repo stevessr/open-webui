@@ -1,33 +1,28 @@
-from typing import List, Optional
-from pydantic import BaseModel
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
 import logging
+from typing import List, Optional
 
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from open_webui.config import BYPASS_ADMIN_ACCESS_CONTROL
+from open_webui.constants import ERROR_MESSAGES
+from open_webui.env import SRC_LOG_LEVELS
+from open_webui.models.files import FileMetadataResponse, FileModel, Files
 from open_webui.models.knowledge import (
-    Knowledges,
     KnowledgeForm,
     KnowledgeResponse,
+    Knowledges,
     KnowledgeUserResponse,
 )
-from open_webui.models.files import Files, FileModel, FileMetadataResponse
+from open_webui.models.models import ModelForm, Models
 from open_webui.retrieval.vector.factory import VECTOR_DB_CLIENT
 from open_webui.routers.retrieval import (
-    process_file,
-    ProcessFileForm,
-    process_files_batch,
     BatchProcessFilesForm,
+    ProcessFileForm,
+    process_file,
+    process_files_batch,
 )
-from open_webui.storage.provider import Storage
-
-from open_webui.constants import ERROR_MESSAGES
-from open_webui.utils.auth import get_verified_user
 from open_webui.utils.access_control import has_access, has_permission
-
-
-from open_webui.env import SRC_LOG_LEVELS
-from open_webui.config import BYPASS_ADMIN_ACCESS_CONTROL
-from open_webui.models.models import Models, ModelForm
-
+from open_webui.utils.auth import get_verified_user
+from pydantic import BaseModel
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -217,7 +212,7 @@ async def reindex_knowledge_files(request: Request, user=Depends(get_verified_us
                         collection_name=knowledge_base.id
                     )
             except Exception as e:
-                log.error(f"Error deleting collection {knowledge_base.id}: {str(e)}")
+                log.error(f"Error deleting collection {knowledge_base.id}: {e!s}")
                 continue  # Skip, don't raise
 
             failed_files = []
@@ -232,13 +227,13 @@ async def reindex_knowledge_files(request: Request, user=Depends(get_verified_us
                     )
                 except Exception as e:
                     log.error(
-                        f"Error processing file {file.filename} (ID: {file.id}): {str(e)}"
+                        f"Error processing file {file.filename} (ID: {file.id}): {e!s}"
                     )
                     failed_files.append({"file_id": file.id, "error": str(e)})
                     continue
 
         except Exception as e:
-            log.error(f"Error processing knowledge base {knowledge_base.id}: {str(e)}")
+            log.error(f"Error processing knowledge base {knowledge_base.id}: {e!s}")
             # Don't raise, just continue
             continue
 

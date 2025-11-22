@@ -1,63 +1,58 @@
-import re
-import uuid
-import time
 import datetime
 import logging
-from aiohttp import ClientSession
+import re
+import time
+import uuid
+from ssl import CERT_NONE, CERT_REQUIRED, PROTOCOL_TLS
+from typing import Optional
 
+from aiohttp import ClientSession
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import JSONResponse, Response
+from ldap3 import NONE, Connection, Server, Tls
+from ldap3.utils.conv import escape_filter_chars
+from open_webui.config import OPENID_PROVIDER_URL
+from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
+from open_webui.env import (
+    ENABLE_INITIAL_ADMIN_SIGNUP,
+    SRC_LOG_LEVELS,
+    WEBUI_AUTH,
+    WEBUI_AUTH_COOKIE_SAME_SITE,
+    WEBUI_AUTH_COOKIE_SECURE,
+    WEBUI_AUTH_SIGNOUT_REDIRECT_URL,
+    WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
+    WEBUI_AUTH_TRUSTED_GROUPS_HEADER,
+    WEBUI_AUTH_TRUSTED_NAME_HEADER,
+)
 from open_webui.models.auths import (
     AddUserForm,
     ApiKey,
     Auths,
-    Token,
     LdapForm,
     SigninForm,
     SigninResponse,
     SignupForm,
+    Token,
     UpdatePasswordForm,
     UserResponse,
 )
-from open_webui.models.users import Users, UpdateProfileForm
 from open_webui.models.groups import Groups
 from open_webui.models.oauth_sessions import OAuthSessions
-
-from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
-from open_webui.env import (
-    WEBUI_AUTH,
-    WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
-    WEBUI_AUTH_TRUSTED_NAME_HEADER,
-    WEBUI_AUTH_TRUSTED_GROUPS_HEADER,
-    WEBUI_AUTH_COOKIE_SAME_SITE,
-    WEBUI_AUTH_COOKIE_SECURE,
-    WEBUI_AUTH_SIGNOUT_REDIRECT_URL,
-    ENABLE_INITIAL_ADMIN_SIGNUP,
-    SRC_LOG_LEVELS,
-)
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import RedirectResponse, Response, JSONResponse
-from open_webui.config import OPENID_PROVIDER_URL, ENABLE_OAUTH_SIGNUP, ENABLE_LDAP
-from pydantic import BaseModel
-
-from open_webui.utils.misc import parse_duration, validate_email_format
+from open_webui.models.users import UpdateProfileForm, Users
+from open_webui.utils.access_control import get_permissions
 from open_webui.utils.auth import (
-    decode_token,
     create_api_key,
     create_token,
+    decode_token,
     get_admin_user,
-    get_verified_user,
     get_current_user,
-    get_password_hash,
     get_http_authorization_cred,
+    get_password_hash,
+    get_verified_user,
 )
+from open_webui.utils.misc import parse_duration, validate_email_format
 from open_webui.utils.webhook import post_webhook
-from open_webui.utils.access_control import get_permissions
-
-from typing import Optional, List
-
-from ssl import CERT_NONE, CERT_REQUIRED, PROTOCOL_TLS
-
-from ldap3 import Server, Connection, NONE, Tls
-from ldap3.utils.conv import escape_filter_chars
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -217,7 +212,7 @@ async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
             ciphers=LDAP_CIPHERS,
         )
     except Exception as e:
-        log.error(f"TLS configuration error: {str(e)}")
+        log.error(f"TLS configuration error: {e!s}")
         raise HTTPException(400, detail="Failed to configure TLS for LDAP connection.")
 
     try:
@@ -382,7 +377,7 @@ async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
                 except HTTPException:
                     raise
                 except Exception as err:
-                    log.error(f"LDAP user creation error: {str(err)}")
+                    log.error(f"LDAP user creation error: {err!s}")
                     raise HTTPException(
                         500, detail="Internal error occurred during LDAP user creation."
                     )
@@ -452,7 +447,7 @@ async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
         else:
             raise HTTPException(400, "User record mismatch.")
     except Exception as e:
-        log.error(f"LDAP authentication error: {str(e)}")
+        log.error(f"LDAP authentication error: {e!s}")
         raise HTTPException(400, detail="LDAP authentication failed.")
 
 
@@ -678,7 +673,7 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
         else:
             raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
     except Exception as err:
-        log.error(f"Signup error: {str(err)}")
+        log.error(f"Signup error: {err!s}")
         raise HTTPException(500, detail="An internal error occurred during signup.")
 
 
@@ -726,7 +721,7 @@ async def signout(request: Request, response: Response):
                             raise Exception("Failed to fetch OpenID configuration")
 
             except Exception as e:
-                log.error(f"OpenID signout error: {str(e)}")
+                log.error(f"OpenID signout error: {e!s}")
                 raise HTTPException(
                     status_code=500,
                     detail="Failed to sign out from the OpenID provider.",
@@ -787,7 +782,7 @@ async def add_user(form_data: AddUserForm, user=Depends(get_admin_user)):
         else:
             raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
     except Exception as err:
-        log.error(f"Add user error: {str(err)}")
+        log.error(f"Add user error: {err!s}")
         raise HTTPException(
             500, detail="An internal error occurred while adding the user."
         )

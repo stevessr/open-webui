@@ -1,13 +1,10 @@
 import asyncio
-from typing import Optional
 from contextlib import AsyncExitStack
+from typing import Optional
 
 import anyio
-
 from mcp import ClientSession
-from mcp.client.auth import OAuthClientProvider, TokenStorage
 from mcp.client.streamable_http import streamablehttp_client
-from mcp.shared.auth import OAuthClientInformationFull, OAuthClientMetadata, OAuthToken
 
 
 class MCPClient:

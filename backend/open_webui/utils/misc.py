@@ -1,16 +1,15 @@
+import collections.abc
 import hashlib
+import json
+import logging
 import re
 import threading
 import time
 import uuid
-import logging
 from datetime import timedelta
 from pathlib import Path
-from typing import Callable, Optional
-import json
+from typing import Optional
 
-
-import collections.abc
 from open_webui.env import SRC_LOG_LEVELS
 
 log = logging.getLogger(__name__)
@@ -215,7 +214,7 @@ def append_or_update_assistant_message(content: str, messages: list[dict]):
 
 def openai_chat_message_template(model: str):
     return {
-        "id": f"{model}-{str(uuid.uuid4())}",
+        "id": f"{model}-{uuid.uuid4()!s}",
         "created": int(time.time()),
         "model": model,
         "choices": [{"index": 0, "logprobs": None, "finish_reason": None}],

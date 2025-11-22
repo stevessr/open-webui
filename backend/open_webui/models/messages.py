@@ -1,27 +1,18 @@
-import json
 import time
 import uuid
 from typing import Optional
 
-from sqlalchemy.orm import relationship, joinedload, selectinload
-from sqlalchemy import (
-    ForeignKey,
-    BigInteger,
-    Boolean,
-    Column,
-    String,
-    Text,
-    JSON,
-)
-
 from open_webui.internal.db import Base, get_db
-from open_webui.models.users import Users, UserNameResponse, User
-
-
+from open_webui.models.users import UserNameResponse, Users
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import BigInteger, Boolean, Column, String, Text, JSON
-from sqlalchemy import or_, func, select, and_, text
-from sqlalchemy.sql import exists
+from sqlalchemy import (
+    JSON,
+    BigInteger,
+    Column,
+    ForeignKey,
+    Text,
+)
+from sqlalchemy.orm import joinedload, selectinload
 
 ####################
 # Message DB Schema

@@ -1,19 +1,13 @@
-import json
 import time
 import uuid
 from typing import Optional
-from functools import lru_cache
 
 from open_webui.internal.db import Base, get_db
 from open_webui.models.groups import Groups
+from open_webui.models.users import UserResponse
 from open_webui.utils.access_control import has_access
-from open_webui.models.users import Users, UserResponse
-
-
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import BigInteger, Boolean, Column, String, Text, JSON
-from sqlalchemy import or_, func, select, and_, text
-from sqlalchemy.sql import exists
+from sqlalchemy import JSON, BigInteger, Column, Text
 
 ####################
 # Note DB Schema

@@ -1,11 +1,10 @@
-import logging
-import ftfy
-import sys
 import json
-import httpx
-import asyncio
-import aiofiles
+import logging
+import sys
 
+import aiofiles
+import ftfy
+import httpx
 from azure.identity import DefaultAzureCredential
 from langchain_community.document_loaders import (
     AzureAIDocumentIntelligenceLoader,
@@ -21,18 +20,13 @@ from langchain_community.document_loaders import (
     UnstructuredPowerPointLoader,
     UnstructuredRSTLoader,
     UnstructuredXMLLoader,
-    YoutubeLoader,
 )
 from langchain_core.documents import Document
-
-from open_webui.retrieval.loaders.external_document import ExternalDocumentLoader
-
-from open_webui.retrieval.loaders.mistral import MistralLoader
+from open_webui.env import GLOBAL_LOG_LEVEL, SRC_LOG_LEVELS
 from open_webui.retrieval.loaders.datalab_marker import DatalabMarkerLoader
+from open_webui.retrieval.loaders.external_document import ExternalDocumentLoader
 from open_webui.retrieval.loaders.mineru import MinerULoader
-
-
-from open_webui.env import SRC_LOG_LEVELS, GLOBAL_LOG_LEVEL
+from open_webui.retrieval.loaders.mistral import MistralLoader
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)

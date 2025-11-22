@@ -1,45 +1,32 @@
-import logging
-import uuid
-import jwt
 import base64
-import hmac
 import hashlib
+import hmac
+import json
+import logging
 import os
+import uuid
+from datetime import datetime, timedelta
+from typing import Optional, Union
+
 import bcrypt
 import httpx
-import asyncio
-
+import jwt
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from cryptography.hazmat.primitives.asymmetric import ed25519
-from cryptography.hazmat.primitives import serialization
-import json
-
-
-from datetime import datetime, timedelta
-import pytz
-from pytz import UTC
-from typing import Optional, Union, List, Dict
-
-from opentelemetry import trace
-
-from open_webui.models.users import Users
-
-from open_webui.constants import ERROR_MESSAGES
-
-from open_webui.env import (
-    OFFLINE_MODE,
-    LICENSE_BLOB,
-    pk,
-    WEBUI_SECRET_KEY,
-    TRUSTED_SIGNATURE_KEY,
-    STATIC_DIR,
-    SRC_LOG_LEVELS,
-    WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
-)
-
 from fastapi import BackgroundTasks, Depends, HTTPException, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-
+from open_webui.constants import ERROR_MESSAGES
+from open_webui.env import (
+    LICENSE_BLOB,
+    SRC_LOG_LEVELS,
+    STATIC_DIR,
+    TRUSTED_SIGNATURE_KEY,
+    WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
+    WEBUI_SECRET_KEY,
+    pk,
+)
+from open_webui.models.users import Users
+from opentelemetry import trace
+from pytz import UTC
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["OAUTH"])
@@ -270,7 +257,7 @@ def get_current_user(
     try:
         try:
             data = decode_token(token)
-        except Exception as e:
+        except Exception:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token",

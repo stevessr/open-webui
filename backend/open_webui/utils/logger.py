@@ -4,17 +4,16 @@ import sys
 from typing import TYPE_CHECKING
 
 from loguru import logger
-from opentelemetry import trace
 from open_webui.env import (
-    AUDIT_UVICORN_LOGGER_NAMES,
     AUDIT_LOG_FILE_ROTATION_SIZE,
     AUDIT_LOG_LEVEL,
     AUDIT_LOGS_FILE_PATH,
-    GLOBAL_LOG_LEVEL,
+    AUDIT_UVICORN_LOGGER_NAMES,
     ENABLE_OTEL,
     ENABLE_OTEL_LOGS,
+    GLOBAL_LOG_LEVEL,
 )
-
+from opentelemetry import trace
 
 if TYPE_CHECKING:
     from loguru import Record
@@ -143,7 +142,7 @@ def start_logger():
                 filter=lambda record: record["extra"].get("auditable") is True,
             )
         except Exception as e:
-            logger.error(f"Failed to initialize audit log file handler: {str(e)}")
+            logger.error(f"Failed to initialize audit log file handler: {e!s}")
 
     logging.basicConfig(
         handlers=[InterceptHandler()], level=GLOBAL_LOG_LEVEL, force=True

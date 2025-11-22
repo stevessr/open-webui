@@ -1,16 +1,16 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Request
 
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from open_webui.config import BYPASS_ADMIN_ACCESS_CONTROL
+from open_webui.constants import ERROR_MESSAGES
 from open_webui.models.prompts import (
     PromptForm,
-    PromptUserResponse,
     PromptModel,
     Prompts,
+    PromptUserResponse,
 )
-from open_webui.constants import ERROR_MESSAGES
-from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.access_control import has_access, has_permission
-from open_webui.config import BYPASS_ADMIN_ACCESS_CONTROL
+from open_webui.utils.auth import get_verified_user
 
 router = APIRouter()
 

@@ -1,49 +1,38 @@
+import asyncio
+import hashlib
 import logging
 import os
-from typing import Optional, Union
-
-import hashlib
-from concurrent.futures import ThreadPoolExecutor
-import time
 import re
-import httpx
-import asyncio
-
+from concurrent.futures import ThreadPoolExecutor
+from typing import Optional, Union
 from urllib.parse import quote
+
+import httpx
 from huggingface_hub import snapshot_download
 from langchain.retrievers import ContextualCompressionRetriever, EnsembleRetriever
 from langchain_community.retrievers import BM25Retriever
 from langchain_core.documents import Document
-
-from open_webui.config import VECTOR_DB
-from open_webui.retrieval.vector.factory import VECTOR_DB_CLIENT
-
-
-from open_webui.models.users import UserModel
-from open_webui.models.files import Files
-from open_webui.models.knowledge import Knowledges
-
-from open_webui.models.chats import Chats
-from open_webui.models.notes import Notes
-
-from open_webui.retrieval.vector.main import GetResult
-from open_webui.utils.access_control import has_access
-from open_webui.utils.misc import get_message_list
-
-from open_webui.retrieval.web.utils import get_web_loader
-from open_webui.retrieval.loaders.youtube import YoutubeLoader
-
-
-from open_webui.env import (
-    SRC_LOG_LEVELS,
-    OFFLINE_MODE,
-    ENABLE_FORWARD_USER_INFO_HEADERS,
-)
 from open_webui.config import (
-    RAG_EMBEDDING_QUERY_PREFIX,
     RAG_EMBEDDING_CONTENT_PREFIX,
     RAG_EMBEDDING_PREFIX_FIELD_NAME,
+    RAG_EMBEDDING_QUERY_PREFIX,
 )
+from open_webui.env import (
+    ENABLE_FORWARD_USER_INFO_HEADERS,
+    OFFLINE_MODE,
+    SRC_LOG_LEVELS,
+)
+from open_webui.models.chats import Chats
+from open_webui.models.files import Files
+from open_webui.models.knowledge import Knowledges
+from open_webui.models.notes import Notes
+from open_webui.models.users import UserModel
+from open_webui.retrieval.loaders.youtube import YoutubeLoader
+from open_webui.retrieval.vector.factory import VECTOR_DB_CLIENT
+from open_webui.retrieval.vector.main import GetResult
+from open_webui.retrieval.web.utils import get_web_loader
+from open_webui.utils.access_control import has_access
+from open_webui.utils.misc import get_message_list
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
@@ -756,7 +745,7 @@ def get_sources_from_items(
                                 r=r,
                                 hybrid_bm25_weight=hybrid_bm25_weight,
                             )
-                        except Exception as e:
+                        except Exception:
                             log.debug(
                                 "Error when using hybrid search, using non hybrid search as fallback."
                             )
@@ -789,7 +778,7 @@ def get_sources_from_items(
                         "document": query_result["documents"][0],
                         "metadata": query_result["metadatas"][0],
                     }
-                    if "distances" in query_result and query_result["distances"]:
+                    if query_result.get("distances"):
                         source["distances"] = query_result["distances"][0]
 
                     sources.append(source)
@@ -818,8 +807,8 @@ def get_model_path(model: str, update_model: bool = False):
     # Inspiration from upstream sentence_transformers
     if (
         os.path.exists(model)
-        or ("\\" in model or model.count("/") > 1)
-        and local_files_only
+        or (("\\" in model or model.count("/") > 1)
+        and local_files_only)
     ):
         # If fully qualified path exists, return input, else set repo_id
         return model

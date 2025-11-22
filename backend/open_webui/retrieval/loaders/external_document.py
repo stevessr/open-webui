@@ -1,13 +1,14 @@
-import httpx
-import logging, os
-from typing import Iterator, List, Union
+import logging
+import os
+from typing import List
 from urllib.parse import quote
-import aiofiles
 
+import aiofiles
+import httpx
 from langchain_core.document_loaders import BaseLoader
 from langchain_core.documents import Document
-from open_webui.utils.headers import include_user_info_headers
 from open_webui.env import SRC_LOG_LEVELS
+from open_webui.utils.headers import include_user_info_headers
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])

@@ -1,33 +1,26 @@
 import logging
-import copy
-from fastapi import APIRouter, Depends, Request, HTTPException
-from pydantic import BaseModel, ConfigDict
-import aiohttp
-
 from typing import Optional
 
+import aiohttp
+from fastapi import APIRouter, Depends, HTTPException, Request
+from mcp.shared.auth import OAuthMetadata
+from open_webui.config import BannerModel, get_config, save_config
+from open_webui.env import SRC_LOG_LEVELS
 from open_webui.utils.auth import get_admin_user, get_verified_user
-from open_webui.config import get_config, save_config
-from open_webui.config import BannerModel
-
+from open_webui.utils.mcp.client import MCPClient
+from open_webui.utils.oauth import (
+    OAuthClientInformationFull,
+    decrypt_data,
+    encrypt_data,
+    get_discovery_urls,
+    get_oauth_client_info_with_dynamic_client_registration,
+)
 from open_webui.utils.tools import (
     get_tool_server_data,
     get_tool_server_url,
     set_tool_servers,
 )
-from open_webui.utils.mcp.client import MCPClient
-from open_webui.models.oauth_sessions import OAuthSessions
-
-from open_webui.env import SRC_LOG_LEVELS
-
-from open_webui.utils.oauth import (
-    get_discovery_urls,
-    get_oauth_client_info_with_dynamic_client_registration,
-    encrypt_data,
-    decrypt_data,
-    OAuthClientInformationFull,
-)
-from mcp.shared.auth import OAuthMetadata
+from pydantic import BaseModel, ConfigDict
 
 router = APIRouter()
 
@@ -130,7 +123,7 @@ async def register_oauth_client(
         log.debug(f"Failed to register OAuth client: {e}")
         raise HTTPException(
             status_code=400,
-            detail=f"Failed to register OAuth client",
+            detail="Failed to register OAuth client",
         )
 
 
@@ -276,7 +269,7 @@ async def verify_tool_servers_config(
                                     user.id,
                                     request.cookies.get("oauth_session_id", None),
                                 )
-                        except Exception as e:
+                        except Exception:
                             pass
 
                     if token:
@@ -292,7 +285,7 @@ async def verify_tool_servers_config(
                     log.debug(f"Failed to create MCP client: {e}")
                     raise HTTPException(
                         status_code=400,
-                        detail=f"Failed to create MCP client",
+                        detail="Failed to create MCP client",
                     )
                 finally:
                     if client:
@@ -310,7 +303,7 @@ async def verify_tool_servers_config(
                             user.id,
                             request.cookies.get("oauth_session_id", None),
                         )
-                except Exception as e:
+                except Exception:
                     pass
 
             url = get_tool_server_url(form_data.url, form_data.path)
@@ -321,7 +314,7 @@ async def verify_tool_servers_config(
         log.debug(f"Failed to connect to the tool server: {e}")
         raise HTTPException(
             status_code=400,
-            detail=f"Failed to connect to the tool server",
+            detail="Failed to connect to the tool server",
         )
 
 

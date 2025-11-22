@@ -2,28 +2,21 @@ import json
 import logging
 import os
 import shutil
-import base64
-import redis
-
 from datetime import datetime
 from pathlib import Path
-from typing import Generic, Union, Optional, TypeVar
+from typing import Generic, Optional, TypeVar, Union
 from urllib.parse import urlparse
 
+import redis
 import requests
+from authlib.integrations.starlette_client import OAuth
 from pydantic import BaseModel
 from sqlalchemy import JSON, Column, DateTime, Integer, func
-from authlib.integrations.starlette_client import OAuth
-
 
 from open_webui.env import (
     DATA_DIR,
     DATABASE_URL,
     ENV,
-    REDIS_URL,
-    REDIS_KEY_PREFIX,
-    REDIS_SENTINEL_HOSTS,
-    REDIS_SENTINEL_PORT,
     FRONTEND_BUILD_DIR,
     OFFLINE_MODE,
     OPEN_WEBUI_DIR,
@@ -794,7 +787,7 @@ def load_oauth_providers():
             f"⚠️  OAuth providers configured ({provider_list}) but OPENID_PROVIDER_URL not set - logout will not work!"
         )
         log.warning(
-            f"Set OPENID_PROVIDER_URL to your OAuth provider's OpenID Connect discovery endpoint to fix logout functionality."
+            "Set OPENID_PROVIDER_URL to your OAuth provider's OpenID Connect discovery endpoint to fix logout functionality."
         )
 
 
@@ -812,9 +805,9 @@ try:
             if item.is_file() or item.is_symlink():
                 try:
                     item.unlink()
-                except Exception as e:
+                except Exception:
                     pass
-except Exception as e:
+except Exception:
     pass
 
 for file_path in (FRONTEND_BUILD_DIR / "static").glob("**/*"):

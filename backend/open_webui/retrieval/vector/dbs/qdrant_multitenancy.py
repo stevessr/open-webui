@@ -1,17 +1,16 @@
 import logging
-from typing import Optional, Tuple, List, Dict, Any
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
-import grpc
 from open_webui.config import (
     QDRANT_API_KEY,
+    QDRANT_COLLECTION_PREFIX,
     QDRANT_GRPC_PORT,
+    QDRANT_HNSW_M,
     QDRANT_ON_DISK,
     QDRANT_PREFER_GRPC,
-    QDRANT_URI,
-    QDRANT_COLLECTION_PREFIX,
     QDRANT_TIMEOUT,
-    QDRANT_HNSW_M,
+    QDRANT_URI,
 )
 from open_webui.env import SRC_LOG_LEVELS
 from open_webui.retrieval.vector.main import (
@@ -21,7 +20,6 @@ from open_webui.retrieval.vector.main import (
     VectorItem,
 )
 from qdrant_client import QdrantClient as Qclient
-from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.http.models import PointStruct
 from qdrant_client.models import models
 

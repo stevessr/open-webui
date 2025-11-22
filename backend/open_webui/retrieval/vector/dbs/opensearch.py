@@ -1,21 +1,21 @@
-from opensearchpy import OpenSearch
-from opensearchpy.helpers import bulk
 from typing import Optional
 
-from open_webui.retrieval.vector.utils import process_metadata
+from open_webui.config import (
+    OPENSEARCH_CERT_VERIFY,
+    OPENSEARCH_PASSWORD,
+    OPENSEARCH_SSL,
+    OPENSEARCH_URI,
+    OPENSEARCH_USERNAME,
+)
 from open_webui.retrieval.vector.main import (
+    GetResult,
+    SearchResult,
     VectorDBBase,
     VectorItem,
-    SearchResult,
-    GetResult,
 )
-from open_webui.config import (
-    OPENSEARCH_URI,
-    OPENSEARCH_SSL,
-    OPENSEARCH_CERT_VERIFY,
-    OPENSEARCH_USERNAME,
-    OPENSEARCH_PASSWORD,
-)
+from open_webui.retrieval.vector.utils import process_metadata
+from opensearchpy import OpenSearch
+from opensearchpy.helpers import bulk
 
 
 class OpenSearchClient(VectorDBBase):
@@ -142,7 +142,7 @@ class OpenSearchClient(VectorDBBase):
 
             return self._result_to_search_result(result)
 
-        except Exception as e:
+        except Exception:
             return None
 
     def query(
@@ -172,7 +172,7 @@ class OpenSearchClient(VectorDBBase):
 
             return self._result_to_get_result(result)
 
-        except Exception as e:
+        except Exception:
             return None
 
     def _create_index_if_not_exists(self, collection_name: str, dimension: int):

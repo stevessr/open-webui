@@ -1,26 +1,26 @@
-import os
 import json
 import logging
+import os
 from contextlib import contextmanager
 from typing import Any, Optional
 
-from open_webui.internal.wrappers import register_connection
 from open_webui.env import (
-    OPEN_WEBUI_DIR,
-    DATABASE_URL,
-    DATABASE_SCHEMA,
-    SRC_LOG_LEVELS,
+    DATABASE_ENABLE_SQLITE_WAL,
     DATABASE_POOL_MAX_OVERFLOW,
     DATABASE_POOL_RECYCLE,
     DATABASE_POOL_SIZE,
     DATABASE_POOL_TIMEOUT,
-    DATABASE_ENABLE_SQLITE_WAL,
+    DATABASE_SCHEMA,
+    DATABASE_URL,
+    OPEN_WEBUI_DIR,
+    SRC_LOG_LEVELS,
 )
+from open_webui.internal.wrappers import register_connection
 from peewee_migrate import Router
-from sqlalchemy import Dialect, create_engine, MetaData, event, types
+from sqlalchemy import Dialect, MetaData, create_engine, event, types
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.pool import QueuePool, NullPool
+from sqlalchemy.pool import NullPool, QueuePool
 from sqlalchemy.sql.type_api import _T
 from typing_extensions import Self
 

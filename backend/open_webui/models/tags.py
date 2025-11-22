@@ -1,15 +1,11 @@
-import logging
-import time
-import uuid
-from typing import Optional
 import asyncio
-
-from open_webui.internal.db import Base, get_db
-
+import logging
+from typing import Optional
 
 from open_webui.env import SRC_LOG_LEVELS
+from open_webui.internal.db import Base, get_db
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import BigInteger, Column, String, JSON, PrimaryKeyConstraint, Index
+from sqlalchemy import JSON, Column, Index, PrimaryKeyConstraint, String
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])

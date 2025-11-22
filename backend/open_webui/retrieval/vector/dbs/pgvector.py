@@ -1,52 +1,49 @@
-from typing import Optional, List, Dict, Any
-import logging
 import json
+import logging
+from typing import Any, Dict, List, Optional
+
+from open_webui.config import (
+    PGVECTOR_CREATE_EXTENSION,
+    PGVECTOR_DB_URL,
+    PGVECTOR_INITIALIZE_MAX_VECTOR_LENGTH,
+    PGVECTOR_PGCRYPTO,
+    PGVECTOR_PGCRYPTO_KEY,
+    PGVECTOR_POOL_MAX_OVERFLOW,
+    PGVECTOR_POOL_RECYCLE,
+    PGVECTOR_POOL_SIZE,
+    PGVECTOR_POOL_TIMEOUT,
+)
+from open_webui.env import SRC_LOG_LEVELS
+from open_webui.retrieval.vector.main import (
+    GetResult,
+    SearchResult,
+    VectorDBBase,
+    VectorItem,
+)
+from open_webui.retrieval.vector.utils import process_metadata
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
-    func,
-    literal,
+    Column,
+    Integer,
+    LargeBinary,
+    MetaData,
+    Table,
+    Text,
     cast,
     column,
     create_engine,
-    Column,
-    Integer,
-    MetaData,
-    LargeBinary,
+    func,
+    literal,
     select,
     text,
-    Text,
-    Table,
     values,
 )
-from sqlalchemy.sql import true
-from sqlalchemy.pool import NullPool, QueuePool
-
-from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
 from sqlalchemy.dialects.postgresql import JSONB, array
-from pgvector.sqlalchemy import Vector
-from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.exc import NoSuchTableError
-
-
-from open_webui.retrieval.vector.utils import process_metadata
-from open_webui.retrieval.vector.main import (
-    VectorDBBase,
-    VectorItem,
-    SearchResult,
-    GetResult,
-)
-from open_webui.config import (
-    PGVECTOR_DB_URL,
-    PGVECTOR_INITIALIZE_MAX_VECTOR_LENGTH,
-    PGVECTOR_CREATE_EXTENSION,
-    PGVECTOR_PGCRYPTO,
-    PGVECTOR_PGCRYPTO_KEY,
-    PGVECTOR_POOL_SIZE,
-    PGVECTOR_POOL_MAX_OVERFLOW,
-    PGVECTOR_POOL_TIMEOUT,
-    PGVECTOR_POOL_RECYCLE,
-)
-
-from open_webui.env import SRC_LOG_LEVELS
+from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
+from sqlalchemy.pool import NullPool, QueuePool
+from sqlalchemy.sql import true
 
 VECTOR_LENGTH = PGVECTOR_INITIALIZE_MAX_VECTOR_LENGTH
 Base = declarative_base()

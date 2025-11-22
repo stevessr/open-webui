@@ -1,5 +1,6 @@
 import json
 from uuid import uuid4
+
 from open_webui.utils.misc import (
     openai_chat_chunk_message_template,
     openai_chat_completion_message_template,
@@ -12,7 +13,7 @@ def convert_ollama_tool_call_to_openai(tool_calls: list) -> list:
         function = tool_call.get("function", {})
         openai_tool_call = {
             "index": tool_call.get("index", function.get("index", 0)),
-            "id": tool_call.get("id", f"call_{str(uuid4())}"),
+            "id": tool_call.get("id", f"call_{uuid4()!s}"),
             "type": "function",
             "function": {
                 "name": function.get("name", ""),

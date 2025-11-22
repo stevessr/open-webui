@@ -1,10 +1,8 @@
 import inspect
+import logging
 from urllib.parse import urlparse
 
-import logging
-
 import redis
-
 from open_webui.env import REDIS_SENTINEL_MAX_RETRY_COUNT
 
 log = logging.getLogger(__name__)

@@ -1,21 +1,14 @@
+import datetime
 import time
 from typing import Optional
 
-from open_webui.internal.db import Base, JSONField, get_db
-
-
 from open_webui.env import DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL
+from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.models.chats import Chats
 from open_webui.models.groups import Groups
 from open_webui.utils.misc import throttle
-
-
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy.orm import relationship
-from sqlalchemy import BigInteger, Column, String, Text, Date
-from sqlalchemy import or_
-
-import datetime
+from sqlalchemy import BigInteger, Column, Date, String, Text, or_
 
 ####################
 # User DB Schema

@@ -1,59 +1,48 @@
+import base64
 import hashlib
+import html
 import json
 import logging
+import mimetypes
 import os
 import uuid
-import html
-import base64
-from functools import lru_cache
-from pydub import AudioSegment
-from pydub.silence import split_on_silence
-from concurrent.futures import ThreadPoolExecutor
-from typing import Optional
-
 from fnmatch import fnmatch
-import aiohttp
+from typing import Optional
+from urllib.parse import quote
+
 import aiofiles
+import aiohttp
 import httpx
 from aiocache import cached
-import mimetypes
-from urllib.parse import urljoin, quote
-
 from fastapi import (
+    APIRouter,
     Depends,
-    FastAPI,
     File,
     Form,
     HTTPException,
     Request,
     UploadFile,
     status,
-    APIRouter,
 )
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
-
-
-from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.config import (
+    CACHE_DIR,
+    ELEVENLABS_API_BASE_URL,
+    WHISPER_LANGUAGE,
     WHISPER_MODEL_AUTO_UPDATE,
     WHISPER_MODEL_DIR,
-    CACHE_DIR,
-    WHISPER_LANGUAGE,
-    ELEVENLABS_API_BASE_URL,
 )
-
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import (
-    ENV,
     AIOHTTP_CLIENT_SESSION_SSL,
     AIOHTTP_CLIENT_TIMEOUT,
-    SRC_LOG_LEVELS,
     DEVICE_TYPE,
     ENABLE_FORWARD_USER_INFO_HEADERS,
+    SRC_LOG_LEVELS,
 )
-
+from open_webui.utils.auth import get_admin_user, get_verified_user
+from pydantic import BaseModel
+from pydub import AudioSegment
 
 router = APIRouter()
 
@@ -76,7 +65,6 @@ SPEECH_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 #
 ##########################################
 
-from pydub import AudioSegment
 from pydub.utils import mediainfo
 
 
@@ -316,8 +304,8 @@ async def update_audio_config(
 
 
 def load_speech_pipeline(request):
-    from transformers import pipeline
     from datasets import load_dataset
+    from transformers import pipeline
 
     if request.app.state.speech_synthesiser is None:
         request.app.state.speech_synthesiser = pipeline(
@@ -402,7 +390,7 @@ async def speech(request: Request, user=Depends(get_verified_user)):
             detail = None
 
             status_code = 500
-            detail = f"Open WebUI: Server Connection Error"
+            detail = "Open WebUI: Server Connection Error"
 
             if r is not None:
                 status_code = r.status
@@ -541,8 +529,8 @@ async def speech(request: Request, user=Depends(get_verified_user)):
             log.exception(e)
             raise HTTPException(status_code=400, detail="Invalid JSON payload")
 
-        import torch
         import soundfile as sf
+        import torch
 
         load_speech_pipeline(request)
 
@@ -716,7 +704,7 @@ async def transcription_handler(request, file_path, metadata):
                         0
                     ].get("transcript", "")
                 except (KeyError, IndexError) as e:
-                    log.error(f"Malformed response from Deepgram: {str(e)}")
+                    log.error(f"Malformed response from Deepgram: {e!s}")
                     raise Exception(
                         "Failed to parse Deepgram response - unexpected response format"
                     )
@@ -844,7 +832,7 @@ async def transcription_handler(request, file_path, metadata):
                 log.exception("Error parsing Azure response")
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Failed to parse Azure response: {str(e)}",
+                    detail=f"Failed to parse Azure response: {e!s}",
                 )
             except httpx.RequestException as e:
                 log.exception(e)
@@ -1026,7 +1014,7 @@ async def transcription_handler(request, file_path, metadata):
                 log.exception("Error parsing Mistral response")
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Failed to parse Mistral response: {str(e)}",
+                    detail=f"Failed to parse Mistral response: {e!s}",
                 )
             except httpx.RequestException as e:
                 log.exception(e)
@@ -1255,7 +1243,7 @@ async def get_available_models(request: Request) -> list[dict]:
                     data = response.json()
                 available_models = data.get("models", [])
             except Exception as e:
-                log.error(f"Error fetching models from custom endpoint: {str(e)}")
+                log.error(f"Error fetching models from custom endpoint: {e!s}")
                 available_models = [{"id": "tts-1"}, {"id": "tts-1-hd"}]
         else:
             available_models = [{"id": "tts-1"}, {"id": "tts-1-hd"}]
@@ -1277,7 +1265,7 @@ async def get_available_models(request: Request) -> list[dict]:
                 {"name": model["name"], "id": model["model_id"]} for model in models
             ]
         except httpx.RequestException as e:
-            log.error(f"Error fetching voices: {str(e)}")
+            log.error(f"Error fetching voices: {e!s}")
     return available_models
 
 
@@ -1304,7 +1292,7 @@ async def get_available_voices(request) -> dict:
                 voices_list = data.get("voices", [])
                 available_voices = {voice["id"]: voice["name"] for voice in voices_list}
             except Exception as e:
-                log.error(f"Error fetching voices from custom endpoint: {str(e)}")
+                log.error(f"Error fetching voices from custom endpoint: {e!s}")
                 available_voices = {
                     "alloy": "alloy",
                     "echo": "echo",
@@ -1351,7 +1339,7 @@ async def get_available_voices(request) -> dict:
                     f"{voice['DisplayName']} ({voice['ShortName']})"
                 )
         except httpx.RequestException as e:
-            log.error(f"Error fetching voices: {str(e)}")
+            log.error(f"Error fetching voices: {e!s}")
 
     return available_voices
 
@@ -1384,8 +1372,8 @@ async def get_elevenlabs_voices(api_key: str) -> dict:
             voices[voice["voice_id"]] = voice["name"]
     except httpx.RequestError as e:
         # Avoid @lru_cache with exception
-        log.error(f"Error fetching voices: {str(e)}")
-        raise RuntimeError(f"Error fetching voices: {str(e)}")
+        log.error(f"Error fetching voices: {e!s}")
+        raise RuntimeError(f"Error fetching voices: {e!s}")
 
     return voices
 

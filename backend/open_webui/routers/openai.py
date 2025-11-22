@@ -3,52 +3,44 @@ import hashlib
 import json
 import logging
 from typing import Optional
+from urllib.parse import quote
 
 import aiohttp
 from aiocache import cached
-from urllib.parse import quote
-
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-
-from fastapi import Depends, HTTPException, Request, APIRouter
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import (
     FileResponse,
-    StreamingResponse,
     JSONResponse,
     PlainTextResponse,
+    StreamingResponse,
 )
-from pydantic import BaseModel
-from starlette.background import BackgroundTask
-
-from open_webui.models.models import Models
 from open_webui.config import (
     CACHE_DIR,
 )
+from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import (
-    MODELS_CACHE_TTL,
     AIOHTTP_CLIENT_SESSION_SSL,
     AIOHTTP_CLIENT_TIMEOUT,
     AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST,
-    ENABLE_FORWARD_USER_INFO_HEADERS,
     BYPASS_MODEL_ACCESS_CONTROL,
+    ENABLE_FORWARD_USER_INFO_HEADERS,
+    MODELS_CACHE_TTL,
+    SRC_LOG_LEVELS,
 )
+from open_webui.models.models import Models
 from open_webui.models.users import UserModel
-
-from open_webui.constants import ERROR_MESSAGES
-from open_webui.env import SRC_LOG_LEVELS
-
-
+from open_webui.utils.access_control import has_access
+from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.misc import (
+    convert_logit_bias_input_to_json,
+)
 from open_webui.utils.payload import (
     apply_model_params_to_body_openai,
     apply_system_prompt_to_body,
 )
-from open_webui.utils.misc import (
-    convert_logit_bias_input_to_json,
-)
-
-from open_webui.utils.auth import get_admin_user, get_verified_user
-from open_webui.utils.access_control import has_access
-
+from pydantic import BaseModel
+from starlette.background import BackgroundTask
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["OPENAI"])
@@ -627,13 +619,13 @@ async def get_models(
                         models = response_data
             except aiohttp.ClientError as e:
                 # ClientError covers all aiohttp requests issues
-                log.exception(f"Client error: {str(e)}")
+                log.exception(f"Client error: {e!s}")
                 raise HTTPException(
                     status_code=500, detail="Open WebUI: Server Connection Error"
                 )
             except Exception as e:
                 log.exception(f"Unexpected error: {e}")
-                error_detail = f"Unexpected error: {str(e)}"
+                error_detail = f"Unexpected error: {e!s}"
                 raise HTTPException(status_code=500, detail=error_detail)
 
     if user.role == "user" and not BYPASS_MODEL_ACCESS_CONTROL:
@@ -724,7 +716,7 @@ async def verify_connection(
 
         except aiohttp.ClientError as e:
             # ClientError covers all aiohttp requests issues
-            log.exception(f"Client error: {str(e)}")
+            log.exception(f"Client error: {e!s}")
             raise HTTPException(
                 status_code=500, detail="Open WebUI: Server Connection Error"
             )

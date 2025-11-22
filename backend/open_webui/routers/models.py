@@ -1,34 +1,29 @@
-from typing import Optional
-import io
 import base64
-import json
-import asyncio
+import io
 import logging
+from typing import Optional
 
-from open_webui.models.models import (
-    ModelForm,
-    ModelModel,
-    ModelResponse,
-    ModelUserResponse,
-    Models,
-)
-
-from pydantic import BaseModel
-from open_webui.constants import ERROR_MESSAGES
 from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
     Request,
-    status,
     Response,
+    status,
 )
 from fastapi.responses import FileResponse, StreamingResponse
-
-
-from open_webui.utils.auth import get_admin_user, get_verified_user
-from open_webui.utils.access_control import has_access, has_permission
 from open_webui.config import BYPASS_ADMIN_ACCESS_CONTROL, STATIC_DIR
+from open_webui.constants import ERROR_MESSAGES
+from open_webui.models.models import (
+    ModelForm,
+    ModelModel,
+    ModelResponse,
+    Models,
+    ModelUserResponse,
+)
+from open_webui.utils.access_control import has_access, has_permission
+from open_webui.utils.auth import get_admin_user, get_verified_user
+from pydantic import BaseModel
 
 log = logging.getLogger(__name__)
 
@@ -227,7 +222,7 @@ async def get_model_profile_image(id: str, user=Depends(get_verified_user)):
                         media_type="image/png",
                         headers={"Content-Disposition": "inline; filename=image.png"},
                     )
-                except Exception as e:
+                except Exception:
                     pass
         return FileResponse(f"{STATIC_DIR}/favicon.png")
     else:

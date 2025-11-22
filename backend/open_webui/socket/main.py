@@ -1,50 +1,39 @@
 import asyncio
-import random
-
-import socketio
 import logging
+import random
 import sys
 import time
-from typing import Dict, Set
-from redis import asyncio as aioredis
+
 import pycrdt as Y
-
-from open_webui.models.users import Users, UserNameResponse
-from open_webui.models.channels import Channels
-from open_webui.models.chats import Chats
-from open_webui.models.notes import Notes, NoteUpdateForm
-from open_webui.utils.redis import (
-    get_sentinels_from_env,
-    get_sentinel_url_from_env,
-)
-
+import socketio
 from open_webui.config import (
     CORS_ALLOW_ORIGIN,
 )
-
 from open_webui.env import (
-    VERSION,
     ENABLE_WEBSOCKET_SUPPORT,
+    GLOBAL_LOG_LEVEL,
+    REDIS_KEY_PREFIX,
+    SRC_LOG_LEVELS,
     WEBSOCKET_MANAGER,
-    WEBSOCKET_REDIS_URL,
     WEBSOCKET_REDIS_CLUSTER,
     WEBSOCKET_REDIS_LOCK_TIMEOUT,
-    WEBSOCKET_SENTINEL_PORT,
+    WEBSOCKET_REDIS_URL,
     WEBSOCKET_SENTINEL_HOSTS,
-    REDIS_KEY_PREFIX,
+    WEBSOCKET_SENTINEL_PORT,
 )
-from open_webui.utils.auth import decode_token
+from open_webui.models.channels import Channels
+from open_webui.models.chats import Chats
+from open_webui.models.notes import Notes, NoteUpdateForm
+from open_webui.models.users import UserNameResponse, Users
 from open_webui.socket.utils import RedisDict, RedisLock, YdocManager
 from open_webui.tasks import create_task, stop_item_tasks
-from open_webui.utils.redis import get_redis_connection
-from open_webui.utils.access_control import has_access, get_users_with_access
-
-
-from open_webui.env import (
-    GLOBAL_LOG_LEVEL,
-    SRC_LOG_LEVELS,
+from open_webui.utils.access_control import has_access
+from open_webui.utils.auth import decode_token
+from open_webui.utils.redis import (
+    get_redis_connection,
+    get_sentinel_url_from_env,
+    get_sentinels_from_env,
 )
-
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
@@ -169,7 +158,7 @@ async def periodic_usage_pool_cleanup():
     try:
         while True:
             if not renew_func():
-                log.error(f"Unable to renew cleanup lock. Exiting usage pool cleanup.")
+                log.error("Unable to renew cleanup lock. Exiting usage pool cleanup.")
                 raise Exception("Unable to renew usage pool cleanup lock.")
 
             now = int(time.time())

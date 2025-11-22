@@ -1,8 +1,8 @@
 import logging
-from xml.etree.ElementTree import ParseError
-
 from typing import Any, Dict, Generator, List, Optional, Sequence, Union
 from urllib.parse import parse_qs, urlparse
+from xml.etree.ElementTree import ParseError
+
 from langchain_core.documents import Document
 from open_webui.env import SRC_LOG_LEVELS
 
@@ -101,7 +101,7 @@ class YoutubeLoader:
         transcript_api = YouTubeTranscriptApi(proxy_config=youtube_proxies)
         try:
             transcript_list = transcript_api.list(self.video_id)
-        except Exception as e:
+        except Exception:
             log.exception("Loading YouTube transcript failed")
             return []
 

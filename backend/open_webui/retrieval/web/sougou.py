@@ -1,10 +1,9 @@
-import logging
 import json
-from typing import Optional, List
+import logging
+from typing import List, Optional
 
-
-from open_webui.retrieval.web.main import SearchResult, get_filtered_results
 from open_webui.env import SRC_LOG_LEVELS
+from open_webui.retrieval.web.main import SearchResult, get_filtered_results
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
@@ -17,8 +16,8 @@ def search_sougou(
     count: int,
     filter_list: Optional[List[str]] = None,
 ) -> List[SearchResult]:
-    from tencentcloud.common.common_client import CommonClient
     from tencentcloud.common import credential
+    from tencentcloud.common.common_client import CommonClient
     from tencentcloud.common.exception.tencent_cloud_sdk_exception import (
         TencentCloudSDKException,
     )

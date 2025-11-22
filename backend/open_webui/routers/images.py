@@ -1,33 +1,29 @@
-import asyncio
-import aiofiles
 import base64
-import uuid
 import io
 import json
 import logging
 import mimetypes
 import re
-from pathlib import Path
+import uuid
 from typing import Optional
 
-from urllib.parse import quote
+import aiofiles
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
-
 from open_webui.config import CACHE_DIR
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import ENABLE_FORWARD_USER_INFO_HEADERS, SRC_LOG_LEVELS
-from open_webui.routers.files import upload_file_handler, get_file_content_by_id
+from open_webui.routers.files import get_file_content_by_id, upload_file_handler
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.headers import include_user_info_headers
 from open_webui.utils.images.comfyui import (
     ComfyUICreateImageForm,
     ComfyUIEditImageForm,
     ComfyUIWorkflow,
-    comfyui_upload_image,
     comfyui_create_image,
     comfyui_edit_image,
+    comfyui_upload_image,
 )
 from pydantic import BaseModel
 

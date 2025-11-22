@@ -1,14 +1,14 @@
-import os
-import time
+import asyncio
 import logging
+import os
 import tempfile
 import zipfile
-from typing import List, Optional
-from langchain_core.documents import Document
-from fastapi import HTTPException, status
-import httpx
-import asyncio
+from typing import List
+
 import aiofiles
+import httpx
+from fastapi import HTTPException, status
+from langchain_core.documents import Document
 
 log = logging.getLogger(__name__)
 
@@ -144,7 +144,7 @@ class MinerULoader:
         except Exception as e:
             raise HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error calling MinerU Local API: {str(e)}",
+                detail=f"Error calling MinerU Local API: {e!s}",
             )
 
         # Parse response
@@ -277,7 +277,7 @@ class MinerULoader:
         except Exception as e:
             raise HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error requesting upload URL: {str(e)}",
+                detail=f"Error requesting upload URL: {e!s}",
             )
 
         try:
@@ -314,7 +314,7 @@ class MinerULoader:
         """
         Upload file to presigned URL (no authentication needed).
         """
-        log.info(f"Uploading file to presigned URL")
+        log.info("Uploading file to presigned URL")
 
         try:
             async with aiofiles.open(self.file_path, "rb") as f:
@@ -342,7 +342,7 @@ class MinerULoader:
         except Exception as e:
             raise HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error uploading file: {str(e)}",
+                detail=f"Error uploading file: {e!s}",
             )
 
         log.info("File uploaded successfully")
@@ -381,7 +381,7 @@ class MinerULoader:
                 except Exception as e:
                     raise HTTPException(
                         status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail=f"Error polling batch status: {str(e)}",
+                        detail=f"Error polling batch status: {e!s}",
                     )
 
                 try:
@@ -462,7 +462,7 @@ class MinerULoader:
         except Exception as e:
             raise HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error downloading results: {str(e)}",
+                detail=f"Error downloading results: {e!s}",
             )
 
         # Save ZIP to temporary file and extract
@@ -530,7 +530,7 @@ class MinerULoader:
         except Exception as e:
             raise HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error extracting ZIP: {str(e)}",
+                detail=f"Error extracting ZIP: {e!s}",
             )
 
         if not markdown_content:
