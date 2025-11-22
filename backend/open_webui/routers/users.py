@@ -419,13 +419,8 @@ async def get_user_profile_image_by_id(user_id: str, user=Depends(get_verified_u
     user = Users.get_user_by_id(user_id)
     if user:
         if user.profile_image_url:
-            # check if it's url or base64
-            if user.profile_image_url.startswith("http"):
-                return Response(
-                    status_code=status.HTTP_302_FOUND,
-                    headers={"Location": user.profile_image_url},
-                )
-            elif user.profile_image_url.startswith("data:image"):
+            # check if it's base64 data URL or regular URL
+            if user.profile_image_url.startswith("data:image"):
                 try:
                     header, base64_data = user.profile_image_url.split(",", 1)
                     image_data = base64.b64decode(base64_data)
@@ -438,6 +433,12 @@ async def get_user_profile_image_by_id(user_id: str, user=Depends(get_verified_u
                     )
                 except Exception as e:
                     pass
+            else:
+                # If it's not a base64 data URL, treat it as a regular URL and redirect
+                return Response(
+                    status_code=status.HTTP_302_FOUND,
+                    headers={"Location": user.profile_image_url},
+                )
         return FileResponse(f"{STATIC_DIR}/user.gif")
     else:
         raise HTTPException(
