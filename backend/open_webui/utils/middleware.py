@@ -1106,7 +1106,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
         files.extend(knowledge_files)
         form_data["files"] = files
 
-    variables = form_data.pop("variables", None)
+    form_data.pop("variables", None)
 
     # Process the form_data through the pipeline
     try:
@@ -1519,7 +1519,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
                                     }
                                 )
 
-                        if title == None and len(messages) == 2:
+                        if title is None and len(messages) == 2:
                             title = messages[0].get("content", user_message)
 
                             Chats.update_chat_title_by_id(metadata["chat_id"], title)
@@ -1743,7 +1743,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
 
     # Streaming response
     if event_emitter and event_caller:
-        task_id = str(uuid4())  # Create a unique task ID.
+        str(uuid4())  # Create a unique task ID.
         model_id = form_data.get("model", "")
 
         def split_content_and_whitespace(content):

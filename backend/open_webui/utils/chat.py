@@ -201,7 +201,7 @@ async def generate_chat_completion(
 
             form_data["model"] = selected_model_id
 
-            if form_data.get("stream") == True:
+            if form_data.get("stream"):
 
                 async def stream_wrapper(stream):
                     yield f"data: {json.dumps({'selected_model_id': selected_model_id})}\n\n"

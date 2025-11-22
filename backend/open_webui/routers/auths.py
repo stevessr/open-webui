@@ -168,7 +168,6 @@ async def update_password(form_data: UpdatePasswordForm, session_user=Depends(ge
 @router.post("/ldap", response_model=SessionUserResponse)
 async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
     ENABLE_LDAP = request.app.state.config.ENABLE_LDAP
-    LDAP_SERVER_LABEL = request.app.state.config.LDAP_SERVER_LABEL
     LDAP_SERVER_HOST = request.app.state.config.LDAP_SERVER_HOST
     LDAP_SERVER_PORT = request.app.state.config.LDAP_SERVER_PORT
     LDAP_ATTRIBUTE_FOR_MAIL = request.app.state.config.LDAP_ATTRIBUTE_FOR_MAIL
@@ -424,7 +423,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             if group_names:
                 Groups.sync_groups_by_group_names(user.id, group_names)
 
-    elif WEBUI_AUTH == False:
+    elif not WEBUI_AUTH:
         admin_email = "admin@localhost"
         admin_password = "admin"
 

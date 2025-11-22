@@ -3,11 +3,10 @@ title: Gemini 3 Pro (Thinking Level Support)
 licence: MIT
 """
 
+import asyncio
 import json
 import logging
-import re
-from typing import Optional, Callable, Awaitable, AsyncGenerator, List, Literal
-import asyncio
+from typing import AsyncGenerator, Awaitable, Callable, List, Literal, Optional
 
 import httpx
 from pydantic import BaseModel, Field

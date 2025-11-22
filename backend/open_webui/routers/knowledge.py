@@ -131,7 +131,7 @@ async def create_new_knowledge(request: Request, form_data: KnowledgeForm, user=
     # Check if user can share publicly
     if (
         user.role != "admin"
-        and form_data.access_control == None
+        and form_data.access_control is None
         and not has_permission(
             user.id,
             "sharing.public_knowledge",
@@ -275,7 +275,7 @@ async def update_knowledge_by_id(
     # Check if user can share publicly
     if (
         user.role != "admin"
-        and form_data.access_control == None
+        and form_data.access_control is None
         and not has_permission(
             user.id,
             "sharing.public_knowledge",

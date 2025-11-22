@@ -6,11 +6,12 @@ license: MIT
 description: A tool to generate images using Google's Gemini models.
 """
 
-import requests
-import json
 import base64
+import json
+from typing import Any, Callable, Literal, Optional
+
+import requests
 from pydantic import BaseModel, Field
-from typing import Callable, Any, Literal, Optional
 
 # --- Helper Classes ---
 
@@ -20,7 +21,7 @@ class EventEmitter:
     Helper to safely emit events to the OpenWebUI frontend.
     """
 
-    def __init__(self, event_emitter: Callable[[dict], Any] = None):
+    def __init__(self, event_emitter: Callable[[dict], Any] | None = None):
         self.event_emitter = event_emitter
 
     async def emit(self, description="Unknown State", status="in_progress", done=False):
@@ -65,7 +66,7 @@ class Tools:
         prompt: str,
         aspect_ratio: Literal["1:1", "16:9", "9:16", "4:3", "3:4"] = "1:1",
         image_input: Optional[str] = None,
-        __event_emitter__: Callable[[dict], Any] = None,
+        __event_emitter__: Callable[[dict], Any] | None = None,
     ) -> str:
         """
         Generates an image based on a textual prompt and an optional input image.
@@ -83,7 +84,6 @@ class Tools:
             )
             return json.dumps({"error": error_msg})
 
-        base_url = f"{self.valves.BASE_URL}/{self.valves.API_VERSION}/model/{self.valves.MODEL_NAME}:generateContent"
         headers = {
             "Content-Type": "application/json",
             "x-goog-api-key": self.valves.GOOGLE_API_KEY,
@@ -116,7 +116,7 @@ class Tools:
                     {"inline_data": {"mime_type": content_type, "data": image_b64}}
                 )
             except Exception as e:
-                return json.dumps({"error": f"Failed to process image_input: {str(e)}"})
+                return json.dumps({"error": f"Failed to process image_input: {e!s}"})
 
         # The payload for gemini-2.5-flash-image, structured in a dialogue style.
         payload = {
@@ -168,8 +168,8 @@ class Tools:
             )
             return json.dumps({"error": error_msg})
         except Exception as e:
-            error_msg = f"An unexpected error occurred: {str(e)}"
+            error_msg = f"An unexpected error occurred: {e!s}"
             await emitter.emit(
-                status="error", description=f"Connection Error: {str(e)}", done=True
+                status="error", description=f"Connection Error: {e!s}", done=True
             )
             return json.dumps({"error": error_msg})

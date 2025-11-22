@@ -1,4 +1,3 @@
-# noqa: INP001
 import os
 import shutil
 import subprocess
@@ -18,10 +17,10 @@ class CustomBuildHook(BuildHookInterface):
                 "NodeJS `pnpm` is required for building Open Webui but it was not found"
             )
         stderr.write("### pnpm install\n")
-        subprocess.run([pnpm, "install", "--force"], check=True)  # noqa: S603
+        subprocess.run([pnpm, "install", "--force"], check=True)
         stderr.write("\n### pnpm run build\n")
         os.environ["APP_BUILD_HASH"] = version
-        subprocess.run([pnpm, "run", "build"], check=True)  # noqa: S603
+        subprocess.run([pnpm, "run", "build"], check=True)
 
         # Copy the frontend build output to the backend static files
         stderr.write("### Copying frontend build to backend static files\n")

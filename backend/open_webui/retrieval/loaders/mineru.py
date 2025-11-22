@@ -27,7 +27,7 @@ class MinerULoader:
         api_mode: str = "local",
         api_url: str = "http://localhost:8000",
         api_key: str = "",
-        params: dict = None,
+        params: dict | None = None,
     ):
         self.file_path = file_path
         self.api_mode = api_mode.lower()
@@ -164,7 +164,7 @@ class MinerULoader:
             )
 
         # Get the first (and typically only) result
-        file_result = list(results.values())[0]
+        file_result = next(iter(results.values()))
         markdown_content = file_result.get("md_content", "")
 
         if not markdown_content:
@@ -465,7 +465,6 @@ class MinerULoader:
 
                 # Find markdown file - search recursively for any .md file
                 markdown_content = None
-                found_md_path = None
 
                 # First, list all files in the ZIP for debugging
                 all_files = []
@@ -475,7 +474,6 @@ class MinerULoader:
                         all_files.append(full_path)
                         # Look for any .md file
                         if file.endswith(".md"):
-                            found_md_path = full_path
                             log.info(f"Found markdown file at: {full_path}")
                             try:
                                 async with aiofiles.open(full_path, "r", encoding="utf-8") as f:

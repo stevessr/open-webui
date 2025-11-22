@@ -1720,7 +1720,7 @@ async def upload_model(
                     log.info("Uploaded to /api/blobs")
                     os.remove(file_path)
 
-                    model_name, ext = os.path.splitext(filename)
+                    model_name, _ext = os.path.splitext(filename)
                     log.info(f"Created Model: {model_name}")
 
                     create_payload = {

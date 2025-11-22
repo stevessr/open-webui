@@ -148,7 +148,6 @@ async def periodic_usage_pool_cleanup():
                 raise Exception("Unable to renew usage pool cleanup lock.")
 
             now = int(time.time())
-            send_usage = False
             for model_id, connections in list(USAGE_POOL.items()):
                 # Creating a list of sids to remove if they have timed out
                 expired_sids = [sid for sid, details in connections.items() if now - details["updated_at"] > TIMEOUT_DURATION]
@@ -162,7 +161,6 @@ async def periodic_usage_pool_cleanup():
                 else:
                     USAGE_POOL[model_id] = connections
 
-                send_usage = True
             await asyncio.sleep(TIMEOUT_DURATION)
     finally:
         release_func()
@@ -685,7 +683,7 @@ def get_event_emitter(request_info, update_db=True):
 
             if event_data.get("type") in ["source", "citation"]:
                 data = event_data.get("data", {})
-                if data.get("type") == None:
+                if data.get("type") is None:
                     message = Chats.get_message_by_id_and_message_id(
                         request_info["chat_id"],
                         request_info["message_id"],

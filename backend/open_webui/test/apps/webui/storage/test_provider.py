@@ -129,7 +129,7 @@ class TestS3StorageProvider:
     def test_get_file(self, monkeypatch, tmp_path):
         upload_dir = mock_upload_dir(monkeypatch, tmp_path)
         self.s3_client.create_bucket(Bucket=self.Storage.bucket_name)
-        contents, s3_file_path = self.Storage.upload_file(io.BytesIO(self.file_content), self.filename)
+        _contents, s3_file_path = self.Storage.upload_file(io.BytesIO(self.file_content), self.filename)
         file_path = self.Storage.get_file(s3_file_path)
         assert file_path == str(upload_dir / self.filename)
         assert (upload_dir / self.filename).exists()
@@ -137,7 +137,7 @@ class TestS3StorageProvider:
     def test_delete_file(self, monkeypatch, tmp_path):
         upload_dir = mock_upload_dir(monkeypatch, tmp_path)
         self.s3_client.create_bucket(Bucket=self.Storage.bucket_name)
-        contents, s3_file_path = self.Storage.upload_file(io.BytesIO(self.file_content), self.filename)
+        _contents, s3_file_path = self.Storage.upload_file(io.BytesIO(self.file_content), self.filename)
         assert (upload_dir / self.filename).exists()
         self.Storage.delete_file(s3_file_path)
         assert not (upload_dir / self.filename).exists()
@@ -236,21 +236,21 @@ class TestGCSStorageProvider:
 
     def test_get_file(self, monkeypatch, tmp_path, setup):
         upload_dir = mock_upload_dir(monkeypatch, tmp_path)
-        contents, gcs_file_path = self.Storage.upload_file(io.BytesIO(self.file_content), self.filename)
+        _contents, gcs_file_path = self.Storage.upload_file(io.BytesIO(self.file_content), self.filename)
         file_path = self.Storage.get_file(gcs_file_path)
         assert file_path == str(upload_dir / self.filename)
         assert (upload_dir / self.filename).exists()
 
     def test_delete_file(self, monkeypatch, tmp_path, setup):
         upload_dir = mock_upload_dir(monkeypatch, tmp_path)
-        contents, gcs_file_path = self.Storage.upload_file(io.BytesIO(self.file_content), self.filename)
+        _contents, gcs_file_path = self.Storage.upload_file(io.BytesIO(self.file_content), self.filename)
         # ensure that local directory has the uploaded file as well
         assert (upload_dir / self.filename).exists()
         assert self.Storage.bucket.get_blob(self.filename).name == self.filename
         self.Storage.delete_file(gcs_file_path)
         # check that deleting file from gcs will delete the local file as well
         assert not (upload_dir / self.filename).exists()
-        assert self.Storage.bucket.get_blob(self.filename) == None
+        assert self.Storage.bucket.get_blob(self.filename) is None
 
     def test_delete_all_files(self, monkeypatch, tmp_path, setup):
         upload_dir = mock_upload_dir(monkeypatch, tmp_path)
@@ -271,8 +271,8 @@ class TestGCSStorageProvider:
         self.Storage.delete_all_files()
         assert not (upload_dir / self.filename).exists()
         assert not (upload_dir / self.filename_extra).exists()
-        assert self.Storage.bucket.get_blob(self.filename) == None
-        assert self.Storage.bucket.get_blob(self.filename_extra) == None
+        assert self.Storage.bucket.get_blob(self.filename) is None
+        assert self.Storage.bucket.get_blob(self.filename_extra) is None
 
 
 class TestAzureStorageProvider:

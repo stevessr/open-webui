@@ -144,7 +144,7 @@ class S3StorageProvider(StorageProvider):
 
     async def upload_file(self, file: BinaryIO, filename: str, tags: Dict[str, str]) -> Tuple[bytes, str]:
         """Handles uploading of the file to S3 storage."""
-        contents, file_path = await LocalStorageProvider.upload_file(file, filename, tags)
+        _contents, file_path = await LocalStorageProvider.upload_file(file, filename, tags)
         s3_key = os.path.join(self.key_prefix, filename)
         try:
             await asyncio.to_thread(self.s3_client.upload_file, file_path, self.bucket_name, s3_key)
@@ -292,7 +292,7 @@ class AzureStorageProvider(StorageProvider):
 
     async def upload_file(self, file: BinaryIO, filename: str, tags: Dict[str, str]) -> Tuple[bytes, str]:
         """Handles uploading of the file to Azure Blob Storage."""
-        contents, file_path = await LocalStorageProvider.upload_file(file, filename, tags)
+        contents, _file_path = await LocalStorageProvider.upload_file(file, filename, tags)
         try:
             blob_client = await asyncio.to_thread(self.container_client.get_blob_client, filename)
             await asyncio.to_thread(blob_client.upload_blob, contents, overwrite=True)

@@ -365,7 +365,7 @@ async def get_user_profile_image_by_id(user_id: str, user=Depends(get_verified_u
                 )
             elif user.profile_image_url.startswith("data:image"):
                 try:
-                    header, base64_data = user.profile_image_url.split(",", 1)
+                    _header, base64_data = user.profile_image_url.split(",", 1)
                     image_data = base64.b64decode(base64_data)
                     image_buffer = io.BytesIO(image_data)
 

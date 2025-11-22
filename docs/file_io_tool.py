@@ -6,13 +6,14 @@ license: MIT
 description: A tool to securely read, write, search, and modify files within a sandboxed workspace.
 """
 
-import os
-import json
-import re
 import fnmatch
+import json
+import os
+import re
 import subprocess
+from typing import Any, List, Optional
+
 from pydantic import BaseModel, Field
-from typing import Callable, Any, List, Optional
 
 # --- Helper Classes ---
 
@@ -68,7 +69,7 @@ class Tools:
             await self._emit(__event_emitter__, "File Read", status="complete", done=True)
             return content
         except FileNotFoundError: return json.dumps({"error": f"File not found: '{file_path}'."})
-        except Exception as e: return json.dumps({"error": f"Error reading file: {str(e)}"})
+        except Exception as e: return json.dumps({"error": f"Error reading file: {e!s}"})
 
     async def write_file(self, file_path: str, content: str, __event_emitter__: Any = None) -> str:
         if not self.workspace.is_configured(): return json.dumps({"error": "WORKSPACE_PATH is not configured."})
@@ -81,7 +82,7 @@ class Tools:
             with open(secure_path, 'w', encoding='utf-8') as f: f.write(content)
             await self._emit(__event_emitter__, "File Written", status="complete", done=True)
             return json.dumps({"success": f"Successfully wrote to '{file_path}'."})
-        except Exception as e: return json.dumps({"error": f"Error writing file: {str(e)}"})
+        except Exception as e: return json.dumps({"error": f"Error writing file: {e!s}"})
 
     async def list_items(self, path: str = ".", __event_emitter__: Any = None) -> str:
         if not self.workspace.is_configured(): return json.dumps({"error": "WORKSPACE_PATH is not configured."})
@@ -95,7 +96,7 @@ class Tools:
             files = [i for i in items if os.path.isfile(os.path.join(secure_path, i))]
             await self._emit(__event_emitter__, "Listed Items", status="complete", done=True)
             return json.dumps({"directories": directories, "files": files})
-        except Exception as e: return json.dumps({"error": f"Error listing items: {str(e)}"})
+        except Exception as e: return json.dumps({"error": f"Error listing items: {e!s}"})
 
     async def patch_file(self, file_path: str, regex_pattern: str, replacement_string: str, replace_all: bool = False, __event_emitter__: Any = None) -> str:
         if not self.workspace.is_configured(): return json.dumps({"error": "WORKSPACE_PATH is not configured."})
@@ -112,7 +113,7 @@ class Tools:
             await self._emit(__event_emitter__, "File Patched", status="complete", done=True)
             return json.dumps({"success": f"Patched {num_replacements} occurrence(s) in '{file_path}'."})
         except re.error as e: return json.dumps({"error": f"Invalid regex: {e}"})
-        except Exception as e: return json.dumps({"error": f"Error patching file: {str(e)}"})
+        except Exception as e: return json.dumps({"error": f"Error patching file: {e!s}"})
 
     async def search_content(self, regex_pattern: str, start_path: str = ".", include_patterns: Optional[List[str]] = None, exclude_patterns: Optional[List[str]] = None, __event_emitter__: Any = None) -> str:
         if not self.workspace.is_configured(): return json.dumps({"error": "WORKSPACE_PATH is not configured."})
@@ -139,7 +140,7 @@ class Tools:
             await self._emit(__event_emitter__, "Search Complete", status="complete", done=True)
             return json.dumps(matches if matches else {"message": "No matches found."})
         except re.error as e: return json.dumps({"error": f"Invalid regex: {e}"})
-        except Exception as e: return json.dumps({"error": f"Error during search: {str(e)}"})
+        except Exception as e: return json.dumps({"error": f"Error during search: {e!s}"})
 
     async def apply_diff_patch(self, file_path: str, diff_content: str, __event_emitter__: Any = None) -> str:
         if not self.workspace.is_configured(): return json.dumps({"error": "WORKSPACE_PATH is not configured."})
@@ -173,7 +174,7 @@ class Tools:
             with open(secure_path, 'w', encoding='utf-8') as f: f.writelines(new_lines)
             await self._emit(__event_emitter__, "Patch Applied", status="complete", done=True)
             return json.dumps({"success": f"Successfully applied diff patch to '{file_path}'."})
-        except Exception as e: return json.dumps({"error": f"Error applying patch: {str(e)}"})
+        except Exception as e: return json.dumps({"error": f"Error applying patch: {e!s}"})
 
     async def _run_git_command(self, command: List[str], path: str, event_emitter: Any) -> str:
         secure_path = self.workspace.get_secure_path(path)
@@ -182,11 +183,11 @@ class Tools:
 
         await self._emit(event_emitter, f"Running git {' '.join(command)} in '{path}'...")
         try:
-            process = subprocess.run(['git'] + command, cwd=secure_path, capture_output=True, text=True, check=False)
+            process = subprocess.run(['git', *command], cwd=secure_path, capture_output=True, text=True, check=False)
             if process.returncode != 0: return json.dumps({"error": process.stderr.strip()})
             await self._emit(event_emitter, "Git command successful", status="complete", done=True)
             return process.stdout.strip()
-        except Exception as e: return json.dumps({"error": f"Failed to run git command: {str(e)}"})
+        except Exception as e: return json.dumps({"error": f"Failed to run git command: {e!s}"})
 
     async def git_clone(self, repo_url: str, clone_to: str, __event_emitter__: Any = None) -> str:
         return await self._run_git_command(['clone', repo_url, clone_to], "", __event_emitter__)

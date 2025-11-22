@@ -3,13 +3,12 @@ title: Gemini with search & code (Pseudo-streaming) - Robust Version with Detail
 licence: MIT
 """
 
+import asyncio  # 引入 asyncio 用于超时和延迟
 import json
 import logging
-import time
-import uuid
 import re
-from typing import AsyncIterable, Optional, Callable, Awaitable, AsyncGenerator, List
-import asyncio  # 引入 asyncio 用于超时和延迟
+import uuid
+from typing import AsyncGenerator, Awaitable, Callable, List, Optional
 
 import httpx
 from pydantic import BaseModel, Field
@@ -259,14 +258,14 @@ class Pipe:
                     except json.JSONDecodeError:
                         logger.warning(f"解码 JSON 行失败：{line}. 跳过此行。")
                         await self.emit_status(
-                            f"警告：无法解析一个数据块。可能存在格式问题。", done=False
+                            "警告：无法解析一个数据块。可能存在格式问题。", done=False
                         )
                     except (KeyError, IndexError) as e:
                         logger.debug(
                             f"无法从数据块中提取文本或元数据：{line}. 错误：{e}. 跳过此块。"
                         )
                         await self.emit_status(
-                            f"警告：接收到未知格式的数据块。", done=False
+                            "警告：接收到未知格式的数据块。", done=False
                         )
 
                 except StopAsyncIteration:
@@ -337,7 +336,7 @@ class Pipe:
 
                         else:
                             logger.warning(
-                                f"Unsupported image URL format. Only 'data:image' URIs are supported."
+                                "Unsupported image URL format. Only 'data:image' URIs are supported."
                             )
             if parts:
                 gemini_contents.append({"role": role, "parts": parts})

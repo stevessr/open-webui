@@ -6,9 +6,10 @@ license: MIT
 description: 强制使用 Grok 4.1 原生 Tools 格式 (Web Search, X Search, Code Interpreter)。
 """
 
-import requests
 import json
-from typing import List, Union, Generator, Iterator, Literal
+from typing import Generator, Iterator, Literal, Union
+
+import requests
 from pydantic import BaseModel, Field
 
 
@@ -76,7 +77,7 @@ class Pipe:
         ]
 
     def pipe(
-        self, body: dict, __user__: dict = None
+        self, body: dict, __user__: dict | None = None
     ) -> Union[str, Generator, Iterator]:
 
         self.uservalues = __user__.get("valves") if __user__ else self.UserValves()

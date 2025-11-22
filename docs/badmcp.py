@@ -7,10 +7,11 @@ description: Connects to DeepWiki MCP Server using Streamable HTTP (Fixes SSE Pa
 bad: it's too slow
 """
 
-import requests
 import json
+from typing import Any, Callable, Dict
+
+import requests
 from pydantic import BaseModel, Field
-from typing import Callable, Any, Dict, Optional, List
 
 # --- Helper Classes & Functions ---
 
@@ -20,7 +21,7 @@ class EventEmitter:
     Helper to safely emit events to the OpenWebUI frontend.
     """
 
-    def __init__(self, event_emitter: Callable[[dict], Any] = None):
+    def __init__(self, event_emitter: Callable[[dict], Any] | None = None):
         self.event_emitter = event_emitter
 
     async def emit(self, description="Unknown State", status="in_progress", done=False):
@@ -268,19 +269,19 @@ class Tools:
                 return session, url
 
             except Exception as e:
-                raise Exception(f"Connection failed: {str(e)}")
+                raise Exception(f"Connection failed: {e!s}")
 
         else:
             raise ValueError(f"Unknown _debugger action: {action}")
 
     async def deepwiki_description(
-        self, __event_emitter__: Callable[[dict], Any] = None, __user__: Dict = None
+        self, __event_emitter__: Callable[[dict], Any] | None = None, __user__: Dict | None = None
     ) -> str:
         """
         refresh deepwiki descripton
         """
         emitter = EventEmitter(__event_emitter__)
-        await emitter.emit(f"Connecting to MCP Server...")
+        await emitter.emit("Connecting to MCP Server...")
 
         try:
             session, url = await self._debugger("connect", emitter=emitter)
@@ -289,7 +290,7 @@ class Tools:
                 "payload", method="tools/list", request_id=2
             )
 
-            await emitter.emit(f"Refreshing Description...")
+            await emitter.emit("Refreshing Description...")
 
             response = session.post(
                 url,
@@ -324,12 +325,12 @@ class Tools:
 
         except Exception as e:
             await emitter.emit(status="error", description=str(e), done=True)
-            return json.dumps({"error": f"Discovery failed: {str(e)}"})
+            return json.dumps({"error": f"Discovery failed: {e!s}"})
 
     async def deepwiki(
         self,
-        __event_emitter__: Callable[[dict], Any] = None,
-        __user__: Dict = None,
+        __event_emitter__: Callable[[dict], Any] | None = None,
+        __user__: Dict | None = None,
     ) -> str:
         """
         list all available tools for deepwiki
@@ -347,8 +348,8 @@ class Tools:
         self,
         tool_name: str,
         arguments: dict,
-        __event_emitter__: Callable[[dict], Any] = None,
-        __user__: Dict = None,
+        __event_emitter__: Callable[[dict], Any] | None = None,
+        __user__: Dict | None = None,
     ) -> str:
         """
         Execute a specific tool
@@ -413,6 +414,6 @@ class Tools:
 
         except Exception as e:
             await emitter.emit(
-                status="error", description=f"Execution failed: {str(e)}", done=True
+                status="error", description=f"Execution failed: {e!s}", done=True
             )
             return json.dumps({"error": str(e)})

@@ -26,7 +26,7 @@ class DatalabMarkerLoader:
         strip_existing_ocr: bool = False,
         disable_image_extraction: bool = False,
         format_lines: bool = False,
-        output_format: str = None,
+        output_format: str | None = None,
     ):
         self.file_path = file_path
         self.api_key = api_key

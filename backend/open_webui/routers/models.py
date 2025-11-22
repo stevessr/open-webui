@@ -199,7 +199,7 @@ async def get_model_profile_image(id: str, user=Depends(get_verified_user)):
                 )
             elif model.meta.profile_image_url.startswith("data:image"):
                 try:
-                    header, base64_data = model.meta.profile_image_url.split(",", 1)
+                    _header, base64_data = model.meta.profile_image_url.split(",", 1)
                     image_data = base64.b64decode(base64_data)
                     image_buffer = io.BytesIO(image_data)
 

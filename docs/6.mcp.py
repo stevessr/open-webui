@@ -6,14 +6,16 @@ license: MIT
 description: A generic client to connect to any MCP Server using the Streamable HTTP transport. Includes configurable timeouts and strict header compliance.
 """
 
-import requests
 import json
+from typing import Any, Callable, Dict, Optional
+
+import requests
 from pydantic import BaseModel, Field
-from typing import Callable, Any, Dict, Optional, List
+
 
 # Helper class to manage events
 class EventEmitter:
-    def __init__(self, event_emitter: Callable[[dict], Any] = None):
+    def __init__(self, event_emitter: Callable[[dict], Any] | None = None):
         self.event_emitter = event_emitter
 
     async def emit(self, description="Unknown State", status="in_progress", done=False):
@@ -70,7 +72,7 @@ class Tools:
         self.client_name = "OpenWebUI-MCP-Client"
         self.client_version = "1.0.0"
 
-    def _get_headers(self, session_id: str = None) -> Dict[str, str]:
+    def _get_headers(self, session_id: str | None = None) -> Dict[str, str]:
         # Fix for 406 Error: Server requires explicit acceptance of both formats
         headers = {
             "Content-Type": "application/json",
@@ -157,13 +159,13 @@ class Tools:
             return session_id
 
         except Exception as e:
-            await emitter.emit(status="error", description=f"Handshake failed: {str(e)}", done=True)
+            await emitter.emit(status="error", description=f"Handshake failed: {e!s}", done=True)
             raise e
 
     async def discover_mcp_tools(
         self,
-        __event_emitter__: Callable[[dict], Any] = None,
-        __user__: Dict = None,
+        __event_emitter__: Callable[[dict], Any] | None = None,
+        __user__: Dict | None = None,
     ) -> str:
         """
         Connect to the MCP Server and list all available tools. 
@@ -212,14 +214,14 @@ class Tools:
             return json.dumps(tool_summaries, ensure_ascii=False, indent=2)
 
         except Exception as e:
-            return json.dumps({"error": f"Failed to discover tools: {str(e)}"})
+            return json.dumps({"error": f"Failed to discover tools: {e!s}"})
 
     async def call_mcp_tool(
         self,
         tool_name: str,
         arguments: dict,
-        __event_emitter__: Callable[[dict], Any] = None,
-        __user__: Dict = None,
+        __event_emitter__: Callable[[dict], Any] | None = None,
+        __user__: Dict | None = None,
     ) -> str:
         """
         Execute a specific tool on the remote MCP Server.
@@ -275,5 +277,5 @@ class Tools:
             return final_output if final_output else json.dumps(data)
 
         except Exception as e:
-            await emitter.emit(status="error", description=f"Execution failed: {str(e)}", done=True)
+            await emitter.emit(status="error", description=f"Execution failed: {e!s}", done=True)
             return json.dumps({"error": str(e)})

@@ -19,7 +19,7 @@ def get_function_module(request, function_id, load_from_db=True):
     return function_module
 
 
-async def get_sorted_filter_ids(request, model: dict, enabled_filter_ids: list = None):
+async def get_sorted_filter_ids(request, model: dict, enabled_filter_ids: list | None = None):
     async def get_priority(function_id):
         function = await Functions.get_function_by_id(function_id)
         if function is not None:

@@ -8,15 +8,16 @@ description: MCP Client specialized for bright_data using Streamable HTTP transp
 
 DEFAULT_URL = "https://mcp.brightdata.com/mcp"
 
-import requests
 import json
+from typing import Any, Callable, Dict
+
+import requests
 from pydantic import BaseModel, Field
-from typing import Callable, Any, Dict
 
 
 # Helper class to manage events
 class EventEmitter:
-    def __init__(self, event_emitter: Callable[[dict], Any] = None):
+    def __init__(self, event_emitter: Callable[[dict], Any] | None = None):
         self.event_emitter = event_emitter
 
     async def emit(self, description="Unknown State", status="in_progress", done=False):
@@ -177,7 +178,7 @@ class Tools:
 
             except Exception as e:
                 await emitter.emit(
-                    status="error", description=f"Handshake failed: {str(e)}", done=True
+                    status="error", description=f"Handshake failed: {e!s}", done=True
                 )
                 raise e
 
@@ -186,8 +187,8 @@ class Tools:
 
     async def bright_data_tools(
         self,
-        __event_emitter__: Callable[[dict], Any] = None,
-        __user__: Dict = None,
+        __event_emitter__: Callable[[dict], Any] | None = None,
+        __user__: Dict | None = None,
     ) -> str:
         """
         list all available tools for bright_data via MCP.
@@ -247,14 +248,14 @@ class Tools:
             return json.dumps(tool_summaries, ensure_ascii=False, indent=2)
 
         except Exception as e:
-            return json.dumps({"error": f"Failed to discover tools: {str(e)}"})
+            return json.dumps({"error": f"Failed to discover tools: {e!s}"})
 
     async def bright_data_exec(
         self,
         tool_name: str,
         arguments: dict,
-        __event_emitter__: Callable[[dict], Any] = None,
-        __user__: Dict = None,
+        __event_emitter__: Callable[[dict], Any] | None = None,
+        __user__: Dict | None = None,
     ) -> str:
         """
         Execute a specific tool for bright_data via MCP.
@@ -327,6 +328,6 @@ class Tools:
 
         except Exception as e:
             await emitter.emit(
-                status="error", description=f"Execution failed: {str(e)}", done=True
+                status="error", description=f"Execution failed: {e!s}", done=True
             )
             return json.dumps({"error": str(e)})

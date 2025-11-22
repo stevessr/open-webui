@@ -743,7 +743,7 @@ async def generate_openai_batch_embeddings(
     texts: list[str],
     url: str = "https://api.openai.com/v1",
     key: str = "",
-    prefix: str = None,
+    prefix: str | None = None,
     user: UserModel = None,
 ) -> Optional[list[list[float]]]:
     try:
@@ -788,7 +788,7 @@ async def generate_azure_openai_batch_embeddings(
     url: str,
     key: str = "",
     version: str = "",
-    prefix: str = None,
+    prefix: str | None = None,
     user: UserModel = None,
 ) -> Optional[list[list[float]]]:
     try:
@@ -840,7 +840,7 @@ async def generate_ollama_batch_embeddings(
     texts: list[str],
     url: str,
     key: str = "",
-    prefix: str = None,
+    prefix: str | None = None,
     user: UserModel = None,
 ) -> Optional[list[list[float]]]:
     try:

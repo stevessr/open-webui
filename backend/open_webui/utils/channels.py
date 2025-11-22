@@ -23,7 +23,7 @@ def replace_mentions(message: str, triggerChar: str = "@", use_label: bool = Tru
     triggerChar = re.escape(triggerChar)
 
     def replacer(match):
-        id_type, id_value, label = match.groups()
+        _id_type, id_value, label = match.groups()
         return label if use_label and label else id_value
 
     # Regex captures: idType, id, optional label

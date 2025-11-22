@@ -1,9 +1,10 @@
 
 import asyncio
-import aiohttp
 import json
-import os
 import logging
+import os
+
+import aiohttp
 
 # Configuration
 NTFY_TOPIC = os.getenv("NTFY_TOPIC", "element")
@@ -72,7 +73,7 @@ async def send_to_llm_api(message_text: str) -> str:
         logging.error(f"Error communicating with LLM API: {e}")
         return ""
 
-async def push_to_ntfy(message: str, title: str = "LLM Response", tags: list = None):
+async def push_to_ntfy(message: str, title: str = "LLM Response", tags: list | None = None):
     """
     Pushes a message to the ntfy topic.
     """

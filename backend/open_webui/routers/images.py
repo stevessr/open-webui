@@ -640,7 +640,7 @@ async def image_generations(
             return images
     except Exception as e:
         error = e
-        if r != None:
+        if r is not None:
             data = r.json()
             if "error" in data:
                 error = data["error"]["message"]
@@ -902,7 +902,7 @@ async def image_edits(
             return images
     except Exception as e:
         error = e
-        if r != None:
+        if r is not None:
             data = r.text
             try:
                 data = json.loads(data)

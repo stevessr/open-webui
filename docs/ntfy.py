@@ -6,10 +6,11 @@ license: MIT
 description: Allows the model to send Push Notifications via ntfy.sh (or self-hosted ntfy) to your devices.
 """
 
-import requests
 import json
+from typing import Any, Callable
+
+import requests
 from pydantic import BaseModel, Field
-from typing import Callable, Any, Dict, Optional
 
 # --- Helper Classes ---
 
@@ -19,7 +20,7 @@ class EventEmitter:
     Helper to safely emit events to the OpenWebUI frontend.
     """
 
-    def __init__(self, event_emitter: Callable[[dict], Any] = None):
+    def __init__(self, event_emitter: Callable[[dict], Any] | None = None):
         self.event_emitter = event_emitter
 
     async def emit(self, description="Unknown State", status="in_progress", done=False):
@@ -68,7 +69,7 @@ class Tools:
         priority: str = "default",
         tags: str = "",
         click_action: str = "",
-        __event_emitter__: Callable[[dict], Any] = None,
+        __event_emitter__: Callable[[dict], Any] | None = None,
     ) -> str:
         """
         Send a push notification to the user's device via Ntfy.
@@ -132,6 +133,6 @@ class Tools:
 
         except Exception as e:
             await emitter.emit(
-                status="error", description=f"Connection Error: {str(e)}", done=True
+                status="error", description=f"Connection Error: {e!s}", done=True
             )
-            return json.dumps({"error": f"Ntfy Connection Failed: {str(e)}"})
+            return json.dumps({"error": f"Ntfy Connection Failed: {e!s}"})

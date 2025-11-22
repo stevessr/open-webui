@@ -6,14 +6,16 @@ license: MIT
 description: A generic client to connect to MULTIPLE MCP Servers using the Streamable HTTP transport. Handles tool namespacing automatically.
 """
 
-import requests
 import json
+from typing import Any, Callable, Dict, List, Optional
+
+import requests
 from pydantic import BaseModel, Field
-from typing import Callable, Any, Dict, Optional, List
+
 
 # Helper class to manage events
 class EventEmitter:
-    def __init__(self, event_emitter: Callable[[dict], Any] = None):
+    def __init__(self, event_emitter: Callable[[dict], Any] | None = None):
         self.event_emitter = event_emitter
 
     async def emit(self, description="Unknown State", status="in_progress", done=False):
@@ -68,7 +70,7 @@ class Tools:
         self.client_name = "OpenWebUI-MCP-Client-Multi"
         self.client_version = "1.0.0"
 
-    def _get_headers(self, session_id: str = None) -> Dict[str, str]:
+    def _get_headers(self, session_id: str | None = None) -> Dict[str, str]:
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json, text/event-stream;q=0.5",
@@ -156,8 +158,8 @@ class Tools:
 
     async def discover_mcp_tools(
         self,
-        __event_emitter__: Callable[[dict], Any] = None,
-        __user__: Dict = None,
+        __event_emitter__: Callable[[dict], Any] | None = None,
+        __user__: Dict | None = None,
     ) -> str:
         """
         Connect to ALL configured MCP Servers and aggregate available tools.
@@ -207,7 +209,7 @@ class Tools:
                     errors.append(f"Server {idx+1} ({url}): HTTP {response.status_code}")
 
             except Exception as e:
-                errors.append(f"Server {idx+1} ({url}): {str(e)}")
+                errors.append(f"Server {idx+1} ({url}): {e!s}")
                 if self.user_valves.DEBUG_MODE:
                     await emitter.emit_message(f"DEBUG: Failed to connect to {url}: {e}")
 
@@ -225,8 +227,8 @@ class Tools:
         self,
         tool_name: str,
         arguments: dict,
-        __event_emitter__: Callable[[dict], Any] = None,
-        __user__: Dict = None,
+        __event_emitter__: Callable[[dict], Any] | None = None,
+        __user__: Dict | None = None,
     ) -> str:
         """
         Execute a tool. Handles routing to the correct server based on the tool name prefix.
@@ -293,5 +295,5 @@ class Tools:
             return final_output if final_output else json.dumps(data)
 
         except Exception as e:
-            await emitter.emit(status="error", description=f"Execution failed: {str(e)}", done=True)
+            await emitter.emit(status="error", description=f"Execution failed: {e!s}", done=True)
             return json.dumps({"error": str(e)})

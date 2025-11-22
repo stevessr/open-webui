@@ -36,7 +36,7 @@ class Filter:
             "RtMTQuNTIxLTIyLjYyOEw0Mi41NyAyNCAzMS4yNTUgMzUuMzE0TTI3LjIgNi4yOGwtNi4yNTEgMzUuNDUzIj48L3BhdGg+PC9zdmc+"
         )
 
-    def inlet(self, body: dict, __user__: dict = None) -> dict:
+    def inlet(self, body: dict, __user__: dict | None = None) -> dict:
         self.uservalves = __user__.get("valves") if __user__ else self.UserValves()
         if not body.get("tools"):
             body["tools"] = []

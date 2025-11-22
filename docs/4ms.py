@@ -6,10 +6,11 @@ license: MIT
 description: Connects to microsoft_learn
 """
 
-import requests
 import json
+from typing import Any, Callable, Dict
+
+import requests
 from pydantic import BaseModel, Field
-from typing import Callable, Any, Dict
 
 default_url = "https://server.smithery.ai/@microsoft/learn_mcp/mcp"
 
@@ -19,7 +20,7 @@ class EventEmitter:
     Helper to safely emit events to the OpenWebUI frontend.
     """
 
-    def __init__(self, event_emitter: Callable[[dict], Any] = None):
+    def __init__(self, event_emitter: Callable[[dict], Any] | None = None):
         self.event_emitter = event_emitter
 
     async def emit(self, description="Unknown State", status="in_progress", done=False):
@@ -220,19 +221,19 @@ class Tools:
                 return session_id
 
             except Exception as e:
-                raise Exception(f"Handshake failed: {str(e)}")
+                raise Exception(f"Handshake failed: {e!s}")
         
         else:
             raise ValueError(f"Unknown _debugger action: {action}")
 
     async def microsoft_learn_info(
-        self, __event_emitter__: Callable[[dict], Any] = None, __user__: Dict = None
+        self, __event_emitter__: Callable[[dict], Any] | None = None, __user__: Dict | None = None
     ) -> str:
         """
         get microsoft_learn tool latest information.
         """
         emitter = EventEmitter(__event_emitter__)
-        await emitter.emit(f"Connecting to MCP Server...")
+        await emitter.emit("Connecting to MCP Server...")
 
         try:
             # Use Unified Debugger for Handshake
@@ -241,7 +242,7 @@ class Tools:
             # Use Unified Debugger for Payload
             list_payload = await self._debugger("payload", method="tools/list", params={}, request_id=2)
 
-            await emitter.emit(f"Refreshing Description...")
+            await emitter.emit("Refreshing Description...")
 
             # Use Unified Debugger for Headers
             headers = await self._debugger("headers", session_id=session_id)
@@ -280,12 +281,12 @@ class Tools:
 
         except Exception as e:
             await emitter.emit(status="error", description=str(e), done=True)
-            return json.dumps({"error": f"Discovery failed: {str(e)}"})
+            return json.dumps({"error": f"Discovery failed: {e!s}"})
 
     async def microsoft_learn_tools(
         self,
-        __event_emitter__: Callable[[dict], Any] = None,
-        __user__: Dict = None,
+        __event_emitter__: Callable[[dict], Any] | None = None,
+        __user__: Dict | None = None,
     ) -> str:
         """
         list all available tools for microsoft_learn
@@ -303,8 +304,8 @@ class Tools:
         self,
         tool_name: str,
         arguments: dict,
-        __event_emitter__: Callable[[dict], Any] = None,
-        __user__: Dict = None,
+        __event_emitter__: Callable[[dict], Any] | None = None,
+        __user__: Dict | None = None,
     ) -> str:
         """
         Execute a specific tool on microsoft_learn with given arguments.
@@ -374,6 +375,6 @@ class Tools:
 
         except Exception as e:
             await emitter.emit(
-                status="error", description=f"Execution failed: {str(e)}", done=True
+                status="error", description=f"Execution failed: {e!s}", done=True
             )
             return json.dumps({"error": str(e)})

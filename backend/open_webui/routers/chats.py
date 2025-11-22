@@ -713,7 +713,7 @@ async def delete_shared_chat_by_id(id: str, user=Depends(get_verified_user)):
         result = await Chats.delete_shared_chat_by_chat_id(id)
         update_result = await Chats.update_chat_share_id_by_id(id, None)
 
-        return result and update_result != None
+        return result and update_result is not None
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

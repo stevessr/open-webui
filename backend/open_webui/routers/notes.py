@@ -135,7 +135,7 @@ async def update_note_by_id(request: Request, id: str, form_data: NoteForm, user
     # Check if user can share publicly
     if (
         user.role != "admin"
-        and form_data.access_control == None
+        and form_data.access_control is None
         and not has_permission(
             user.id,
             "sharing.public_notes",

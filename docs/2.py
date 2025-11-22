@@ -3,14 +3,13 @@ title: Gemini with search & code (Pseudo-streaming) - Robust Version with Detail
 licence: MIT
 """
 
+import asyncio
+import base64
 import json
 import logging
-import time
-import uuid
 import re
-import base64
-from typing import AsyncIterable, Optional, Callable, Awaitable, AsyncGenerator, List
-import asyncio
+import uuid
+from typing import AsyncGenerator, Awaitable, Callable, List, Optional
 
 import httpx
 from pydantic import BaseModel, Field
@@ -428,7 +427,7 @@ class Pipe:
                                     continue
                                 try:
                                     await self.emit_status(
-                                        f"正在下载远程图片...", done=False
+                                        "正在下载远程图片...", done=False
                                     )
                                     resp = await upload_client.get(image_url)
                                     if resp.status_code == 200:

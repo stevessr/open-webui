@@ -165,7 +165,7 @@ class ModelsTable:
 
     def get_models(self) -> list[ModelUserResponse]:
         with get_db() as db:
-            all_models = db.query(Model).filter(Model.base_model_id != None).all()
+            all_models = db.query(Model).filter(Model.base_model_id is not None).all()
 
             user_ids = list(set(model.user_id for model in all_models))
 
@@ -187,7 +187,7 @@ class ModelsTable:
 
     def get_base_models(self) -> list[ModelModel]:
         with get_db() as db:
-            return [ModelModel.model_validate(model) for model in db.query(Model).filter(Model.base_model_id == None).all()]
+            return [ModelModel.model_validate(model) for model in db.query(Model).filter(Model.base_model_id is None).all()]
 
     def get_models_by_user_id(self, user_id: str, permission: str = "write") -> list[ModelUserResponse]:
         models = self.get_models()
@@ -223,7 +223,7 @@ class ModelsTable:
         try:
             with get_db() as db:
                 # update only the fields that are present in the model
-                result = db.query(Model).filter_by(id=id).update(model.model_dump(exclude={"id"}))
+                db.query(Model).filter_by(id=id).update(model.model_dump(exclude={"id"}))
                 db.commit()
 
                 model = db.get(Model, id)
