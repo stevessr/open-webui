@@ -251,46 +251,93 @@ async def get_all_models_responses(request: Request, user: UserModel) -> list:
 
 
 @router.get("/models")
+@router.get("/models/{url_idx}")
 @cached(ttl=MODELS_CACHE_TTL)
-async def get_models(request: Request, user=Depends(get_verified_user)):
+async def get_models(
+    request: Request, url_idx: Optional[int] = None, user=Depends(get_verified_user)
+):
     if not request.app.state.config.ENABLE_GEMINI_API:
         return {"data": []}
 
-    responses = await get_all_models_responses(request, user)
-
     models = []
-    for idx, response in enumerate(responses):
-        if response:
-            url = request.app.state.config.GEMINI_API_BASE_URLS[idx]
-            api_config = request.app.state.config.GEMINI_API_CONFIGS.get(
-                str(idx),
-                request.app.state.config.GEMINI_API_CONFIGS.get(url, {}),
+
+    if url_idx is None:
+        # Get models from all configured URLs
+        responses = await get_all_models_responses(request, user)
+
+        for idx, response in enumerate(responses):
+            if response:
+                url = request.app.state.config.GEMINI_API_BASE_URLS[idx]
+                api_config = request.app.state.config.GEMINI_API_CONFIGS.get(
+                    str(idx),
+                    request.app.state.config.GEMINI_API_CONFIGS.get(url, {}),
+                )
+
+                prefix_id = api_config.get("prefix_id", None)
+                model_ids = api_config.get("model_ids", [])
+
+                if "models" in response:
+                    for model in response["models"]:
+                        model_id = model.get("name", "").replace("models/", "")
+                        if len(model_ids) == 0 or model_id in model_ids:
+                            if prefix_id:
+                                model_id = f"{prefix_id}.{model_id}"
+
+                            models.append(
+                                {
+                                    "id": model_id,
+                                    "name": model.get("displayName", model_id),
+                                    "object": "model",
+                                    "created": 0,
+                                    "owned_by": "google",
+                                    "gemini": {
+                                        "name": model.get("name", ""),
+                                        "description": model.get("description", ""),
+                                        "version": model.get("version", ""),
+                                    },
+                                }
+                            )
+    else:
+        # Get models from a specific URL index
+        if url_idx >= len(request.app.state.config.GEMINI_API_BASE_URLS):
+            raise HTTPException(
+                status_code=404,
+                detail=f"URL index {url_idx} not found",
             )
 
-            prefix_id = api_config.get("prefix_id", None)
-            model_ids = api_config.get("model_ids", [])
+        url = request.app.state.config.GEMINI_API_BASE_URLS[url_idx]
+        key = request.app.state.config.GEMINI_API_KEYS[url_idx]
+        api_config = request.app.state.config.GEMINI_API_CONFIGS.get(
+            str(url_idx),
+            request.app.state.config.GEMINI_API_CONFIGS.get(url, {}),
+        )
 
-            if "models" in response:
-                for model in response["models"]:
-                    model_id = model.get("name", "").replace("models/", "")
-                    if len(model_ids) == 0 or model_id in model_ids:
-                        if prefix_id:
-                            model_id = f"{prefix_id}.{model_id}"
+        prefix_id = api_config.get("prefix_id", None)
+        model_ids = api_config.get("model_ids", [])
 
-                        models.append(
-                            {
-                                "id": model_id,
-                                "name": model.get("displayName", model_id),
-                                "object": "model",
-                                "created": 0,
-                                "owned_by": "google",
-                                "gemini": {
-                                    "name": model.get("name", ""),
-                                    "description": model.get("description", ""),
-                                    "version": model.get("version", ""),
-                                },
-                            }
-                        )
+        response = await send_get_request(f"{url}/models", key, user=user)
+
+        if response and "models" in response:
+            for model in response["models"]:
+                model_id = model.get("name", "").replace("models/", "")
+                if len(model_ids) == 0 or model_id in model_ids:
+                    if prefix_id:
+                        model_id = f"{prefix_id}.{model_id}"
+
+                    models.append(
+                        {
+                            "id": model_id,
+                            "name": model.get("displayName", model_id),
+                            "object": "model",
+                            "created": 0,
+                            "owned_by": "google",
+                            "gemini": {
+                                "name": model.get("name", ""),
+                                "description": model.get("description", ""),
+                                "version": model.get("version", ""),
+                            },
+                        }
+                    )
 
     return {"data": models}
 

@@ -199,7 +199,10 @@ async def update_config(
 
 
 @router.get("/models")
-async def get_models(request: Request, user=Depends(get_verified_user)):
+@router.get("/models/{url_idx}")
+async def get_models(
+    request: Request, url_idx: Optional[int] = None, user=Depends(get_verified_user)
+):
     """
     Return a static list of Anthropic models
     Anthropic doesn't provide a models endpoint, so we return known models
@@ -208,7 +211,7 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
         return {"data": []}
 
     # Static list of Anthropic Claude models
-    models = [
+    base_models = [
         {
             "id": "claude-3-5-sonnet-20241022",
             "name": "Claude 3.5 Sonnet (New)",
@@ -253,26 +256,57 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
         },
     ]
 
-    # Apply prefix_id if configured
-    for idx, url in enumerate(request.app.state.config.ANTHROPIC_API_BASE_URLS):
+    models = []
+
+    if url_idx is None:
+        # Apply prefix_id and filtering for all configured URLs
+        for idx, url in enumerate(request.app.state.config.ANTHROPIC_API_BASE_URLS):
+            api_config = request.app.state.config.ANTHROPIC_API_CONFIGS.get(
+                str(idx),
+                request.app.state.config.ANTHROPIC_API_CONFIGS.get(url, {}),
+            )
+            prefix_id = api_config.get("prefix_id", None)
+            model_ids = api_config.get("model_ids", [])
+
+            if prefix_id or len(model_ids) > 0:
+                filtered_models = []
+                for model in base_models:
+                    model_id = model["id"]
+                    if len(model_ids) == 0 or model_id in model_ids:
+                        if prefix_id:
+                            model = model.copy()
+                            model["id"] = f"{prefix_id}.{model_id}"
+                        filtered_models.append(model)
+                models = filtered_models
+                break
+        
+        # If no filtering was applied, return all base models
+        if not models:
+            models = base_models
+    else:
+        # Get models for a specific URL index
+        if url_idx >= len(request.app.state.config.ANTHROPIC_API_BASE_URLS):
+            raise HTTPException(
+                status_code=404,
+                detail=f"URL index {url_idx} not found",
+            )
+
         api_config = request.app.state.config.ANTHROPIC_API_CONFIGS.get(
-            str(idx),
-            request.app.state.config.ANTHROPIC_API_CONFIGS.get(url, {}),
+            str(url_idx),
+            request.app.state.config.ANTHROPIC_API_CONFIGS.get(
+                request.app.state.config.ANTHROPIC_API_BASE_URLS[url_idx], {}
+            ),
         )
         prefix_id = api_config.get("prefix_id", None)
         model_ids = api_config.get("model_ids", [])
 
-        if prefix_id or len(model_ids) > 0:
-            filtered_models = []
-            for model in models:
-                model_id = model["id"]
-                if len(model_ids) == 0 or model_id in model_ids:
-                    if prefix_id:
-                        model = model.copy()
-                        model["id"] = f"{prefix_id}.{model_id}"
-                    filtered_models.append(model)
-            models = filtered_models
-            break
+        for model in base_models:
+            model_id = model["id"]
+            if len(model_ids) == 0 or model_id in model_ids:
+                if prefix_id:
+                    model = model.copy()
+                    model["id"] = f"{prefix_id}.{model_id}"
+                models.append(model)
 
     return {"data": models}
 
