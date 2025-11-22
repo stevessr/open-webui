@@ -50,7 +50,7 @@ async def get_function_list(user=Depends(get_admin_user)):
 
 
 @router.get("/export", response_model=list[FunctionModel | FunctionWithValvesModel])
-async def get_functions(include_valves: bool = False, user=Depends(get_admin_user)):
+async def get_functions_export(include_valves: bool = False, user=Depends(get_admin_user)):
     return await Functions.get_functions(include_valves=include_valves)
 
 

@@ -2,6 +2,7 @@ import io
 import os
 from unittest.mock import MagicMock
 
+import azure
 import boto3
 import pytest
 from botocore.exceptions import ClientError

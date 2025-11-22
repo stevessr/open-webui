@@ -17,7 +17,7 @@ class WEBHOOK_MESSAGES(str, Enum):
         return f"{msg if msg else ''}"
 
     def USER_SIGNUP(username=""):
-        return (f"New user signed up: {username}" if username else "New user signed up")
+        return f"New user signed up: {username}" if username else "New user signed up"
 
 
 class ERROR_MESSAGES(str, Enum):
@@ -26,6 +26,7 @@ class ERROR_MESSAGES(str, Enum):
 
     def DEFAULT(err=""):
         return f"{'Something went wrong :/' if err == '' else '[ERROR: ' + str(err) + ']'}"
+
     ENV_VAR_NOT_FOUND = "Required environment variable not found. Terminating now."
     CREATE_USER_ERROR = "Oops! Something went wrong while creating your account. Please try again later. If the issue persists, contact support for assistance."
     DELETE_USER_ERROR = "Oops! Something went wrong. We encountered an issue while trying to delete the user. Please give it another shot."
@@ -64,14 +65,18 @@ class ERROR_MESSAGES(str, Enum):
     MALICIOUS = "Unusual activities detected, please try again in a few minutes."
 
     PANDOC_NOT_INSTALLED = "Pandoc is not installed on the server. Please contact your administrator for assistance."
+
     def INCORRECT_FORMAT(err=""):
         return f"Invalid format. Please use the correct format{err}"
+
     RATE_LIMIT_EXCEEDED = "API rate limit exceeded"
 
     def MODEL_NOT_FOUND(name=""):
         return f"Model '{name}' was not found"
+
     def OPENAI_NOT_FOUND(name=""):
         return "OpenAI API was not found"
+
     OLLAMA_NOT_FOUND = "WebUI could not connect to Ollama"
     CREATE_API_KEY_ERROR = "Oops! Something went wrong while creating your API key. Please try again later. If the issue persists, contact support for assistance."
     API_KEY_CREATION_NOT_ALLOWED = "API key creation is not allowed in the environment."
@@ -100,6 +105,7 @@ class TASKS(str, Enum):
 
     def DEFAULT(task=""):
         return f"{task if task else 'generation'}"
+
     TITLE_GENERATION = "title_generation"
     FOLLOW_UP_GENERATION = "follow_up_generation"
     TAGS_GENERATION = "tags_generation"

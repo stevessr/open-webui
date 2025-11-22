@@ -1,17 +1,20 @@
 import asyncio
 import hashlib
 import logging
+import operator
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor
-from typing import Optional, Union
+from typing import Any, Optional, Sequence, Union
 from urllib.parse import quote
 
 import httpx
 from huggingface_hub import snapshot_download
 from langchain.retrievers import ContextualCompressionRetriever, EnsembleRetriever
 from langchain_community.retrievers import BM25Retriever
-from langchain_core.documents import Document
+from langchain_core.callbacks import CallbackManagerForRetrieverRun, Callbacks
+from langchain_core.documents import BaseDocumentCompressor, Document
+from langchain_core.retrievers import BaseRetriever
 from open_webui.config import (
     RAG_EMBEDDING_CONTENT_PREFIX,
     RAG_EMBEDDING_PREFIX_FIELD_NAME,
@@ -36,12 +39,6 @@ from open_webui.utils.misc import get_message_list
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
-
-
-from typing import Any
-
-from langchain_core.callbacks import CallbackManagerForRetrieverRun
-from langchain_core.retrievers import BaseRetriever
 
 
 def is_youtube_url(url: str) -> bool:
@@ -924,13 +921,6 @@ async def generate_embeddings(
             user,
         )
         return embeddings[0] if isinstance(text, str) else embeddings
-
-
-import operator
-from typing import Optional, Sequence
-
-from langchain_core.callbacks import Callbacks
-from langchain_core.documents import BaseDocumentCompressor, Document
 
 
 class RerankCompressor(BaseDocumentCompressor):

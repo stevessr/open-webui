@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import hashlib
 import html
@@ -43,6 +44,7 @@ from open_webui.env import (
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from pydantic import BaseModel
 from pydub import AudioSegment
+from pydub.utils import mediainfo
 
 router = APIRouter()
 
@@ -64,8 +66,6 @@ SPEECH_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 # Utility functions
 #
 ##########################################
-
-from pydub.utils import mediainfo
 
 
 def is_audio_conversion_required(file_path):

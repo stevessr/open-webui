@@ -9,6 +9,7 @@ from typing import Optional
 
 import aiofiles
 import httpx
+import requests
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 from open_webui.config import CACHE_DIR

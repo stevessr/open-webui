@@ -652,7 +652,7 @@ class Oracle23aiClient(VectorDBBase):
             log.exception(f"Error during query: {e}")
             return None
 
-    def get(self, collection_name: str) -> Optional[GetResult]:
+    def get(self, collection_name: str, limit: Optional[int] = None) -> Optional[GetResult]:
         """
         Get all items in a collection.
 

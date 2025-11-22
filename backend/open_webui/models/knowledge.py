@@ -168,7 +168,6 @@ class KnowledgeTable:
     async def update_knowledge_by_id(self, id: str, form_data: KnowledgeForm, overwrite: bool = False) -> Optional[KnowledgeModel]:
         try:
             with get_db() as db:
-                await self.get_knowledge_by_id(id=id)
                 await asyncio.to_thread(
                     db.query(Knowledge).filter_by(id=id).update,
                     {
@@ -185,7 +184,6 @@ class KnowledgeTable:
     async def update_knowledge_data_by_id(self, id: str, data: dict) -> Optional[KnowledgeModel]:
         try:
             with get_db() as db:
-                await self.get_knowledge_by_id(id=id)
                 await asyncio.to_thread(
                     db.query(Knowledge).filter_by(id=id).update,
                     {

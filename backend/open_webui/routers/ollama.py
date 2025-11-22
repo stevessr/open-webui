@@ -15,6 +15,7 @@ from urllib.parse import quote, urlparse
 
 import aiofiles
 import aiohttp
+import requests
 from aiocache import cached
 from fastapi import (
     APIRouter,
