@@ -214,7 +214,7 @@ select = ["E", "F", "I", "RUF"]
 # ignore = ["E501"] # 例如，忽略行太长的错误
 
 # 设置代码行长限制，与 Black 格式化器默认值一致
-line-length = 88
+line-length = 320
 
 # 指定你的项目所支持的 Python 版本
 target-version = "py312" # 根据你的项目修改

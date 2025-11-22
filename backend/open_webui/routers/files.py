@@ -676,7 +676,7 @@ async def get_file_content_by_id(id: str, user=Depends(get_verified_user)):
                     detail=ERROR_MESSAGES.NOT_FOUND,
                 )
         else:
-            # File path doesn’t exist, return the content as .txt if possible
+            # File path doesn't exist, return the content as .txt if possible
             file_content = file.content.get("content", "")
             file_name = file.filename
 

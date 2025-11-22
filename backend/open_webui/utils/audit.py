@@ -59,10 +59,10 @@ class AuditLevel(str, Enum):
 
 class AuditLogger:
     """
-    A helper class that encapsulates audit logging functionality. It uses Loguru’s logger with an auditable binding to ensure that audit log entries are filtered correctly.
+    A helper class that encapsulates audit logging functionality. It uses Loguru's logger with an auditable binding to ensure that audit log entries are filtered correctly.
 
     Parameters:
-    logger (Logger): An instance of Loguru’s logger.
+    logger (Logger): An instance of Loguru's logger.
     """
 
     def __init__(self, logger: "Logger"):

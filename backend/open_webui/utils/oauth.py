@@ -49,15 +49,7 @@ from open_webui.config import (
     AppConfig,
 )
 from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
-from open_webui.env import (
-    AIOHTTP_CLIENT_SESSION_SSL,
-    ENABLE_OAUTH_EMAIL_FALLBACK,
-    ENABLE_OAUTH_ID_TOKEN_COOKIE,
-    OAUTH_CLIENT_INFO_ENCRYPTION_KEY,
-    WEBUI_AUTH_COOKIE_SAME_SITE,
-    WEBUI_AUTH_COOKIE_SECURE,
-    WEBUI_NAME,
-)
+from open_webui.env import AIOHTTP_CLIENT_SESSION_SSL, ENABLE_OAUTH_EMAIL_FALLBACK, ENABLE_OAUTH_ID_TOKEN_COOKIE, GLOBAL_LOG_LEVEL, OAUTH_CLIENT_INFO_ENCRYPTION_KEY, SRC_LOG_LEVELS, WEBUI_AUTH_COOKIE_SAME_SITE, WEBUI_AUTH_COOKIE_SECURE, WEBUI_NAME
 from open_webui.models.auths import Auths
 from open_webui.models.groups import GroupForm, GroupModel, Groups, GroupUpdateForm
 from open_webui.models.oauth_sessions import OAuthSessions
@@ -78,8 +70,6 @@ class OAuthClientInformationFull(OAuthClientMetadata):
 
     server_metadata: Optional[OAuthMetadata] = None  # Fetched from the OAuth server
 
-
-from open_webui.env import GLOBAL_LOG_LEVEL, SRC_LOG_LEVELS
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
@@ -198,10 +188,7 @@ def is_in_blocked_groups(group_name: str, groups: list) -> bool:
             return True
 
         # Try as regex pattern first if it contains regex-specific characters
-        if any(
-            char in group_pattern
-            for char in ["^", "$", "[", "]", "(", ")", "{", "}", "+", "\\", "|"]
-        ):
+        if any(char in group_pattern for char in ["^", "$", "[", "]", "(", ")", "{", "}", "+", "\\", "|"]):
             try:
                 # Use the original pattern as-is for regex matching
                 if re.search(group_pattern, group_name):
@@ -239,11 +226,7 @@ def get_discovery_urls(server_url) -> list[str]:
                 f"/.well-known/oauth-authorization-server{parsed.path.rstrip('/')}",
             )
         )
-        urls.append(
-            urllib.parse.urljoin(
-                base_url, f"/.well-known/openid-configuration{parsed.path.rstrip('/')}"
-            )
-        )
+        urls.append(urllib.parse.urljoin(base_url, f"/.well-known/openid-configuration{parsed.path.rstrip('/')}"))
 
     return urls
 
@@ -260,9 +243,7 @@ async def get_oauth_client_info_with_dynamic_client_registration(
         oauth_server_metadata = None
         oauth_server_metadata_url = None
 
-        redirect_base_url = (
-            str(request.app.state.config.WEBUI_URL or request.base_url)
-        ).rstrip("/")
+        redirect_base_url = (str(request.app.state.config.WEBUI_URL or request.base_url)).rstrip("/")
 
         oauth_client_metadata = OAuthClientMetadata(
             client_name="Open WebUI",
@@ -276,22 +257,13 @@ async def get_oauth_client_info_with_dynamic_client_registration(
         discovery_urls = get_discovery_urls(oauth_server_url)
         for url in discovery_urls:
             async with aiohttp.ClientSession(trust_env=True) as session:
-                async with session.get(
-                    url, ssl=AIOHTTP_CLIENT_SESSION_SSL
-                ) as oauth_server_metadata_response:
+                async with session.get(url, ssl=AIOHTTP_CLIENT_SESSION_SSL) as oauth_server_metadata_response:
                     if oauth_server_metadata_response.status == 200:
                         try:
-                            oauth_server_metadata = OAuthMetadata.model_validate(
-                                await oauth_server_metadata_response.json()
-                            )
+                            oauth_server_metadata = OAuthMetadata.model_validate(await oauth_server_metadata_response.json())
                             oauth_server_metadata_url = url
-                            if (
-                                oauth_client_metadata.scope is None
-                                and oauth_server_metadata.scopes_supported is not None
-                            ):
-                                oauth_client_metadata.scope = " ".join(
-                                    oauth_server_metadata.scopes_supported
-                                )
+                            if oauth_client_metadata.scope is None and oauth_server_metadata.scopes_supported is not None:
+                                oauth_client_metadata.scope = " ".join(oauth_server_metadata.scopes_supported)
                             break
                         except Exception as e:
                             log.error(f"Error parsing OAuth metadata from {url}: {e}")
@@ -312,13 +284,9 @@ async def get_oauth_client_info_with_dynamic_client_registration(
 
         # Perform dynamic client registration and return client info
         async with aiohttp.ClientSession(trust_env=True) as session:
-            async with session.post(
-                registration_url, json=registration_data, ssl=AIOHTTP_CLIENT_SESSION_SSL
-            ) as oauth_client_registration_response:
+            async with session.post(registration_url, json=registration_data, ssl=AIOHTTP_CLIENT_SESSION_SSL) as oauth_client_registration_response:
                 try:
-                    registration_response_json = (
-                        await oauth_client_registration_response.json()
-                    )
+                    registration_response_json = await oauth_client_registration_response.json()
                     oauth_client_info = OAuthClientInformationFull.model_validate(
                         {
                             **registration_response_json,
@@ -326,26 +294,18 @@ async def get_oauth_client_info_with_dynamic_client_registration(
                             **{"server_metadata": oauth_server_metadata},
                         }
                     )
-                    log.info(
-                        f"Dynamic client registration successful at {registration_url}, client_id: {oauth_client_info.client_id}"
-                    )
+                    log.info(f"Dynamic client registration successful at {registration_url}, client_id: {oauth_client_info.client_id}")
                     return oauth_client_info
                 except Exception as e:
                     error_text = None
                     try:
                         error_text = await oauth_client_registration_response.text()
-                        log.error(
-                            f"Dynamic client registration failed at {registration_url}: {oauth_client_registration_response.status} - {error_text}"
-                        )
+                        log.error(f"Dynamic client registration failed at {registration_url}: {oauth_client_registration_response.status} - {error_text}")
                     except Exception:
                         pass
 
                     log.error(f"Error parsing client registration response: {e}")
-                    raise Exception(
-                        f"Dynamic client registration failed: {error_text}"
-                        if error_text
-                        else "Error parsing client registration response"
-                    )
+                    raise Exception(f"Dynamic client registration failed: {error_text}" if error_text else "Error parsing client registration response")
         raise Exception("Dynamic client registration failed")
     except Exception as e:
         log.error(f"Exception during dynamic client registration: {e}")
@@ -363,25 +323,17 @@ class OAuthClientManager:
             "name": client_id,
             "client_id": oauth_client_info.client_id,
             "client_secret": oauth_client_info.client_secret,
-            "client_kwargs": (
-                {"scope": oauth_client_info.scope} if oauth_client_info.scope else {}
-            ),
-            "server_metadata_url": (
-                oauth_client_info.issuer if oauth_client_info.issuer else None
-            ),
+            "client_kwargs": ({"scope": oauth_client_info.scope} if oauth_client_info.scope else {}),
+            "server_metadata_url": (oauth_client_info.issuer if oauth_client_info.issuer else None),
         }
 
-        if (
-            oauth_client_info.server_metadata
-            and oauth_client_info.server_metadata.code_challenge_methods_supported
-        ):
+        if oauth_client_info.server_metadata and oauth_client_info.server_metadata.code_challenge_methods_supported:
             if (
                 isinstance(
                     oauth_client_info.server_metadata.code_challenge_methods_supported,
                     list,
                 )
-                and "S256"
-                in oauth_client_info.server_metadata.code_challenge_methods_supported
+                and "S256" in oauth_client_info.server_metadata.code_challenge_methods_supported
             ):
                 kwargs["code_challenge_method"] = "S256"
 
@@ -406,9 +358,7 @@ class OAuthClientManager:
 
         return True
 
-    async def _preflight_authorization_url(
-        self, client, client_info: OAuthClientInformationFull
-    ) -> bool:
+    async def _preflight_authorization_url(self, client, client_info: OAuthClientInformationFull) -> bool:
         # TODO: Replace this logic with a more robust OAuth client registration validation
         # Only perform preflight checks for Starlette OAuth clients
         if not hasattr(client, "create_authorization_url"):
@@ -457,19 +407,12 @@ class OAuthClientManager:
 
                     error_message = f"{error or ''} {error_description or ''}".lower()
 
-                    if any(
-                        keyword in error_message
-                        for keyword in ("invalid_client", "invalid client", "client id")
-                    ):
-                        log.warning(
-                            f"OAuth client preflight detected invalid registration for {client_info.client_id}: {error} {error_description}"
-                        )
+                    if any(keyword in error_message for keyword in ("invalid_client", "invalid client", "client id")):
+                        log.warning(f"OAuth client preflight detected invalid registration for {client_info.client_id}: {error} {error_description}")
 
                         return False
         except Exception as e:
-            log.debug(
-                f"Skipping OAuth preflight network check for client {client_info.client_id}: {e}"
-            )
+            log.debug(f"Skipping OAuth preflight network check for client {client_info.client_id}: {e}")
 
         return True
 
@@ -484,16 +427,10 @@ class OAuthClientManager:
     def get_server_metadata_url(self, client_id):
         if client_id in self.clients:
             client = self.clients[client_id]
-            return (
-                client._server_metadata_url
-                if hasattr(client, "_server_metadata_url")
-                else None
-            )
+            return client._server_metadata_url if hasattr(client, "_server_metadata_url") else None
         return None
 
-    async def get_oauth_token(
-        self, user_id: str, client_id: str, force_refresh: bool = False
-    ):
+    async def get_oauth_token(self, user_id: str, client_id: str, force_refresh: bool = False):
         """
         Get a valid OAuth token for the user, automatically refreshing if needed.
 
@@ -507,28 +444,18 @@ class OAuthClientManager:
         """
         try:
             # Get the OAuth session
-            session = OAuthSessions.get_session_by_provider_and_user_id(
-                client_id, user_id
-            )
+            session = OAuthSessions.get_session_by_provider_and_user_id(client_id, user_id)
             if not session:
-                log.warning(
-                    f"No OAuth session found for user {user_id}, client_id {client_id}"
-                )
+                log.warning(f"No OAuth session found for user {user_id}, client_id {client_id}")
                 return None
 
-            if force_refresh or datetime.now() + timedelta(
-                minutes=5
-            ) >= datetime.fromtimestamp(session.expires_at):
-                log.debug(
-                    f"Token refresh needed for user {user_id}, client_id {session.provider}"
-                )
+            if force_refresh or datetime.now() + timedelta(minutes=5) >= datetime.fromtimestamp(session.expires_at):
+                log.debug(f"Token refresh needed for user {user_id}, client_id {session.provider}")
                 refreshed_token = await self._refresh_token(session)
                 if refreshed_token:
                     return refreshed_token
                 else:
-                    log.warning(
-                        f"Token refresh failed for user {user_id}, client_id {session.provider}, deleting session {session.id}"
-                    )
+                    log.warning(f"Token refresh failed for user {user_id}, client_id {session.provider}, deleting session {session.id}")
                     OAuthSessions.delete_session_by_id(session.id)
                     return None
             return session.token
@@ -553,9 +480,7 @@ class OAuthClientManager:
 
             if refreshed_token:
                 # Update the session with new token data
-                session = OAuthSessions.update_session_by_id(
-                    session.id, refreshed_token
-                )
+                session = OAuthSessions.update_session_by_id(session.id, refreshed_token)
                 log.info(f"Successfully refreshed token for session {session.id}")
                 return session.token
             else:
@@ -591,16 +516,12 @@ class OAuthClientManager:
 
             token_endpoint = None
             async with aiohttp.ClientSession(trust_env=True) as session_http:
-                async with session_http.get(
-                    self.get_server_metadata_url(client_id)
-                ) as r:
+                async with session_http.get(self.get_server_metadata_url(client_id)) as r:
                     if r.status == 200:
                         openid_data = await r.json()
                         token_endpoint = openid_data.get("token_endpoint")
                     else:
-                        log.error(
-                            f"Failed to fetch OpenID configuration for client_id {client_id}"
-                        )
+                        log.error(f"Failed to fetch OpenID configuration for client_id {client_id}")
             if not token_endpoint:
                 log.error(f"No token endpoint found for client_id {client_id}")
                 return None
@@ -627,30 +548,20 @@ class OAuthClientManager:
 
                         # Merge with existing token data (preserve refresh_token if not provided)
                         if "refresh_token" not in new_token_data:
-                            new_token_data["refresh_token"] = token_data[
-                                "refresh_token"
-                            ]
+                            new_token_data["refresh_token"] = token_data["refresh_token"]
 
                         # Add timestamp for tracking
                         new_token_data["issued_at"] = datetime.now().timestamp()
 
                         # Calculate expires_at if we have expires_in
-                        if (
-                            "expires_in" in new_token_data
-                            and "expires_at" not in new_token_data
-                        ):
-                            new_token_data["expires_at"] = int(
-                                datetime.now().timestamp()
-                                + new_token_data["expires_in"]
-                            )
+                        if "expires_in" in new_token_data and "expires_at" not in new_token_data:
+                            new_token_data["expires_at"] = int(datetime.now().timestamp() + new_token_data["expires_in"])
 
                         log.debug(f"Token refresh successful for client_id {client_id}")
                         return new_token_data
                     else:
                         error_text = await r.text()
-                        log.error(
-                            f"Token refresh failed for client_id {client_id}: {r.status} - {error_text}"
-                        )
+                        log.error(f"Token refresh failed for client_id {client_id}: {r.status} - {error_text}")
                         return None
 
         except Exception as e:
@@ -665,9 +576,7 @@ class OAuthClientManager:
         if client_info is None:
             raise HTTPException(404)
 
-        redirect_uri = (
-            client_info.redirect_uris[0] if client_info.redirect_uris else None
-        )
+        redirect_uri = client_info.redirect_uris[0] if client_info.redirect_uris else None
         redirect_uri_str = str(redirect_uri) if redirect_uri else None
         return await client.authorize_redirect(request, redirect_uri_str)
 
@@ -680,11 +589,7 @@ class OAuthClientManager:
         try:
             client_info = self.get_client_info(client_id)
             token_params = {}
-            if (
-                client_info
-                and hasattr(client_info, "client_id")
-                and hasattr(client_info, "client_secret")
-            ):
+            if client_info and hasattr(client_info, "client_id") and hasattr(client_info, "client_secret"):
                 token_params["client_id"] = client_info.client_id
                 token_params["client_secret"] = client_info.client_secret
 
@@ -696,9 +601,7 @@ class OAuthClientManager:
 
                     # Calculate expires_at if we have expires_in
                     if "expires_in" in token and "expires_at" not in token:
-                        token["expires_at"] = (
-                            datetime.now().timestamp() + token["expires_in"]
-                        )
+                        token["expires_at"] = datetime.now().timestamp() + token["expires_in"]
 
                     # Clean up any existing sessions for this user/client_id first
                     sessions = OAuthSessions.get_sessions_by_user_id(user_id)
@@ -711,9 +614,7 @@ class OAuthClientManager:
                         provider=client_id,
                         token=token,
                     )
-                    log.info(
-                        f"Stored OAuth session server-side for user {user_id}, client_id {client_id}"
-                    )
+                    log.info(f"Stored OAuth session server-side for user {user_id}, client_id {client_id}")
                 except Exception as e:
                     error_message = "Failed to store OAuth session server-side"
                     log.error(f"Failed to store OAuth session server-side: {e}")
@@ -730,15 +631,11 @@ class OAuthClientManager:
                 exc_info=True,
             )
 
-        redirect_url = (
-            str(request.app.state.config.WEBUI_URL or request.base_url)
-        ).rstrip("/")
+        redirect_url = (str(request.app.state.config.WEBUI_URL or request.base_url)).rstrip("/")
 
         if error_message:
             log.debug(error_message)
-            redirect_url = (
-                f"{redirect_url}/?error={urllib.parse.quote_plus(error_message)}"
-            )
+            redirect_url = f"{redirect_url}/?error={urllib.parse.quote_plus(error_message)}"
             return RedirectResponse(url=redirect_url, headers=response.headers)
 
         response = RedirectResponse(url=redirect_url, headers=response.headers)
@@ -768,16 +665,10 @@ class OAuthManager:
     def get_server_metadata_url(self, provider_name):
         if provider_name in self._clients:
             client = self._clients[provider_name]
-            return (
-                client._server_metadata_url
-                if hasattr(client, "_server_metadata_url")
-                else None
-            )
+            return client._server_metadata_url if hasattr(client, "_server_metadata_url") else None
         return None
 
-    async def get_oauth_token(
-        self, user_id: str, session_id: str, force_refresh: bool = False
-    ):
+    async def get_oauth_token(self, user_id: str, session_id: str, force_refresh: bool = False):
         """
         Get a valid OAuth token for the user, automatically refreshing if needed.
 
@@ -793,24 +684,16 @@ class OAuthManager:
             # Get the OAuth session
             session = OAuthSessions.get_session_by_id_and_user_id(session_id, user_id)
             if not session:
-                log.warning(
-                    f"No OAuth session found for user {user_id}, session {session_id}"
-                )
+                log.warning(f"No OAuth session found for user {user_id}, session {session_id}")
                 return None
 
-            if force_refresh or datetime.now() + timedelta(
-                minutes=5
-            ) >= datetime.fromtimestamp(session.expires_at):
-                log.debug(
-                    f"Token refresh needed for user {user_id}, provider {session.provider}"
-                )
+            if force_refresh or datetime.now() + timedelta(minutes=5) >= datetime.fromtimestamp(session.expires_at):
+                log.debug(f"Token refresh needed for user {user_id}, provider {session.provider}")
                 refreshed_token = await self._refresh_token(session)
                 if refreshed_token:
                     return refreshed_token
                 else:
-                    log.warning(
-                        f"Token refresh failed for user {user_id}, provider {session.provider}, deleting session {session.id}"
-                    )
+                    log.warning(f"Token refresh failed for user {user_id}, provider {session.provider}, deleting session {session.id}")
                     OAuthSessions.delete_session_by_id(session.id)
 
                     return None
@@ -836,9 +719,7 @@ class OAuthManager:
 
             if refreshed_token:
                 # Update the session with new token data
-                session = OAuthSessions.update_session_by_id(
-                    session.id, refreshed_token
-                )
+                session = OAuthSessions.update_session_by_id(session.id, refreshed_token)
                 log.info(f"Successfully refreshed token for session {session.id}")
                 return session.token
             else:
@@ -880,9 +761,7 @@ class OAuthManager:
                         openid_data = await r.json()
                         token_endpoint = openid_data.get("token_endpoint")
                     else:
-                        log.error(
-                            f"Failed to fetch OpenID configuration for provider {provider}"
-                        )
+                        log.error(f"Failed to fetch OpenID configuration for provider {provider}")
             if not token_endpoint:
                 log.error(f"No token endpoint found for provider {provider}")
                 return None
@@ -910,30 +789,20 @@ class OAuthManager:
 
                         # Merge with existing token data (preserve refresh_token if not provided)
                         if "refresh_token" not in new_token_data:
-                            new_token_data["refresh_token"] = token_data[
-                                "refresh_token"
-                            ]
+                            new_token_data["refresh_token"] = token_data["refresh_token"]
 
                         # Add timestamp for tracking
                         new_token_data["issued_at"] = datetime.now().timestamp()
 
                         # Calculate expires_at if we have expires_in
-                        if (
-                            "expires_in" in new_token_data
-                            and "expires_at" not in new_token_data
-                        ):
-                            new_token_data["expires_at"] = int(
-                                datetime.now().timestamp()
-                                + new_token_data["expires_in"]
-                            )
+                        if "expires_in" in new_token_data and "expires_at" not in new_token_data:
+                            new_token_data["expires_at"] = int(datetime.now().timestamp() + new_token_data["expires_in"])
 
                         log.debug(f"Token refresh successful for provider {provider}")
                         return new_token_data
                     else:
                         error_text = await r.text()
-                        log.error(
-                            f"Token refresh failed for provider {provider}: {r.status} - {error_text}"
-                        )
+                        log.error(f"Token refresh failed for provider {provider}: {r.status} - {error_text}")
                         return None
 
         except Exception as e:
@@ -1048,9 +917,7 @@ class OAuthManager:
 
             for group_name in user_oauth_groups:
                 if group_name not in all_group_names:
-                    log.info(
-                        f"Group '{group_name}' not found via OAuth claim. Creating group..."
-                    )
+                    log.info(f"Group '{group_name}' not found via OAuth claim. Creating group...")
                     try:
                         new_group_form = GroupForm(
                             name=group_name,
@@ -1059,20 +926,14 @@ class OAuthManager:
                             user_ids=[],  # Start with no users, user will be added later by subsequent logic
                         )
                         # Use determined creator ID (admin or fallback to current user)
-                        created_group = Groups.insert_new_group(
-                            creator_id, new_group_form
-                        )
+                        created_group = Groups.insert_new_group(creator_id, new_group_form)
                         if created_group:
-                            log.info(
-                                f"Successfully created group '{group_name}' with ID {created_group.id} using creator ID {creator_id}"
-                            )
+                            log.info(f"Successfully created group '{group_name}' with ID {created_group.id} using creator ID {creator_id}")
                             groups_created = True
                             # Add to local set to prevent duplicate creation attempts in this run
                             all_group_names.add(group_name)
                         else:
-                            log.error(
-                                f"Failed to create group '{group_name}' via OAuth."
-                            )
+                            log.error(f"Failed to create group '{group_name}' via OAuth.")
                     except Exception as e:
                         log.error(f"Error creating group '{group_name}' via OAuth: {e}")
 
@@ -1084,21 +945,13 @@ class OAuthManager:
         log.debug(f"Oauth Groups claim: {oauth_claim}")
         log.debug(f"User oauth groups: {user_oauth_groups}")
         log.debug(f"User's current groups: {[g.name for g in user_current_groups]}")
-        log.debug(
-            f"All groups available in OpenWebUI: {[g.name for g in all_available_groups]}"
-        )
+        log.debug(f"All groups available in OpenWebUI: {[g.name for g in all_available_groups]}")
 
         # Remove groups that user is no longer a part of
         for group_model in user_current_groups:
-            if (
-                user_oauth_groups
-                and group_model.name not in user_oauth_groups
-                and not is_in_blocked_groups(group_model.name, blocked_groups)
-            ):
+            if user_oauth_groups and group_model.name not in user_oauth_groups and not is_in_blocked_groups(group_model.name, blocked_groups):
                 # Remove group from user
-                log.debug(
-                    f"Removing user from group {group_model.name} as it is no longer in their oauth groups"
-                )
+                log.debug(f"Removing user from group {group_model.name} as it is no longer in their oauth groups")
 
                 user_ids = group_model.user_ids
                 user_ids = [i for i in user_ids if i != user.id]
@@ -1114,22 +967,13 @@ class OAuthManager:
                     permissions=group_permissions,
                     user_ids=user_ids,
                 )
-                Groups.update_group_by_id(
-                    id=group_model.id, form_data=update_form, overwrite=False
-                )
+                Groups.update_group_by_id(id=group_model.id, form_data=update_form, overwrite=False)
 
         # Add user to new groups
         for group_model in all_available_groups:
-            if (
-                user_oauth_groups
-                and group_model.name in user_oauth_groups
-                and not any(gm.name == group_model.name for gm in user_current_groups)
-                and not is_in_blocked_groups(group_model.name, blocked_groups)
-            ):
+            if user_oauth_groups and group_model.name in user_oauth_groups and not any(gm.name == group_model.name for gm in user_current_groups) and not is_in_blocked_groups(group_model.name, blocked_groups):
                 # Add user to group
-                log.debug(
-                    f"Adding user to group {group_model.name} as it was found in their oauth groups"
-                )
+                log.debug(f"Adding user to group {group_model.name} as it was found in their oauth groups")
 
                 user_ids = group_model.user_ids
                 user_ids.append(user.id)
@@ -1145,13 +989,9 @@ class OAuthManager:
                     permissions=group_permissions,
                     user_ids=user_ids,
                 )
-                Groups.update_group_by_id(
-                    id=group_model.id, form_data=update_form, overwrite=False
-                )
+                Groups.update_group_by_id(id=group_model.id, form_data=update_form, overwrite=False)
 
-    async def _process_picture_url(
-        self, picture_url: str, access_token: str = None
-    ) -> str:
+    async def _process_picture_url(self, picture_url: str, access_token: str | None = None) -> str:
         """Process a picture URL and return a base64 encoded data URL.
 
         Args:
@@ -1171,24 +1011,16 @@ class OAuthManager:
                     "Authorization": f"Bearer {access_token}",
                 }
             async with aiohttp.ClientSession(trust_env=True) as session:
-                async with session.get(
-                    picture_url, **get_kwargs, ssl=AIOHTTP_CLIENT_SESSION_SSL
-                ) as resp:
+                async with session.get(picture_url, **get_kwargs, ssl=AIOHTTP_CLIENT_SESSION_SSL) as resp:
                     if resp.ok:
                         picture = await resp.read()
-                        base64_encoded_picture = base64.b64encode(picture).decode(
-                            "utf-8"
-                        )
+                        base64_encoded_picture = base64.b64encode(picture).decode("utf-8")
                         guessed_mime_type = mimetypes.guess_type(picture_url)[0]
                         if guessed_mime_type is None:
                             guessed_mime_type = "image/jpeg"
-                        return (
-                            f"data:{guessed_mime_type};base64,{base64_encoded_picture}"
-                        )
+                        return f"data:{guessed_mime_type};base64,{base64_encoded_picture}"
                     else:
-                        log.warning(
-                            f"Failed to fetch profile picture from {picture_url}"
-                        )
+                        log.warning(f"Failed to fetch profile picture from {picture_url}")
                         return "/user.gif"
         except Exception as e:
             log.error(f"Error processing profile picture '{picture_url}': {e}")
@@ -1198,9 +1030,7 @@ class OAuthManager:
         if provider not in OAUTH_PROVIDERS:
             raise HTTPException(404)
         # If the provider has a custom redirect URL, use that, otherwise automatically generate one
-        redirect_uri = OAUTH_PROVIDERS[provider].get("redirect_uri") or request.url_for(
-            "oauth_login_callback", provider=provider
-        )
+        redirect_uri = OAUTH_PROVIDERS[provider].get("redirect_uri") or request.url_for("oauth_login_callback", provider=provider)
         client = self.get_client(provider)
         if client is None:
             raise HTTPException(404)
@@ -1227,17 +1057,9 @@ class OAuthManager:
 
             # Try to get userinfo from the token first, some providers include it there
             user_data: UserInfo = token.get("userinfo")
-            if (
-                (not user_data)
-                or (auth_manager_config.OAUTH_EMAIL_CLAIM not in user_data)
-                or (auth_manager_config.OAUTH_USERNAME_CLAIM not in user_data)
-            ):
+            if (not user_data) or (auth_manager_config.OAUTH_EMAIL_CLAIM not in user_data) or (auth_manager_config.OAUTH_USERNAME_CLAIM not in user_data):
                 user_data: UserInfo = await client.userinfo(token=token)
-            if (
-                provider == "feishu"
-                and isinstance(user_data, dict)
-                and "data" in user_data
-            ):
+            if provider == "feishu" and isinstance(user_data, dict) and "data" in user_data:
                 user_data = user_data["data"]
             if not user_data:
                 log.warning(f"OAuth callback failed, user data is missing: {token}")
@@ -1275,27 +1097,17 @@ class OAuthManager:
                                     emails = await resp.json()
                                     # use the primary email as the user's email
                                     primary_email = next(
-                                        (
-                                            e["email"]
-                                            for e in emails
-                                            if e.get("primary")
-                                        ),
+                                        (e["email"] for e in emails if e.get("primary")),
                                         None,
                                     )
                                     if primary_email:
                                         email = primary_email
                                     else:
-                                        log.warning(
-                                            "No primary email found in GitHub response"
-                                        )
-                                        raise HTTPException(
-                                            400, detail=ERROR_MESSAGES.INVALID_CRED
-                                        )
+                                        log.warning("No primary email found in GitHub response")
+                                        raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
                                 else:
                                     log.warning("Failed to fetch GitHub email")
-                                    raise HTTPException(
-                                        400, detail=ERROR_MESSAGES.INVALID_CRED
-                                    )
+                                    raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
                     except Exception as e:
                         log.warning(f"Error fetching GitHub email: {e}")
                         raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
@@ -1307,14 +1119,8 @@ class OAuthManager:
             email = email.lower()
 
             # If allowed domains are configured, check if the email domain is in the list
-            if (
-                "*" not in auth_manager_config.OAUTH_ALLOWED_DOMAINS
-                and email.split("@")[-1]
-                not in auth_manager_config.OAUTH_ALLOWED_DOMAINS
-            ):
-                log.warning(
-                    f"OAuth callback failed, e-mail domain is not in the list of allowed domains: {user_data}"
-                )
+            if "*" not in auth_manager_config.OAUTH_ALLOWED_DOMAINS and email.split("@")[-1] not in auth_manager_config.OAUTH_ALLOWED_DOMAINS:
+                log.warning(f"OAuth callback failed, e-mail domain is not in the list of allowed domains: {user_data}")
                 raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
 
             # Check if the user exists
@@ -1340,13 +1146,9 @@ class OAuthManager:
                             picture_claim,
                             OAUTH_PROVIDERS[provider].get("picture_url", ""),
                         )
-                        processed_picture_url = await self._process_picture_url(
-                            new_picture_url, token.get("access_token")
-                        )
+                        processed_picture_url = await self._process_picture_url(new_picture_url, token.get("access_token"))
                         if processed_picture_url != user.profile_image_url:
-                            Users.update_user_profile_image_url_by_id(
-                                user.id, processed_picture_url
-                            )
+                            Users.update_user_profile_image_url_by_id(user.id, processed_picture_url)
                             log.debug(f"Updated profile picture for user {user.email}")
             else:
                 # If the user does not exist, check if signups are enabled
@@ -1362,9 +1164,7 @@ class OAuthManager:
                             picture_claim,
                             OAUTH_PROVIDERS[provider].get("picture_url", ""),
                         )
-                        picture_url = await self._process_picture_url(
-                            picture_url, token.get("access_token")
-                        )
+                        picture_url = await self._process_picture_url(picture_url, token.get("access_token"))
                     else:
                         picture_url = "/user.gif"
                     username_claim = auth_manager_config.OAUTH_USERNAME_CLAIM
@@ -1376,9 +1176,7 @@ class OAuthManager:
 
                     user = Auths.insert_new_auth(
                         email=email,
-                        password=get_password_hash(
-                            str(uuid.uuid4())
-                        ),  # Random password, not used
+                        password=get_password_hash(str(uuid.uuid4())),  # Random password, not used
                         name=name,
                         profile_image_url=picture_url,
                         role=self.get_user_role(None, user_data),
@@ -1406,10 +1204,7 @@ class OAuthManager:
                 data={"id": user.id},
                 expires_delta=parse_duration(auth_manager_config.JWT_EXPIRES_IN),
             )
-            if (
-                auth_manager_config.ENABLE_OAUTH_GROUP_MANAGEMENT
-                and user.role != "admin"
-            ):
+            if auth_manager_config.ENABLE_OAUTH_GROUP_MANAGEMENT and user.role != "admin":
                 self.update_user_groups(
                     user=user,
                     user_data=user_data,
@@ -1418,15 +1213,9 @@ class OAuthManager:
 
         except Exception as e:
             log.error(f"Error during OAuth process: {e}")
-            error_message = (
-                e.detail
-                if isinstance(e, HTTPException) and e.detail
-                else ERROR_MESSAGES.DEFAULT("Error during OAuth process")
-            )
+            error_message = e.detail if isinstance(e, HTTPException) and e.detail else ERROR_MESSAGES.DEFAULT("Error during OAuth process")
 
-        redirect_base_url = (
-            str(request.app.state.config.WEBUI_URL or request.base_url)
-        ).rstrip("/")
+        redirect_base_url = (str(request.app.state.config.WEBUI_URL or request.base_url)).rstrip("/")
         redirect_url = f"{redirect_base_url}/auth"
 
         if error_message:
@@ -1483,9 +1272,7 @@ class OAuthManager:
                 secure=WEBUI_AUTH_COOKIE_SECURE,
             )
 
-            log.info(
-                f"Stored OAuth session server-side for user {user.id}, provider {provider}"
-            )
+            log.info(f"Stored OAuth session server-side for user {user.id}, provider {provider}")
         except Exception as e:
             log.error(f"Failed to store OAuth session server-side: {e}")
 

@@ -118,7 +118,7 @@ def start_logger():
 
     A console (stdout) handler for general log messages (excluding those marked as auditable).
     An optional file handler for audit logs if audit logging is enabled.
-    Additionally, this function reconfigures Python’s standard logging to route through Loguru and adjusts logging levels for Uvicorn.
+    Additionally, this function reconfigures Python's standard logging to route through Loguru and adjusts logging levels for Uvicorn.
 
     Parameters:
     enable_audit_logging (bool): Determines whether audit-specific log entries should be recorded to file.
