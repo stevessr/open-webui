@@ -1473,7 +1473,7 @@ async def chat_completion(
                                 "model": model_id,
                             },
                         )
-                except:
+                except Exception as e:
                     pass
 
             return await process_chat_response(request, response, form_data, user, metadata, model, events, tasks)
@@ -1515,7 +1515,7 @@ async def chat_completion(
                         {"type": "chat:tasks:cancel"},
                     )
 
-                except:
+                except Exception as e:
                     pass
         finally:
             try:

@@ -1147,7 +1147,7 @@ async def process_file(
                         VECTOR_DB_CLIENT.delete_collection,
                         collection_name=f"file-{file.id}",
                     )
-                except:
+                except Exception as e:
                     # Audio file upload pipeline
                     pass
 

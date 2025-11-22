@@ -496,7 +496,7 @@ async def send_chat_message_event_by_id(id: str, message_id: str, form_data: Eve
         else:
             return False
         return True
-    except:
+    except Exception as e:
         return False
 
 

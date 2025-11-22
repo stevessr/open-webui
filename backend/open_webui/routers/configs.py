@@ -161,7 +161,7 @@ async def set_tool_servers_config(
 
             try:
                 request.app.state.oauth_client_manager.remove_client(client_key)
-            except:
+            except Exception as e:
                 pass
 
     # Set new tool server connections

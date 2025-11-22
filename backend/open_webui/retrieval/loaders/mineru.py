@@ -131,7 +131,7 @@ class MinerULoader:
             try:
                 error_data = e.response.json()
                 error_detail += f" - {error_data}"
-            except:
+            except Exception as e:
                 error_detail += f" - {e.response.text}"
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=error_detail)
         except Exception as e:
@@ -262,7 +262,7 @@ class MinerULoader:
             try:
                 error_data = e.response.json()
                 error_detail += f" - {error_data.get('msg', error_data)}"
-            except:
+            except Exception as e:
                 error_detail += f" - {e.response.text}"
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=error_detail)
         except Exception as e:
@@ -364,7 +364,7 @@ class MinerULoader:
                     try:
                         error_data = e.response.json()
                         error_detail += f" - {error_data.get('msg', error_data)}"
-                    except:
+                    except Exception as e:
                         error_detail += f" - {e.response.text}"
                     raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=error_detail)
                 except Exception as e:

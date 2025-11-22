@@ -870,7 +870,7 @@ async def chat_completion_files_handler(request: Request, body: dict, extra_para
                     queries_response = {"queries": [queries_response]}
 
                 queries = queries_response.get("queries", [])
-            except:
+            except Exception as e:
                 pass
 
             await __event_emitter__(
@@ -1002,7 +1002,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
     if system_message:  # Chat Controls/User Settings
         try:
             form_data = apply_system_prompt_to_body(system_message.get("content"), form_data, metadata, user, replace=True)  # Required to handle system prompt variables
-        except:
+        except Exception as e:
             pass
 
     event_emitter = get_event_emitter(metadata)
@@ -1951,7 +1951,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
                         if match:
                             try:
                                 attr_content = match.group(1) if match.group(1) else ""  # Ensure it's not None
-                            except:
+                            except Exception as e:
                                 attr_content = ""
 
                             attributes = extract_attributes(attr_content)  # Extract attributes safely

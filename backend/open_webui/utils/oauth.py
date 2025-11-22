@@ -400,7 +400,8 @@ class OAuthClientManager:
                             payload = json.loads(response_text)
                             error = payload.get("error")
                             error_description = payload.get("error_description", "")
-                        except:
+                        except Exception as e:
+                            log.debug(f"Error parsing JSON response during OAuth preflight for client {client_info.client_id}: {e}")
                             pass
                     else:
                         error_description = response_text
