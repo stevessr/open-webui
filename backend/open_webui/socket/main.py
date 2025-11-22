@@ -269,7 +269,7 @@ async def user_join(sid, data):
         USER_POOL[user.id] = [sid]
 
     # Join all the channels
-    channels = Channels.get_channels_by_user_id(user.id)
+    channels = await Channels.get_channels_by_user_id(user.id)
     log.debug(f"{channels=}")
     for channel in channels:
         await sio.enter_room(sid, f"channel:{channel.id}")
@@ -291,7 +291,7 @@ async def join_channel(sid, data):
         return
 
     # Join all the channels
-    channels = Channels.get_channels_by_user_id(user.id)
+    channels = await Channels.get_channels_by_user_id(user.id)
     log.debug(f"{channels=}")
     for channel in channels:
         await sio.enter_room(sid, f"channel:{channel.id}")

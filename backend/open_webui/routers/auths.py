@@ -64,7 +64,9 @@ log.setLevel(SRC_LOG_LEVELS["MAIN"])
 ############################
 
 
-class SessionUserResponse(Token, UserResponse):
+class SessionUserResponse(UserResponse):
+    token: Optional[str] = None
+    token_type: Optional[str] = "Bearer"
     expires_at: Optional[int] = None
     permissions: Optional[dict] = None
 
@@ -79,29 +81,33 @@ class SessionUserInfoResponse(SessionUserResponse):
 async def get_session_user(request: Request, response: Response, user=Depends(get_current_user)):
     auth_header = request.headers.get("Authorization")
     auth_token = get_http_authorization_cred(auth_header)
-    token = auth_token.credentials
-    data = decode_token(token)
 
+    token = None
     expires_at = None
 
-    if data:
-        expires_at = data.get("exp")
+    # Only process token if auth_token is present (not None)
+    if auth_token:
+        token = auth_token.credentials
+        data = decode_token(token)
 
-        if (expires_at is not None) and int(time.time()) > expires_at:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=ERROR_MESSAGES.INVALID_TOKEN,
+        if data:
+            expires_at = data.get("exp")
+
+            if (expires_at is not None) and int(time.time()) > expires_at:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=ERROR_MESSAGES.INVALID_TOKEN,
+                )
+
+            # Set the cookie token
+            response.set_cookie(
+                key="token",
+                value=token,
+                expires=(datetime.datetime.fromtimestamp(expires_at, datetime.timezone.utc) if expires_at else None),
+                httponly=True,  # Ensures the cookie is not accessible via JavaScript
+                samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
+                secure=WEBUI_AUTH_COOKIE_SECURE,
             )
-
-        # Set the cookie token
-        response.set_cookie(
-            key="token",
-            value=token,
-            expires=(datetime.datetime.fromtimestamp(expires_at, datetime.timezone.utc) if expires_at else None),
-            httponly=True,  # Ensures the cookie is not accessible via JavaScript
-            samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
-            secure=WEBUI_AUTH_COOKIE_SECURE,
-        )
 
     user_permissions = await get_permissions(user.id, request.app.state.config.USER_PERMISSIONS)
 

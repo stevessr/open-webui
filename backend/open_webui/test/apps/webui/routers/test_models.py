@@ -1,5 +1,5 @@
-from test.util.abstract_integration_test import AbstractPostgresTest
-from test.util.mock_user import mock_webui_user
+from open_webui.test.util.abstract_integration_test import AbstractPostgresTest
+from open_webui.test.util.mock_user import mock_webui_user
 
 
 class TestModels(AbstractPostgresTest):
@@ -15,7 +15,7 @@ class TestModels(AbstractPostgresTest):
         with mock_webui_user(id="2"):
             response = self.fast_api_client.get(self.create_url("/"))
         assert response.status_code == 200
-        assert len(response.json()) == 0
+        assert len(response.json()["data"]) == 0
 
         with mock_webui_user(id="2"):
             response = self.fast_api_client.post(
@@ -38,12 +38,12 @@ class TestModels(AbstractPostgresTest):
         with mock_webui_user(id="2"):
             response = self.fast_api_client.get(self.create_url("/"))
         assert response.status_code == 200
-        assert len(response.json()) == 1
+        assert len(response.json()["data"]) == 1
 
         with mock_webui_user(id="2"):
             response = self.fast_api_client.get(self.create_url(query_params={"id": "my-model"}))
         assert response.status_code == 200
-        data = response.json()[0]
+        data = response.json()["data"][0]
         assert data["id"] == "my-model"
         assert data["name"] == "Hello World"
 
@@ -54,4 +54,4 @@ class TestModels(AbstractPostgresTest):
         with mock_webui_user(id="2"):
             response = self.fast_api_client.get(self.create_url("/"))
         assert response.status_code == 200
-        assert len(response.json()) == 0
+        assert len(response.json()["data"]) == 0

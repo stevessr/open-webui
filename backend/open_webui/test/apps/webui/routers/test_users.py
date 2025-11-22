@@ -1,5 +1,5 @@
-from test.util.abstract_integration_test import AbstractPostgresTest
-from test.util.mock_user import mock_webui_user
+from open_webui.test.util.abstract_integration_test import AbstractPostgresTest
+from open_webui.test.util.mock_user import mock_webui_user
 
 
 def _get_user_by_id(data, param):
@@ -48,26 +48,26 @@ class TestUsers(AbstractPostgresTest):
 
     def test_users(self):
         # Get all users
-        with mock_webui_user(id="3"):
+        with mock_webui_user(id="3", role="admin"):
             response = self.fast_api_client.get(self.create_url(""))
         assert response.status_code == 200
-        assert len(response.json()) == 2
-        data = response.json()
+        assert len(response.json()["users"]) == 2
+        data = response.json()["users"]
         _assert_user(data, "1")
         _assert_user(data, "2")
 
         # update role
-        with mock_webui_user(id="3"):
+        with mock_webui_user(id="3", role="admin"):
             response = self.fast_api_client.post(self.create_url("/update/role"), json={"id": "2", "role": "admin"})
         assert response.status_code == 200
         _assert_user([response.json()], "2", role="admin")
 
         # Get all users
-        with mock_webui_user(id="3"):
+        with mock_webui_user(id="3", role="admin"):
             response = self.fast_api_client.get(self.create_url(""))
         assert response.status_code == 200
-        assert len(response.json()) == 2
-        data = response.json()
+        assert len(response.json()["users"]) == 2
+        data = response.json()["users"]
         _assert_user(data, "1")
         _assert_user(data, "2", role="admin")
 
@@ -136,11 +136,11 @@ class TestUsers(AbstractPostgresTest):
         assert response.status_code == 200
 
         # Get all users
-        with mock_webui_user(id="3"):
+        with mock_webui_user(id="3", role="admin"):
             response = self.fast_api_client.get(self.create_url(""))
         assert response.status_code == 200
-        assert len(response.json()) == 2
-        data = response.json()
+        assert len(response.json()["users"]) == 2
+        data = response.json()["users"]
         _assert_user(data, "1")
         _assert_user(
             data,
@@ -152,14 +152,14 @@ class TestUsers(AbstractPostgresTest):
         )
 
         # Delete user by id
-        with mock_webui_user(id="1"):
+        with mock_webui_user(id="1", role="admin"):
             response = self.fast_api_client.delete(self.create_url("/2"))
         assert response.status_code == 200
 
         # Get all users
-        with mock_webui_user(id="3"):
+        with mock_webui_user(id="3", role="admin"):
             response = self.fast_api_client.get(self.create_url(""))
         assert response.status_code == 200
-        assert len(response.json()) == 1
-        data = response.json()
+        assert len(response.json()["users"]) == 1
+        data = response.json()["users"]
         _assert_user(data, "1")

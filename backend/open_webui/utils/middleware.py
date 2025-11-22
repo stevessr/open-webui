@@ -521,6 +521,9 @@ async def chat_web_search_handler(request: Request, form_data: dict, extra_param
             user,
         )
 
+        if isinstance(res, JSONResponse):
+            res = json.loads(res.body.decode())
+
         response = res["choices"][0]["message"]["content"]
 
         try:
@@ -891,25 +894,14 @@ async def chat_completion_files_handler(request: Request, body: dict, extra_para
                 request=request,
                 items=files,
                 queries=queries,
-                embedding_function=lambda query, prefix: request.app.state.EMBEDDING_FUNCTION(
-                    query, prefix=prefix, user=user
-                ),
+                embedding_function=lambda query, prefix: request.app.state.EMBEDDING_FUNCTION(query, prefix=prefix, user=user),
                 k=request.app.state.config.TOP_K,
-                reranking_function=(
-                    (
-                        lambda sentences: request.app.state.RERANKING_FUNCTION(
-                            sentences, user=user
-                        )
-                    )
-                    if request.app.state.RERANKING_FUNCTION
-                    else None
-                ),
+                reranking_function=((lambda sentences: request.app.state.RERANKING_FUNCTION(sentences, user=user)) if request.app.state.RERANKING_FUNCTION else None),
                 k_reranker=request.app.state.config.TOP_K_RERANKER,
                 r=request.app.state.config.RELEVANCE_THRESHOLD,
                 hybrid_bm25_weight=request.app.state.config.HYBRID_BM25_WEIGHT,
                 hybrid_search=request.app.state.config.ENABLE_RAG_HYBRID_SEARCH,
-                full_context=all_full_context
-                or request.app.state.config.RAG_FULL_CONTEXT,
+                full_context=all_full_context or request.app.state.config.RAG_FULL_CONTEXT,
                 user=user,
             )
         except Exception as e:
@@ -1636,7 +1628,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
                                 }
                             )
 
-                            title = Chats.get_chat_title_by_id(metadata["chat_id"])
+                            title = await Chats.get_chat_title_by_id(metadata["chat_id"])
 
                             await event_emitter(
                                 {
@@ -2701,7 +2693,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
                             log.debug(e)
                             break
 
-                title = Chats.get_chat_title_by_id(metadata["chat_id"])
+                title = await Chats.get_chat_title_by_id(metadata["chat_id"])
                 data = {
                     "done": True,
                     "content": serialize_content_blocks(content_blocks),

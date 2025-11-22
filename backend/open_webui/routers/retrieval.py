@@ -1584,7 +1584,8 @@ async def search_web(request: Request, engine: str, query: str) -> list[SearchRe
         else:
             raise Exception("No SERPLY_API_KEY found in environment variables")
     elif engine == "duckduckgo":
-        return await search_duckduckgo(
+        return await asyncio.to_thread(
+            search_duckduckgo,
             query,
             request.app.state.config.WEB_SEARCH_RESULT_COUNT,
             request.app.state.config.WEB_SEARCH_DOMAIN_FILTER_LIST,
@@ -1920,7 +1921,8 @@ async def delete_entries_from_collection(form_data: DeleteForm, user=Depends(get
             file = await Files.get_file_by_id(form_data.file_id)
             hash = file.hash
 
-            await asyncio.to_thread(VECTOR_DB_CLIENT.delete,
+            await asyncio.to_thread(
+                VECTOR_DB_CLIENT.delete,
                 collection_name=form_data.collection_name,
                 metadata={"hash": hash},
             )

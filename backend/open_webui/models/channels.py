@@ -1,3 +1,4 @@
+import asyncio
 import time
 import uuid
 from typing import Optional
@@ -66,7 +67,7 @@ class ChannelForm(BaseModel):
 
 
 class ChannelTable:
-    def insert_new_channel(self, type: Optional[str], form_data: ChannelForm, user_id: str) -> Optional[ChannelModel]:
+    async def insert_new_channel(self, type: Optional[str], form_data: ChannelForm, user_id: str) -> Optional[ChannelModel]:
         with get_db() as db:
             channel = ChannelModel(
                 **{
@@ -82,27 +83,27 @@ class ChannelTable:
 
             new_channel = Channel(**channel.model_dump())
 
-            db.add(new_channel)
-            db.commit()
+            await asyncio.to_thread(db.add, new_channel)
+            await asyncio.to_thread(db.commit)
             return channel
 
-    def get_channels(self) -> list[ChannelModel]:
+    async def get_channels(self) -> list[ChannelModel]:
         with get_db() as db:
-            channels = db.query(Channel).all()
+            channels = await asyncio.to_thread(db.query(Channel).all)
             return [ChannelModel.model_validate(channel) for channel in channels]
 
-    def get_channels_by_user_id(self, user_id: str, permission: str = "read") -> list[ChannelModel]:
-        channels = self.get_channels()
+    async def get_channels_by_user_id(self, user_id: str, permission: str = "read") -> list[ChannelModel]:
+        channels = await self.get_channels()
         return [channel for channel in channels if channel.user_id == user_id or has_access(user_id, permission, channel.access_control)]
 
-    def get_channel_by_id(self, id: str) -> Optional[ChannelModel]:
+    async def get_channel_by_id(self, id: str) -> Optional[ChannelModel]:
         with get_db() as db:
-            channel = db.query(Channel).filter(Channel.id == id).first()
+            channel = await asyncio.to_thread(db.query(Channel).filter(Channel.id == id).first)
             return ChannelModel.model_validate(channel) if channel else None
 
-    def update_channel_by_id(self, id: str, form_data: ChannelForm) -> Optional[ChannelModel]:
+    async def update_channel_by_id(self, id: str, form_data: ChannelForm) -> Optional[ChannelModel]:
         with get_db() as db:
-            channel = db.query(Channel).filter(Channel.id == id).first()
+            channel = await asyncio.to_thread(db.query(Channel).filter(Channel.id == id).first)
             if not channel:
                 return None
 
@@ -112,13 +113,13 @@ class ChannelTable:
             channel.access_control = form_data.access_control
             channel.updated_at = int(time.time_ns())
 
-            db.commit()
+            await asyncio.to_thread(db.commit)
             return ChannelModel.model_validate(channel) if channel else None
 
-    def delete_channel_by_id(self, id: str):
+    async def delete_channel_by_id(self, id: str):
         with get_db() as db:
-            db.query(Channel).filter(Channel.id == id).delete()
-            db.commit()
+            await asyncio.to_thread(db.query(Channel).filter(Channel.id == id).delete)
+            await asyncio.to_thread(db.commit)
             return True
 
 

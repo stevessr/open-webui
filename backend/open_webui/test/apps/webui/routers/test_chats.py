@@ -1,7 +1,7 @@
 import uuid
 
-from test.util.abstract_integration_test import AbstractPostgresTest
-from test.util.mock_user import mock_webui_user
+from open_webui.test.util.abstract_integration_test import AbstractPostgresTest
+from open_webui.test.util.mock_user import mock_webui_user
 
 
 class TestChats(AbstractPostgresTest):
@@ -10,23 +10,27 @@ class TestChats(AbstractPostgresTest):
     def setup_class(cls):
         super().setup_class()
 
-    async def setup_method(self):
+    def setup_method(self):
+        import asyncio
+
         super().setup_method()
         from open_webui.models.chats import ChatForm, Chats
 
         self.chats = Chats
-        await self.chats.insert_new_chat(
-            "2",
-            ChatForm(
-                **{
-                    "chat": {
-                        "name": "chat1",
-                        "description": "chat1 description",
-                        "tags": ["tag1", "tag2"],
-                        "history": {"currentId": "1", "messages": []},
+        asyncio.run(
+            self.chats.insert_new_chat(
+                "2",
+                ChatForm(
+                    **{
+                        "chat": {
+                            "name": "chat1",
+                            "description": "chat1 description",
+                            "tags": ["tag1", "tag2"],
+                            "history": {"currentId": "1", "messages": []},
+                        }
                     }
-                }
-            ),
+                ),
+            )
         )
 
     def test_get_session_user_chat_list(self):

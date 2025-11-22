@@ -1,6 +1,6 @@
 import io
 import os
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import azure
 import boto3
@@ -29,7 +29,13 @@ def test_imports():
     provider.Storage
 
 
-def test_get_storage_provider():
+@patch("open_webui.storage.provider.AZURE_STORAGE_CONTAINER_NAME", "test-container")
+@patch("open_webui.storage.provider.AZURE_STORAGE_ENDPOINT", "https://example.com")
+@patch("google.auth.default")
+def test_get_storage_provider(mock_auth):
+    mock_credentials = MagicMock()
+    mock_credentials.universe_domain = "googleapis.com"
+    mock_auth.return_value = (mock_credentials, "test-project")
     Storage = provider.get_storage_provider("local")
     assert isinstance(Storage, provider.LocalStorageProvider)
     Storage = provider.get_storage_provider("s3")
@@ -42,7 +48,13 @@ def test_get_storage_provider():
         provider.get_storage_provider("invalid")
 
 
-def test_class_instantiation():
+@patch("open_webui.storage.provider.AZURE_STORAGE_CONTAINER_NAME", "test-container")
+@patch("open_webui.storage.provider.AZURE_STORAGE_ENDPOINT", "https://example.com")
+@patch("google.auth.default")
+def test_class_instantiation(mock_auth):
+    mock_credentials = MagicMock()
+    mock_credentials.universe_domain = "googleapis.com"
+    mock_auth.return_value = (mock_credentials, "test-project")
     with pytest.raises(TypeError):
         provider.StorageProvider()
     with pytest.raises(TypeError):
@@ -194,8 +206,7 @@ class TestS3StorageProvider:
 
 
 class TestGCSStorageProvider:
-    Storage = provider.GCSStorageProvider()
-    Storage.bucket_name = "my-bucket"
+    Storage = None
     file_content = b"test content"
     filename = "test.txt"
     filename_extra = "test_exyta.txt"
@@ -208,6 +219,10 @@ class TestGCSStorageProvider:
         server = create_server(host, port, in_memory=True)
         server.start()
         os.environ["STORAGE_EMULATOR_HOST"] = f"http://{host}:{port}"
+
+        with patch("google.auth.default", return_value=(MagicMock(), "test-project")):
+            self.Storage = provider.GCSStorageProvider()
+            self.Storage.bucket_name = "my-bucket"
 
         gcs_client = storage.Client()
         bucket = gcs_client.bucket(self.Storage.bucket_name)

@@ -108,7 +108,7 @@ if SQLALCHEMY_DATABASE_URL.startswith("sqlite+sqlcipher://"):
     log.info("Connected to encrypted SQLite database using SQLCipher")
 
 elif "sqlite" in SQLALCHEMY_DATABASE_URL:
-    engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+    engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False, "timeout": 30})
 
     def on_connect(dbapi_connection, connection_record):
         cursor = dbapi_connection.cursor()

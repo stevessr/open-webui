@@ -13,7 +13,17 @@ log = logging.getLogger(__name__)
 
 
 def get_fast_api_client():
-    from main import app
+    import sys
+    from pathlib import Path
+
+    # Ensure the backend directory is in sys.path to prioritize project imports
+    # From: backend/open_webui/test/util/abstract_integration_test.py
+    # To:   backend/
+    backend_dir = Path(__file__).resolve().parent.parent.parent.parent
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+
+    from open_webui.main import app
 
     with TestClient(app) as c:
         return c
@@ -139,7 +149,7 @@ class AbstractPostgresTest(AbstractIntegrationTest):
         # rollback everything not yet committed
         Session.commit()
 
-        # truncate all tables
+        # Clear all tables - use database-appropriate syntax
         tables = [
             "auth",
             "chat",
@@ -149,8 +159,27 @@ class AbstractPostgresTest(AbstractIntegrationTest):
             "model",
             "prompt",
             "tag",
+            "oauth_session",
             '"user"',
         ]
-        for table in tables:
-            Session.execute(text(f"TRUNCATE TABLE {table}"))
+
+        # Check if we're using PostgreSQL or SQLite
+        engine_name = Session.bind.dialect.name
+
+        if engine_name == "postgresql":
+            # PostgreSQL supports TRUNCATE with CASCADE
+            for table in tables:
+                Session.execute(text(f"TRUNCATE TABLE {table} CASCADE"))
+        else:
+            # SQLite and others: use DELETE (slower but compatible)
+            # Disable foreign key checks temporarily for SQLite
+            if engine_name == "sqlite":
+                Session.execute(text("PRAGMA foreign_keys = OFF"))
+
+            for table in tables:
+                Session.execute(text(f"DELETE FROM {table}"))
+
+            if engine_name == "sqlite":
+                Session.execute(text("PRAGMA foreign_keys = ON"))
+
         Session.commit()

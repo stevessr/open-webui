@@ -3,8 +3,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import redis
+from open_webui.env import REDIS_SENTINEL_MAX_RETRY_COUNT as MAX_RETRY_COUNT
 from open_webui.utils.redis import (
-    MAX_RETRY_COUNT,
     SentinelRedisProxy,
     get_redis_connection,
     get_sentinels_from_env,
@@ -449,7 +449,7 @@ class TestSentinelRedisProxyCommands:
         assert mock_master.hget.call_count == 2
 
         # Verify both calls were made with same parameters
-        expected_calls = [(("test_hash", "field1"),), (("test_hash", "field1"),)]
+        expected_calls = [("test_hash", "field1"), ("test_hash", "field1")]
         actual_calls = [call.args for call in mock_master.hget.call_args_list]
         assert actual_calls == expected_calls
 
@@ -478,8 +478,8 @@ class TestSentinelRedisProxyCommands:
 
         # Verify both calls were made with same parameters
         expected_calls = [
-            (("test_hash", "field1", "value1"),),
-            (("test_hash", "field1", "value1"),),
+            ("test_hash", "field1", "value1"),
+            ("test_hash", "field1", "value1"),
         ]
         actual_calls = [call.args for call in mock_master.hset.call_args_list]
         assert actual_calls == expected_calls
@@ -511,7 +511,7 @@ class TestSentinelRedisProxyCommands:
         assert mock_master.hget.call_count == 2
 
         # Verify both calls were made with same parameters
-        expected_calls = [(("test_hash", "field1"),), (("test_hash", "field1"),)]
+        expected_calls = [("test_hash", "field1"), ("test_hash", "field1")]
         actual_calls = [call.args for call in mock_master.hget.call_args_list]
         assert actual_calls == expected_calls
 

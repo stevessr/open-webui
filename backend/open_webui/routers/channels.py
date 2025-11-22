@@ -41,14 +41,14 @@ router = APIRouter()
 
 @router.get("/", response_model=list[ChannelModel])
 async def get_channels(user=Depends(get_verified_user)):
-    return Channels.get_channels_by_user_id(user.id)
+    return await Channels.get_channels_by_user_id(user.id)
 
 
 @router.get("/list", response_model=list[ChannelModel])
 async def get_all_channels(user=Depends(get_verified_user)):
     if user.role == "admin":
-        return Channels.get_channels()
-    return Channels.get_channels_by_user_id(user.id)
+        return await Channels.get_channels()
+    return await Channels.get_channels_by_user_id(user.id)
 
 
 ############################
@@ -229,10 +229,12 @@ async def model_response_handler(request, channel, message, user):
         if model:
             try:
                 # reverse to get in chronological order
-                thread_messages = (await Messages.get_messages_by_parent_id(
-                    channel.id,
-                    message.parent_id if message.parent_id else message.id,
-                ))[::-1]
+                thread_messages = (
+                    await Messages.get_messages_by_parent_id(
+                        channel.id,
+                        message.parent_id if message.parent_id else message.id,
+                    )
+                )[::-1]
 
                 response_message, channel = await new_message_handler(
                     request,

@@ -5,7 +5,15 @@ from fastapi import FastAPI
 
 @contextmanager
 def mock_webui_user(**kwargs):
-    from open_webui.routers.webui import app
+    import sys
+    from pathlib import Path
+
+    # Ensure the backend directory is in sys.path to prioritize project imports
+    backend_dir = Path(__file__).resolve().parent.parent.parent.parent
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+
+    from open_webui.main import app
 
     with mock_user(app, **kwargs):
         yield
