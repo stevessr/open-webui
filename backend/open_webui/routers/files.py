@@ -309,7 +309,7 @@ async def search_files(
 
 @router.delete("/all")
 async def delete_all_files(user=Depends(get_admin_user)):
-    result = Files.delete_all_files()
+    result = await Files.delete_all_files()
     if result:
         try:
             Storage.delete_all_files()
@@ -530,7 +530,7 @@ async def get_file_content_by_id(id: str, user=Depends(get_verified_user), attac
 
 @router.get("/{id}/content/html")
 async def get_html_file_content_by_id(id: str, user=Depends(get_verified_user)):
-    file = Files.get_file_by_id(id)
+    file = await Files.get_file_by_id(id)
 
     if not file:
         raise HTTPException(
@@ -538,14 +538,14 @@ async def get_html_file_content_by_id(id: str, user=Depends(get_verified_user)):
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    file_user = Users.get_user_by_id(file.user_id)
+    file_user = await Users.get_user_by_id(file.user_id)
     if not file_user.role == "admin":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if file.user_id == user.id or user.role == "admin" or has_access_to_file(id, "read", user):
+    if file.user_id == user.id or user.role == "admin" or await has_access_to_file(id, "read", user):
         try:
             file_path = Storage.get_file(file.path)
             file_path = Path(file_path)
@@ -630,7 +630,7 @@ async def get_file_content_by_filename(id: str, file_name: str, user=Depends(get
 
 @router.delete("/{id}")
 async def delete_file_by_id(id: str, user=Depends(get_verified_user)):
-    file = Files.get_file_by_id(id)
+    file = await Files.get_file_by_id(id)
 
     if not file:
         raise HTTPException(
@@ -638,11 +638,11 @@ async def delete_file_by_id(id: str, user=Depends(get_verified_user)):
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if file.user_id == user.id or user.role == "admin" or has_access_to_file(id, "write", user):
-        result = Files.delete_file_by_id(id)
+    if file.user_id == user.id or user.role == "admin" or await has_access_to_file(id, "write", user):
+        result = await Files.delete_file_by_id(id)
         if result:
             try:
-                Storage.delete_file(file.path)
+                await Storage.delete_file(file.path)
                 VECTOR_DB_CLIENT.delete(collection_name=f"file-{id}")
             except Exception as e:
                 log.exception(e)

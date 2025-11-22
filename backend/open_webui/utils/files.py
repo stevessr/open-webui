@@ -12,13 +12,13 @@ from open_webui.routers.images import (
 )
 
 
-def get_image_url_from_base64(request, base64_image_string, metadata, user):
+async def get_image_url_from_base64(request, base64_image_string, metadata, user):
     if "data:image/png;base64" in base64_image_string:
         image_url = ""
         # Extract base64 image data from the line
-        image_data, content_type = get_image_data(base64_image_string)
+        image_data, content_type = await get_image_data(base64_image_string)
         if image_data is not None:
-            image_url = upload_image(
+            image_url = await upload_image(
                 request,
                 image_data,
                 content_type,
@@ -44,7 +44,7 @@ def load_b64_audio_data(b64_str):
         return None, None
 
 
-def upload_audio(request, audio_data, content_type, metadata, user):
+async def upload_audio(request, audio_data, content_type, metadata, user):
     audio_format = mimetypes.guess_extension(content_type)
     file = UploadFile(
         file=io.BytesIO(audio_data),
@@ -53,7 +53,7 @@ def upload_audio(request, audio_data, content_type, metadata, user):
             "content-type": content_type,
         },
     )
-    file_item = upload_file_handler(
+    file_item = await upload_file_handler(
         request,
         file=file,
         metadata=metadata,
@@ -64,13 +64,13 @@ def upload_audio(request, audio_data, content_type, metadata, user):
     return url
 
 
-def get_audio_url_from_base64(request, base64_audio_string, metadata, user):
+async def get_audio_url_from_base64(request, base64_audio_string, metadata, user):
     if "data:audio/wav;base64" in base64_audio_string:
         audio_url = ""
         # Extract base64 audio data from the line
         audio_data, content_type = load_b64_audio_data(base64_audio_string)
         if audio_data is not None:
-            audio_url = upload_audio(
+            audio_url = await upload_audio(
                 request,
                 audio_data,
                 content_type,
@@ -81,9 +81,9 @@ def get_audio_url_from_base64(request, base64_audio_string, metadata, user):
     return None
 
 
-def get_file_url_from_base64(request, base64_file_string, metadata, user):
+async def get_file_url_from_base64(request, base64_file_string, metadata, user):
     if "data:image/png;base64" in base64_file_string:
-        return get_image_url_from_base64(request, base64_file_string, metadata, user)
+        return await get_image_url_from_base64(request, base64_file_string, metadata, user)
     elif "data:audio/wav;base64" in base64_file_string:
-        return get_audio_url_from_base64(request, base64_file_string, metadata, user)
+        return await get_audio_url_from_base64(request, base64_file_string, metadata, user)
     return None

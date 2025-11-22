@@ -272,7 +272,7 @@ def get_automatic1111_api_auth(request: Request):
 async def verify_url(request: Request, user=Depends(get_admin_user)):
     if request.app.state.config.IMAGE_GENERATION_ENGINE == "automatic1111":
         try:
-            r = requests.get(
+            r = await requests.get(
                 url=f"{request.app.state.config.AUTOMATIC1111_BASE_URL}/sdapi/v1/options",
                 headers={"authorization": get_automatic1111_api_auth(request)},
             )
@@ -286,7 +286,7 @@ async def verify_url(request: Request, user=Depends(get_admin_user)):
         if request.app.state.config.COMFYUI_API_KEY:
             headers = {"Authorization": f"Bearer {request.app.state.config.COMFYUI_API_KEY}"}
         try:
-            r = requests.get(
+            r = await requests.get(
                 url=f"{request.app.state.config.COMFYUI_BASE_URL}/object_info",
                 headers=headers,
             )
@@ -300,7 +300,7 @@ async def verify_url(request: Request, user=Depends(get_admin_user)):
 
 
 @router.get("/models")
-def get_models(request: Request, user=Depends(get_verified_user)):
+async def get_models(request: Request, user=Depends(get_verified_user)):
     try:
         if request.app.state.config.IMAGE_GENERATION_ENGINE == "openai":
             return [
@@ -315,7 +315,7 @@ def get_models(request: Request, user=Depends(get_verified_user)):
         elif request.app.state.config.IMAGE_GENERATION_ENGINE == "comfyui":
             # TODO - get models from comfyui
             headers = {"Authorization": f"Bearer {request.app.state.config.COMFYUI_API_KEY}"}
-            r = requests.get(
+            r = await requests.get(
                 url=f"{request.app.state.config.COMFYUI_BASE_URL}/object_info",
                 headers=headers,
             )
@@ -354,7 +354,7 @@ def get_models(request: Request, user=Depends(get_verified_user)):
                     )
                 )
         elif request.app.state.config.IMAGE_GENERATION_ENGINE == "automatic1111" or request.app.state.config.IMAGE_GENERATION_ENGINE == "":
-            r = requests.get(
+            r = await requests.get(
                 url=f"{request.app.state.config.AUTOMATIC1111_BASE_URL}/sdapi/v1/sd-models",
                 headers={"authorization": get_automatic1111_api_auth(request)},
             )
@@ -411,7 +411,7 @@ async def get_image_data(data: str, headers=None):
         return None, None
 
 
-def upload_image(request, image_data, content_type, metadata, user):
+async def upload_image(request, image_data, content_type, metadata, user):
     image_format = mimetypes.guess_extension(content_type)
     file = UploadFile(
         file=io.BytesIO(image_data),
@@ -420,7 +420,7 @@ def upload_image(request, image_data, content_type, metadata, user):
             "content-type": content_type,
         },
     )
-    file_item = upload_file_handler(
+    file_item = await upload_file_handler(
         request,
         file=file,
         metadata=metadata,
@@ -587,7 +587,7 @@ async def image_generations(
                     headers = {"Authorization": f"Bearer {request.app.state.config.COMFYUI_API_KEY}"}
 
                 image_data, content_type = get_image_data(image["url"], headers)
-                url = upload_image(
+                url = await upload_image(
                     request,
                     image_data,
                     content_type,

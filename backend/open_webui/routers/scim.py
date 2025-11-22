@@ -502,7 +502,7 @@ async def get_user(
     if not user:
         return scim_error(status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found")
 
-    return user_to_scim(user, request)
+    return await user_to_scim(user, request)
 
 
 @router.post("/Users", response_model=SCIMUser, status_code=status.HTTP_201_CREATED)
@@ -513,7 +513,7 @@ async def create_user(
 ):
     """Create SCIM User"""
     # Check if user already exists
-    existing_user = Users.get_user_by_email(user_data.userName)
+    existing_user = await Users.get_user_by_email(user_data.userName)
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -538,7 +538,7 @@ async def create_user(
         profile_image = user_data.photos[0].value
 
     # Create user
-    new_user = Users.insert_new_user(
+    new_user = await Users.insert_new_user(
         id=user_id,
         name=name,
         email=email,
@@ -552,7 +552,7 @@ async def create_user(
             detail="Failed to create user",
         )
 
-    return user_to_scim(new_user, request)
+    return await user_to_scim(new_user, request)
 
 
 @router.put("/Users/{user_id}", response_model=SCIMUser)
@@ -594,14 +594,14 @@ async def update_user(
         update_data["profile_image_url"] = user_data.photos[0].value
 
     # Update user
-    updated_user = Users.update_user_by_id(user_id, update_data)
+    updated_user = await Users.update_user_by_id(user_id, update_data)
     if not updated_user:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update user",
         )
 
-    return user_to_scim(updated_user, request)
+    return await user_to_scim(updated_user, request)
 
 
 @router.patch("/Users/{user_id}", response_model=SCIMUser)
@@ -640,7 +640,7 @@ async def patch_user(
 
     # Update user
     if update_data:
-        updated_user = Users.update_user_by_id(user_id, update_data)
+        updated_user = await Users.update_user_by_id(user_id, update_data)
         if not updated_user:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -649,7 +649,7 @@ async def patch_user(
     else:
         updated_user = user
 
-    return user_to_scim(updated_user, request)
+    return await user_to_scim(updated_user, request)
 
 
 @router.delete("/Users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -666,7 +666,7 @@ async def delete_user(
             detail=f"User {user_id} not found",
         )
 
-    success = Users.delete_user_by_id(user_id)
+    success = await Users.delete_user_by_id(user_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -696,7 +696,7 @@ async def get_groups(
     paginated_groups = groups_list[start:end]
 
     # Convert to SCIM format
-    scim_groups = [group_to_scim(group, request) for group in paginated_groups]
+    scim_groups = [await group_to_scim(group, request) for group in paginated_groups]
 
     return SCIMListResponse(
         totalResults=total,
@@ -720,7 +720,7 @@ async def get_group(
             detail=f"Group {group_id} not found",
         )
 
-        return await group_to_scim(group, request)
+    return await group_to_scim(group, request)
 
 
 @router.post("/Groups", response_model=SCIMGroup, status_code=status.HTTP_201_CREATED)
@@ -745,14 +745,14 @@ async def create_group(
     )
 
     # Need to get the creating user's ID - we'll use the first admin
-    admin_user = Users.get_super_admin_user()
+    admin_user = await Users.get_super_admin_user()
     if not admin_user:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="No admin user found",
         )
 
-    new_group = Groups.insert_new_group(admin_user.id, form)
+    new_group = await Groups.insert_new_group(admin_user.id, form)
     if not new_group:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -803,7 +803,7 @@ async def update_group(
         update_form.user_ids = member_ids
 
     # Update group
-    updated_group = Groups.update_group_by_id(group_id, update_form)
+    updated_group = await Groups.update_group_by_id(group_id, update_form)
     if not updated_group:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -863,7 +863,7 @@ async def patch_group(
                     update_form.user_ids.remove(member_id)
 
     # Update group
-    updated_group = Groups.update_group_by_id(group_id, update_form)
+    updated_group = await Groups.update_group_by_id(group_id, update_form)
     if not updated_group:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -887,7 +887,7 @@ async def delete_group(
             detail=f"Group {group_id} not found",
         )
 
-    success = Groups.delete_group_by_id(group_id)
+    success = await Groups.delete_group_by_id(group_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -895,6 +895,7 @@ async def delete_group(
         )
 
     return None
+
 
 
 # End of SCIM 2.0 Implementation for Open WebUI

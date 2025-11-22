@@ -110,7 +110,7 @@ DEFAULT_SOLUTION_TAGS = [("<|begin_of_solution|>", "<|end_of_solution|>")]
 DEFAULT_CODE_INTERPRETER_TAGS = [("<code_interpreter>", "</code_interpreter>")]
 
 
-def process_tool_result(
+async def process_tool_result(
     request,
     tool_function_name,
     tool_result,
@@ -212,7 +212,7 @@ def process_tool_result(
                                 pass
                         tool_response.append(text)
                     elif item.get("type") in ["image", "audio"]:
-                        file_url = get_file_url_from_base64(
+                        file_url = await get_file_url_from_base64(
                             request,
                             f"data:{item.get('mimeType')};base64,{item.get('data', item.get('blob', ''))}",
                             {
@@ -369,7 +369,7 @@ async def chat_completion_tools_handler(request: Request, body: dict, extra_para
                 except Exception as e:
                     tool_result = str(e)
 
-                tool_result, tool_result_files, tool_result_embeds = process_tool_result(
+                tool_result, tool_result_files, tool_result_embeds = await process_tool_result(
                     request,
                     tool_function_name,
                     tool_result,
@@ -2488,7 +2488,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
                             except Exception as e:
                                 tool_result = str(e)
 
-                        tool_result, tool_result_files, tool_result_embeds = process_tool_result(
+                        tool_result, tool_result_files, tool_result_embeds = await process_tool_result(
                             request,
                             tool_function_name,
                             tool_result,

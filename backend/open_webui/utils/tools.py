@@ -92,7 +92,7 @@ async def get_tools(request: Request, tool_ids: list[str], user: UserModel, extr
     tools_dict = {}
 
     for tool_id in tool_ids:
-        tool = Tools.get_tool_by_id(tool_id)
+        tool = await Tools.get_tool_by_id(tool_id)
         if tool is None:
             if tool_id.startswith("server:"):
                 splits = tool_id.split(":")

@@ -133,7 +133,7 @@ def get_doc(collection_name: str, user: UserModel = None):
         raise e
 
 
-def query_doc_with_hybrid_search(
+async def query_doc_with_hybrid_search(
     collection_name: str,
     collection_result: GetResult,
     query: str,
@@ -271,13 +271,13 @@ def merge_and_sort_query_results(query_results: list[dict], k: int) -> dict:
     }
 
 
-def get_all_items_from_collections(collection_names: list[str]) -> dict:
+async def get_all_items_from_collections(collection_names: list[str]) -> dict:
     results = []
 
     for collection_name in collection_names:
         if collection_name:
             try:
-                result = get_doc(collection_name=collection_name)
+                result = await get_doc(collection_name=collection_name)
                 if result is not None:
                     results.append(result.model_dump())
             except Exception as e:
@@ -288,7 +288,7 @@ def get_all_items_from_collections(collection_names: list[str]) -> dict:
     return merge_get_results(results)
 
 
-def query_collection(
+async def query_collection(
     collection_names: list[str],
     queries: list[str],
     embedding_function,
@@ -336,7 +336,7 @@ def query_collection(
     return merge_and_sort_query_results(results, k=k)
 
 
-def query_collection_with_hybrid_search(
+async def query_collection_with_hybrid_search(
     collection_names: list[str],
     queries: list[str],
     embedding_function,
@@ -399,7 +399,7 @@ def query_collection_with_hybrid_search(
     return merge_and_sort_query_results(results, k=k)
 
 
-def get_embedding_function(
+async def get_embedding_function(
     embedding_engine,
     embedding_model,
     embedding_function,
@@ -447,7 +447,7 @@ def get_embedding_function(
         raise ValueError(f"Unknown embedding engine: {embedding_engine}")
 
 
-def get_reranking_function(reranking_engine, reranking_model, reranking_function):
+async def get_reranking_function(reranking_engine, reranking_model, reranking_function):
     if reranking_function is None:
         return None
     if reranking_engine == "external":
@@ -456,7 +456,7 @@ def get_reranking_function(reranking_engine, reranking_model, reranking_function
         return lambda sentences, user=None: reranking_function.predict(sentences)
 
 
-def get_sources_from_items(
+async def get_sources_from_items(
     request,
     items,
     queries,
@@ -511,9 +511,9 @@ def get_sources_from_items(
 
         elif item.get("type") == "note":
             # Note Attached
-            note = Notes.get_note_by_id(item.get("id"))
+            note = await Notes.get_note_by_id(item.get("id"))
 
-            if note and (user.role == "admin" or note.user_id == user.id or has_access(user.id, "read", note.access_control)):
+            if note and (user.role == "admin" or note.user_id == user.id or await has_access(user.id, "read", note.access_control)):
                 # User has access to the note
                 query_result = {
                     "documents": [[note.data.get("content", {}).get("md", "")]],
@@ -522,7 +522,7 @@ def get_sources_from_items(
 
         elif item.get("type") == "chat":
             # Chat Attached
-            chat = Chats.get_chat_by_id(item.get("id"))
+            chat = await Chats.get_chat_by_id(item.get("id"))
 
             if chat and (user.role == "admin" or chat.user_id == user.id):
                 messages_map = chat.chat.get("history", {}).get("messages", {})
@@ -540,7 +540,7 @@ def get_sources_from_items(
                     }
 
         elif item.get("type") == "url":
-            content, docs = get_content_from_url(request, item.get("url"))
+            content, docs = await get_content_from_url(request, item.get("url"))
             if docs:
                 query_result = {
                     "documents": [[content]],
@@ -564,7 +564,7 @@ def get_sources_from_items(
                         ],
                     }
                 elif item.get("id"):
-                    file_object = Files.get_file_by_id(item.get("id"))
+                    file_object = await Files.get_file_by_id(item.get("id"))
                     if file_object:
                         query_result = {
                             "documents": [[file_object.data.get("content", "")]],
@@ -587,17 +587,17 @@ def get_sources_from_items(
 
         elif item.get("type") == "collection":
             # Manual Full Mode Toggle for Collection
-            knowledge_base = Knowledges.get_knowledge_by_id(item.get("id"))
+            knowledge_base = await Knowledges.get_knowledge_by_id(item.get("id"))
 
-            if knowledge_base and (user.role == "admin" or knowledge_base.user_id == user.id or has_access(user.id, "read", knowledge_base.access_control)):
+            if knowledge_base and (user.role == "admin" or knowledge_base.user_id == user.id or await has_access(user.id, "read", knowledge_base.access_control)):
                 if item.get("context") == "full" or request.app.state.config.BYPASS_EMBEDDING_AND_RETRIEVAL:
-                    if knowledge_base and (user.role == "admin" or knowledge_base.user_id == user.id or has_access(user.id, "read", knowledge_base.access_control)):
+                    if knowledge_base and (user.role == "admin" or knowledge_base.user_id == user.id or await has_access(user.id, "read", knowledge_base.access_control)):
                         file_ids = knowledge_base.data.get("file_ids", [])
 
                         documents = []
                         metadatas = []
                         for file_id in file_ids:
-                            file_object = Files.get_file_by_id(file_id)
+                            file_object = await Files.get_file_by_id(file_id)
 
                             if file_object:
                                 documents.append(file_object.data.get("content", ""))

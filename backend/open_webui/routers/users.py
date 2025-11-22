@@ -115,7 +115,7 @@ async def search_users(
 
 @router.get("/groups")
 async def get_user_groups(user=Depends(get_verified_user)):
-    return Groups.get_groups_by_member_id(user.id)
+    return await Groups.get_groups_by_member_id(user.id)
 
 
 ############################
@@ -125,7 +125,7 @@ async def get_user_groups(user=Depends(get_verified_user)):
 
 @router.get("/permissions")
 async def get_user_permissisions(request: Request, user=Depends(get_verified_user)):
-    user_permissions = get_permissions(user.id, request.app.state.config.USER_PERMISSIONS)
+    user_permissions = await get_permissions(user.id, request.app.state.config.USER_PERMISSIONS)
 
     return user_permissions
 
@@ -229,7 +229,7 @@ async def update_user_settings_by_session_user(request: Request, form_data: User
     if (
         user.role != "admin"
         and "toolServers" in updated_user_settings.get("ui").keys()
-        and not has_permission(
+        and not await has_permission(
             user.id,
             "features.direct_tool_servers",
             request.app.state.config.USER_PERMISSIONS,
@@ -309,7 +309,7 @@ async def get_user_by_id(user_id: str, user=Depends(get_verified_user)):
     # If it is, get the user_id from the chat
     if user_id.startswith("shared-"):
         chat_id = user_id.replace("shared-", "")
-        chat = Chats.get_chat_by_id(chat_id)
+        chat = await Chats.get_chat_by_id(chat_id)
         if chat:
             user_id = chat.user_id
         else:
@@ -354,7 +354,7 @@ async def get_user_oauth_sessions_by_id(user_id: str, user=Depends(get_admin_use
 
 @router.get("/{user_id}/profile/image")
 async def get_user_profile_image_by_id(user_id: str, user=Depends(get_verified_user)):
-    user = Users.get_user_by_id(user_id)
+    user = await Users.get_user_by_id(user_id)
     if user:
         if user.profile_image_url:
             # check if it's url or base64
@@ -433,11 +433,11 @@ async def update_user_by_id(
             detail="Could not verify primary admin status.",
         )
 
-    user = Users.get_user_by_id(user_id)
+    user = await Users.get_user_by_id(user_id)
 
     if user:
         if form_data.email.lower() != user.email:
-            email_user = Users.get_user_by_email(form_data.email.lower())
+            email_user = await Users.get_user_by_email(form_data.email.lower())
             if email_user:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -447,10 +447,10 @@ async def update_user_by_id(
         if form_data.password:
             hashed = get_password_hash(form_data.password)
             log.debug(f"hashed: {hashed}")
-            Auths.update_user_password_by_id(user_id, hashed)
+            await Auths.update_user_password_by_id(user_id, hashed)
 
-        Auths.update_email_by_id(user_id, form_data.email.lower())
-        updated_user = Users.update_user_by_id(
+        await Auths.update_email_by_id(user_id, form_data.email.lower())
+        updated_user = await Users.update_user_by_id(
             user_id,
             {
                 "role": form_data.role,
@@ -497,7 +497,7 @@ async def delete_user_by_id(user_id: str, user=Depends(get_admin_user)):
         )
 
     if user.id != user_id:
-        result = Auths.delete_auth_by_id(user_id)
+        result = await Auths.delete_auth_by_id(user_id)
 
         if result:
             return True
@@ -521,4 +521,4 @@ async def delete_user_by_id(user_id: str, user=Depends(get_admin_user)):
 
 @router.get("/{user_id}/groups")
 async def get_user_groups_by_id(user_id: str, user=Depends(get_admin_user)):
-    return Groups.get_groups_by_member_id(user_id)
+    return await Groups.get_groups_by_member_id(user_id)

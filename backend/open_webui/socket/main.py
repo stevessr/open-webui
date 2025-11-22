@@ -238,7 +238,7 @@ async def connect(sid, environ, auth):
         data = decode_token(auth["token"])
 
         if data is not None and "id" in data:
-            user = Users.get_user_by_id(data["id"])
+            user = await Users.get_user_by_id(data["id"])
 
         if user:
             SESSION_POOL[sid] = user.model_dump(exclude=["date_of_birth", "bio", "gender"])
@@ -269,7 +269,7 @@ async def user_join(sid, data):
         USER_POOL[user.id] = [sid]
 
     # Join all the channels
-    channels = Channels.get_channels_by_user_id(user.id)
+    channels = await Channels.get_channels_by_user_id(user.id)
     log.debug(f"{channels=}")
     for channel in channels:
         await sio.enter_room(sid, f"channel:{channel.id}")
@@ -291,7 +291,7 @@ async def join_channel(sid, data):
         return
 
     # Join all the channels
-    channels = Channels.get_channels_by_user_id(user.id)
+    channels = await Channels.get_channels_by_user_id(user.id)
     log.debug(f"{channels=}")
     for channel in channels:
         await sio.enter_room(sid, f"channel:{channel.id}")
@@ -307,16 +307,16 @@ async def join_note(sid, data):
     if token_data is None or "id" not in token_data:
         return
 
-    user = Users.get_user_by_id(token_data["id"])
+    user = await Users.get_user_by_id(token_data["id"])
     if not user:
         return
 
-    note = Notes.get_note_by_id(data["note_id"])
+    note = await Notes.get_note_by_id(data["note_id"])
     if not note:
         log.error(f"Note {data['note_id']} not found for user {user.id}")
         return
 
-    if user.role != "admin" and user.id != note.user_id and not has_access(user.id, type="read", access_control=note.access_control):
+    if user.role != "admin" and user.id != note.user_id and not await has_access(user.id, type="read", access_control=note.access_control):
         log.error(f"User {user.id} does not have access to note {data['note_id']}")
         return
 
@@ -362,12 +362,12 @@ async def ydoc_document_join(sid, data):
 
         if document_id.startswith("note:"):
             note_id = document_id.split(":")[1]
-            note = Notes.get_note_by_id(note_id)
+            note = await Notes.get_note_by_id(note_id)
             if not note:
                 log.error(f"Note {note_id} not found")
                 return
 
-            if user.get("role") != "admin" and user.get("id") != note.user_id and not has_access(user.get("id"), type="read", access_control=note.access_control):
+            if user.get("role") != "admin" and user.get("id") != note.user_id and not await has_access(user.get("id"), type="read", access_control=note.access_control):
                 log.error(f"User {user.get('id')} does not have access to note {note_id}")
                 return
 
@@ -424,16 +424,16 @@ async def ydoc_document_join(sid, data):
 async def document_save_handler(document_id, data, user):
     if document_id.startswith("note:"):
         note_id = document_id.split(":")[1]
-        note = Notes.get_note_by_id(note_id)
+        note = await Notes.get_note_by_id(note_id)
         if not note:
             log.error(f"Note {note_id} not found")
             return
 
-        if user.get("role") != "admin" and user.get("id") != note.user_id and not has_access(user.get("id"), type="read", access_control=note.access_control):
+        if user.get("role") != "admin" and user.get("id") != note.user_id and not await has_access(user.get("id"), type="read", access_control=note.access_control):
             log.error(f"User {user.get('id')} does not have access to note {note_id}")
             return
 
-        Notes.update_note_by_id(note_id, NoteUpdateForm(data=data))
+        await Notes.update_note_by_id(note_id, NoteUpdateForm(data=data))
 
 
 @sio.on("ydoc:document:state")
@@ -612,7 +612,7 @@ def get_event_emitter(request_info, update_db=True):
         await asyncio.gather(*emit_tasks)
         if update_db and message_id and not request_info.get("chat_id", "").startswith("local:"):
             if "type" in event_data and event_data["type"] == "status":
-                Chats.add_message_status_to_chat_by_id_and_message_id(
+                await Chats.add_message_status_to_chat_by_id_and_message_id(
                     request_info["chat_id"],
                     request_info["message_id"],
                     event_data.get("data", {}),
@@ -628,7 +628,7 @@ def get_event_emitter(request_info, update_db=True):
                     content = message.get("content", "")
                     content += event_data.get("data", {}).get("content", "")
 
-                    Chats.upsert_message_to_chat_by_id_and_message_id(
+                    await Chats.upsert_message_to_chat_by_id_and_message_id(
                         request_info["chat_id"],
                         request_info["message_id"],
                         {
@@ -639,7 +639,7 @@ def get_event_emitter(request_info, update_db=True):
             if "type" in event_data and event_data["type"] == "replace":
                 content = event_data.get("data", {}).get("content", "")
 
-                Chats.upsert_message_to_chat_by_id_and_message_id(
+                await Chats.upsert_message_to_chat_by_id_and_message_id(
                     request_info["chat_id"],
                     request_info["message_id"],
                     {
@@ -656,7 +656,7 @@ def get_event_emitter(request_info, update_db=True):
                 embeds = event_data.get("data", {}).get("embeds", [])
                 embeds.extend(message.get("embeds", []))
 
-                Chats.upsert_message_to_chat_by_id_and_message_id(
+                await Chats.upsert_message_to_chat_by_id_and_message_id(
                     request_info["chat_id"],
                     request_info["message_id"],
                     {
@@ -673,7 +673,7 @@ def get_event_emitter(request_info, update_db=True):
                 files = event_data.get("data", {}).get("files", [])
                 files.extend(message.get("files", []))
 
-                Chats.upsert_message_to_chat_by_id_and_message_id(
+                await Chats.upsert_message_to_chat_by_id_and_message_id(
                     request_info["chat_id"],
                     request_info["message_id"],
                     {
@@ -692,7 +692,7 @@ def get_event_emitter(request_info, update_db=True):
                     sources = message.get("sources", [])
                     sources.append(data)
 
-                    Chats.upsert_message_to_chat_by_id_and_message_id(
+                    await Chats.upsert_message_to_chat_by_id_and_message_id(
                         request_info["chat_id"],
                         request_info["message_id"],
                         {

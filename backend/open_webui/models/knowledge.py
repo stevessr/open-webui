@@ -150,7 +150,7 @@ class KnowledgeTable:
         if knowledge.user_id == user_id:
             return True
         user_group_ids = {group.id for group in await Groups.get_groups_by_member_id(user_id)}
-        return has_access(user_id, permission, knowledge.access_control, user_group_ids)
+        return await has_access(user_id, permission, knowledge.access_control, user_group_ids)
 
     async def get_knowledge_bases_by_user_id(self, user_id: str, permission: str = "write") -> list[KnowledgeUserModel]:
         knowledge_bases = await self.get_knowledge_bases()

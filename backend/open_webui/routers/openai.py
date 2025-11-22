@@ -384,9 +384,16 @@ async def get_all_models_responses(request: Request, user: UserModel) -> list:
                         ],
                     }
 
-                    request_tasks.append(asyncio.ensure_future(asyncio.sleep(0, model_list)))
+                    async def _model_list():
+                        return model_list
+
+                    request_tasks.append(_model_list())
             else:
-                request_tasks.append(asyncio.ensure_future(asyncio.sleep(0, None)))
+
+                async def _model_list():
+                    return None
+
+                request_tasks.append(_model_list())
 
     responses = await asyncio.gather(*request_tasks)
 

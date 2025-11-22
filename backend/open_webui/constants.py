@@ -2,21 +2,26 @@ from enum import Enum
 
 
 class MESSAGES(str, Enum):
-    def DEFAULT(msg=""):
+    @staticmethod
+    def DEFAULT(msg: str = "") -> str:
         return f"{msg if msg else ''}"
 
-    def MODEL_ADDED(model=""):
+    @staticmethod
+    def MODEL_ADDED(model: str = "") -> str:
         return f"The model '{model}' has been added successfully."
 
-    def MODEL_DELETED(model=""):
+    @staticmethod
+    def MODEL_DELETED(model: str = "") -> str:
         return f"The model '{model}' has been deleted successfully."
 
 
 class WEBHOOK_MESSAGES(str, Enum):
-    def DEFAULT(msg=""):
+    @staticmethod
+    def DEFAULT(msg: str = "") -> str:
         return f"{msg if msg else ''}"
 
-    def USER_SIGNUP(username=""):
+    @staticmethod
+    def USER_SIGNUP(username: str = "") -> str:
         return f"New user signed up: {username}" if username else "New user signed up"
 
 
@@ -24,7 +29,8 @@ class ERROR_MESSAGES(str, Enum):
     def __str__(self) -> str:
         return super().__str__()
 
-    def DEFAULT(err=""):
+    @staticmethod
+    def DEFAULT(err: str = "") -> str:
         return f"{'Something went wrong :/' if err == '' else '[ERROR: ' + str(err) + ']'}"
 
     ENV_VAR_NOT_FOUND = "Required environment variable not found. Terminating now."
@@ -66,15 +72,18 @@ class ERROR_MESSAGES(str, Enum):
 
     PANDOC_NOT_INSTALLED = "Pandoc is not installed on the server. Please contact your administrator for assistance."
 
-    def INCORRECT_FORMAT(err=""):
+    @staticmethod
+    def INCORRECT_FORMAT(err: str = "") -> str:
         return f"Invalid format. Please use the correct format{err}"
 
     RATE_LIMIT_EXCEEDED = "API rate limit exceeded"
 
-    def MODEL_NOT_FOUND(name=""):
+    @staticmethod
+    def MODEL_NOT_FOUND(name: str = "") -> str:
         return f"Model '{name}' was not found"
 
-    def OPENAI_NOT_FOUND(name=""):
+    @staticmethod
+    def OPENAI_NOT_FOUND(name: str = "") -> str:
         return "OpenAI API was not found"
 
     OLLAMA_NOT_FOUND = "WebUI could not connect to Ollama"
@@ -87,12 +96,14 @@ class ERROR_MESSAGES(str, Enum):
 
     INVALID_URL = "Oops! The URL you provided is invalid. Please double-check and try again."
 
-    def WEB_SEARCH_ERROR(err=""):
+    @staticmethod
+    def WEB_SEARCH_ERROR(err: str = "") -> str:
         return f"{err if err else 'Oops! Something went wrong while searching the web.'}"
 
     OLLAMA_API_DISABLED = "The Ollama API is disabled. Please enable it to use this feature."
 
-    def FILE_TOO_LARGE(size=""):
+    @staticmethod
+    def FILE_TOO_LARGE(size: str = "") -> str:
         return f"Oops! The file you're trying to upload is too large. Please upload a file that is less than {size}."
 
     DUPLICATE_CONTENT = "Duplicate content detected. Please provide unique content to proceed."
@@ -103,7 +114,8 @@ class TASKS(str, Enum):
     def __str__(self) -> str:
         return super().__str__()
 
-    def DEFAULT(task=""):
+    @staticmethod
+    def DEFAULT(task: str = "") -> str:
         return f"{task if task else 'generation'}"
 
     TITLE_GENERATION = "title_generation"

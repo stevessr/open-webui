@@ -1,11 +1,11 @@
-from typing import Optional
+from typing import Any, List, Optional
 from urllib.parse import urlparse
 
 import validators
 from pydantic import BaseModel
 
 
-def get_filtered_results(results, filter_list):
+def get_filtered_results(results: List[Any], filter_list: List[str]) -> List[Any]:
     if not filter_list:
         return results
     filtered_results = []

@@ -56,14 +56,14 @@ def validate_url(url: Union[str, Sequence[str]]):
             # Check if any of the resolved addresses are private
             # This is technically still vulnerable to DNS rebinding attacks, as we don't control WebBaseLoader
             for ip in ipv4_addresses:
-                if validators.ipv4(ip, private=True):
+                if await validators.ipv4(ip, private=True):
                     raise ValueError(ERROR_MESSAGES.INVALID_URL)
             for ip in ipv6_addresses:
-                if validators.ipv6(ip, private=True):
+                if await validators.ipv6(ip, private=True):
                     raise ValueError(ERROR_MESSAGES.INVALID_URL)
         return True
     elif isinstance(url, Sequence):
-        return all(validate_url(u) for u in url)
+        return all(await validate_url(u) for u in url)
     else:
         return False
 
@@ -155,7 +155,7 @@ class URLProcessingMixin:
 
     async def _safe_process_url_sync(self, url: str) -> bool:
         """Synchronous version of safety checks."""
-        if self.verify_ssl and not self._verify_ssl_cert(url):
+        if self.verify_ssl and not self._verify_ssl_cert_sync(url):
             raise ValueError(f"SSL certificate verification failed for {url}")
         await self._sync_wait_for_rate_limit()
         return True
@@ -254,7 +254,7 @@ class SafeFireCrawlLoader(BaseLoader, RateLimitMixin, URLProcessingMixin):
             else:
                 raise e
 
-    async def alazy_load(self):
+async def alazy_load(self) -> AsyncIterator[Document]:
         """Async version of lazy_load."""
         log.debug(
             "Starting FireCrawl batch scrape for %d URLs, mode: %s, params: %s",
@@ -345,7 +345,7 @@ class SafeTavilyLoader(BaseLoader, RateLimitMixin, URLProcessingMixin):
         valid_urls = []
         for url in self.web_paths:
             try:
-                self._safe_process_url_sync(url)
+                await self._safe_process_url_sync(url)
                 valid_urls.append(url)
             except Exception as e:
                 log.warning(f"SSL verification failed for {url}: {e!s}")
@@ -363,7 +363,7 @@ class SafeTavilyLoader(BaseLoader, RateLimitMixin, URLProcessingMixin):
                 extract_depth=self.extract_depth,
                 continue_on_failure=self.continue_on_failure,
             )
-            yield from loader.lazy_load()
+            yield from loader.alazy_load()
         except Exception as e:
             if self.continue_on_failure:
                 log.exception(f"Error extracting content from URLs: {e}")
@@ -470,7 +470,7 @@ class SafePlaywrightURLLoader(PlaywrightURLLoader, RateLimitMixin, URLProcessing
 
             for url in self.urls:
                 try:
-                    self._safe_process_url_sync(url)
+                    await self._safe_process_url_sync(url)
                     page = browser.new_page()
                     response = page.goto(url, timeout=self.playwright_timeout)
                     if response is None:
