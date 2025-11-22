@@ -503,7 +503,7 @@ def get_user_profile_image_by_id(user_id: str, user=Depends(get_verified_user)):
     if user:
         if user.profile_image_url:
             # check if it's url or base64
-            if user.profile_image_url.startswith("http"):
+            if user.profile_image_url.startswith("http") or user.profile_image_url.startswith("/"):
                 return Response(
                     status_code=status.HTTP_302_FOUND,
                     headers={"Location": user.profile_image_url},
@@ -521,7 +521,11 @@ def get_user_profile_image_by_id(user_id: str, user=Depends(get_verified_user)):
                         headers={"Content-Disposition": "inline"},
                     )
                 except Exception as e:
-                    pass
+                    log.error(f"Error decoding base64 image for user {user_id}: {e}")
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=ERROR_MESSAGES.DEFAULT(),
+                    )
         return FileResponse(f"{STATIC_DIR}/user.gif")
     else:
         raise HTTPException(
