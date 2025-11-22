@@ -300,7 +300,7 @@ class FolderTable:
 
                     # get children folders
                     children = await self.get_children_folders_by_id_and_user_id(folder.id, user_id)
-                    for child in children:
+                    for child in children or []:
                         results[child.id] = child
 
         # Return the results as a list

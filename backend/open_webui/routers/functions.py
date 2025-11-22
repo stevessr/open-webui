@@ -126,7 +126,7 @@ async def sync_functions(request: Request, form_data: SyncFunctionsForm, user=De
     try:
         for function in form_data.functions:
             function.content = replace_imports(function.content)
-            function_module, _, _ = load_function_module_by_id(
+            function_module, _, _ = await load_function_module_by_id(
                 function.id,
                 content=function.content,
             )
@@ -167,7 +167,7 @@ async def create_new_function(request: Request, form_data: FunctionForm, user=De
     if function is None:
         try:
             form_data.content = replace_imports(form_data.content)
-            function_module, function_type, frontmatter = load_function_module_by_id(
+            function_module, function_type, frontmatter = await load_function_module_by_id(
                 form_data.id,
                 content=form_data.content,
             )
@@ -281,7 +281,7 @@ async def toggle_global_by_id(id: str, user=Depends(get_admin_user)):
 async def update_function_by_id(request: Request, id: str, form_data: FunctionForm, user=Depends(get_admin_user)):
     try:
         form_data.content = replace_imports(form_data.content)
-        function_module, function_type, frontmatter = load_function_module_by_id(id, content=form_data.content)
+        function_module, function_type, frontmatter = await load_function_module_by_id(id, content=form_data.content)
         form_data.meta.manifest = frontmatter
 
         FUNCTIONS = request.app.state.FUNCTIONS

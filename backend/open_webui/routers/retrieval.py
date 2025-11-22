@@ -13,7 +13,6 @@ from fastapi import (
     Request,
     status,
 )
-from fastapi.concurrency import run_in_threadpool
 from langchain.text_splitter import RecursiveCharacterTextSplitter, TokenTextSplitter
 from langchain_core.documents import Document
 from langchain_text_splitters import MarkdownHeaderTextSplitter
@@ -1437,7 +1436,7 @@ async def process_web(request: Request, form_data: ProcessUrlForm, user=Depends(
         )
 
 
-def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
+async def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
     """Search the web using a search engine and return the results as a list of SearchResult objects.
     Will look for a search engine API key in environment variables in the following order:
     - SEARXNG_QUERY_URL
@@ -1462,7 +1461,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
 
     # TODO: add playwright to search the web
     if engine == "ollama_cloud":
-        return search_ollama_cloud(
+        return await search_ollama_cloud(
             "https://ollama.com",
             request.app.state.config.OLLAMA_CLOUD_WEB_SEARCH_API_KEY,
             query,
@@ -1471,7 +1470,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
         )
     elif engine == "perplexity_search":
         if request.app.state.config.PERPLEXITY_API_KEY:
-            return search_perplexity_search(
+            return await search_perplexity_search(
                 request.app.state.config.PERPLEXITY_API_KEY,
                 query,
                 request.app.state.config.WEB_SEARCH_RESULT_COUNT,
@@ -1481,7 +1480,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
             raise Exception("No PERPLEXITY_API_KEY found in environment variables")
     elif engine == "searxng":
         if request.app.state.config.SEARXNG_QUERY_URL:
-            return search_searxng(
+            return await search_searxng(
                 request.app.state.config.SEARXNG_QUERY_URL,
                 query,
                 request.app.state.config.WEB_SEARCH_RESULT_COUNT,
@@ -1491,7 +1490,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
             raise Exception("No SEARXNG_QUERY_URL found in environment variables")
     elif engine == "yacy":
         if request.app.state.config.YACY_QUERY_URL:
-            return search_yacy(
+            return await search_yacy(
                 request.app.state.config.YACY_QUERY_URL,
                 request.app.state.config.YACY_USERNAME,
                 request.app.state.config.YACY_PASSWORD,
@@ -1503,7 +1502,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
             raise Exception("No YACY_QUERY_URL found in environment variables")
     elif engine == "google_pse":
         if request.app.state.config.GOOGLE_PSE_API_KEY and request.app.state.config.GOOGLE_PSE_ENGINE_ID:
-            return search_google_pse(
+            return await search_google_pse(
                 request.app.state.config.GOOGLE_PSE_API_KEY,
                 request.app.state.config.GOOGLE_PSE_ENGINE_ID,
                 query,
@@ -1515,7 +1514,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
             raise Exception("No GOOGLE_PSE_API_KEY or GOOGLE_PSE_ENGINE_ID found in environment variables")
     elif engine == "brave":
         if request.app.state.config.BRAVE_SEARCH_API_KEY:
-            return search_brave(
+            return await search_brave(
                 request.app.state.config.BRAVE_SEARCH_API_KEY,
                 query,
                 request.app.state.config.WEB_SEARCH_RESULT_COUNT,
@@ -1525,7 +1524,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
             raise Exception("No BRAVE_SEARCH_API_KEY found in environment variables")
     elif engine == "kagi":
         if request.app.state.config.KAGI_SEARCH_API_KEY:
-            return search_kagi(
+            return await search_kagi(
                 request.app.state.config.KAGI_SEARCH_API_KEY,
                 query,
                 request.app.state.config.WEB_SEARCH_RESULT_COUNT,
@@ -1535,7 +1534,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
             raise Exception("No KAGI_SEARCH_API_KEY found in environment variables")
     elif engine == "mojeek":
         if request.app.state.config.MOJEEK_SEARCH_API_KEY:
-            return search_mojeek(
+            return await search_mojeek(
                 request.app.state.config.MOJEEK_SEARCH_API_KEY,
                 query,
                 request.app.state.config.WEB_SEARCH_RESULT_COUNT,
@@ -1545,7 +1544,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
             raise Exception("No MOJEEK_SEARCH_API_KEY found in environment variables")
     elif engine == "bocha":
         if request.app.state.config.BOCHA_SEARCH_API_KEY:
-            return search_bocha(
+            return await search_bocha(
                 request.app.state.config.BOCHA_SEARCH_API_KEY,
                 query,
                 request.app.state.config.WEB_SEARCH_RESULT_COUNT,
@@ -1555,7 +1554,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
             raise Exception("No BOCHA_SEARCH_API_KEY found in environment variables")
     elif engine == "serpstack":
         if request.app.state.config.SERPSTACK_API_KEY:
-            return search_serpstack(
+            return await search_serpstack(
                 request.app.state.config.SERPSTACK_API_KEY,
                 query,
                 request.app.state.config.WEB_SEARCH_RESULT_COUNT,
@@ -1566,7 +1565,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
             raise Exception("No SERPSTACK_API_KEY found in environment variables")
     elif engine == "serper":
         if request.app.state.config.SERPER_API_KEY:
-            return search_serper(
+            return await search_serper(
                 request.app.state.config.SERPER_API_KEY,
                 query,
                 request.app.state.config.WEB_SEARCH_RESULT_COUNT,
@@ -1576,7 +1575,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
             raise Exception("No SERPER_API_KEY found in environment variables")
     elif engine == "serply":
         if request.app.state.config.SERPLY_API_KEY:
-            return search_serply(
+            return await search_serply(
                 request.app.state.config.SERPLY_API_KEY,
                 query,
                 request.app.state.config.WEB_SEARCH_RESULT_COUNT,
@@ -1585,7 +1584,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
         else:
             raise Exception("No SERPLY_API_KEY found in environment variables")
     elif engine == "duckduckgo":
-        return search_duckduckgo(
+        return await search_duckduckgo(
             query,
             request.app.state.config.WEB_SEARCH_RESULT_COUNT,
             request.app.state.config.WEB_SEARCH_DOMAIN_FILTER_LIST,
@@ -1593,7 +1592,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
         )
     elif engine == "tavily":
         if request.app.state.config.TAVILY_API_KEY:
-            return search_tavily(
+            return await search_tavily(
                 request.app.state.config.TAVILY_API_KEY,
                 query,
                 request.app.state.config.WEB_SEARCH_RESULT_COUNT,
@@ -1603,7 +1602,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
             raise Exception("No TAVILY_API_KEY found in environment variables")
     elif engine == "exa":
         if request.app.state.config.EXA_API_KEY:
-            return search_exa(
+            return await search_exa(
                 request.app.state.config.EXA_API_KEY,
                 query,
                 request.app.state.config.WEB_SEARCH_RESULT_COUNT,
@@ -1613,7 +1612,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
             raise Exception("No EXA_API_KEY found in environment variables")
     elif engine == "searchapi":
         if request.app.state.config.SEARCHAPI_API_KEY:
-            return search_searchapi(
+            return await search_searchapi(
                 request.app.state.config.SEARCHAPI_API_KEY,
                 request.app.state.config.SEARCHAPI_ENGINE,
                 query,
@@ -1624,7 +1623,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
             raise Exception("No SEARCHAPI_API_KEY found in environment variables")
     elif engine == "serpapi":
         if request.app.state.config.SERPAPI_API_KEY:
-            return search_serpapi(
+            return await search_serpapi(
                 request.app.state.config.SERPAPI_API_KEY,
                 request.app.state.config.SERPAPI_ENGINE,
                 query,
@@ -1634,13 +1633,13 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
         else:
             raise Exception("No SERPAPI_API_KEY found in environment variables")
     elif engine == "jina":
-        return search_jina(
+        return await search_jina(
             request.app.state.config.JINA_API_KEY,
             query,
             request.app.state.config.WEB_SEARCH_RESULT_COUNT,
         )
     elif engine == "bing":
-        return search_bing(
+        return await search_bing(
             request.app.state.config.BING_SEARCH_V7_SUBSCRIPTION_KEY,
             request.app.state.config.BING_SEARCH_V7_ENDPOINT,
             str(DEFAULT_LOCALE),
@@ -1649,14 +1648,14 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
             request.app.state.config.WEB_SEARCH_DOMAIN_FILTER_LIST,
         )
     elif engine == "exa":
-        return search_exa(
+        return await search_exa(
             request.app.state.config.EXA_API_KEY,
             query,
             request.app.state.config.WEB_SEARCH_RESULT_COUNT,
             request.app.state.config.WEB_SEARCH_DOMAIN_FILTER_LIST,
         )
     elif engine == "perplexity":
-        return search_perplexity(
+        return await search_perplexity(
             request.app.state.config.PERPLEXITY_API_KEY,
             query,
             request.app.state.config.WEB_SEARCH_RESULT_COUNT,
@@ -1666,7 +1665,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
         )
     elif engine == "sougou":
         if request.app.state.config.SOUGOU_API_SID and request.app.state.config.SOUGOU_API_SK:
-            return search_sougou(
+            return await search_sougou(
                 request.app.state.config.SOUGOU_API_SID,
                 request.app.state.config.SOUGOU_API_SK,
                 query,
@@ -1676,7 +1675,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
         else:
             raise Exception("No SOUGOU_API_SID or SOUGOU_API_SK found in environment variables")
     elif engine == "firecrawl":
-        return search_firecrawl(
+        return await search_firecrawl(
             request.app.state.config.FIRECRAWL_API_BASE_URL,
             request.app.state.config.FIRECRAWL_API_KEY,
             query,
@@ -1684,7 +1683,7 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
             request.app.state.config.WEB_SEARCH_DOMAIN_FILTER_LIST,
         )
     elif engine == "external":
-        return search_external(
+        return await search_external(
             request.app.state.config.EXTERNAL_WEB_SEARCH_URL,
             request.app.state.config.EXTERNAL_WEB_SEARCH_API_KEY,
             query,
@@ -1704,8 +1703,7 @@ async def process_web_search(request: Request, form_data: SearchForm, user=Depen
         logging.debug(f"trying to web search with {request.app.state.config.WEB_SEARCH_ENGINE, form_data.queries}")
 
         search_tasks = [
-            run_in_threadpool(
-                search_web,
+            search_web(
                 request,
                 request.app.state.config.WEB_SEARCH_ENGINE,
                 query,
@@ -1788,8 +1786,7 @@ async def process_web_search(request: Request, form_data: SearchForm, user=Depen
             collection_name = f"web-search-{calculate_sha256_string('-'.join(form_data.queries))}"[:63]
 
             try:
-                await run_in_threadpool(
-                    save_docs_to_vector_db,
+                await save_docs_to_vector_db(
                     request,
                     docs,
                     collection_name,
@@ -1917,13 +1914,13 @@ class DeleteForm(BaseModel):
 
 
 @router.post("/delete")
-def delete_entries_from_collection(form_data: DeleteForm, user=Depends(get_admin_user)):
+async def delete_entries_from_collection(form_data: DeleteForm, user=Depends(get_admin_user)):
     try:
-        if VECTOR_DB_CLIENT.has_collection(collection_name=form_data.collection_name):
-            file = Files.get_file_by_id(form_data.file_id)
+        if await asyncio.to_thread(VECTOR_DB_CLIENT.has_collection, collection_name=form_data.collection_name):
+            file = await Files.get_file_by_id(form_data.file_id)
             hash = file.hash
 
-            VECTOR_DB_CLIENT.delete(
+            await asyncio.to_thread(VECTOR_DB_CLIENT.delete,
                 collection_name=form_data.collection_name,
                 metadata={"hash": hash},
             )
@@ -1936,9 +1933,9 @@ def delete_entries_from_collection(form_data: DeleteForm, user=Depends(get_admin
 
 
 @router.post("/reset/db")
-def reset_vector_db(user=Depends(get_admin_user)):
+async def reset_vector_db(user=Depends(get_admin_user)):
     VECTOR_DB_CLIENT.reset()
-    Knowledges.delete_all_knowledge()
+    await Knowledges.delete_all_knowledge()
 
 
 @router.post("/reset/uploads")
@@ -1988,7 +1985,7 @@ class BatchProcessFilesResponse(BaseModel):
 
 
 @router.post("/process/files/batch")
-def process_files_batch(
+async def process_files_batch(
     request: Request,
     form_data: BatchProcessFilesForm,
     user=Depends(get_verified_user),
@@ -2020,8 +2017,8 @@ def process_files_batch(
             ]
 
             hash = calculate_sha256_string(text_content)
-            Files.update_file_hash_by_id(file.id, hash)
-            Files.update_file_data_by_id(file.id, {"content": text_content})
+            await Files.update_file_hash_by_id(file.id, hash)
+            await Files.update_file_data_by_id(file.id, {"content": text_content})
 
             all_docs.extend(docs)
             results.append(BatchProcessFilesResult(file_id=file.id, status="prepared"))
@@ -2033,7 +2030,7 @@ def process_files_batch(
     # Save all documents in one batch
     if all_docs:
         try:
-            save_docs_to_vector_db(
+            await save_docs_to_vector_db(
                 request=request,
                 docs=all_docs,
                 collection_name=collection_name,
@@ -2043,7 +2040,7 @@ def process_files_batch(
 
             # Update all files with collection name
             for result in results:
-                Files.update_file_metadata_by_id(result.file_id, {"collection_name": collection_name})
+                await Files.update_file_metadata_by_id(result.file_id, {"collection_name": collection_name})
                 result.status = "completed"
 
         except Exception as e:

@@ -7,7 +7,6 @@ import re
 import sys
 import textwrap
 import time
-from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
 from uuid import uuid4
 
@@ -888,26 +887,31 @@ async def chat_completion_files_handler(request: Request, body: dict, extra_para
             queries = [get_last_user_message(body["messages"])]
 
         try:
-            # Offload get_sources_from_items to a separate thread
-            loop = asyncio.get_running_loop()
-            with ThreadPoolExecutor() as executor:
-                sources = await loop.run_in_executor(
-                    executor,
-                    lambda: get_sources_from_items(
-                        request=request,
-                        items=files,
-                        queries=queries,
-                        embedding_function=lambda query, prefix: request.app.state.EMBEDDING_FUNCTION(query, prefix=prefix, user=user),
-                        k=request.app.state.config.TOP_K,
-                        reranking_function=((lambda sentences: request.app.state.RERANKING_FUNCTION(sentences, user=user)) if request.app.state.RERANKING_FUNCTION else None),
-                        k_reranker=request.app.state.config.TOP_K_RERANKER,
-                        r=request.app.state.config.RELEVANCE_THRESHOLD,
-                        hybrid_bm25_weight=request.app.state.config.HYBRID_BM25_WEIGHT,
-                        hybrid_search=request.app.state.config.ENABLE_RAG_HYBRID_SEARCH,
-                        full_context=all_full_context or request.app.state.config.RAG_FULL_CONTEXT,
-                        user=user,
-                    ),
-                )
+            sources = await get_sources_from_items(
+                request=request,
+                items=files,
+                queries=queries,
+                embedding_function=lambda query, prefix: request.app.state.EMBEDDING_FUNCTION(
+                    query, prefix=prefix, user=user
+                ),
+                k=request.app.state.config.TOP_K,
+                reranking_function=(
+                    (
+                        lambda sentences: request.app.state.RERANKING_FUNCTION(
+                            sentences, user=user
+                        )
+                    )
+                    if request.app.state.RERANKING_FUNCTION
+                    else None
+                ),
+                k_reranker=request.app.state.config.TOP_K_RERANKER,
+                r=request.app.state.config.RELEVANCE_THRESHOLD,
+                hybrid_bm25_weight=request.app.state.config.HYBRID_BM25_WEIGHT,
+                hybrid_search=request.app.state.config.ENABLE_RAG_HYBRID_SEARCH,
+                full_context=all_full_context
+                or request.app.state.config.RAG_FULL_CONTEXT,
+                user=user,
+            )
         except Exception as e:
             log.exception(e)
 
@@ -1053,7 +1057,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
     if chat_id and user:
         chat = await Chats.get_chat_by_id_and_user_id(chat_id, user.id)
         if chat and chat.folder_id:
-            folder = Folders.get_folder_by_id_and_user_id(chat.folder_id, user.id)
+            folder = await Folders.get_folder_by_id_and_user_id(chat.folder_id, user.id)
 
             if folder and folder.data:
                 if "system_prompt" in folder.data:
@@ -1115,7 +1119,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
         raise e
 
     try:
-        filter_functions = [Functions.get_function_by_id(filter_id) for filter_id in get_sorted_filter_ids(request, model, metadata.get("filter_ids", []))]
+        filter_functions = [await Functions.get_function_by_id(filter_id) for filter_id in await get_sorted_filter_ids(request, model, metadata.get("filter_ids", []))]
 
         form_data, flags = await process_filter_functions(
             request=request,
@@ -1162,7 +1166,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                 # Get folder files
                 folder_id = file_item.get("id", None)
                 if folder_id:
-                    folder = Folders.get_folder_by_id_and_user_id(folder_id, user.id)
+                    folder = await Folders.get_folder_by_id_and_user_id(folder_id, user.id)
                     if folder and folder.data and "files" in folder.data:
                         files = [f for f in files if f.get("id", None) != folder_id]
                         files = [*files, *folder.data["files"]]
@@ -1241,7 +1245,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                     )
 
                     tool_specs = await mcp_clients[server_id].list_tool_specs()
-                    for tool_spec in tool_specs:
+                    for tool_spec in tool_specs or []:
 
                         def make_tool_function(client, function_name):
                             async def tool_function(**kwargs):
@@ -1381,7 +1385,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
         messages = []
 
         if "chat_id" in metadata and not metadata["chat_id"].startswith("local:"):
-            messages_map = Chats.get_messages_map_by_chat_id(metadata["chat_id"])
+            messages_map = await Chats.get_messages_map_by_chat_id(metadata["chat_id"])
             message = messages_map.get(metadata["message_id"]) if messages_map else None
 
             message_list = get_message_list(messages_map, metadata["message_id"])
@@ -1457,7 +1461,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
                             )
 
                             if not metadata.get("chat_id", "").startswith("local:"):
-                                Chats.upsert_message_to_chat_by_id_and_message_id(
+                                await Chats.upsert_message_to_chat_by_id_and_message_id(
                                     metadata["chat_id"],
                                     metadata["message_id"],
                                     {
@@ -1510,7 +1514,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
                                 if not title:
                                     title = messages[0].get("content", user_message)
 
-                                Chats.update_chat_title_by_id(metadata["chat_id"], title)
+                                await Chats.update_chat_title_by_id(metadata["chat_id"], title)
 
                                 await event_emitter(
                                     {
@@ -1522,7 +1526,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
                         if title is None and len(messages) == 2:
                             title = messages[0].get("content", user_message)
 
-                            Chats.update_chat_title_by_id(metadata["chat_id"], title)
+                            await Chats.update_chat_title_by_id(metadata["chat_id"], title)
 
                             await event_emitter(
                                 {
@@ -1554,7 +1558,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
 
                             try:
                                 tags = json.loads(tags_string).get("tags", [])
-                                Chats.update_chat_tags_by_id(metadata["chat_id"], tags, user)
+                                await Chats.update_chat_tags_by_id(metadata["chat_id"], tags, user)
 
                                 await event_emitter(
                                     {
@@ -1596,7 +1600,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
                         else:
                             error = str(error)
 
-                        Chats.upsert_message_to_chat_by_id_and_message_id(
+                        await Chats.upsert_message_to_chat_by_id_and_message_id(
                             metadata["chat_id"],
                             metadata["message_id"],
                             {
@@ -1612,7 +1616,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
                             )
 
                     if "selected_model_id" in response_data:
-                        Chats.upsert_message_to_chat_by_id_and_message_id(
+                        await Chats.upsert_message_to_chat_by_id_and_message_id(
                             metadata["chat_id"],
                             metadata["message_id"],
                             {
@@ -1646,7 +1650,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
                             )
 
                             # Save message in the database
-                            Chats.upsert_message_to_chat_by_id_and_message_id(
+                            await Chats.upsert_message_to_chat_by_id_and_message_id(
                                 metadata["chat_id"],
                                 metadata["message_id"],
                                 {
@@ -1739,7 +1743,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
         "__request__": request,
         "__model__": model,
     }
-    filter_functions = [Functions.get_function_by_id(filter_id) for filter_id in get_sorted_filter_ids(request, model, metadata.get("filter_ids", []))]
+    filter_functions = [await Functions.get_function_by_id(filter_id) for filter_id in await get_sorted_filter_ids(request, model, metadata.get("filter_ids", []))]
 
     # Streaming response
     if event_emitter and event_caller:
@@ -2073,7 +2077,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
 
                 return content, content_blocks, end_flag
 
-            message = Chats.get_message_by_id_and_message_id(metadata["chat_id"], metadata["message_id"])
+            message = await Chats.get_message_by_id_and_message_id(metadata["chat_id"], metadata["message_id"])
 
             tool_calls = []
 
@@ -2114,7 +2118,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
                     )
 
                     # Save message in the database
-                    Chats.upsert_message_to_chat_by_id_and_message_id(
+                    await Chats.upsert_message_to_chat_by_id_and_message_id(
                         metadata["chat_id"],
                         metadata["message_id"],
                         {
@@ -2181,7 +2185,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
 
                                 if "selected_model_id" in data:
                                     model_id = data["selected_model_id"]
-                                    Chats.upsert_message_to_chat_by_id_and_message_id(
+                                    await Chats.upsert_message_to_chat_by_id_and_message_id(
                                         metadata["chat_id"],
                                         metadata["message_id"],
                                         {
@@ -2328,7 +2332,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
 
                                         if ENABLE_REALTIME_CHAT_SAVE:
                                             # Save message in the database
-                                            Chats.upsert_message_to_chat_by_id_and_message_id(
+                                            await Chats.upsert_message_to_chat_by_id_and_message_id(
                                                 metadata["chat_id"],
                                                 metadata["message_id"],
                                                 {
@@ -2706,7 +2710,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
 
                 if not ENABLE_REALTIME_CHAT_SAVE:
                     # Save message in the database
-                    Chats.upsert_message_to_chat_by_id_and_message_id(
+                    await Chats.upsert_message_to_chat_by_id_and_message_id(
                         metadata["chat_id"],
                         metadata["message_id"],
                         {
@@ -2744,7 +2748,7 @@ async def process_chat_response(request, response, form_data, user, metadata, mo
 
                 if not ENABLE_REALTIME_CHAT_SAVE:
                     # Save message in the database
-                    Chats.upsert_message_to_chat_by_id_and_message_id(
+                    await Chats.upsert_message_to_chat_by_id_and_message_id(
                         metadata["chat_id"],
                         metadata["message_id"],
                         {

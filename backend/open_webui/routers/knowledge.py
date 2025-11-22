@@ -63,7 +63,7 @@ async def get_knowledge(user=Depends(get_verified_user)):
                     data["file_ids"] = file_ids
                     await Knowledges.update_knowledge_data_by_id(id=knowledge_base.id, data=data)
 
-                    files = Files.get_file_metadatas_by_ids(file_ids)
+                    files = await Files.get_file_metadatas_by_ids(file_ids)
 
         knowledge_with_files.append(
             KnowledgeUserResponse(
@@ -104,7 +104,7 @@ async def get_knowledge_list(user=Depends(get_verified_user)):
                     data["file_ids"] = file_ids
                     await Knowledges.update_knowledge_data_by_id(id=knowledge_base.id, data=data)
 
-                    files = Files.get_file_metadatas_by_ids(file_ids)
+                    files = await Files.get_file_metadatas_by_ids(file_ids)
 
         knowledge_with_files.append(
             KnowledgeUserResponse(
@@ -234,7 +234,7 @@ async def get_knowledge_by_id(id: str, user=Depends(get_verified_user)):
     if knowledge:
         if user.role == "admin" or knowledge.user_id == user.id or await has_access(user.id, "read", knowledge.access_control):
             file_ids = knowledge.data.get("file_ids", []) if knowledge.data else []
-            files = Files.get_file_metadatas_by_ids(file_ids)
+            files = await Files.get_file_metadatas_by_ids(file_ids)
 
             return KnowledgeFilesResponse(
                 **knowledge.model_dump(),
@@ -287,7 +287,7 @@ async def update_knowledge_by_id(
     knowledge = await Knowledges.update_knowledge_by_id(id=id, form_data=form_data)
     if knowledge:
         file_ids = knowledge.data.get("file_ids", []) if knowledge.data else []
-        files = Files.get_file_metadatas_by_ids(file_ids)
+        files = await Files.get_file_metadatas_by_ids(file_ids)
 
         return KnowledgeFilesResponse(
             **knowledge.model_dump(),
@@ -367,7 +367,7 @@ async def add_file_to_knowledge_by_id(
             knowledge = await Knowledges.update_knowledge_data_by_id(id=id, data=data)
 
             if knowledge:
-                files = Files.get_file_metadatas_by_ids(file_ids)
+                files = await Files.get_file_metadatas_by_ids(file_ids)
 
                 return KnowledgeFilesResponse(
                     **knowledge.model_dump(),
@@ -437,7 +437,7 @@ async def update_file_from_knowledge_by_id(
         data = knowledge.data or {}
         file_ids = data.get("file_ids", [])
 
-        files = Files.get_file_metadatas_by_ids(file_ids)
+        files = await Files.get_file_metadatas_by_ids(file_ids)
 
         return KnowledgeFilesResponse(
             **knowledge.model_dump(),
@@ -515,7 +515,7 @@ async def remove_file_from_knowledge_by_id(
             knowledge = await Knowledges.update_knowledge_data_by_id(id=id, data=data)
 
             if knowledge:
-                files = Files.get_file_metadatas_by_ids(file_ids)
+                files = await Files.get_file_metadatas_by_ids(file_ids)
 
                 return KnowledgeFilesResponse(
                     **knowledge.model_dump(),
@@ -623,7 +623,7 @@ async def reset_knowledge_by_id(id: str, user=Depends(get_verified_user)):
         log.debug(e)
         pass
 
-    knowledge = Knowledges.update_knowledge_data_by_id(id=id, data={"file_ids": []})
+    knowledge = await Knowledges.update_knowledge_data_by_id(id=id, data={"file_ids": []})
 
     return knowledge
 
@@ -660,7 +660,7 @@ async def add_files_to_knowledge_batch(
     log.info(f"files/batch/add - {len(form_data)} files")
     files: List[FileModel] = []
     for form in form_data:
-        file = Files.get_file_by_id(form.file_id)
+        file = await Files.get_file_by_id(form.file_id)
         if not file:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -690,14 +690,14 @@ async def add_files_to_knowledge_batch(
             existing_file_ids.append(file_id)
 
     data["file_ids"] = existing_file_ids
-    knowledge = Knowledges.update_knowledge_data_by_id(id=id, data=data)
+    knowledge = await Knowledges.update_knowledge_data_by_id(id=id, data=data)
 
     # If there were any errors, include them in the response
     if result.errors:
         error_details = [f"{err.file_id}: {err.error}" for err in result.errors]
         return KnowledgeFilesResponse(
             **knowledge.model_dump(),
-            files=Files.get_file_metadatas_by_ids(existing_file_ids),
+            files=await Files.get_file_metadatas_by_ids(existing_file_ids),
             warnings={
                 "message": "Some files failed to process",
                 "errors": error_details,
@@ -706,5 +706,5 @@ async def add_files_to_knowledge_batch(
 
     return KnowledgeFilesResponse(
         **knowledge.model_dump(),
-        files=Files.get_file_metadatas_by_ids(existing_file_ids),
+        files=await Files.get_file_metadatas_by_ids(existing_file_ids),
     )

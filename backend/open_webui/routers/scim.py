@@ -846,7 +846,7 @@ async def patch_group(
                 update_form.name = value
             elif path == "members":
                 # Replace all members
-                update_form.user_ids = [member["value"] for member in value]
+                update_form.user_ids = [member["value"] for member in value or []]
         elif op == "add":
             if path == "members":
                 # Add members

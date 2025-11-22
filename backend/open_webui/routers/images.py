@@ -586,7 +586,7 @@ async def image_generations(
                 if request.app.state.config.COMFYUI_API_KEY:
                     headers = {"Authorization": f"Bearer {request.app.state.config.COMFYUI_API_KEY}"}
 
-                image_data, content_type = get_image_data(image["url"], headers)
+                image_data, content_type = await get_image_data(image["url"], headers)
                 url = await upload_image(
                     request,
                     image_data,

@@ -643,12 +643,12 @@ async def get_sources_from_items(
 
             try:
                 if full_context:
-                    query_result = get_all_items_from_collections(collection_names)
+                    query_result = await get_all_items_from_collections(collection_names)
                 else:
                     query_result = None  # Initialize to None
                     if hybrid_search:
                         try:
-                            query_result = query_collection_with_hybrid_search(
+                            query_result = await query_collection_with_hybrid_search(
                                 collection_names=collection_names,
                                 queries=queries,
                                 embedding_function=embedding_function,
@@ -663,7 +663,7 @@ async def get_sources_from_items(
 
                     # fallback to non-hybrid search
                     if not hybrid_search and query_result is None:
-                        query_result = query_collection(
+                        query_result = await query_collection(
                             collection_names=collection_names,
                             queries=queries,
                             embedding_function=embedding_function,

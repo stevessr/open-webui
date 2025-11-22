@@ -279,7 +279,7 @@ class GroupTable:
 
                 group_user_ids = list(set(group_user_ids))  # Deduplicate
 
-                for user_id in user_ids:
+                for user_id in user_ids or []:
                     if user_id not in group_user_ids:
                         group_user_ids.append(user_id)
 
@@ -306,7 +306,7 @@ class GroupTable:
 
                 group_user_ids = list(set(group_user_ids))  # Deduplicate
 
-                for user_id in user_ids:
+                for user_id in user_ids or []:
                     if user_id in group_user_ids:
                         group_user_ids.remove(user_id)
 

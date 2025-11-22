@@ -331,7 +331,7 @@ async def get_all_models(request: Request, user: UserModel = None):
                 if enable:
                     request_tasks.append(send_get_request(f"{url}/api/tags", key, user=user))
                 else:
-                    request_tasks.append(asyncio.ensure_future(asyncio.sleep(0, None)))
+                    request_tasks.append(asyncio.sleep(0))
 
         responses = await asyncio.gather(*request_tasks)
 
@@ -488,7 +488,7 @@ async def get_ollama_loaded_models(request: Request, user=Depends(get_admin_user
                 if enable:
                     request_tasks.append(send_get_request(f"{url}/api/ps", key, user=user))
                 else:
-                    request_tasks.append(asyncio.ensure_future(asyncio.sleep(0, None)))
+                    request_tasks.append(asyncio.sleep(0))
 
         responses = await asyncio.gather(*request_tasks)
 
