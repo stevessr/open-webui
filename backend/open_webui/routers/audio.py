@@ -384,7 +384,7 @@ async def speech(request: Request, user=Depends(get_verified_user)):
     elif request.app.state.config.TTS_ENGINE == "elevenlabs":
         voice_id = payload.get("voice", "")
 
-        if voice_id not in get_available_voices(request):
+        if voice_id not in await get_available_voices(request):
             raise HTTPException(
                 status_code=400,
                 detail="Invalid voice id",
@@ -1285,4 +1285,4 @@ async def get_elevenlabs_voices(api_key: str) -> dict:
 
 @router.get("/voices")
 async def get_voices(request: Request, user=Depends(get_verified_user)):
-    return {"voices": [{"id": k, "name": v} for k, v in get_available_voices(request).items()]}
+    return {"voices": [{"id": k, "name": v} for k, v in (await get_available_voices(request)).items()]}

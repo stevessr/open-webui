@@ -56,8 +56,7 @@ class ExternalDocumentLoader(BaseLoader):
             url = url[:-1]
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.put(f"{url}/process", content=data, headers=headers)
+            response = httpx.put(f"{url}/process", content=data, headers=headers)
             response.raise_for_status()
         except Exception as e:
             log.error(f"Error connecting to endpoint: {e}")

@@ -284,7 +284,7 @@ def get_scim_auth(request: Request, authorization: Optional[str] = Header(None))
         )
 
 
-def user_to_scim(user: UserModel, request: Request) -> SCIMUser:
+async def user_to_scim(user: UserModel, request: Request) -> SCIMUser:
     """Convert internal User model to SCIM User"""
     # Parse display name into name components
     name_parts = user.name.split(" ", 1) if user.name else ["", ""]
@@ -292,7 +292,7 @@ def user_to_scim(user: UserModel, request: Request) -> SCIMUser:
     family_name = name_parts[1] if len(name_parts) > 1 else ""
 
     # Get user's groups
-    user_groups = Groups.get_groups_by_member_id(user.id)
+    user_groups = await Groups.get_groups_by_member_id(user.id)
     groups = [
         {
             "value": group.id,
@@ -325,11 +325,11 @@ def user_to_scim(user: UserModel, request: Request) -> SCIMUser:
     )
 
 
-def group_to_scim(group: GroupModel, request: Request) -> SCIMGroup:
+async def group_to_scim(group: GroupModel, request: Request) -> SCIMGroup:
     """Convert internal Group model to SCIM Group"""
     members = []
     for user_id in group.user_ids:
-        user = Users.get_user_by_id(user_id)
+        user = await Users.get_user_by_id(user_id)
         if user:
             members.append(
                 SCIMGroupMember(
@@ -498,7 +498,7 @@ async def get_user(
     _: bool = Depends(get_scim_auth),
 ):
     """Get SCIM User by ID"""
-    user = Users.get_user_by_id(user_id)
+    user = await Users.get_user_by_id(user_id)
     if not user:
         return scim_error(status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found")
 
@@ -563,7 +563,7 @@ async def update_user(
     _: bool = Depends(get_scim_auth),
 ):
     """Update SCIM User (full update)"""
-    user = Users.get_user_by_id(user_id)
+    user = await Users.get_user_by_id(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -612,7 +612,7 @@ async def patch_user(
     _: bool = Depends(get_scim_auth),
 ):
     """Update SCIM User (partial update)"""
-    user = Users.get_user_by_id(user_id)
+    user = await Users.get_user_by_id(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -659,7 +659,7 @@ async def delete_user(
     _: bool = Depends(get_scim_auth),
 ):
     """Delete SCIM User"""
-    user = Users.get_user_by_id(user_id)
+    user = await Users.get_user_by_id(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -687,7 +687,7 @@ async def get_groups(
 ):
     """List SCIM Groups"""
     # Get all groups
-    groups_list = Groups.get_groups()
+    groups_list = await Groups.get_groups()
 
     # Apply pagination
     total = len(groups_list)
@@ -720,7 +720,7 @@ async def get_group(
             detail=f"Group {group_id} not found",
         )
 
-    return group_to_scim(group, request)
+        return await group_to_scim(group, request)
 
 
 @router.post("/Groups", response_model=SCIMGroup, status_code=status.HTTP_201_CREATED)
@@ -768,10 +768,10 @@ async def create_group(
             description=new_group.description,
             user_ids=member_ids,
         )
-        Groups.update_group_by_id(new_group.id, update_form)
-        new_group = Groups.get_group_by_id(new_group.id)
+        await Groups.update_group_by_id(new_group.id, update_form)
+        new_group = await Groups.get_group_by_id(new_group.id)
 
-    return group_to_scim(new_group, request)
+    return await group_to_scim(new_group, request)
 
 
 @router.put("/Groups/{group_id}", response_model=SCIMGroup)
@@ -810,7 +810,7 @@ async def update_group(
             detail="Failed to update group",
         )
 
-    return group_to_scim(updated_group, request)
+    return await group_to_scim(updated_group, request)
 
 
 @router.patch("/Groups/{group_id}", response_model=SCIMGroup)
@@ -870,7 +870,7 @@ async def patch_group(
             detail="Failed to update group",
         )
 
-    return group_to_scim(updated_group, request)
+    return await group_to_scim(updated_group, request)
 
 
 @router.delete("/Groups/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -895,3 +895,6 @@ async def delete_group(
         )
 
     return None
+
+
+# End of SCIM 2.0 Implementation for Open WebUI

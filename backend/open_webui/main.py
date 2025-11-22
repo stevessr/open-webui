@@ -1272,12 +1272,12 @@ app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 if SCIM_ENABLED:
     app.include_router(scim.router, prefix="/api/v1/scim/v2", tags=["scim"])
 
-
-try:
-    audit_level = AuditLevel(AUDIT_LOG_LEVEL)
-except ValueError as e:
-    logger.error(f"Invalid audit level: {AUDIT_LOG_LEVEL}. Error: {e}")
     audit_level = AuditLevel.NONE
+    try:
+        if AUDIT_LOG_LEVEL:
+            audit_level = AuditLevel(AUDIT_LOG_LEVEL)
+    except ValueError as e:
+        logger.error(f"Invalid audit level: {AUDIT_LOG_LEVEL}. Error: {e}")
 
 if audit_level != AuditLevel.NONE:
     app.add_middleware(
@@ -1593,7 +1593,7 @@ async def list_tasks_endpoint(request: Request, user=Depends(get_verified_user))
 
 @app.get("/api/tasks/chat/{chat_id}")
 async def list_tasks_by_chat_id_endpoint(request: Request, chat_id: str, user=Depends(get_verified_user)):
-    chat = await await Chats.get_chat_by_id(chat_id)
+    chat = await Chats.get_chat_by_id(chat_id)
     if chat is None or chat.user_id != user.id:
         return {"task_ids": []}
 
@@ -1634,7 +1634,7 @@ async def get_app_config(request: Request):
                 detail="Invalid token",
             )
         if data is not None and "id" in data:
-            user = Users.get_user_by_id(data["id"])
+            user = await Users.get_user_by_id(data["id"])
 
     user_count = Users.get_num_users()
     onboarding = False
@@ -1885,7 +1885,7 @@ except Exception:
     )
 
 
-async def register_client(self, request, client_id: str) -> bool:
+async def register_client(request, client_id: str) -> bool:
     server_type, server_id = client_id.split(":", 1)
 
     connection = None

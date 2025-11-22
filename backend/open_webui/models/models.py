@@ -189,10 +189,20 @@ class ModelsTable:
         with get_db() as db:
             return [ModelModel.model_validate(model) for model in db.query(Model).filter(Model.base_model_id is None).all()]
 
-    def get_models_by_user_id(self, user_id: str, permission: str = "write") -> list[ModelUserResponse]:
+    async def get_models_by_user_id(self, user_id: str, permission: str = "write") -> list[ModelUserResponse]:
         models = self.get_models()
-        user_group_ids = {group.id for group in Groups.get_groups_by_member_id(user_id)}
-        return [model for model in models if model.user_id == user_id or has_access(user_id, permission, model.access_control, user_group_ids)]
+        user_groups = await Groups.get_groups_by_member_id(user_id)
+        user_group_ids = {group.id for group in user_groups}
+
+        filtered_models = []
+        for model in models:
+            if model.user_id == user_id:
+                filtered_models.append(model)
+            else:
+                has_permission = await has_access(user_id, permission, model.access_control, user_group_ids)
+                if has_permission:
+                    filtered_models.append(model)
+        return filtered_models
 
     def get_model_by_id(self, id: str) -> Optional[ModelModel]:
         try:

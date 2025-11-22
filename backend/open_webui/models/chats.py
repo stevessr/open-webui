@@ -651,7 +651,7 @@ class ChatTable:
             query = query.order_by(Chat.updated_at.desc())
 
             # Check if the database dialect is either 'sqlite' or 'postgresql'
-            dialect_name = await asyncio.to_thread(lambda: db.bind.dialect.name)()
+            dialect_name = await asyncio.to_thread(db.bind.dialect.name.fget)
             if dialect_name == "sqlite":
                 # SQLite case: using JSON1 extension for JSON searching
                 sqlite_content_sql = "EXISTS (    SELECT 1     FROM json_each(Chat.chat, '$.messages') AS message     WHERE LOWER(message.value->>'content') LIKE '%' || :content_key || '%')"
@@ -836,7 +836,7 @@ class ChatTable:
             # Normalize the tag_name for consistency
             tag_id = tag_name.replace(" ", "_").lower()
 
-            dialect_name = await asyncio.to_thread(lambda: db.bind.dialect.name)()
+            dialect_name = await asyncio.to_thread(db.bind.dialect.name.fget)
             if dialect_name == "sqlite":
                 # SQLite JSON1 support for querying the tags inside the `meta` JSON field
                 query = query.filter(text("EXISTS (SELECT 1 FROM json_each(Chat.meta, '$.tags') WHERE json_each.value = :tag_id)")).params(tag_id=tag_id)

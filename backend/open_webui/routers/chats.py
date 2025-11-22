@@ -63,7 +63,7 @@ async def get_session_user_chat_list(
 
 @router.delete("/", response_model=bool)
 async def delete_all_user_chats(request: Request, user=Depends(get_verified_user)):
-    if user.role == "user" and not has_permission(user.id, "chat.delete", request.app.state.config.USER_PERMISSIONS):
+    if user.role == "user" and not await has_permission(user.id, "chat.delete", request.app.state.config.USER_PERMISSIONS):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
@@ -517,7 +517,7 @@ async def delete_chat_by_id(request: Request, id: str, user=Depends(get_verified
 
         return result
     else:
-        if not has_permission(user.id, "chat.delete", request.app.state.config.USER_PERMISSIONS):
+        if not await has_permission(user.id, "chat.delete", request.app.state.config.USER_PERMISSIONS):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
@@ -670,7 +670,7 @@ async def archive_chat_by_id(id: str, user=Depends(get_verified_user)):
 
 @router.post("/{id}/share", response_model=Optional[ChatResponse])
 async def share_chat_by_id(request: Request, id: str, user=Depends(get_verified_user)):
-    if (user.role != "admin") and (not has_permission(user.id, "chat.share", request.app.state.config.USER_PERMISSIONS)):
+    if (user.role != "admin") and (not await has_permission(user.id, "chat.share", request.app.state.config.USER_PERMISSIONS)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,

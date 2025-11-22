@@ -120,7 +120,7 @@ class NoteTable:
             notes = query.all()
             return [NoteModel.model_validate(note) for note in notes]
 
-    def get_notes_by_permission(
+    async def get_notes_by_permission(
         self,
         user_id: str,
         permission: str = "write",
@@ -128,7 +128,7 @@ class NoteTable:
         limit: Optional[int] = None,
     ) -> list[NoteModel]:
         with get_db() as db:
-            user_groups = Groups.get_groups_by_member_id(user_id)
+            user_groups = await Groups.get_groups_by_member_id(user_id)
             user_group_ids = {group.id for group in user_groups}
 
             # Order newest-first. We stream to keep memory usage low.
@@ -147,7 +147,7 @@ class NoteTable:
                     # We might want to change this behavior later
                     permitted = permission == "read"
                 else:
-                    permitted = has_access(user_id, permission, note.access_control, user_group_ids)
+                    permitted = await has_access(user_id, permission, note.access_control, user_group_ids)
 
                 if not permitted:
                     continue

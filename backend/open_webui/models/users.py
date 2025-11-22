@@ -393,13 +393,13 @@ class UsersTable:
         except Exception:
             return None
 
-    def delete_user_by_id(self, id: str) -> bool:
+    async def delete_user_by_id(self, id: str) -> bool:
         try:
             # Remove User from Groups
-            Groups.remove_user_from_all_groups(id)
+            await Groups.remove_user_from_all_groups(id)
 
             # Delete User Chats
-            result = Chats.delete_chats_by_user_id(id)
+            result = await Chats.delete_chats_by_user_id(id)
             if result:
                 with get_db() as db:
                     # Delete User

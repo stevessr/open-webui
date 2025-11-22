@@ -874,7 +874,7 @@ class OAuthManager:
 
         return role
 
-    def update_user_groups(self, user, user_data, default_permissions):
+    async def update_user_groups(self, user, user_data, default_permissions):
         log.debug("Running OAUTH Group management")
         oauth_claim = auth_manager_config.OAUTH_GROUPS_CLAIM
 
@@ -903,8 +903,8 @@ class OAuthManager:
             else:
                 user_oauth_groups = []
 
-        user_current_groups: list[GroupModel] = Groups.get_groups_by_member_id(user.id)
-        all_available_groups: list[GroupModel] = Groups.get_groups()
+        user_current_groups: list[GroupModel] = await Groups.get_groups_by_member_id(user.id)
+        all_available_groups: list[GroupModel] = await Groups.get_groups()
 
         # Create groups if they don't exist and creation is enabled
         if auth_manager_config.ENABLE_OAUTH_GROUP_CREATION:
@@ -927,7 +927,7 @@ class OAuthManager:
                             user_ids=[],  # Start with no users, user will be added later by subsequent logic
                         )
                         # Use determined creator ID (admin or fallback to current user)
-                        created_group = Groups.insert_new_group(creator_id, new_group_form)
+                        created_group = await Groups.insert_new_group(creator_id, new_group_form)
                         if created_group:
                             log.info(f"Successfully created group '{group_name}' with ID {created_group.id} using creator ID {creator_id}")
                             groups_created = True
@@ -940,7 +940,7 @@ class OAuthManager:
 
             # Refresh the list of all available groups if any were created
             if groups_created:
-                all_available_groups = Groups.get_groups()
+                all_available_groups = await Groups.get_groups()
                 log.debug("Refreshed list of all available groups after creation.")
 
         log.debug(f"Oauth Groups claim: {oauth_claim}")
@@ -968,7 +968,7 @@ class OAuthManager:
                     permissions=group_permissions,
                     user_ids=user_ids,
                 )
-                Groups.update_group_by_id(id=group_model.id, form_data=update_form, overwrite=False)
+                await Groups.update_group_by_id(id=group_model.id, form_data=update_form, overwrite=False)
 
         # Add user to new groups
         for group_model in all_available_groups:
@@ -990,7 +990,7 @@ class OAuthManager:
                     permissions=group_permissions,
                     user_ids=user_ids,
                 )
-                Groups.update_group_by_id(id=group_model.id, form_data=update_form, overwrite=False)
+                await Groups.update_group_by_id(id=group_model.id, form_data=update_form, overwrite=False)
 
     async def _process_picture_url(self, picture_url: str, access_token: str | None = None) -> str:
         """Process a picture URL and return a base64 encoded data URL.

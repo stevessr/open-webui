@@ -363,10 +363,10 @@ async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
 
                 if user.role != "admin" and ENABLE_LDAP_GROUP_MANAGEMENT and user_groups:
                     if ENABLE_LDAP_GROUP_CREATION:
-                        Groups.create_groups_by_group_names(user.id, user_groups)
+                        await Groups.create_groups_by_group_names(user.id, user_groups)
 
                     try:
-                        Groups.sync_groups_by_group_names(user.id, user_groups)
+                        await Groups.sync_groups_by_group_names(user.id, user_groups)
                         log.info(f"Successfully synced groups for user {user.id}: {user_groups}")
                     except Exception as e:
                         log.error(f"Failed to sync groups for user {user.id}: {e}")
@@ -421,7 +421,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             group_names = [name.strip() for name in group_names if name.strip()]
 
             if group_names:
-                Groups.sync_groups_by_group_names(user.id, group_names)
+                await Groups.sync_groups_by_group_names(user.id, group_names)
 
     elif not WEBUI_AUTH:
         admin_email = "admin@localhost"
