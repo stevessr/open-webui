@@ -1287,7 +1287,7 @@ def validate_cors_origin(origin):
     parsed_url = urlparse(origin)
 
     # Check if the scheme is either http or https, or a custom scheme
-    schemes = ["http", "https"] + CORS_ALLOW_CUSTOM_SCHEME
+    schemes = ["http", "https", *CORS_ALLOW_CUSTOM_SCHEME]
     if parsed_url.scheme not in schemes:
         raise ValueError(f"Invalid scheme in CORS_ALLOW_ORIGIN: '{origin}'. Only 'http' and 'https' and CORS_ALLOW_CUSTOM_SCHEME are allowed.")
 
@@ -1508,7 +1508,8 @@ QUERY_GENERATION_PROMPT_TEMPLATE = PersistentConfig(
 )
 
 DEFAULT_QUERY_GENERATION_PROMPT_TEMPLATE = """### Task:
-Analyze the chat history to determine the necessity of generating search queries, in the given language. By default, **prioritize generating 1-3 broad and relevant search queries** unless it is absolutely certain that no additional information is required. The aim is to retrieve comprehensive, updated, and valuable information even with minimal uncertainty. If no search is unequivocally needed, return an empty list.
+Analyze the chat history to determine the necessity of generating search queries, in the given language. By default, **prioritize generating 1-3 broad and relevant search queries** unless it is absolutely certain that no additional information is required.
+The aim is to retrieve comprehensive, updated, and valuable information even with minimal uncertainty. If no search is unequivocally needed, return an empty list.
 
 ### Guidelines:
 - Respond **EXCLUSIVELY** with a JSON object. Any form of extra commentary, explanation, or additional text is strictly prohibited.
@@ -1629,7 +1630,8 @@ Message: ```{{prompt}}```"""
 
 DEFAULT_MOA_GENERATION_PROMPT_TEMPLATE = """You have been provided with a set of responses from various models to the latest user query: "{{prompt}}"
 
-Your task is to synthesize these responses into a single, high-quality response. It is crucial to critically evaluate the information provided in these responses, recognizing that some of it may be biased or incorrect. Your response should not simply replicate the given answers but should offer a refined, accurate, and comprehensive reply to the instruction. Ensure your response is well-structured, coherent, and adheres to the highest standards of accuracy and reliability.
+Your task is to synthesize these responses into a single, high-quality response. It is crucial to critically evaluate the information provided in these responses, recognizing that some of it may be biased or incorrect.
+Your response should not simply replicate the given answers but should offer a refined, accurate, and comprehensive reply to the instruction. Ensure your response is well-structured, coherent, and adheres to the highest standards of accuracy and reliability.
 
 Responses from models: {{responses}}"""
 
@@ -1847,7 +1849,7 @@ if PGVECTOR_PGCRYPTO and not PGVECTOR_PGCRYPTO_KEY:
 
 PGVECTOR_POOL_SIZE = os.environ.get("PGVECTOR_POOL_SIZE", None)
 
-if PGVECTOR_POOL_SIZE != None:
+if PGVECTOR_POOL_SIZE is not None:
     try:
         PGVECTOR_POOL_SIZE = int(PGVECTOR_POOL_SIZE)
     except Exception:

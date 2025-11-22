@@ -94,7 +94,7 @@ async def process_pipeline_outlet_filter(request, payload, user, models):
     model = models[model_id]
 
     if "pipeline" in model:
-        sorted_filters = [model] + sorted_filters
+        sorted_filters = [model, *sorted_filters]
 
     async with aiohttp.ClientSession(trust_env=True) as session:
         for filter in sorted_filters:

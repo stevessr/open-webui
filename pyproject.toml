@@ -204,12 +204,6 @@ dev = [
 # pyproject.toml
 
 [tool.ruff]
-# 选择要启用的规则集。
-# "E", "F": 核心的 pycodestyle 和 Pyflakes 规则，相当于 Flake8 的默认设置。
-# "I": isort，用于导入排序。
-# "RUF": Ruff 的特定规则，包含了对未等待协程的检查。
-select = ["E", "F", "I", "RUF"]
-
 # 你可以忽略特定的规则
 # ignore = ["E501"] # 例如，忽略行太长的错误
 
@@ -218,3 +212,10 @@ line-length = 320
 
 # 指定你的项目所支持的 Python 版本
 target-version = "py312" # 根据你的项目修改
+
+[tool.ruff.lint]
+# 选择要启用的规则集。
+# "E", "F": 核心的 pycodestyle 和 Pyflakes 规则，相当于 Flake8 的默认设置。
+# "I": isort，用于导入排序。
+# "RUF": Ruff 的特定规则，包含了对未等待协程的检查。
+select = ["E", "F", "I", "RUF"]

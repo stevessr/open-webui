@@ -253,7 +253,7 @@ async def install_frontmatter_requirements(requirements: str):
             log.info(f"Installing requirements: {' '.join(req_list)}")
             await asyncio.to_thread(
                 subprocess.check_call,
-                [sys.executable, "-m", "pip", "install"] + PIP_OPTIONS + req_list + PIP_PACKAGE_INDEX_OPTIONS,
+                [sys.executable, "-m", "pip", "install", *PIP_OPTIONS, *req_list, *PIP_PACKAGE_INDEX_OPTIONS],
             )
         except Exception as e:
             log.error(f"Error installing packages: {' '.join(req_list)}")

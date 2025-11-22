@@ -492,7 +492,7 @@ class ChatTable:
                 query = query.filter_by(folder_id=None)
 
             if not include_pinned:
-                query = query.filter(or_(Chat.pinned == False, Chat.pinned == None))
+                query = query.filter(or_(not Chat.pinned, Chat.pinned is None))
 
             if not include_archived:
                 query = query.filter_by(archived=False)
@@ -634,7 +634,7 @@ class ChatTable:
             if is_archived is not None:
                 query = query.filter(Chat.archived == is_archived)
             elif not include_archived:
-                query = query.filter(Chat.archived == False)
+                query = query.filter(not Chat.archived)
 
             if is_pinned is not None:
                 query = query.filter(Chat.pinned == is_pinned)
@@ -745,7 +745,7 @@ class ChatTable:
     async def get_chats_by_folder_id_and_user_id(self, folder_id: str, user_id: str, skip: int = 0, limit: int = 60) -> list[ChatModel]:
         with get_db() as db:
             query = db.query(Chat).filter_by(folder_id=folder_id, user_id=user_id)
-            query = query.filter(or_(Chat.pinned == False, Chat.pinned == None))
+            query = query.filter(or_(not Chat.pinned, Chat.pinned is None))
             query = query.filter_by(archived=False)
 
             query = query.order_by(Chat.updated_at.desc())
@@ -761,7 +761,7 @@ class ChatTable:
     async def get_chats_by_folder_ids_and_user_id(self, folder_ids: list[str], user_id: str) -> list[ChatModel]:
         with get_db() as db:
             query = db.query(Chat).filter(Chat.folder_id.in_(folder_ids), Chat.user_id == user_id)
-            query = query.filter(or_(Chat.pinned == False, Chat.pinned == None))
+            query = query.filter(or_(not Chat.pinned, Chat.pinned is None))
             query = query.filter_by(archived=False)
 
             query = query.order_by(Chat.updated_at.desc())
@@ -820,7 +820,7 @@ class ChatTable:
                 if tag_id not in chat.meta.get("tags", []):
                     chat.meta = {
                         **chat.meta,
-                        "tags": list(set(chat.meta.get("tags", []) + [tag_id])),
+                        "tags": list(set([*chat.meta.get("tags", []), tag_id])),
                     }
 
                 await asyncio.to_thread(db.commit)

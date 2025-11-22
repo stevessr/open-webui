@@ -300,7 +300,7 @@ DATABASE_SCHEMA = os.environ.get("DATABASE_SCHEMA", None)
 
 DATABASE_POOL_SIZE = os.environ.get("DATABASE_POOL_SIZE", None)
 
-if DATABASE_POOL_SIZE != None:
+if DATABASE_POOL_SIZE is not None:
     try:
         DATABASE_POOL_SIZE = int(DATABASE_POOL_SIZE)
     except Exception:
