@@ -44,7 +44,15 @@
 		num_ctx: null,
 		num_batch: null,
 		num_thread: null,
-		num_gpu: null
+		num_gpu: null,
+		// Gemini-specific parameters
+		include_thoughts: null,
+		thinking_level: null,
+		thinking_budget: null,
+		// Anthropic-specific parameters
+		thinking_enabled: null,
+		tool_choice: null,
+		tools: null
 	};
 
 	export let params = defaultParams;
@@ -1670,5 +1678,217 @@
 				</button>
 			</div>
 		{/if}
+	{/if}
+
+	<!-- Anthropic-specific parameters -->
+	{#if params.model && params.model.includes('claude')}
+		<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+			<div class="text-sm font-medium mb-2">Anthropic Specific Parameters</div>
+
+			<!-- Thinking Enabled -->
+			<div class="py-0.5 w-full justify-between">
+				<Tooltip
+					content="Enable Claude's thinking mode for enhanced reasoning"
+					placement="top-start"
+					className="inline-tooltip"
+				>
+					<div class="flex w-full justify-between">
+						<div class="self-center text-xs font-medium">
+							Thinking Enabled
+						</div>
+						<button
+							class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+							type="button"
+							on:click={() => {
+								params.thinking_enabled = (params?.thinking_enabled ?? null) === null ? true : null;
+							}}
+						>
+							{#if (params?.thinking_enabled ?? null) === null}
+								<span class="ml-2 self-center">Default</span>
+							{:else if params.thinking_enabled}
+								<span class="ml-2 self-center">On</span>
+							{:else}
+								<span class="ml-2 self-center">Off</span>
+							{/if}
+						</button>
+					</div>
+				</Tooltip>
+			</div>
+
+			{#if (params?.thinking_enabled ?? null) !== null && params.thinking_enabled}
+				<!-- Thinking Budget -->
+				<div class="py-0.5 w-full justify-between">
+					<Tooltip
+						content="Budget tokens for thinking (max 50K)"
+						placement="top-start"
+						className="inline-tooltip"
+					>
+						<div class="flex w-full justify-between">
+							<div class="self-center text-xs font-medium">
+								Thinking Budget
+							</div>
+							<button
+								class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+								type="button"
+								on:click={() => {
+									params.thinking_budget = (params?.thinking_budget ?? null) === null ? 1024 : null;
+								}}
+							>
+								{#if (params?.thinking_budget ?? null) === null}
+									<span class="ml-2 self-center">Default</span>
+								{:else}
+									<span class="ml-2 self-center">Custom</span>
+								{/if}
+							</button>
+						</div>
+					</Tooltip>
+
+					{#if (params?.thinking_budget ?? null) !== null}
+						<div class="flex mt-0.5 space-x-2">
+							<div class="flex-1">
+								<input
+									type="range"
+									min="1024"
+									max="50000"
+									step="1024"
+									bind:value={params.thinking_budget}
+									class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+								/>
+							</div>
+							<div>
+								<input
+									bind:value={params.thinking_budget}
+									type="number"
+									class="bg-transparent text-center w-20"
+									min="1024"
+									max="50000"
+									step="1024"
+								/>
+							</div>
+						</div>
+					{/if}
+				</div>
+			{/if}
+		</div>
+	{/if}
+
+	<!-- Gemini-specific parameters -->
+	{#if params.model && params.model.includes('gemini')}
+		<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+			<div class="text-sm font-medium mb-2">Gemini Specific Parameters</div>
+
+			<!-- Include Thoughts -->
+			<div class="py-0.5 w-full justify-between">
+				<Tooltip
+					content="Include thought summaries in the response when available"
+					placement="top-start"
+					className="inline-tooltip"
+				>
+					<div class="flex w-full justify-between">
+						<div class="self-center text-xs font-medium">
+							Include Thoughts
+						</div>
+						<button
+							class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+							type="button"
+							on:click={() => {
+								params.include_thoughts = (params?.include_thoughts ?? null) === null ? true : null;
+							}}
+						>
+							{#if (params?.include_thoughts ?? null) === null}
+								<span class="ml-2 self-center">Default</span>
+							{:else if params.include_thoughts}
+								<span class="ml-2 self-center">On</span>
+							{:else}
+								<span class="ml-2 self-center">Off</span>
+							{/if}
+						</button>
+					</div>
+				</Tooltip>
+			</div>
+
+			<!-- Thinking Level -->
+			<div class="py-0.5 w-full justify-between">
+				<Tooltip
+					content="Control reasoning behavior. 'low' or 'high' (Gemini 3+)"
+					placement="top-start"
+					className="inline-tooltip"
+				>
+					<div class="flex w-full justify-between">
+						<div class="self-center text-xs font-medium">
+							Thinking Level
+						</div>
+						<button
+							class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+							type="button"
+							on:click={() => {
+								const levels = [null, 'low', 'high'];
+								const currentIndex = levels.indexOf(params?.thinking_level ?? null);
+								params.thinking_level = levels[(currentIndex + 1) % levels.length];
+							}}
+						>
+							{#if (params?.thinking_level ?? null) === null}
+								<span class="ml-2 self-center">Default</span>
+							{:else}
+								<span class="ml-2 self-center">{params.thinking_level}</span>
+							{/if}
+						</button>
+					</div>
+				</Tooltip>
+			</div>
+
+			<!-- Thinking Budget -->
+			<div class="py-0.5 w-full justify-between">
+				<Tooltip
+					content="Number of tokens to use for thinking. Set to 0 to disable, -1 for dynamic"
+					placement="top-start"
+					className="inline-tooltip"
+				>
+					<div class="flex w-full justify-between">
+						<div class="self-center text-xs font-medium">
+							Thinking Budget
+						</div>
+						<button
+							class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+							type="button"
+							on:click={() => {
+								params.thinking_budget = (params?.thinking_budget ?? null) === null ? 1024 : null;
+							}}
+						>
+							{#if (params?.thinking_budget ?? null) === null}
+								<span class="ml-2 self-center">Default</span>
+							{:else}
+								<span class="ml-2 self-center">Custom</span>
+							{/if}
+						</button>
+					</div>
+				</Tooltip>
+
+				{#if (params?.thinking_budget ?? null) !== null}
+					<div class="flex mt-0.5 space-x-2">
+						<div class="flex-1">
+							<input
+								type="range"
+								min="-1"
+								max="32768"
+								step="1"
+								bind:value={params.thinking_budget}
+								class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+							/>
+						</div>
+						<div>
+							<input
+								bind:value={params.thinking_budget}
+								type="number"
+								class="bg-transparent text-center w-20"
+								min="-1"
+								max="32768"
+								step="1"
+							/>
+						</div>
+					</div>
+				{/if}
+			</div>
+		</div>
 	{/if}
 </div>
