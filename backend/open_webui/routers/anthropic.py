@@ -1,4 +1,3 @@
-
 import asyncio
 import hashlib
 import json
@@ -173,9 +172,7 @@ async def update_config(
     request.app.state.config.ANTHROPIC_API_CONFIGS = form_data.ANTHROPIC_API_CONFIGS
 
     # Remove the API configs that are not in the API URLS
-    keys = list(
-        map(str, range(len(request.app.state.config.ANTHROPIC_API_BASE_URLS)))
-    )
+    keys = list(map(str, range(len(request.app.state.config.ANTHROPIC_API_BASE_URLS))))
     request.app.state.config.ANTHROPIC_API_CONFIGS = {
         key: value
         for key, value in request.app.state.config.ANTHROPIC_API_CONFIGS.items()
@@ -213,9 +210,10 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
         if (str(idx) not in request.app.state.config.ANTHROPIC_API_CONFIGS) and (
             url not in request.app.state.config.ANTHROPIC_API_CONFIGS  # Legacy support
         ):
+            # Try to fetch models from Anthropic API
             request_tasks.append(
                 send_get_request(
-                    f"{url}/messages",  # Anthropic doesn't have a models endpoint, we'll create a dummy response
+                    f"{url}/models",
                     request.app.state.config.ANTHROPIC_API_KEYS[idx],
                     user=user,
                 )
@@ -233,37 +231,16 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
 
             if enable:
                 if len(model_ids) == 0:
-                    # Default Anthropic models if none specified
-                    model_list = {
-                        "object": "list",
-                        "data": [
-                            {
-                                "id": "claude-3-5-sonnet-latest",
-                                "name": "Claude 3.5 Sonnet",
-                                "owned_by": "anthropic",
-                                "anthropic": {"id": "claude-3-5-sonnet-latest"},
-                                "urlIdx": idx,
-                            },
-                            {
-                                "id": "claude-3-5-haiku-latest",
-                                "name": "Claude 3.5 Haiku",
-                                "owned_by": "anthropic",
-                                "anthropic": {"id": "claude-3-5-haiku-latest"},
-                                "urlIdx": idx,
-                            },
-                            {
-                                "id": "claude-3-opus-latest",
-                                "name": "Claude 3 Opus",
-                                "owned_by": "anthropic",
-                                "anthropic": {"id": "claude-3-opus-latest"},
-                                "urlIdx": idx,
-                            }
-                        ]
-                    }
+                    # Try to fetch models from Anthropic API endpoint
                     request_tasks.append(
-                        asyncio.ensure_future(asyncio.sleep(0, model_list))
+                        send_get_request(
+                            f"{url}/models",
+                            request.app.state.config.ANTHROPIC_API_KEYS[idx],
+                            user=user,
+                        )
                     )
                 else:
+                    # Use model_ids from config
                     model_list = {
                         "object": "list",
                         "data": [
@@ -300,11 +277,20 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
                 for model in model_list:
                     model_id = model.get("id") or model.get("name")
                     if model_id and model_id not in models:
+                        # Anthropic API returns 'display_name' instead of 'name'
+                        model_name = (
+                            model.get("name") or model.get("display_name") or model_id
+                        )
+
                         models[model_id] = {
                             **model,
-                            "name": model.get("name", model_id),
+                            "id": model_id,
+                            "name": model_name,
                             "owned_by": "anthropic",
-                            "anthropic": model,
+                            "anthropic": {
+                                **model,
+                                "original_id": model_id,  # Store original ID
+                            },
                             "connection_type": model.get("connection_type", "external"),
                             "urlIdx": idx,
                         }
@@ -432,7 +418,7 @@ async def generate_chat_completion(
     if "thinking_enabled" in payload and payload["thinking_enabled"]:
         anthropic_payload["thinking"] = {
             "type": "enabled",
-            "budget_tokens": payload.get("thinking_budget", 1024)
+            "budget_tokens": payload.get("thinking_budget", 1024),
         }
 
     if "tool_choice" in payload:
@@ -500,23 +486,23 @@ async def generate_chat_completion(
                         "choices": [
                             {
                                 "index": 0,
-                                "message": {
-                                    "role": "assistant",
-                                    "content": content
-                                },
-                                "finish_reason": response["stop_reason"]
+                                "message": {"role": "assistant", "content": content},
+                                "finish_reason": response["stop_reason"],
                             }
                         ],
                         "usage": {
                             "prompt_tokens": response["usage"]["input_tokens"],
                             "completion_tokens": response["usage"]["output_tokens"],
-                            "total_tokens": response["usage"]["input_tokens"] + response["usage"]["output_tokens"]
-                        }
+                            "total_tokens": response["usage"]["input_tokens"]
+                            + response["usage"]["output_tokens"],
+                        },
                     }
 
                     # Add thinking content if present
                     if thinking_content:
-                        openai_response["choices"][0]["message"]["thinking"] = thinking_content
+                        openai_response["choices"][0]["message"]["thinking"] = (
+                            thinking_content
+                        )
 
                     response = openai_response
 
@@ -677,7 +663,7 @@ async def verify_connection(
             payload = {
                 "model": "claude-3-haiku-20240307",
                 "max_tokens": 1,
-                "messages": [{"role": "user", "content": "Hi"}]
+                "messages": [{"role": "user", "content": "Hi"}],
             }
 
             async with session.post(

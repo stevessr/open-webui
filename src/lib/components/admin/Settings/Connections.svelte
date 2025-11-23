@@ -8,6 +8,7 @@
 	import { getOpenAIConfig, updateOpenAIConfig, getOpenAIModels } from '$lib/apis/openai';
 	import { getAnthropicConfig, updateAnthropicConfig } from '$lib/apis/anthropic';
 	import { getGeminiConfig, updateGeminiConfig } from '$lib/apis/gemini';
+	import { getResponsesConfig, updateResponsesConfig } from '$lib/apis/responses';
 	import { getModels as _getModels, getBackendConfig } from '$lib/apis';
 	import { getConnectionsConfig, setConnectionsConfig } from '$lib/apis/configs';
 
@@ -52,10 +53,15 @@
 	let GEMINI_API_BASE_URLS = [''];
 	let GEMINI_API_CONFIGS = {};
 
+	let RESPONSES_API_KEYS = [''];
+	let RESPONSES_API_BASE_URLS = [''];
+	let RESPONSES_API_CONFIGS = {};
+
 	let ENABLE_OPENAI_API: null | boolean = null;
 	let ENABLE_OLLAMA_API: null | boolean = null;
 	let ENABLE_ANTHROPIC_API: null | boolean = null;
 	let ENABLE_GEMINI_API: null | boolean = null;
+	let ENABLE_RESPONSES_API: null | boolean = null;
 
 	let connectionsConfig = null;
 
@@ -64,6 +70,7 @@
 	let showAddOllamaConnectionModal = false;
 	let showAddAnthropicConnectionModal = false;
 	let showAddGeminiConnectionModal = false;
+	let showAddResponsesConnectionModal = false;
 
 	const updateOpenAIHandler = async () => {
 		if (ENABLE_OPENAI_API !== null) {
@@ -242,12 +249,58 @@
 		}
 	};
 
+	const updateResponsesHandler = async () => {
+		if (ENABLE_RESPONSES_API !== null) {
+			// Remove trailing slashes
+			RESPONSES_API_BASE_URLS = RESPONSES_API_BASE_URLS.map((url) => url.replace(/\/$/, ''));
+
+			// Check if API KEYS length is same than API URLS length
+			if (RESPONSES_API_KEYS.length !== RESPONSES_API_BASE_URLS.length) {
+				// if there are more keys than urls, remove the extra keys
+				if (RESPONSES_API_KEYS.length > RESPONSES_API_BASE_URLS.length) {
+					RESPONSES_API_KEYS = RESPONSES_API_KEYS.slice(0, RESPONSES_API_BASE_URLS.length);
+				}
+
+				// if there are more urls than keys, add empty keys
+				if (RESPONSES_API_KEYS.length < RESPONSES_API_BASE_URLS.length) {
+					const diff = RESPONSES_API_BASE_URLS.length - RESPONSES_API_KEYS.length;
+					for (let i = 0; i < diff; i++) {
+						RESPONSES_API_KEYS.push('');
+					}
+				}
+			}
+
+			const res = await updateResponsesConfig(localStorage.token, {
+				ENABLE_RESPONSES_API: ENABLE_RESPONSES_API,
+				RESPONSES_API_BASE_URLS: RESPONSES_API_BASE_URLS,
+				RESPONSES_API_KEYS: RESPONSES_API_KEYS,
+				RESPONSES_API_CONFIGS: RESPONSES_API_CONFIGS
+			}).catch((error) => {
+				toast.error(`${error}`);
+			});
+
+			if (res) {
+				toast.success($i18n.t('OpenAI Responses API settings updated'));
+				await models.set(await getModels());
+			}
+		}
+	};
+
+	const addResponsesConnectionHandler = async (connection) => {
+		RESPONSES_API_BASE_URLS = [...RESPONSES_API_BASE_URLS, connection.url];
+		RESPONSES_API_KEYS = [...RESPONSES_API_KEYS, connection.key];
+		RESPONSES_API_CONFIGS[RESPONSES_API_BASE_URLS.length - 1] = connection.config;
+
+		await updateResponsesHandler();
+	};
+
 	onMount(async () => {
 		if ($user?.role === 'admin') {
 			let ollamaConfig = {};
 			let openaiConfig = {};
 			let anthropicConfig = {};
 			let geminiConfig = {};
+			let responsesConfig = {};
 
 			await Promise.all([
 				(async () => {
@@ -263,6 +316,9 @@
 					geminiConfig = await getGeminiConfig(localStorage.token);
 				})(),
 				(async () => {
+					responsesConfig = await getResponsesConfig(localStorage.token);
+				})(),
+				(async () => {
 					connectionsConfig = await getConnectionsConfig(localStorage.token);
 				})()
 			]);
@@ -271,6 +327,7 @@
 			ENABLE_OLLAMA_API = ollamaConfig.ENABLE_OLLAMA_API;
 			ENABLE_ANTHROPIC_API = anthropicConfig.ENABLE_ANTHROPIC_API;
 			ENABLE_GEMINI_API = geminiConfig.ENABLE_GEMINI_API;
+			ENABLE_RESPONSES_API = responsesConfig.ENABLE_RESPONSES_API;
 
 			OPENAI_API_BASE_URLS = openaiConfig.OPENAI_API_BASE_URLS;
 			OPENAI_API_KEYS = openaiConfig.OPENAI_API_KEYS;
@@ -283,6 +340,10 @@
 			GEMINI_API_BASE_URLS = geminiConfig.GEMINI_API_BASE_URLS;
 			GEMINI_API_KEYS = geminiConfig.GEMINI_API_KEYS;
 			GEMINI_API_CONFIGS = geminiConfig.GEMINI_API_CONFIGS;
+
+			RESPONSES_API_BASE_URLS = responsesConfig.RESPONSES_API_BASE_URLS;
+			RESPONSES_API_KEYS = responsesConfig.RESPONSES_API_KEYS;
+			RESPONSES_API_CONFIGS = responsesConfig.RESPONSES_API_CONFIGS;
 
 			OLLAMA_BASE_URLS = ollamaConfig.OLLAMA_BASE_URLS;
 			OLLAMA_API_CONFIGS = ollamaConfig.OLLAMA_API_CONFIGS;
@@ -324,6 +385,14 @@
 				}
 			}
 
+			if (ENABLE_RESPONSES_API) {
+				for (const [idx, url] of RESPONSES_API_BASE_URLS.entries()) {
+					if (!RESPONSES_API_CONFIGS[idx]) {
+						RESPONSES_API_CONFIGS[idx] = RESPONSES_API_CONFIGS[url] || {};
+					}
+				}
+			}
+
 			if (ENABLE_OLLAMA_API) {
 				for (const [idx, url] of OLLAMA_BASE_URLS.entries()) {
 					if (!OLLAMA_API_CONFIGS[idx]) {
@@ -339,6 +408,7 @@
 		updateOllamaHandler();
 		updateAnthropicHandler();
 		updateGeminiHandler();
+		updateResponsesHandler();
 
 		dispatch('save');
 
@@ -367,9 +437,14 @@
 	onSubmit={addGeminiConnectionHandler}
 />
 
+<AddConnectionModal
+	bind:show={showAddResponsesConnectionModal}
+	onSubmit={addResponsesConnectionHandler}
+/>
+
 <form class="flex flex-col h-full justify-between text-sm" on:submit|preventDefault={submitHandler}>
 	<div class=" overflow-y-scroll scrollbar-hidden h-full">
-		{#if ENABLE_OPENAI_API !== null && ENABLE_OLLAMA_API !== null && ENABLE_ANTHROPIC_API !== null && ENABLE_GEMINI_API !== null && connectionsConfig !== null}
+		{#if ENABLE_OPENAI_API !== null && ENABLE_OLLAMA_API !== null && ENABLE_ANTHROPIC_API !== null && ENABLE_GEMINI_API !== null && ENABLE_RESPONSES_API !== null && connectionsConfig !== null}
 			<div class="mb-3.5">
 				<div class=" mt-0.5 mb-2.5 text-base font-medium">{$i18n.t('General')}</div>
 
@@ -440,6 +515,69 @@
 							</div>
 						{/if}
 					</div>
+				</div>
+
+				<div class=" my-2">
+					<div class="flex justify-between items-center text-sm mb-2">
+						<div class="  font-medium">{$i18n.t('OpenAI Responses API')}</div>
+
+						<div class="mt-1">
+							<Switch
+								bind:state={ENABLE_RESPONSES_API}
+								on:change={async () => {
+									updateResponsesHandler();
+								}}
+							/>
+						</div>
+					</div>
+
+					{#if ENABLE_RESPONSES_API}
+						<div class="">
+							<div class="flex justify-between items-center">
+								<div class="font-medium text-xs">{$i18n.t('Manage OpenAI Responses API Connections')}</div>
+
+								<Tooltip content={$i18n.t(`Add Connection`)}>
+									<button
+										class="px-1"
+										on:click={() => {
+											showAddResponsesConnectionModal = true;
+										}}
+										type="button"
+									>
+										<Plus />
+									</button>
+								</Tooltip>
+							</div>
+
+							<div class="flex w-full gap-1.5">
+								<div class="flex-1 flex flex-col gap-1.5 mt-1.5">
+									{#each RESPONSES_API_BASE_URLS as url, idx}
+										<OpenAIConnection
+											bind:url={RESPONSES_API_BASE_URLS[idx]}
+											bind:key={RESPONSES_API_KEYS[idx]}
+											bind:config={RESPONSES_API_CONFIGS[idx]}
+											pipeline={false}
+											onSubmit={() => {
+												updateResponsesHandler();
+											}}
+											onDelete={() => {
+												RESPONSES_API_BASE_URLS = RESPONSES_API_BASE_URLS.filter((url, urlIdx) => idx !== urlIdx);
+												RESPONSES_API_KEYS = RESPONSES_API_KEYS.filter((key, keyIdx) => idx !== keyIdx);
+
+												let newConfig = {};
+												RESPONSES_API_BASE_URLS.forEach((url, newIdx) => {
+													newConfig[newIdx] =
+														RESPONSES_API_CONFIGS[newIdx < idx ? newIdx : newIdx + 1];
+												});
+												RESPONSES_API_CONFIGS = newConfig;
+												updateResponsesHandler();
+											}}
+										/>
+									{/each}
+								</div>
+							</div>
+						</div>
+					{/if}
 				</div>
 
 				<div class=" my-2">
