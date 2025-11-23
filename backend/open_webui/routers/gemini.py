@@ -25,6 +25,7 @@ from open_webui.env import (
     AIOHTTP_CLIENT_SESSION_SSL,
     AIOHTTP_CLIENT_TIMEOUT,
     AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST,
+    AIOHTTP_CLIENT_TIMEOUT_STREAMING,
     ENABLE_FORWARD_USER_INFO_HEADERS,
     BYPASS_MODEL_ACCESS_CONTROL,
 )
@@ -341,7 +342,7 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
                     if model_id and model_id not in models:
                         # Gemini API returns 'displayName' instead of 'name'
                         model_name = (
-                            model.get("name") or model.get("displayName") or model_id
+                            model.get("displayName") or model.get("name") or model_id
                         )
 
                         # Remove 'models/' prefix if present for cleaner ID
@@ -349,6 +350,9 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
                             clean_id = model_id.replace("models/", "")
                         else:
                             clean_id = model_id
+
+                        if isinstance(model_name, str) and model_name.startswith("models/"):
+                            model_name = model_name.replace("models/", "")
 
                         models[clean_id] = {
                             **model,
@@ -384,278 +388,6 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
         return {"data": filtered_models}
 
     return {"data": list(models.values())}
-
-
-@router.post("/chat/completions")
-async def generate_chat_completion(
-    request: Request,
-    form_data: dict,
-    user=Depends(get_verified_user),
-    bypass_filter: Optional[bool] = False,
-):
-    if BYPASS_MODEL_ACCESS_CONTROL:
-        bypass_filter = True
-
-    idx = 0
-
-    payload = {**form_data}
-    metadata = payload.pop("metadata", None)
-
-    model_id = form_data.get("model")
-    model_info = Models.get_model_by_id(model_id)
-
-    # Check model info and override the payload
-    if model_info:
-        if model_info.base_model_id:
-            payload["model"] = model_info.base_model_id
-            model_id = model_info.base_model_id
-
-        params = model_info.params.model_dump()
-
-        if params:
-            system = params.pop("system", None)
-            payload = apply_model_params_to_body_openai(params, payload)
-            payload = apply_system_prompt_to_body(system, payload, metadata, user)
-
-        # Check if user has access to the model
-        if not bypass_filter and user.role == "user":
-            if not (
-                user.id == model_info.user_id
-                or has_access(
-                    user.id, type="read", access_control=model_info.access_control
-                )
-            ):
-                raise HTTPException(
-                    status_code=403,
-                    detail="Model not found",
-                )
-    elif not bypass_filter:
-        if user.role != "admin":
-            raise HTTPException(
-                status_code=403,
-                detail="Model not found",
-            )
-
-    # For now we just use the first available config/key
-    idx = 0
-
-    # Get the API config for the model
-    api_config = request.app.state.config.GEMINI_API_CONFIGS.get(
-        str(idx),
-        request.app.state.config.GEMINI_API_CONFIGS.get(
-            request.app.state.config.GEMINI_API_BASE_URLS[idx], {}
-        ),
-    )
-
-    url = request.app.state.config.GEMINI_API_BASE_URLS[idx]
-    key = request.app.state.config.GEMINI_API_KEYS[idx]
-
-    headers, cookies = await get_headers_and_cookies(
-        request, url, key, api_config, metadata, user=user
-    )
-
-    # Convert OpenAI format to Gemini format
-    # Gemini uses "contents" instead of "messages"
-    # Gemini uses "parts" list with "text"
-
-    messages = payload.get("messages", [])
-    contents = []
-    system_instruction = None
-
-    for msg in messages:
-        role = msg["role"]
-        content = msg["content"]
-
-        if role == "system":
-            system_instruction = {"parts": [{"text": content}]}
-        elif role == "user":
-            contents.append({"role": "user", "parts": [{"text": content}]})
-        elif role == "assistant":
-            contents.append({"role": "model", "parts": [{"text": content}]})
-
-    generation_config = {
-        "maxOutputTokens": payload.get("max_tokens", 8192),
-        "temperature": payload.get("temperature", 1.0),
-        "topP": payload.get("top_p", 0.95),
-    }
-
-    # Add Gemini-specific thinking configurations
-    if "include_thoughts" in payload and payload["include_thoughts"]:
-        generation_config["thinkingConfig"] = generation_config.get(
-            "thinkingConfig", {}
-        )
-        generation_config["thinkingConfig"]["includeThoughts"] = True
-
-    if "thinking_level" in payload:
-        generation_config["thinkingConfig"] = generation_config.get(
-            "thinkingConfig", {}
-        )
-        generation_config["thinkingConfig"]["thinkingLevel"] = payload["thinking_level"]
-
-    if "thinking_budget" in payload:
-        generation_config["thinkingConfig"] = generation_config.get(
-            "thinkingConfig", {}
-        )
-        generation_config["thinkingConfig"]["thinkingBudget"] = payload[
-            "thinking_budget"
-        ]
-
-    gemini_payload = {"contents": contents, "generationConfig": generation_config}
-
-    if system_instruction:
-        gemini_payload["systemInstruction"] = system_instruction
-
-    # Gemini URL format: https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent
-    model_name = payload.get("model")
-
-    if not model_name:
-        raise HTTPException(
-            status_code=400,
-            detail="Model parameter is required",
-        )
-
-    # Check if we have the model in app state to get the original ID
-    if model_name in request.app.state.GEMINI_MODELS:
-        gemini_model = request.app.state.GEMINI_MODELS[model_name]
-        # Use the original model ID if available (with models/ prefix)
-        original_id = gemini_model.get("gemini", {}).get("original_id")
-        if original_id:
-            model_name = original_id
-        # If original_id doesn't exist, check if the model ID needs the prefix
-        elif not model_name.startswith("models/") and gemini_model.get(
-            "gemini", {}
-        ).get("name"):
-            # Use the name field from the original Gemini response
-            gemini_name = gemini_model.get("gemini", {}).get("name", model_name)
-            if gemini_name.startswith("models/"):
-                model_name = gemini_name
-    else:
-        # Model not found in our cached models
-        log.error(f"Model '{model_name}' not found in GEMINI_MODELS")
-        raise HTTPException(
-            status_code=404,
-            detail=f"Model '{model_name}' not found. Please check available models.",
-        )
-
-    method = (
-        "streamGenerateContent" if payload.get("stream", False) else "generateContent"
-    )
-    request_url = f"{url}/models/{model_name}:{method}?key={key}"
-    payload_json = json.dumps(gemini_payload)
-
-    r = None
-    session = None
-    streaming = False
-    response = None
-
-    try:
-        session = aiohttp.ClientSession(
-            trust_env=True, timeout=aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT)
-        )
-
-        r = await session.request(
-            method="POST",
-            url=request_url,
-            data=payload_json,
-            headers=headers,
-            cookies=cookies,
-            ssl=AIOHTTP_CLIENT_SESSION_SSL,
-        )
-
-        if payload.get("stream", False):
-            streaming = True
-            # TODO: Implement Gemini SSE to OpenAI SSE conversion
-            # For now, returning raw stream which might need client-side handling adjustment
-            # or middleware transformation
-            return StreamingResponse(
-                r.content,
-                status_code=r.status,
-                headers=dict(r.headers),
-                background=BackgroundTask(
-                    cleanup_response, response=r, session=session
-                ),
-            )
-        else:
-            try:
-                response = await r.json()
-
-                # Convert Gemini response to OpenAI format
-                if "candidates" in response and len(response["candidates"]) > 0:
-                    candidate = response["candidates"][0]
-                    content = ""
-                    if "content" in candidate and "parts" in candidate["content"]:
-                        content = "".join(
-                            [
-                                part.get("text", "")
-                                for part in candidate["content"]["parts"]
-                            ]
-                        )
-
-                    usage_metadata = response.get("usageMetadata", {})
-                    openai_response = {
-                        "id": f"chatcmpl-{hashlib.sha256(json.dumps(response).encode()).hexdigest()}",
-                        "object": "chat.completion",
-                        "created": int(asyncio.get_event_loop().time()),
-                        "model": model_name,
-                        "choices": [
-                            {
-                                "index": 0,
-                                "message": {"role": "assistant", "content": content},
-                                "finish_reason": candidate.get(
-                                    "finishReason", "STOP"
-                                ).lower(),
-                            }
-                        ],
-                        "usage": {
-                            "prompt_tokens": usage_metadata.get("promptTokenCount", 0),
-                            "completion_tokens": usage_metadata.get(
-                                "candidatesTokenCount", 0
-                            ),
-                            "total_tokens": usage_metadata.get("totalTokenCount", 0),
-                        },
-                    }
-
-                    # Add thinking-specific information if present
-                    if "thoughtsTokenCount" in usage_metadata:
-                        openai_response["usage"]["thoughts_tokens"] = usage_metadata[
-                            "thoughtsTokenCount"
-                        ]
-
-                    # Check if response includes thoughts in parts
-                    if "content" in candidate and "parts" in candidate["content"]:
-                        thoughts = []
-                        for part in candidate["content"]["parts"]:
-                            if part.get("thought", False) and "text" in part:
-                                thoughts.append(part["text"])
-
-                        if thoughts:
-                            openai_response["choices"][0]["message"]["thoughts"] = (
-                                "\n".join(thoughts)
-                            )
-
-                    response = openai_response
-
-            except Exception as e:
-                log.error(e)
-                response = await r.text()
-
-            if r.status >= 400:
-                if isinstance(response, (dict, list)):
-                    return JSONResponse(status_code=r.status, content=response)
-                else:
-                    return PlainTextResponse(status_code=r.status, content=response)
-
-            return response
-    except Exception as e:
-        log.exception(e)
-
-        raise HTTPException(
-            status_code=r.status if r else 500,
-            detail="Open WebUI: Server Connection Error",
-        )
-    finally:
-        if not streaming:
-            await cleanup_response(r, session)
 
 
 @router.post("/models/{model}:generateContent")
@@ -781,7 +513,8 @@ async def stream_generate_content(
 
     try:
         session = aiohttp.ClientSession(
-            trust_env=True, timeout=aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT)
+            trust_env=True,
+            timeout=aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT_STREAMING),
         )
 
         r = await session.request(
@@ -803,13 +536,11 @@ async def stream_generate_content(
 
     except Exception as e:
         log.exception(e)
+        await cleanup_response(r, session)
         raise HTTPException(
             status_code=r.status if r else 500,
             detail="Open WebUI: Server Connection Error",
         )
-    finally:
-        if r and not r.closed:
-            await cleanup_response(r, session)
 
 
 class ConnectionVerificationForm(BaseModel):

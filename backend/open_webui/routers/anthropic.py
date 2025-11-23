@@ -613,13 +613,13 @@ async def create_message(
 
     except Exception as e:
         log.exception(e)
+        if r and not r.closed:
+            await cleanup_response(r, session)
         raise HTTPException(
             status_code=r.status if r else 500,
             detail="Open WebUI: Server Connection Error",
         )
-    finally:
-        if r and not r.closed:
-            await cleanup_response(r, session)
+
 
 
 class ConnectionVerificationForm(BaseModel):
