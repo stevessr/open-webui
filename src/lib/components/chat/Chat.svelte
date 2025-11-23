@@ -2022,7 +2022,11 @@
 
 		if (res) {
 			if (res instanceof Response && res.body) {
-				const textStream = await createOpenAITextStream(res.body, $settings.splitLargeChunks);
+				const textStream = await createOpenAITextStream(
+					res.body,
+					$settings.splitLargeChunks,
+					model.owned_by ?? 'openai'
+				);
 				for await (const update of textStream) {
 					const { value, done, sources, error, usage } = update;
 
@@ -2055,6 +2059,11 @@
 			if (res.error) {
 				await handleOpenAIError(res.error, responseMessage);
 			} else {
+				if (res.choices && res.choices[0]?.message?.content) {
+					responseMessage.content = res.choices[0].message.content;
+					history.messages[responseMessageId] = responseMessage;
+				}
+
 				if (taskIds) {
 					taskIds.push(res.task_id);
 				} else {
@@ -2252,7 +2261,11 @@
 
 			if (res && res.ok && res.body && generating) {
 				generationController = controller;
-				const textStream = await createOpenAITextStream(res.body, $settings.splitLargeChunks);
+				const textStream = await createOpenAITextStream(
+					res.body,
+					$settings.splitLargeChunks,
+					$models.find((m) => m.id === message.model)?.owned_by ?? 'openai'
+				);
 				for await (const update of textStream) {
 					const { value, done, sources, error, usage } = update;
 					if (error || done) {

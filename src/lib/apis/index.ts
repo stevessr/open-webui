@@ -370,8 +370,7 @@ export const generateChatCompletion = async (
 				});
 		} else if (ownedBy === 'gemini') {
 			const modelId = (body as any).model;
-			// Force disable streaming for Gemini until we handle JSON stream parsing
-			const stream = false; // (body as any).stream;
+			const stream = (body as any).stream ?? false;
 			const method = stream ? 'streamGenerateContent' : 'generateContent';
 			url = `${Gemini_API_BASE_URL}/models/${modelId}:${method}`;
 
