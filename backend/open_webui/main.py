@@ -121,6 +121,11 @@ from open_webui.config import (
     OPENAI_API_BASE_URLS,
     OPENAI_API_KEYS,
     OPENAI_API_CONFIGS,
+    # Responses API
+    ENABLE_RESPONSES_API,
+    RESPONSES_API_BASE_URLS,
+    RESPONSES_API_KEYS,
+    RESPONSES_API_CONFIGS,
     # Anthropic
     ENABLE_ANTHROPIC_API,
     ANTHROPIC_API_BASE_URLS,
@@ -711,6 +716,17 @@ app.state.config.OPENAI_API_KEYS = OPENAI_API_KEYS
 app.state.config.OPENAI_API_CONFIGS = OPENAI_API_CONFIGS
 
 app.state.OPENAI_MODELS = {}
+
+########################################
+#
+# RESPONSES API
+#
+########################################
+
+app.state.config.ENABLE_RESPONSES_API = ENABLE_RESPONSES_API
+app.state.config.RESPONSES_API_BASE_URLS = RESPONSES_API_BASE_URLS
+app.state.config.RESPONSES_API_KEYS = RESPONSES_API_KEYS
+app.state.config.RESPONSES_API_CONFIGS = RESPONSES_API_CONFIGS
 
 ########################################
 #
@@ -1414,6 +1430,16 @@ app.mount("/ws", socket_app)
 
 
 app.include_router(ollama.router, prefix="/ollama", tags=["ollama"])
+
+# Import and register responses router BEFORE openai router
+# This is critical because openai.router has a wildcard /{path:path} route
+# that would catch all /openai/* requests, including /openai/responses/*
+from open_webui.routers import responses
+
+app.include_router(
+    responses.router, prefix="/openai/responses", tags=["openai", "responses"]
+)
+
 app.include_router(openai.router, prefix="/openai", tags=["openai"])
 app.include_router(anthropic.router, prefix="/anthropic", tags=["anthropic"])
 app.include_router(gemini.router, prefix="/gemini", tags=["gemini"])
@@ -1800,6 +1826,64 @@ async def chat_action(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
+
+
+##################################
+#
+# Native API Endpoint Variants
+# These provide unified /api access to provider-specific endpoints
+#
+##################################
+
+
+@app.post("/api/messages")
+async def api_claude_messages(
+    request: Request,
+    form_data: dict,
+    user=Depends(get_verified_user),
+):
+    """Claude-style messages API under /api path"""
+    from open_webui.routers.anthropic import create_message
+
+    return await create_message(request, form_data, user)
+
+
+@app.post("/api/responses")
+async def api_openai_responses(
+    request: Request,
+    form_data: dict,
+    user=Depends(get_verified_user),
+):
+    """OpenAI responses API under /api path"""
+    from open_webui.routers.responses import create_response
+
+    return await create_response(request, form_data, user)
+
+
+@app.post("/api/models/{model}:generateContent")
+async def api_gemini_generate(
+    model: str,
+    request: Request,
+    form_data: dict,
+    user=Depends(get_verified_user),
+):
+    """Gemini-style generateContent API under /api path"""
+    from open_webui.routers.gemini import generate_content
+
+    return await generate_content(model, request, form_data, user)
+
+
+@app.post("/api/models/{model}:streamGenerateContent")
+async def api_gemini_stream(
+    model: str,
+    request: Request,
+    form_data: dict,
+    user=Depends(get_verified_user),
+):
+    """Gemini-style streamGenerateContent API under /api path"""
+    from open_webui.routers.gemini import stream_generate_content
+
+    return await stream_generate_content(model, request, form_data, user)
 
 
 @app.post("/api/tasks/stop/{task_id}")

@@ -1065,6 +1065,54 @@ OPENAI_API_CONFIGS = PersistentConfig(
 )
 
 ####################################
+# RESPONSES_API (OpenAI Responses API)
+####################################
+
+ENABLE_RESPONSES_API = PersistentConfig(
+    "ENABLE_RESPONSES_API",
+    "responses.enable",
+    os.environ.get("ENABLE_RESPONSES_API", "False").lower() == "true",
+)
+
+RESPONSES_API_KEY = os.environ.get("RESPONSES_API_KEY", "")
+RESPONSES_API_BASE_URL = os.environ.get("RESPONSES_API_BASE_URL", "")
+
+if RESPONSES_API_BASE_URL == "":
+    RESPONSES_API_BASE_URL = "https://api.openai.com/v1"
+else:
+    if RESPONSES_API_BASE_URL.endswith("/"):
+        RESPONSES_API_BASE_URL = RESPONSES_API_BASE_URL[:-1]
+
+RESPONSES_API_KEYS = os.environ.get("RESPONSES_API_KEYS", "")
+RESPONSES_API_KEYS = (
+    RESPONSES_API_KEYS if RESPONSES_API_KEYS != "" else RESPONSES_API_KEY
+)
+
+RESPONSES_API_KEYS = [url.strip() for url in RESPONSES_API_KEYS.split(";")]
+RESPONSES_API_KEYS = PersistentConfig(
+    "RESPONSES_API_KEYS", "responses.api_keys", RESPONSES_API_KEYS
+)
+
+RESPONSES_API_BASE_URLS = os.environ.get("RESPONSES_API_BASE_URLS", "")
+RESPONSES_API_BASE_URLS = (
+    RESPONSES_API_BASE_URLS if RESPONSES_API_BASE_URLS != "" else RESPONSES_API_BASE_URL
+)
+
+RESPONSES_API_BASE_URLS = [
+    url.strip() if url != "" else "https://api.openai.com/v1"
+    for url in RESPONSES_API_BASE_URLS.split(";")
+]
+RESPONSES_API_BASE_URLS = PersistentConfig(
+    "RESPONSES_API_BASE_URLS", "responses.api_base_urls", RESPONSES_API_BASE_URLS
+)
+
+RESPONSES_API_CONFIGS = PersistentConfig(
+    "RESPONSES_API_CONFIGS",
+    "responses.api_configs",
+    {},
+)
+
+####################################
 # ANTHROPIC_API
 ####################################
 
@@ -1091,9 +1139,7 @@ ANTHROPIC_API_KEYS = PersistentConfig(
 
 ANTHROPIC_API_BASE_URLS = os.environ.get("ANTHROPIC_API_BASE_URLS", "")
 ANTHROPIC_API_BASE_URLS = (
-    ANTHROPIC_API_BASE_URLS
-    if ANTHROPIC_API_BASE_URLS != ""
-    else ANTHROPIC_API_BASE_URL
+    ANTHROPIC_API_BASE_URLS if ANTHROPIC_API_BASE_URLS != "" else ANTHROPIC_API_BASE_URL
 )
 
 ANTHROPIC_API_BASE_URLS = [

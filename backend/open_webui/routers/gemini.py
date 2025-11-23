@@ -1,4 +1,3 @@
-
 import asyncio
 import hashlib
 import json
@@ -173,9 +172,7 @@ async def update_config(
     request.app.state.config.GEMINI_API_CONFIGS = form_data.GEMINI_API_CONFIGS
 
     # Remove the API configs that are not in the API URLS
-    keys = list(
-        map(str, range(len(request.app.state.config.GEMINI_API_BASE_URLS)))
-    )
+    keys = list(map(str, range(len(request.app.state.config.GEMINI_API_BASE_URLS))))
     request.app.state.config.GEMINI_API_CONFIGS = {
         key: value
         for key, value in request.app.state.config.GEMINI_API_CONFIGS.items()
@@ -273,8 +270,8 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
                                     "owned_by": "google",
                                     "gemini": {"id": "gemini-pro"},
                                     "urlIdx": idx,
-                                }
-                            ]
+                                },
+                            ],
                         }
                         request_tasks.append(
                             asyncio.ensure_future(asyncio.sleep(0, model_list))
@@ -303,6 +300,9 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
     responses = await asyncio.gather(*request_tasks)
 
     def extract_data(response):
+        # Gemini API returns 'models' instead of 'data'
+        if response and "models" in response:
+            return response["models"]
         if response and "data" in response:
             return response["data"]
         if isinstance(response, list):
@@ -316,33 +316,49 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
 
         generative_models = []
         for model in models_data:
-            model_id = model.get("name", "").split("/")[-1]  # Extract model name from full path
+            model_id = model.get("name", "").split("/")[
+                -1
+            ]  # Extract model name from full path
             # Only include models that support generateContent
             if any(keyword in model_id.lower() for keyword in ["gemini"]):
-                generative_models.append({
-                    "id": model_id,
-                    "name": model.get("displayName", model_id),
-                    "owned_by": "google",
-                    "gemini": {"id": model_id},
-                    **model
-                })
+                generative_models.append(
+                    {
+                        "id": model_id,
+                        "name": model.get("displayName", model_id),
+                        "owned_by": "google",
+                        "gemini": {"id": model_id},
+                        **model,
+                    }
+                )
         return generative_models
 
     def get_merged_models(model_lists):
         models = {}
         for idx, model_list in enumerate(model_lists):
             if model_list is not None and "error" not in model_list:
-                # Filter to get only generative models
-                filtered_models = filter_gemini_models(model_list)
-
-                for model in filtered_models:
-                    model_id = model.get("id")
+                for model in model_list:
+                    model_id = model.get("id") or model.get("name")
                     if model_id and model_id not in models:
-                        models[model_id] = {
+                        # Gemini API returns 'displayName' instead of 'name'
+                        model_name = (
+                            model.get("name") or model.get("displayName") or model_id
+                        )
+
+                        # Remove 'models/' prefix if present for cleaner ID
+                        if model_id.startswith("models/"):
+                            clean_id = model_id.replace("models/", "")
+                        else:
+                            clean_id = model_id
+
+                        models[clean_id] = {
                             **model,
-                            "name": model.get("name", model_id),
-                            "owned_by": "google",
-                            "gemini": model.get("gemini", {}),
+                            "id": clean_id,
+                            "name": model_name,
+                            "owned_by": "gemini",
+                            "gemini": {
+                                **model,
+                                "original_id": model_id,  # Store original ID with models/ prefix
+                            },
                             "connection_type": model.get("connection_type", "external"),
                             "urlIdx": idx,
                         }
@@ -465,31 +481,65 @@ async def generate_chat_completion(
 
     # Add Gemini-specific thinking configurations
     if "include_thoughts" in payload and payload["include_thoughts"]:
-        generation_config["thinkingConfig"] = generation_config.get("thinkingConfig", {})
+        generation_config["thinkingConfig"] = generation_config.get(
+            "thinkingConfig", {}
+        )
         generation_config["thinkingConfig"]["includeThoughts"] = True
 
     if "thinking_level" in payload:
-        generation_config["thinkingConfig"] = generation_config.get("thinkingConfig", {})
+        generation_config["thinkingConfig"] = generation_config.get(
+            "thinkingConfig", {}
+        )
         generation_config["thinkingConfig"]["thinkingLevel"] = payload["thinking_level"]
 
     if "thinking_budget" in payload:
-        generation_config["thinkingConfig"] = generation_config.get("thinkingConfig", {})
-        generation_config["thinkingConfig"]["thinkingBudget"] = payload["thinking_budget"]
+        generation_config["thinkingConfig"] = generation_config.get(
+            "thinkingConfig", {}
+        )
+        generation_config["thinkingConfig"]["thinkingBudget"] = payload[
+            "thinking_budget"
+        ]
 
-    gemini_payload = {
-        "contents": contents,
-        "generationConfig": generation_config
-    }
+    gemini_payload = {"contents": contents, "generationConfig": generation_config}
 
     if system_instruction:
         gemini_payload["systemInstruction"] = system_instruction
 
     # Gemini URL format: https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent
-    model_name = payload.get("model", "gemini-1.5-flash")
-    if "gemini" not in model_name:
-        model_name = "gemini-1.5-flash" # Fallback
+    model_name = payload.get("model")
 
-    method = "streamGenerateContent" if payload.get("stream", False) else "generateContent"
+    if not model_name:
+        raise HTTPException(
+            status_code=400,
+            detail="Model parameter is required",
+        )
+
+    # Check if we have the model in app state to get the original ID
+    if model_name in request.app.state.GEMINI_MODELS:
+        gemini_model = request.app.state.GEMINI_MODELS[model_name]
+        # Use the original model ID if available (with models/ prefix)
+        original_id = gemini_model.get("gemini", {}).get("original_id")
+        if original_id:
+            model_name = original_id
+        # If original_id doesn't exist, check if the model ID needs the prefix
+        elif not model_name.startswith("models/") and gemini_model.get(
+            "gemini", {}
+        ).get("name"):
+            # Use the name field from the original Gemini response
+            gemini_name = gemini_model.get("gemini", {}).get("name", model_name)
+            if gemini_name.startswith("models/"):
+                model_name = gemini_name
+    else:
+        # Model not found in our cached models
+        log.error(f"Model '{model_name}' not found in GEMINI_MODELS")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Model '{model_name}' not found. Please check available models.",
+        )
+
+    method = (
+        "streamGenerateContent" if payload.get("stream", False) else "generateContent"
+    )
     request_url = f"{url}/models/{model_name}:{method}?key={key}"
     payload_json = json.dumps(gemini_payload)
 
@@ -534,7 +584,12 @@ async def generate_chat_completion(
                     candidate = response["candidates"][0]
                     content = ""
                     if "content" in candidate and "parts" in candidate["content"]:
-                        content = "".join([part.get("text", "") for part in candidate["content"]["parts"]])
+                        content = "".join(
+                            [
+                                part.get("text", "")
+                                for part in candidate["content"]["parts"]
+                            ]
+                        )
 
                     usage_metadata = response.get("usageMetadata", {})
                     openai_response = {
@@ -545,23 +600,26 @@ async def generate_chat_completion(
                         "choices": [
                             {
                                 "index": 0,
-                                "message": {
-                                    "role": "assistant",
-                                    "content": content
-                                },
-                                "finish_reason": candidate.get("finishReason", "STOP").lower()
+                                "message": {"role": "assistant", "content": content},
+                                "finish_reason": candidate.get(
+                                    "finishReason", "STOP"
+                                ).lower(),
                             }
                         ],
                         "usage": {
                             "prompt_tokens": usage_metadata.get("promptTokenCount", 0),
-                            "completion_tokens": usage_metadata.get("candidatesTokenCount", 0),
-                            "total_tokens": usage_metadata.get("totalTokenCount", 0)
-                        }
+                            "completion_tokens": usage_metadata.get(
+                                "candidatesTokenCount", 0
+                            ),
+                            "total_tokens": usage_metadata.get("totalTokenCount", 0),
+                        },
                     }
 
                     # Add thinking-specific information if present
                     if "thoughtsTokenCount" in usage_metadata:
-                        openai_response["usage"]["thoughts_tokens"] = usage_metadata["thoughtsTokenCount"]
+                        openai_response["usage"]["thoughts_tokens"] = usage_metadata[
+                            "thoughtsTokenCount"
+                        ]
 
                     # Check if response includes thoughts in parts
                     if "content" in candidate and "parts" in candidate["content"]:
@@ -571,7 +629,9 @@ async def generate_chat_completion(
                                 thoughts.append(part["text"])
 
                         if thoughts:
-                            openai_response["choices"][0]["message"]["thoughts"] = "\n".join(thoughts)
+                            openai_response["choices"][0]["message"]["thoughts"] = (
+                                "\n".join(thoughts)
+                            )
 
                     response = openai_response
 
@@ -738,9 +798,7 @@ async def stream_generate_content(
             r.content,
             status_code=r.status,
             headers=dict(r.headers),
-            background=BackgroundTask(
-                cleanup_response, response=r, session=session
-            ),
+            background=BackgroundTask(cleanup_response, response=r, session=session),
         )
 
     except Exception as e:

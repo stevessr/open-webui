@@ -10,6 +10,7 @@
 
 	export let label = '';
 	export let suggestionTags = [];
+	export let modelInfo = {};
 
 	let showTagInput = false;
 	let tagName = '';
