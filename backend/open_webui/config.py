@@ -1168,7 +1168,7 @@ ENABLE_GEMINI_API = PersistentConfig(
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_API_BASE_URL = os.environ.get(
-    "GEMINI_API_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/"
+    "GEMINI_API_BASE_URL", "https://generativelanguage.googleapis.com/v1beta"
 )
 
 GEMINI_API_KEYS = os.environ.get("GEMINI_API_KEYS", "")
@@ -1185,9 +1185,7 @@ GEMINI_API_BASE_URLS = (
 )
 
 GEMINI_API_BASE_URLS = [
-    url.strip()
-    if url != ""
-    else "https://generativelanguage.googleapis.com/v1beta/openai/"
+    url.strip() if url != "" else "https://generativelanguage.googleapis.com/v1beta/"
     for url in GEMINI_API_BASE_URLS.split(";")
 ]
 GEMINI_API_BASE_URLS = PersistentConfig(

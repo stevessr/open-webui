@@ -48,7 +48,7 @@
 			transition={flyAndScale}
 		>
 			<button
-				class="transv2 flex gap-2 items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl w-full"
+				class="flex  gap-2  items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl w-full"
 				on:click={async () => {
 					createHandler();
 					show = false;
@@ -61,7 +61,7 @@
 			</button>
 
 			<button
-				class="transv2 flex gap-2 items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl w-full"
+				class="flex  gap-2  items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl w-full"
 				on:click={async () => {
 					importFromLinkHandler();
 					show = false;

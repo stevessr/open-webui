@@ -59,7 +59,13 @@ async function* openAIStreamToIterator(
 		}
 
 		try {
-			const parsedData = JSON.parse(data);
+			let dataToParse = data;
+			// Handle potential double data: prefix or parser issues
+			if (dataToParse.startsWith('data: ')) {
+				dataToParse = dataToParse.slice(6);
+			}
+
+			const parsedData = JSON.parse(dataToParse);
 			console.log(parsedData);
 
 			if (parsedData.error) {
@@ -79,6 +85,68 @@ async function* openAIStreamToIterator(
 
 			if (parsedData.usage) {
 				yield { done: false, value: '', usage: parsedData.usage };
+				continue;
+			}
+
+			if (parsedData.usageMetadata) {
+				yield {
+					done: false,
+					value: '',
+					usage: {
+						prompt_tokens: parsedData.usageMetadata.promptTokenCount,
+						completion_tokens: parsedData.usageMetadata.candidatesTokenCount,
+						total_tokens: parsedData.usageMetadata.totalTokenCount
+					}
+				};
+				continue;
+			}
+
+			if (parsedData.candidates) {
+				const content = parsedData.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+				yield { done: false, value: content };
+				continue;
+			}
+
+			// Anthropic
+			if (parsedData.type === 'content_block_delta') {
+				const content = parsedData.delta?.text ?? '';
+				yield { done: false, value: content };
+				continue;
+			}
+
+			if (parsedData.type === 'message_start') {
+				if (parsedData.message?.usage) {
+					yield {
+						done: false,
+						value: '',
+						usage: {
+							prompt_tokens: parsedData.message.usage.input_tokens,
+							completion_tokens: parsedData.message.usage.output_tokens,
+							total_tokens:
+								parsedData.message.usage.input_tokens + parsedData.message.usage.output_tokens
+						}
+					};
+				}
+				continue;
+			}
+
+			if (parsedData.type === 'message_delta') {
+				if (parsedData.usage) {
+					yield {
+						done: false,
+						value: '',
+						usage: {
+							prompt_tokens: 0, // Delta doesn't have input tokens
+							completion_tokens: parsedData.usage.output_tokens,
+							total_tokens: parsedData.usage.output_tokens
+						}
+					};
+				}
+				continue;
+			}
+
+			if (parsedData.type === 'response.output_text.delta') {
+				yield { done: false, value: parsedData.delta };
 				continue;
 			}
 

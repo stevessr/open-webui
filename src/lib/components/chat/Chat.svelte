@@ -69,7 +69,7 @@
 		updateChatById,
 		updateChatFolderIdById
 	} from '$lib/apis/chats';
-	import { generateOpenAIChatCompletion } from '$lib/apis/openai';
+
 	import { processWeb, processWebSearch, processYoutubeVideo } from '$lib/apis/retrieval';
 	import { getAndUpdateUserLocation, getUserSettings } from '$lib/apis/users';
 	import {
@@ -78,7 +78,8 @@
 		chatAction,
 		generateMoACompletion,
 		stopTask,
-		getTaskIdsByChatId
+		getTaskIdsByChatId,
+		generateChatCompletion
 	} from '$lib/apis';
 	import { getTools } from '$lib/apis/tools';
 	import { uploadFile } from '$lib/apis/files';
@@ -1934,7 +1935,7 @@
 			}
 		}
 
-		const res = await generateOpenAIChatCompletion(
+		const res = await generateChatCompletion(
 			localStorage.token,
 			{
 				stream: stream,
@@ -2020,6 +2021,37 @@
 		});
 
 		if (res) {
+			if (res instanceof Response && res.body) {
+				const textStream = await createOpenAITextStream(res.body, $settings.splitLargeChunks);
+				for await (const update of textStream) {
+					const { value, done, sources, error, usage } = update;
+
+					if (error) {
+						await handleOpenAIError(error, responseMessage);
+						break;
+					}
+
+					if (value) {
+						responseMessage.content += value;
+						history.messages[responseMessageId] = responseMessage;
+					}
+
+					if (usage) {
+						responseMessage.info = { ...responseMessage.info, ...usage };
+						history.messages[responseMessageId] = responseMessage;
+					}
+
+					if (done) {
+						responseMessage.done = true;
+						history.messages[responseMessageId] = responseMessage;
+						break;
+					}
+				}
+				await tick();
+				scrollToBottom();
+				return;
+			}
+
 			if (res.error) {
 				await handleOpenAIError(res.error, responseMessage);
 			} else {
