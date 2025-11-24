@@ -225,7 +225,7 @@
 	<div class="overflow-y-scroll scrollbar-hidden h-full">
 		{#if PIPELINES_LIST !== null}
 			<div class="flex w-full justify-between mb-2">
-				<div class=" self-center text-sm font-semibold">
+				<div class=" self-center text-sm font-medium">
 					{$i18n.t('Manage Pipelines')}
 				</div>
 			</div>
@@ -408,7 +408,7 @@
 					</div>
 
 					<div class="mt-2 text-xs text-gray-500">
-						<span class=" font-semibold dark:text-gray-200">{$i18n.t('Warning:')}</span>
+						<span class=" font-medium dark:text-gray-200">{$i18n.t('Warning:')}</span>
 						{$i18n.t('Pipelines are a plugin system with arbitrary code execution —')}
 						<span class=" font-medium dark:text-gray-400"
 							>{$i18n.t("don't fetch random pipelines from sources you don't trust.")}</span
@@ -421,7 +421,7 @@
 				{#if pipelines !== null}
 					{#if pipelines.length > 0}
 						<div class="flex w-full justify-between mb-2">
-							<div class=" self-center text-sm font-semibold">
+							<div class=" self-center text-sm font-medium">
 								{$i18n.t('Pipelines Valves')}
 							</div>
 						</div>
