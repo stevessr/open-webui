@@ -4,74 +4,99 @@ on:
   push:
     branches:
       - main
-      - master
 
 jobs:
   quality-checks:
     name: 'Format & i18n Checks'
     runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'src/') || contains(github.event.head_commit.modified, 'static/') || contains(github.event.head_commit.modified, 'package.json') || contains(github.event.head_commit.modified, 'bun.lockb') || contains(github.event.head_commit.modified, 'vite.config.ts') || contains(github.event.head_commit.modified, 'svelte.config.js') || contains(github.event.head_commit.modified, 'tailwind.config.js')
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '22'
-
-      # Use pnpm/action-setup to install pnpm and set up caching
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: latest # Or specify your pnpm version
+          bun-version: latest
 
       - name: Install Dependencies
-        run: pnpm install -no-frozen-lockfile
+        run: bun install --frozen-lockfile
+        # The 'pnpm update' command is usually for updating your lockfile,
+        # typically done locally. 'pnpm install' is for CI.
 
       - name: Fix missing Dependencies
         run: |
-          pnpm add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
-          pnpm add onnxruntime-web
-          pnpm add lowlight
-          pnpm add @floating-ui/utils
+          bun add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
+          bun add onnxruntime-web
+          bun add lowlight
+          bun add @floating-ui/utils
+          bun add y-protocols
         # Consider if these need --save-dev or just --save depending on their usage
 
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Format Frontend
-        run: pnpm format
+        run: bun run format
 
       - name: Run i18next
-        run: pnpm i18n:parse
+        run: bun run i18n:parse
 
   build:
     name: 'Build Frontend'
     runs-on: ubuntu-latest
-    needs: quality-checks # Ensures quality checks pass before building
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '22'
+          bun-version: latest
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+      - name: Cache node modules
+        uses: actions/cache@v4
         with:
-          version: latest
+          path: |
+            ~/.bun
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
 
       - name: Install Dependencies
-        run: pnpm install
+        run: bun install --frozen-lockfile
 
       - name: Fix missing Dependencies
         run: |
-          pnpm add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
-          pnpm add onnxruntime-web
-          pnpm add lowlight
-          pnpm add @floating-ui/utils
+          bun add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
+          bun add onnxruntime-web
+          bun add lowlight
+          bun add @floating-ui/utils
+          bun add y-protocols
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            .svelte-kit
+          key: ${{ runner.os }}-build-${{ hashFiles('src/**', 'static/**', 'package.json', 'bun.lockb', 'vite.config.ts', 'svelte.config.js', 'tailwind.config.js') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
 
       - name: Build Frontend
-        run: pnpm build
+        env:
+          APP_BUILD_HASH: ${{ github.sha }}
+          VITE_BUILD_TIME: ${{ github.event.head_commit.timestamp }}
+        run: bun run build
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -85,21 +110,169 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main' # Only deploy on pushes to main
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Fix missing Dependencies
+        run: |
+          bun add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
+          bun add onnxruntime-web
+          bun add lowlight
+          bun add @floating-ui/utils
+          bun add y-protocols
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            .svelte-kit
+          key: ${{ runner.os }}-build-${{ hashFiles('src/**', 'static/**', 'package.json', 'bun.lockb', 'vite.config.ts', 'svelte.config.js', 'tailwind.config.js') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+      - name: Build Frontend (if not cached)
+        env:
+          APP_BUILD_HASH: ${{ github.sha }}
+          VITE_BUILD_TIME: ${{ github.event.head_commit.timestamp }}
+        run: |
+          if [ ! -d "build" ] || [ ! -f "build/index.html" ]; then
+            echo "Build not found in cache, building..."
+            bun run build
+          else
+            echo "Build found in cache, skipping build step"
+          fi
+
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: frontend-build
           path: build
+          merge-multiple: true
 
-      - name: Deploy to owu repository
+      - name: Setup deployment environment
         env:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
-          cd build
+          echo "Setting up deployment environment..."
+
+          # Create deployment directory
+          mkdir -p deploy
+          cd deploy
+
+          # Initialize git repo
           git init
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git add .
-          git commit -m "Deploy owu site (build ${{ github.sha }})"
+          git config --global init.defaultBranch main
+          git config --global advice.defaultBranchName false
+
+          # Add remote
           git remote add origin "https://${{ env.PERSONAL_ACCESS_TOKEN }}@github.com/stevessr/owu.git"
-          git push --force --quiet origin HEAD:owu
+
+          # Fetch existing branches to check what exists
+          echo "Fetching existing branches..."
+          git fetch origin --depth=3
+
+          echo "Deployment environment setup complete"
+          echo "Available branches:"
+          git branch -r || echo "No remote branches found"
+
+      - name: Process owu branch
+        env:
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          echo "=== Processing owu branch ==="
+
+          cd deploy
+
+          if git ls-remote --heads origin owu | grep -q "refs/heads/owu"; then
+            echo "OWU branch exists, fetching..."
+            git fetch origin owu --depth=3
+            git checkout owu
+            git pull origin owu || true
+          else
+            echo "OWU branch does not exist, creating..."
+            git checkout -b owu
+          fi
+
+          # Clear all existing files
+          echo "Clearing existing files in owu branch..."
+          git rm -r . 2>/dev/null || true
+
+          # Clean up any remaining non-git files
+          echo "Cleaning up any remaining non-git files..."
+          find . -maxdepth 1 -not -name ".git" -not -name "." -exec rm -rf {} + 2>/dev/null || true
+
+          # Copy complete build directory to owu branch
+          if [ -d "../build" ]; then
+            echo "Copying complete build directory to owu branch..."
+            echo "Build directory contents:"
+            ls -la ../build/
+
+            cp -r ../build/* ./
+
+            # Show what will be committed
+            echo "Files copied to owu branch:"
+            ls -la
+            echo "Files to be committed to owu branch:"
+            git status --porcelain
+            echo "Complete build directory copied successfully"
+          else
+            echo "Error: build directory not found"
+            echo "Current directory contents:"
+            ls -la ..
+            exit 1
+          fi
+
+          # Commit changes to owu branch
+          git add .
+          if ! git diff --staged --quiet; then
+            echo "Committing owu branch changes..."
+            git commit -m "Update owu branch - complete build ${{ github.sha }}
+
+            Files: Complete build assets including _app
+            Build from: ${{ github.repository }}@${{ github.sha }}
+            Timestamp: $(date -u +\"%Y-%m-%d %H:%M:%S UTC\")"
+          else
+            git commit --allow-empty -m "Update owu branch - no build changes - ${{ github.sha }}"
+          fi
+
+          echo "Pushing owu branch..."
+          git push --force origin owu
+          echo "✓ OWU branch updated successfully"
+
+      - name: Cleanup and summary
+        run: |
+          echo "=== Cleaning up temporary files ==="
+          if [ -d "deploy" ]; then
+            rm -rf deploy
+            echo "✓ Deployment directory cleaned up"
+          fi
+
+          echo ""
+          echo "=== Deployment Summary ==="
+          echo "✓ OWU branch: Updated with complete build assets"
+          echo "✓ Repository: https://github.com/stevessr/owu"
+          echo "✓ Build commit: ${{ github.sha }}"
+          echo "✓ Deployment timestamp: $(date -u +\"%Y-%m-%d %H:%M:%S UTC\")"
+          echo ""
+          echo "Deployment completed successfully!"

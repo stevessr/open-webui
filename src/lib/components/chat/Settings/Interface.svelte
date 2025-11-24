@@ -1,15 +1,19 @@
 <script lang="ts">
 	import { config, models, settings, user } from '$lib/stores';
-	import { createEventDispatcher, onMount, getContext } from 'svelte';
+	import { createEventDispatcher, onMount, onDestroy, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { updateUserInfo } from '$lib/apis/users';
 	import { getUserPosition } from '$lib/utils';
+	import { setTextScale } from '$lib/utils/text-scale';
+
 	import Minus from '$lib/components/icons/Minus.svelte';
 	import Plus from '$lib/components/icons/Plus.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
 	import ManageFloatingActionButtonsModal from './Interface/ManageFloatingActionButtonsModal.svelte';
 	import ManageImageCompressionModal from './Interface/ManageImageCompressionModal.svelte';
+	import ImgBedSettings from './Interface/ImgBedSettings.svelte';
+	import BackgroundUrlInputModal from '$lib/components/common/BackgroundUrlInputModal.svelte';
 	const dispatch = createEventDispatcher();
 
 	const i18n = getContext('i18n');
@@ -67,6 +71,7 @@
 	let chatFadeStreamingText = true;
 	let collapseCodeBlocks = false;
 	let expandDetails = false;
+	let showChatTitleInTab = true;
 
 	let showFloatingActionButtons = true;
 	let floatingActionButtons = null;
@@ -96,6 +101,10 @@
 
 	let showManageFloatingActionButtonsModal = false;
 	let showManageImageCompressionModal = false;
+	let showBackgroundUrlModal = false;
+	let showImgBedSettings = false;
+
+	let textScale = null;
 
 	const toggleLandingPageMode = async () => {
 		landingPageMode = landingPageMode === '' ? 'chat' : '';
@@ -179,13 +188,14 @@
 		saveSettings({ webSearch: webSearch });
 	};
 
-	const handleUrlConfirm = () => {
-		saveSettings({ backgroundImageUrl });
-		showBackgroundUrlInput = false;
-	};
+	const setTextScaleHandler = (scale) => {
+		textScale = scale;
+		setTextScale(textScale);
 
-	const handleUrlCancel = () => {
-		showBackgroundUrlInput = false;
+		if (textScale === 1) {
+			textScale = null;
+		}
+		saveSettings({ textScale });
 	};
 
 	onMount(async () => {
@@ -234,6 +244,7 @@
 		temporaryChatByDefault = $settings?.temporaryChatByDefault ?? false;
 		chatDirection = $settings?.chatDirection ?? 'auto';
 		userLocation = $settings?.userLocation ?? false;
+		showChatTitleInTab = $settings?.showChatTitleInTab ?? true;
 
 		notificationSound = $settings?.notificationSound ?? true;
 		notificationSoundAlways = $settings?.notificationSoundAlways ?? false;
@@ -262,6 +273,8 @@
 		// Open the URL input if there is already a background image/url set
 		showBackgroundUrlInput = !!backgroundImageUrl;
 		webSearch = $settings?.webSearch ?? null;
+
+		textScale = $settings?.textScale ?? null;
 	});
 </script>
 
@@ -279,6 +292,17 @@
 	size={imageCompressionSize}
 	onSave={(size) => {
 		saveSettings({ imageCompressionSize: size });
+	}}
+/>
+
+<BackgroundUrlInputModal
+	bind:show={showBackgroundUrlModal}
+	bind:value={backgroundImageUrl}
+	title="Enter background image or video URL"
+	placeholder="Enter image or video URL..."
+	confirmText="Set"
+	on:confirm={() => {
+		saveSettings({ backgroundImageUrl });
 	}}
 />
 
@@ -318,9 +342,89 @@
 		}}
 	/>
 
-	<div class=" space-y-3 overflow-y-scroll max-h-[28rem] lg:max-h-full">
+	<div class=" space-y-3 overflow-y-scroll max-h-[28rem] md:max-h-full">
 		<div>
 			<h1 class=" mb-2 text-sm font-medium">{$i18n.t('UI')}</h1>
+
+			<div>
+				<div class="py-0.5 flex w-full justify-between">
+					<label id="ui-scale-label" class=" self-center text-xs" for="ui-scale-slider">
+						{$i18n.t('UI Scale')}
+					</label>
+
+					<div class="flex items-center gap-2 p-1">
+						<button
+							class="text-xs"
+							aria-live="polite"
+							type="button"
+							on:click={() => {
+								if (textScale === null) {
+									textScale = 1;
+								} else {
+									textScale = null;
+									setTextScaleHandler(1);
+								}
+							}}
+						>
+							{#if textScale === null}
+								<span>{$i18n.t('Default')}</span>
+							{:else}
+								<span>{textScale}x</span>
+							{/if}
+						</button>
+					</div>
+				</div>
+
+				{#if textScale !== null}
+					<div class=" flex items-center gap-2 px-1 pb-1">
+						<button
+							type="button"
+							class="rounded-lg p-1 transition outline-gray-200 hover:bg-gray-100 dark:outline-gray-700 dark:hover:bg-gray-800"
+							on:click={() => {
+								textScale = Math.max(1, textScale);
+								setTextScaleHandler(textScale);
+							}}
+							aria-labelledby="ui-scale-label"
+							aria-label={$i18n.t('Decrease UI Scale')}
+						>
+							<Minus className="h-3.5 w-3.5" />
+						</button>
+
+						<div class="flex-1 flex items-center">
+							<input
+								id="ui-scale-slider"
+								class="w-full"
+								type="range"
+								min="1"
+								max="1.5"
+								step={0.01}
+								bind:value={textScale}
+								on:change={() => {
+									setTextScaleHandler(textScale);
+								}}
+								aria-labelledby="ui-scale-label"
+								aria-valuemin="1"
+								aria-valuemax="1.5"
+								aria-valuenow={textScale}
+								aria-valuetext={`${textScale}x`}
+							/>
+						</div>
+
+						<button
+							type="button"
+							class="rounded-lg p-1 transition outline-gray-200 hover:bg-gray-100 dark:outline-gray-700 dark:hover:bg-gray-800"
+							on:click={() => {
+								textScale = Math.min(1.5, textScale);
+								setTextScaleHandler(textScale);
+							}}
+							aria-labelledby="ui-scale-label"
+							aria-label={$i18n.t('Increase UI Scale')}
+						>
+							<Plus className="h-3.5 w-3.5" />
+						</button>
+					</div>
+				{/if}
+			</div>
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
@@ -335,6 +439,25 @@
 							bind:state={highContrastMode}
 							on:change={() => {
 								saveSettings({ highContrastMode });
+							}}
+						/>
+					</div>
+				</div>
+			</div>
+
+			<div>
+				<div class=" py-0.5 flex w-full justify-between">
+					<div id="use-chat-title-as-tab-title-label" class=" self-center text-xs">
+						{$i18n.t('Display chat title in tab')}
+					</div>
+
+					<div class="flex items-center gap-2 p-1">
+						<Switch
+							ariaLabelledbyId="use-chat-title-as-tab-title-label"
+							tooltip={true}
+							bind:state={showChatTitleInTab}
+							on:change={() => {
+								saveSettings({ showChatTitleInTab });
 							}}
 						/>
 					</div>
@@ -529,15 +652,12 @@
 					</div>
 
 					<div class="flex items-center gap-2">
-						<!-- Upload / Reset button -->
 						<button
-							aria-labelledby="chat-background-label background-image-upload-reset"
+							aria-labelledby="chat-background-label background-image-url-state"
 							class="p-1 px-3 text-xs flex rounded-sm transition"
 							on:click={() => {
 								if (backgroundImageUrl !== null) {
 									backgroundImageUrl = null;
-									// hide url input when resetting
-									showBackgroundUrlInput = false;
 									saveSettings({ backgroundImageUrl });
 								} else {
 									filesInputElement.click();
@@ -545,26 +665,19 @@
 							}}
 							type="button"
 						>
-							<span class="ml-2 self-center" id="background-image-upload-reset"
+							<span class="ml-2 self-center" id="background-image-url-state"
 								>{backgroundImageUrl !== null ? $i18n.t('Reset') : $i18n.t('Upload')}</span
 							>
 						</button>
 
-						<!-- URL toggle button -->
 						<button
-							aria-labelledby="chat-background-label background-image-url-toggle"
 							class="p-1 px-3 text-xs flex rounded-sm transition"
 							on:click={() => {
-								// Open modal for URL input
-								showBackgroundUrlInput = true;
-								// Initialize backgroundImageUrl if it's null
-								if (backgroundImageUrl === null) {
-									backgroundImageUrl = '';
-								}
+								showBackgroundUrlModal = true;
 							}}
 							type="button"
 						>
-							<span class="ml-2 self-center" id="background-image-url-toggle">URL</span>
+							{$i18n.t('URL')}
 						</button>
 					</div>
 				</div>
@@ -1036,6 +1149,27 @@
 				</div>
 			</div>
 
+			{#if $config?.features?.enable_autocomplete_generation}
+				<div>
+					<div class=" py-0.5 flex w-full justify-between">
+						<div id="prompt-autocompletion-label" class=" self-center text-xs">
+							{$i18n.t('Prompt Autocompletion')}
+						</div>
+
+						<div class="flex items-center gap-2 p-1">
+							<Switch
+								ariaLabelledbyId="prompt-autocompletion-label"
+								tooltip={true}
+								bind:state={promptAutocomplete}
+								on:change={() => {
+									saveSettings({ promptAutocomplete });
+								}}
+							/>
+						</div>
+					</div>
+				</div>
+			{/if}
+
 			{#if richTextInput}
 				<div>
 					<div class=" py-0.5 flex w-full justify-between">
@@ -1074,27 +1208,6 @@
 						</div>
 					</div>
 				</div>
-
-				{#if $config?.features?.enable_autocomplete_generation}
-					<div>
-						<div class=" py-0.5 flex w-full justify-between">
-							<div id="prompt-autocompletion-label" class=" self-center text-xs">
-								{$i18n.t('Prompt Autocompletion')}
-							</div>
-
-							<div class="flex items-center gap-2 p-1">
-								<Switch
-									ariaLabelledbyId="prompt-autocompletion-label"
-									tooltip={true}
-									bind:state={promptAutocomplete}
-									on:change={() => {
-										saveSettings({ promptAutocomplete });
-									}}
-								/>
-							</div>
-						</div>
-					</div>
-				{/if}
 			{/if}
 
 			<div>
@@ -1269,6 +1382,27 @@
 					</div>
 				</div>
 			{/if}
+
+			<div>
+				<div class=" py-0.5 flex w-full justify-between">
+					<div id="img-bed-settings-label" class=" self-center text-xs">
+						{$i18n.t('Image Hosting Settings')}
+					</div>
+
+					<div class="flex items-center gap-2 p-1">
+						<button
+							class="text-xs text-gray-700 dark:text-gray-400 underline"
+							type="button"
+							aria-label={$i18n.t('Open Image Hosting Settings')}
+							on:click={() => {
+								showImgBedSettings = true;
+							}}
+						>
+							{$i18n.t('Configure')}
+						</button>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -1281,3 +1415,9 @@
 		</button>
 	</div>
 </form>
+
+<!-- ImgBed Settings Modal -->
+<ImgBedSettings
+	bind:show={showImgBedSettings}
+	{saveSettings}
+/>

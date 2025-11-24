@@ -5,7 +5,8 @@
 	import { WEBUI_NAME, mobile, showSidebar, user } from '$lib/stores';
 	import { page } from '$app/stores';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Background from '$lib/components/common/Background.svelte';
+	import Background from '$lib/components/Background.svelte';
+
 	import Sidebar from '$lib/components/icons/Sidebar.svelte';
 
 	const i18n = getContext('i18n');
@@ -27,13 +28,14 @@
 </svelte:head>
 
 {#if loaded}
+	<Background opacity={0.25} />
 	<div
-		class=" flex flex-col h-screen max-h-[100dvh] flex-1 transition-width duration-200 ease-in-out {$showSidebar
+		class="relative z-10 flex flex-col h-screen max-h-[100dvh] flex-1 transition-width duration-200 ease-in-out {$showSidebar
 			? 'md:max-w-[calc(100%-260px)]'
 			: ' md:max-w-[calc(100%-49px)]'}  w-full max-w-full"
+			id="admin-container"
 	>
-		<Background />
-		<nav class="   px-2.5 pt-1.5 backdrop-blur-xl drag-region relative z-10">
+		<nav class="   px-2.5 pt-1.5 drag-region">
 			<div class=" flex items-center gap-1">
 				{#if $mobile}
 					<div class="{$showSidebar ? 'md:hidden' : ''} flex flex-none items-center self-end">

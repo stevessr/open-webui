@@ -10,9 +10,11 @@
 		updateLdapConfig,
 		updateLdapServer
 	} from '$lib/apis/auths';
+	import { getGroups } from '$lib/apis/groups';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
 	import { config, showChangelog } from '$lib/stores';
 	import { compareVersion } from '$lib/utils';
@@ -32,6 +34,7 @@
 
 	let adminConfig = null;
 	let webhookUrl = '';
+	let groups = [];
 
 	// LDAP
 	let ENABLE_LDAP = false;
@@ -104,6 +107,9 @@
 			})(),
 			(async () => {
 				LDAP_SERVER = await getLdapServer(localStorage.token);
+			})(),
+			(async () => {
+				groups = await getGroups(localStorage.token);
 			})()
 		]);
 
@@ -118,11 +124,11 @@
 		updateHandler();
 	}}
 >
-	<div class="mt-0.5 space-y-3 overflow-y-scroll scrollbar-hidden h-full">
+	<div class="space-y-3 overflow-y-scroll scrollbar-hidden h-full">
 		{#if adminConfig !== null}
 			<div class="">
 				<div class="mb-3.5">
-					<div class=" mb-2.5 text-base font-medium">{$i18n.t('General')}</div>
+					<div class=" mt-0.5 mb-2.5 text-base font-medium">{$i18n.t('General')}</div>
 
 					<hr class=" border-gray-100 dark:border-gray-850 my-2" />
 
@@ -185,7 +191,7 @@
 									{$i18n.t('Help')}
 								</div>
 								<div class=" text-xs text-gray-500">
-									{$i18n.t('Discover how to use Neko UI and seek support from the community.')}
+									{$i18n.t('Discover how to use Neko and seek support from the community.')}
 								</div>
 							</div>
 
@@ -197,105 +203,44 @@
 								{$i18n.t('Documentation')}
 							</a>
 						</div>
-
-						<div class="mt-1">
-							<div class="flex space-x-1">
-								<a href="https://discord.gg/5rJgQTnV4s" target="_blank">
-									<img
-										alt="Discord"
-										src="https://img.shields.io/badge/Discord-Open_WebUI-blue?logo=discord&logoColor=white"
-									/>
-								</a>
-
-								<a href="https://twitter.com/OpenWebUI" target="_blank">
-									<img
-										alt="X (formerly Twitter) Follow"
-										src="https://img.shields.io/twitter/follow/OpenWebUI"
-									/>
-								</a>
-
-								<a href="https://github.com/open-webui/open-webui" target="_blank">
-									<img
-										alt="Github Repo"
-										src="https://img.shields.io/github/stars/open-webui/open-webui?style=social&label=Star us on Github"
-									/>
-								</a>
-							</div>
-						</div>
-					</div>
-
-					<div class="mb-2.5">
-						<div class="flex w-full justify-between items-center">
-							<div class="text-xs pr-2">
-								<div class="">
-									{$i18n.t('License')}
-								</div>
-
-								{#if $config?.license_metadata}
-									<a
-										href="https://docs.openwebui.com/enterprise"
-										target="_blank"
-										class="text-gray-500 mt-0.5"
-									>
-										<span class=" capitalize text-black dark:text-white"
-											>{$config?.license_metadata?.type}
-											license</span
-										>
-										registered to
-										<span class=" capitalize text-black dark:text-white"
-											>{$config?.license_metadata?.organization_name}</span
-										>
-										for
-										<span class=" font-medium text-black dark:text-white"
-											>{$config?.license_metadata?.seats ?? 'Unlimited'} users.</span
-										>
-									</a>
-									{#if $config?.license_metadata?.html}
-										<div class="mt-0.5">
-											{@html DOMPurify.sanitize($config?.license_metadata?.html)}
-										</div>
-									{/if}
-								{:else}
-									<a
-										class=" text-xs hover:underline"
-										href="https://docs.openwebui.com/enterprise"
-										target="_blank"
-									>
-										<span class="text-gray-500">
-											{$i18n.t(
-												'Upgrade to a licensed plan for enhanced capabilities, including custom theming and branding, and dedicated support.'
-											)}
-										</span>
-									</a>
-								{/if}
-							</div>
-
-							<!-- <button
-								class="flex-shrink-0 text-xs px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition rounded-lg font-medium"
-							>
-								{$i18n.t('Activate')}
-							</button> -->
-						</div>
 					</div>
 				</div>
 
 				<div class="mb-3">
-					<div class=" mb-2.5 text-base font-medium">{$i18n.t('Authentication')}</div>
+					<div class=" mt-0.5 mb-2.5 text-base font-medium">{$i18n.t('Authentication')}</div>
 
 					<hr class=" border-gray-100 dark:border-gray-850 my-2" />
 
 					<div class="  mb-2.5 flex w-full justify-between">
 						<div class=" self-center text-xs font-medium">{$i18n.t('Default User Role')}</div>
 						<div class="flex items-center relative">
-							<select
-								class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
+							<Select
+								className="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
 								bind:value={adminConfig.DEFAULT_USER_ROLE}
 								placeholder={$i18n.t('Select a role')}
-							>
-								<option value="pending">{$i18n.t('pending')}</option>
-								<option value="user">{$i18n.t('user')}</option>
-								<option value="admin">{$i18n.t('admin')}</option>
-							</select>
+								items={[
+									{ value: 'pending', label: $i18n.t('pending') },
+									{ value: 'user', label: $i18n.t('user') },
+									{ value: 'admin', label: $i18n.t('admin') }
+								]}
+							/>
+						</div>
+					</div>
+
+					<div class="  mb-2.5 flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">{$i18n.t('Default Group')}</div>
+						<div class="flex items-center relative">
+							<Select
+								className="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
+								bind:value={adminConfig.DEFAULT_GROUP_ID}
+								placeholder={$i18n.t('Select a group')}
+								items={
+									[{ value: '', label: $i18n.t('None') }, ...groups.map((group) => ({
+									value: group.id,
+									label: DOMPurify.sanitize(group.name)
+								}))]
+								}
+							></Select>
 						</div>
 					</div>
 
@@ -338,31 +283,31 @@
 					</div>
 
 					<div class="mb-2.5 flex w-full justify-between pr-2">
-						<div class=" self-center text-xs font-medium">{$i18n.t('Enable API Key')}</div>
+						<div class=" self-center text-xs font-medium">{$i18n.t('Enable API Keys')}</div>
 
-						<Switch bind:state={adminConfig.ENABLE_API_KEY} />
+						<Switch bind:state={adminConfig.ENABLE_API_KEYS} />
 					</div>
 
-					{#if adminConfig?.ENABLE_API_KEY}
+					{#if adminConfig?.ENABLE_API_KEYS}
 						<div class="mb-2.5 flex w-full justify-between pr-2">
 							<div class=" self-center text-xs font-medium">
 								{$i18n.t('API Key Endpoint Restrictions')}
 							</div>
 
-							<Switch bind:state={adminConfig.ENABLE_API_KEY_ENDPOINT_RESTRICTIONS} />
+							<Switch bind:state={adminConfig.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS} />
 						</div>
 
-						{#if adminConfig?.ENABLE_API_KEY_ENDPOINT_RESTRICTIONS}
-							<div class=" flex w-full flex-col pr-2">
+						{#if adminConfig?.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS}
+							<div class=" flex w-full flex-col pr-2 mb-2.5">
 								<div class=" text-xs font-medium">
 									{$i18n.t('Allowed Endpoints')}
 								</div>
 
 								<input
-									class="w-full mt-1 rounded-lg text-sm dark:text-gray-300 bg-transparent outline-hidden"
+									class="w-full mt-1 text-sm dark:text-gray-300 bg-transparent outline-hidden"
 									type="text"
 									placeholder={`e.g.) /api/v1/messages, /api/v1/channels`}
-									bind:value={adminConfig.API_KEY_ALLOWED_ENDPOINTS}
+									bind:value={adminConfig.API_KEYS_ALLOWED_ENDPOINTS}
 								/>
 
 								<div class="mt-2 text-xs text-gray-400 dark:text-gray-500">
@@ -399,6 +344,26 @@
 								>{$i18n.t("'s', 'm', 'h', 'd', 'w' or '-1' for no expiration.")}</span
 							>
 						</div>
+
+						{#if adminConfig.JWT_EXPIRES_IN === '-1'}
+							<div class="mt-2 text-xs">
+								<div
+									class=" bg-yellow-500/20 text-yellow-700 dark:text-yellow-200 rounded-lg px-3 py-2"
+								>
+									<div>
+										<span class=" font-medium">{$i18n.t('Warning')}:</span>
+										<span
+											><a
+												href="https://docs.openwebui.com/getting-started/env-configuration#jwt_expires_in"
+												target="_blank"
+												class=" underline"
+												>{$i18n.t('No expiration can pose security risks.')}
+											</a></span
+										>
+									</div>
+								</div>
+							</div>
+						{/if}
 					</div>
 
 					<div class=" space-y-3">
@@ -617,7 +582,7 @@
 				</div>
 
 				<div class="mb-3">
-					<div class=" mb-2.5 text-base font-medium">{$i18n.t('Features')}</div>
+					<div class=" mt-0.5 mb-2.5 text-base font-medium">{$i18n.t('Features')}</div>
 
 					<hr class=" border-gray-100 dark:border-gray-850 my-2" />
 

@@ -7,18 +7,21 @@
 
 	import { models } from '$lib/stores';
 	import { deleteAllModels } from '$lib/apis/models';
+	import { getModelsConfig, setModelsConfig } from '$lib/apis/configs';
 
 	import Modal from '$lib/components/common/Modal.svelte';
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import ModelList from './ModelList.svelte';
-	import { getModelsConfig, setModelsConfig } from '$lib/apis/configs';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import Minus from '$lib/components/icons/Minus.svelte';
 	import Plus from '$lib/components/icons/Plus.svelte';
 	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import ModelSelector from './ModelSelector.svelte';
+	import Model from '../Evaluations/Model.svelte';
 
 	export let show = false;
 	export let initHandler = () => {};
@@ -27,6 +30,10 @@
 
 	let selectedModelId = '';
 	let defaultModelIds = [];
+
+	let selectedPinnedModelId = '';
+	let defaultPinnedModelIds = [];
+
 	let modelIds = [];
 
 	let sortKey = '';
@@ -38,25 +45,6 @@
 	$: if (show) {
 		init();
 	}
-
-	$: if (selectedModelId) {
-		onModelSelect();
-	}
-
-	const onModelSelect = () => {
-		if (selectedModelId === '') {
-			return;
-		}
-
-		if (defaultModelIds.includes(selectedModelId)) {
-			selectedModelId = '';
-			return;
-		}
-
-		defaultModelIds = [...defaultModelIds, selectedModelId];
-		selectedModelId = '';
-	};
-
 	const init = async () => {
 		config = await getModelsConfig(localStorage.token);
 
@@ -65,6 +53,13 @@
 		} else {
 			defaultModelIds = [];
 		}
+
+		if (config?.DEFAULT_PINNED_MODELS) {
+			defaultPinnedModelIds = (config?.DEFAULT_PINNED_MODELS).split(',').filter((id) => id);
+		} else {
+			defaultPinnedModelIds = [];
+		}
+
 		const modelOrderList = config.MODEL_ORDER_LIST || [];
 		const allModelIds = $models.map((model) => model.id);
 
@@ -86,6 +81,7 @@
 
 		const res = await setModelsConfig(localStorage.token, {
 			DEFAULT_MODELS: defaultModelIds.join(','),
+			DEFAULT_PINNED_MODELS: defaultPinnedModelIds.join(','),
 			MODEL_ORDER_LIST: modelIds
 		});
 
@@ -198,19 +194,14 @@
 								</div>
 
 								<div class="flex items-center -mr-1">
-									<select
-										class="w-full py-1 text-sm rounded-lg bg-transparent {selectedModelId
+									<Select
+										className="w-full py-1 text-sm rounded-lg bg-transparent {selectedModelId
 											? ''
 											: 'text-gray-500'} placeholder:text-gray-300 dark:placeholder:text-gray-700 outline-hidden"
 										bind:value={selectedModelId}
-									>
-										<option value="">{$i18n.t('Select a model')}</option>
-										{#each $models as model}
-											<option value={model.id} class="bg-gray-50 dark:bg-gray-700"
-												>{model.name}</option
-											>
-										{/each}
-									</select>
+										placeholder={$i18n.t('Select a model')}
+										items={$models.map((m) => ({ value: m.id, label: m.name }))}
+									/>
 								</div>
 
 								<!-- <hr class=" border-gray-100 dark:border-gray-700/10 my-2.5 w-full" /> -->

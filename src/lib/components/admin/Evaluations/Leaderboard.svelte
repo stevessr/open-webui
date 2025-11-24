@@ -10,7 +10,8 @@
 
 	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
-	import { WEBUI_BASE_URL } from '$lib/constants';
+	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -300,7 +301,7 @@
 		}, 1500); // Debounce for 1.5 seconds
 	};
 
-	$: query, debouncedQueryHandler();
+	$: (query, debouncedQueryHandler());
 
 	onMount(async () => {
 		rankHandler();
@@ -337,18 +338,16 @@
 />
 
 <div
-	class="pt-0.5 pb-1 gap-1 flex flex-col md:flex-row justify-between sticky top-0 z-10"
+	class="trans pt-0.5 pb-1 gap-1 flex flex-col md:flex-row justify-between sticky top-0 z-10 bg-white dark:bg-gray-900"
 >
-	<div class="flex md:self-center text-lg font-medium px-0.5 shrink-0 items-center">
-		<div class=" gap-1">
+	<div class="flex items-center md:self-center text-xl font-medium px-0.5 gap-2 shrink-0">
+		<div>
 			{$i18n.t('Leaderboard')}
 		</div>
 
-		<div class="flex self-center w-[1px] h-6 mx-2.5 bg-gray-50 dark:bg-gray-850" />
-
-		<span class="text-lg font-medium text-gray-500 dark:text-gray-300 mr-1.5"
-			>{rankedModels.length}</span
-		>
+		<div class="text-lg font-medium text-gray-500 dark:text-gray-500">
+			{rankedModels.length}
+		</div>
 	</div>
 
 	<div class=" flex space-x-2">
@@ -389,7 +388,7 @@
 				: ''}"
 		>
 			<thead class="text-xs text-gray-800 uppercase bg-transparent dark:text-gray-200">
-				<tr class=" border-b-2 border-gray-100 dark:border-gray-800">
+				<tr class=" border-b-[1.5px] border-gray-50 dark:border-gray-850">
 					<th
 						scope="col"
 						class="px-2.5 py-2 cursor-pointer select-none w-3"
@@ -505,7 +504,7 @@
 			<tbody class="">
 				{#each sortedModels as model, modelIdx (model.id)}
 					<tr
-						class="bg-white dark:bg-gray-900 dark:border-gray-850 text-xs group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-850/50 transition"
+						class="dark:border-gray-850 text-xs group cursor-pointer transition"
 						on:click={() => openLeaderboardModelModal(model)}
 					>
 						<td class="px-3 py-1.5 text-left font-medium text-gray-900 dark:text-white w-fit">
@@ -516,10 +515,10 @@
 						<td class="px-3 py-1.5 flex flex-col justify-center">
 							<div class="flex items-center gap-2">
 								<div class="shrink-0">
-									<img
-										src={model?.info?.meta?.profile_image_url ?? `${WEBUI_BASE_URL}/favicon.png`}
+									<ProfileImage
+										src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model.id}`}
 										alt={model.name}
-										class="size-5 rounded-full object-cover shrink-0"
+										className="size-5 rounded-full object-cover shrink-0"
 									/>
 								</div>
 
@@ -532,7 +531,7 @@
 							{model.rating}
 						</td>
 
-						<td class=" px-3 py-1.5 text-right font-semibold text-green-500">
+						<td class=" px-3 py-1.5 text-right font-medium text-green-500">
 							<div class=" w-10">
 								{#if model.stats.won === '-'}
 									-
@@ -545,7 +544,7 @@
 							</div>
 						</td>
 
-						<td class="px-3 py-1.5 text-right font-semibold text-red-500">
+						<td class="px-3 py-1.5 text-right font-medium text-red-500">
 							<div class=" w-10">
 								{#if model.stats.lost === '-'}
 									-

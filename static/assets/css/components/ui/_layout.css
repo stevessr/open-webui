@@ -1,0 +1,28 @@
+/* Layout Component Styles */
+
+/* Background and Blur Effects */
+.overscroll-contain,
+.menu-cover,
+.chat-interface,
+.model-menu,
+.parameter-panel,
+.tools-menu,
+.trans {
+  background: transparent;
+  backdrop-filter: blur(8px);
+}
+
+div#chat-input,
+select {
+  background: transparent;
+}
+
+/* Utility Classes */
+.none-border {
+  border: none;
+}
+
+.tag-selcetor,
+.clean {
+  background: transparent;
+}

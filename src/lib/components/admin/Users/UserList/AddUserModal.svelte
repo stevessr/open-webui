@@ -11,6 +11,7 @@
 	import { generateInitialsImage } from '$lib/utils';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 
 	const i18n = getContext('i18n');
 	const dispatch = createEventDispatcher();
@@ -179,16 +180,16 @@
 								<div class=" mb-1 text-xs text-gray-500">{$i18n.t('Role')}</div>
 
 								<div class="flex-1">
-									<select
-										class="w-full capitalize rounded-lg text-sm bg-transparent dark:disabled:text-gray-500 outline-hidden"
+									<Select
+										className="w-full capitalize rounded-lg text-sm bg-transparent dark:disabled:text-gray-500 outline-hidden"
 										bind:value={_user.role}
 										placeholder={$i18n.t('Enter Your Role')}
-										required
-									>
-										<option value="pending"> {$i18n.t('pending')} </option>
-										<option value="user"> {$i18n.t('user')} </option>
-										<option value="admin"> {$i18n.t('admin')} </option>
-									</select>
+										items={[
+											{ value: 'pending', label: $i18n.t('pending') },
+											{ value: 'user', label: $i18n.t('user') },
+											{ value: 'admin', label: $i18n.t('admin') }
+										]}
+									/>
 								</div>
 							</div>
 

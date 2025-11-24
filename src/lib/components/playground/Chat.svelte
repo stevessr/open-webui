@@ -24,6 +24,7 @@
 	import Cog6 from '../icons/Cog6.svelte';
 	import Sidebar from '../common/Sidebar.svelte';
 	import ArrowRight from '../icons/ArrowRight.svelte';
+	import Select from '../common/Select.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -224,7 +225,7 @@
 							{$i18n.t('System Instructions')}
 						</div>
 
-						{#if !showSystem}
+						{#if !showSystem && system.trim()}
 							<div class=" flex-1 text-gray-500 line-clamp-1">
 								{system}
 							</div>
@@ -296,7 +297,7 @@
 					<div
 						class="flex justify-between flex-col sm:flex-row items-start sm:items-center gap-2 mt-2"
 					>
-						<div class="flex-1 shrink-0">
+						<div class="shrink-0">
 							<button
 								type="button"
 								class="px-3.5 py-1.5 text-sm font-medium bg-gray-50 hover:bg-gray-100 text-gray-900 dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-gray-200 transition rounded-lg shrink-0 {($settings?.highContrastMode ??
@@ -321,16 +322,15 @@
 
 						<div class="flex items-center justify-between gap-2 w-full sm:w-auto">
 							<div class="flex-1">
-								<select
-									class=" bg-transparent border border-gray-100 dark:border-gray-850 rounded-lg py-1 px-2 -mx-0.5 text-sm outline-hidden w-full"
+								<Select
+									className="bg-transparent border border-gray-100 dark:border-gray-850 rounded-lg text-sm outline-hidden w-full"
 									bind:value={selectedModelId}
-								>
-									{#each $models as model}
-										<option value={model.id} class="bg-gray-50 dark:bg-gray-700"
-											>{model.name}</option
-										>
-									{/each}
-								</select>
+									placeholder={$i18n.t('Select a model')}
+									items={$models.map((model) => ({
+										value: model.id,
+										label: model.name
+									}))}
+								/>
 							</div>
 
 							<div class="flex gap-2 shrink-0">

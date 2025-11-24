@@ -44,7 +44,15 @@
 		num_ctx: null,
 		num_batch: null,
 		num_thread: null,
-		num_gpu: null
+		num_gpu: null,
+		// Gemini-specific parameters
+		include_thoughts: null,
+		thinking_level: null,
+		thinking_budget: null,
+		// Anthropic-specific parameters
+		thinking_enabled: null,
+		tool_choice: null,
+		tools: null
 	};
 
 	export let params = defaultParams;
@@ -1136,454 +1144,183 @@
 		{/if}
 	</div>
 
-	{#if admin}
-		<div class=" py-0.5 w-full justify-between">
-			<Tooltip
-				content={$i18n.t(
-					'Enable Memory Mapping (mmap) to load model data. This option allows the system to use disk storage as an extension of RAM by treating disk files as if they were in RAM. This can improve model performance by allowing for faster data access. However, it may not work correctly with all systems and can consume a significant amount of disk space.'
-				)}
-				placement="top-start"
-				className="inline-tooltip"
-			>
-				<div class="flex w-full justify-between">
-					<div class=" self-center text-xs font-medium">
-						{'use_mmap'}
-					</div>
-					<button
-						class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-						type="button"
-						on:click={() => {
-							params.use_mmap = (params?.use_mmap ?? null) === null ? true : null;
-						}}
-					>
-						{#if (params?.use_mmap ?? null) === null}
-							<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
-						{/if}
-					</button>
-				</div>
-			</Tooltip>
-
-			{#if (params?.use_mmap ?? null) !== null}
-				<div class="flex justify-between items-center mt-1">
-					<div class="text-xs text-gray-500">
-						{params.use_mmap ? $i18n.t('Enabled') : $i18n.t('Disabled')}
-					</div>
-					<div class=" pr-2">
-						<Switch bind:state={params.use_mmap} />
-					</div>
-				</div>
-			{/if}
-		</div>
-
-		<div class=" py-0.5 w-full justify-between">
-			<Tooltip
-				content={$i18n.t(
-					"Enable Memory Locking (mlock) to prevent model data from being swapped out of RAM. This option locks the model's working set of pages into RAM, ensuring that they will not be swapped out to disk. This can help maintain performance by avoiding page faults and ensuring fast data access."
-				)}
-				placement="top-start"
-				className="inline-tooltip"
-			>
-				<div class="flex w-full justify-between">
-					<div class=" self-center text-xs font-medium">
-						{'use_mlock'}
-					</div>
-
-					<button
-						class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-						type="button"
-						on:click={() => {
-							params.use_mlock = (params?.use_mlock ?? null) === null ? true : null;
-						}}
-					>
-						{#if (params?.use_mlock ?? null) === null}
-							<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
-						{/if}
-					</button>
-				</div>
-			</Tooltip>
-
-			{#if (params?.use_mlock ?? null) !== null}
-				<div class="flex justify-between items-center mt-1">
-					<div class="text-xs text-gray-500">
-						{params.use_mlock ? $i18n.t('Enabled') : $i18n.t('Disabled')}
-					</div>
-
-					<div class=" pr-2">
-						<Switch bind:state={params.use_mlock} />
-					</div>
-				</div>
-			{/if}
-		</div>
-	{/if}
-
-	<div class=" py-0.5 w-full justify-between">
-		<Tooltip
-			content={$i18n.t(
-				'This option enables or disables the use of the reasoning feature in Ollama, which allows the model to think before generating a response. When enabled, the model can take a moment to process the conversation context and generate a more thoughtful response.'
-			)}
-			placement="top-start"
-			className="inline-tooltip"
-		>
-			<div class=" py-0.5 flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{'think'} ({$i18n.t('Ollama')})
-				</div>
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition"
-					on:click={() => {
-						params.think = (params?.think ?? null) === null ? true : params.think ? false : null;
-					}}
-					type="button"
+	<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+		<div class="text-sm font-medium mb-2">Ollama Specific Parameters</div>
+		{#if admin}
+			<div class=" py-0.5 w-full justify-between">
+				<Tooltip
+					content={$i18n.t(
+						'Enable Memory Mapping (mmap) to load model data. This option allows the system to use disk storage as an extension of RAM by treating disk files as if they were in RAM. This can improve model performance by allowing for faster data access. However, it may not work correctly with all systems and can consume a significant amount of disk space.'
+					)}
+					placement="top-start"
+					className="inline-tooltip"
 				>
-					{#if params.think === true}
-						<span class="ml-2 self-center">{$i18n.t('On')}</span>
-					{:else if params.think === false}
-						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-					{:else}
-						<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
-	</div>
+					<div class="flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">
+							{'use_mmap'}
+						</div>
+						<button
+							class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+							type="button"
+							on:click={() => {
+								params.use_mmap = (params?.use_mmap ?? null) === null ? true : null;
+							}}
+						>
+							{#if (params?.use_mmap ?? null) === null}
+								<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+							{:else}
+								<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
+							{/if}
+						</button>
+					</div>
+				</Tooltip>
 
-	<div class=" py-0.5 w-full justify-between">
-		<Tooltip
-			content={$i18n.t('The format to return a response in. Format can be json or a JSON schema.')}
-			placement="top-start"
-			className="inline-tooltip"
-		>
-			<div class=" py-0.5 flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{'format'} ({$i18n.t('Ollama')})
-				</div>
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition"
-					on:click={() => {
-						params.format = (params?.format ?? null) === null ? 'json' : null;
-					}}
-					type="button"
+				{#if (params?.use_mmap ?? null) !== null}
+					<div class="flex justify-between items-center mt-1">
+						<div class="text-xs text-gray-500">
+							{params.use_mmap ? $i18n.t('Enabled') : $i18n.t('Disabled')}
+						</div>
+						<div class=" pr-2">
+							<Switch bind:state={params.use_mmap} />
+						</div>
+					</div>
+				{/if}
+			</div>
+
+			<div class=" py-0.5 w-full justify-between">
+				<Tooltip
+					content={$i18n.t(
+						"Enable Memory Locking (mlock) to prevent model data from being swapped out of RAM. This option locks the model's working set of pages into RAM, ensuring that they will not be swapped out to disk. This can help maintain performance by avoiding page faults and ensuring fast data access."
+					)}
+					placement="top-start"
+					className="inline-tooltip"
 				>
-					{#if (params?.format ?? null) === null}
-						<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-					{:else}
-						<span class="ml-2 self-center">{$i18n.t('JSON')}</span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
+					<div class="flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">
+							{'use_mlock'}
+						</div>
 
-		{#if (params?.format ?? null) !== null}
-			<div class="flex mt-0.5 space-x-2">
-				<Textarea
-					className="w-full  text-sm bg-transparent outline-hidden"
-					placeholder={$i18n.t('e.g. "json" or a JSON schema')}
-					bind:value={params.format}
-				/>
+						<button
+							class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+							type="button"
+							on:click={() => {
+								params.use_mlock = (params?.use_mlock ?? null) === null ? true : null;
+							}}
+						>
+							{#if (params?.use_mlock ?? null) === null}
+								<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+							{:else}
+								<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
+							{/if}
+						</button>
+					</div>
+				</Tooltip>
+
+				{#if (params?.use_mlock ?? null) !== null}
+					<div class="flex justify-between items-center mt-1">
+						<div class="text-xs text-gray-500">
+							{params.use_mlock ? $i18n.t('Enabled') : $i18n.t('Disabled')}
+						</div>
+
+						<div class=" pr-2">
+							<Switch bind:state={params.use_mlock} />
+						</div>
+					</div>
+				{/if}
 			</div>
 		{/if}
-	</div>
-
-	<div class=" py-0.5 w-full justify-between">
-		<Tooltip
-			content={$i18n.t(
-				'This option controls how many tokens are preserved when refreshing the context. For example, if set to 2, the last 2 tokens of the conversation context will be retained. Preserving context can help maintain the continuity of a conversation, but it may reduce the ability to respond to new topics.'
-			)}
-			placement="top-start"
-			className="inline-tooltip"
-		>
-			<div class="flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{'num_keep'} ({$i18n.t('Ollama')})
-				</div>
-
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-					type="button"
-					on:click={() => {
-						params.num_keep = (params?.num_keep ?? null) === null ? 24 : null;
-					}}
-				>
-					{#if (params?.num_keep ?? null) === null}
-						<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-					{:else}
-						<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
-
-		{#if (params?.num_keep ?? null) !== null}
-			<div class="flex mt-0.5 space-x-2">
-				<div class=" flex-1">
-					<input
-						id="steps-range"
-						type="range"
-						min="-1"
-						max="10240000"
-						step="1"
-						bind:value={params.num_keep}
-						class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-					/>
-				</div>
-				<div class="">
-					<input
-						bind:value={params.num_keep}
-						type="number"
-						class=" bg-transparent text-center w-14"
-						min="-1"
-						step="1"
-					/>
-				</div>
-			</div>
-		{/if}
-	</div>
-
-	<div class=" py-0.5 w-full justify-between">
-		<Tooltip
-			content={$i18n.t('Sets the size of the context window used to generate the next token.')}
-			placement="top-start"
-			className="inline-tooltip"
-		>
-			<div class="flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{'num_ctx'} ({$i18n.t('Ollama')})
-				</div>
-
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-					type="button"
-					on:click={() => {
-						params.num_ctx = (params?.num_ctx ?? null) === null ? 2048 : null;
-					}}
-				>
-					{#if (params?.num_ctx ?? null) === null}
-						<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-					{:else}
-						<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
-
-		{#if (params?.num_ctx ?? null) !== null}
-			<div class="flex mt-0.5 space-x-2">
-				<div class=" flex-1">
-					<input
-						id="steps-range"
-						type="range"
-						min="-1"
-						max="10240000"
-						step="1"
-						bind:value={params.num_ctx}
-						class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-					/>
-				</div>
-				<div class="">
-					<input
-						bind:value={params.num_ctx}
-						type="number"
-						class=" bg-transparent text-center w-14"
-						min="-1"
-						step="1"
-					/>
-				</div>
-			</div>
-		{/if}
-	</div>
-
-	<div class=" py-0.5 w-full justify-between">
-		<Tooltip
-			content={$i18n.t(
-				'The batch size determines how many text requests are processed together at once. A higher batch size can increase the performance and speed of the model, but it also requires more memory.'
-			)}
-			placement="top-start"
-			className="inline-tooltip"
-		>
-			<div class="flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{'num_batch'} ({$i18n.t('Ollama')})
-				</div>
-
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-					type="button"
-					on:click={() => {
-						params.num_batch = (params?.num_batch ?? null) === null ? 512 : null;
-					}}
-				>
-					{#if (params?.num_batch ?? null) === null}
-						<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-					{:else}
-						<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
-
-		{#if (params?.num_batch ?? null) !== null}
-			<div class="flex mt-0.5 space-x-2">
-				<div class=" flex-1">
-					<input
-						id="steps-range"
-						type="range"
-						min="256"
-						max="8192"
-						step="256"
-						bind:value={params.num_batch}
-						class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-					/>
-				</div>
-				<div>
-					<input
-						bind:value={params.num_batch}
-						type="number"
-						class=" bg-transparent text-center w-14"
-						min="256"
-						step="256"
-					/>
-				</div>
-			</div>
-		{/if}
-	</div>
-
-	{#if admin}
-		<div class=" py-0.5 w-full justify-between">
-			<Tooltip
-				content={$i18n.t(
-					'Set the number of worker threads used for computation. This option controls how many threads are used to process incoming requests concurrently. Increasing this value can improve performance under high concurrency workloads but may also consume more CPU resources.'
-				)}
-				placement="top-start"
-				className="inline-tooltip"
-			>
-				<div class="flex w-full justify-between">
-					<div class=" self-center text-xs font-medium">
-						{'num_thread'} ({$i18n.t('Ollama')})
-					</div>
-
-					<button
-						class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-						type="button"
-						on:click={() => {
-							params.num_thread = (params?.num_thread ?? null) === null ? 2 : null;
-						}}
-					>
-						{#if (params?.num_thread ?? null) === null}
-							<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
-						{/if}
-					</button>
-				</div>
-			</Tooltip>
-
-			{#if (params?.num_thread ?? null) !== null}
-				<div class="flex mt-0.5 space-x-2">
-					<div class=" flex-1">
-						<input
-							id="steps-range"
-							type="range"
-							min="1"
-							max="256"
-							step="1"
-							bind:value={params.num_thread}
-							class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-						/>
-					</div>
-					<div class="">
-						<input
-							bind:value={params.num_thread}
-							type="number"
-							class=" bg-transparent text-center w-14"
-							min="1"
-							max="256"
-							step="1"
-						/>
-					</div>
-				</div>
-			{/if}
-		</div>
 
 		<div class=" py-0.5 w-full justify-between">
 			<Tooltip
 				content={$i18n.t(
-					'Set the number of layers, which will be off-loaded to GPU. Increasing this value can significantly improve performance for models that are optimized for GPU acceleration but may also consume more power and GPU resources.'
-				)}
-				placement="top-start"
-				className="inline-tooltip"
-			>
-				<div class="flex w-full justify-between">
-					<div class=" self-center text-xs font-medium">
-						{'num_gpu'} ({$i18n.t('Ollama')})
-					</div>
-
-					<button
-						class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-						type="button"
-						on:click={() => {
-							params.num_gpu = (params?.num_gpu ?? null) === null ? 0 : null;
-						}}
-					>
-						{#if (params?.num_gpu ?? null) === null}
-							<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
-						{/if}
-					</button>
-				</div>
-			</Tooltip>
-
-			{#if (params?.num_gpu ?? null) !== null}
-				<div class="flex mt-0.5 space-x-2">
-					<div class=" flex-1">
-						<input
-							id="steps-range"
-							type="range"
-							min="0"
-							max="256"
-							step="1"
-							bind:value={params.num_gpu}
-							class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-						/>
-					</div>
-					<div class="">
-						<input
-							bind:value={params.num_gpu}
-							type="number"
-							class=" bg-transparent text-center w-14"
-							min="0"
-							max="256"
-							step="1"
-						/>
-					</div>
-				</div>
-			{/if}
-		</div>
-
-		<div class=" py-0.5 w-full justify-between">
-			<Tooltip
-				content={$i18n.t(
-					'This option controls how long the model will stay loaded into memory following the request (default: 5m)'
+					'This option enables or disables the use of the reasoning feature in Ollama, which allows the model to think before generating a response. When enabled, the model can take a moment to process the conversation context and generate a more thoughtful response.'
 				)}
 				placement="top-start"
 				className="inline-tooltip"
 			>
 				<div class=" py-0.5 flex w-full justify-between">
 					<div class=" self-center text-xs font-medium">
-						{'keep_alive'} ({$i18n.t('Ollama')})
+						{'think'} ({$i18n.t('Ollama')})
 					</div>
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
 						on:click={() => {
-							params.keep_alive = (params?.keep_alive ?? null) === null ? '5m' : null;
+							params.think = (params?.think ?? null) === null ? true : params.think ? false : null;
 						}}
 						type="button"
 					>
-						{#if (params?.keep_alive ?? null) === null}
+						{#if params.think === true}
+							<span class="ml-2 self-center">{$i18n.t('On')}</span>
+						{:else if params.think === false}
+							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+						{:else}
+							<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+						{/if}
+					</button>
+				</div>
+			</Tooltip>
+		</div>
+
+		<div class=" py-0.5 w-full justify-between">
+			<Tooltip
+				content={$i18n.t(
+					'The format to return a response in. Format can be json or a JSON schema.'
+				)}
+				placement="top-start"
+				className="inline-tooltip"
+			>
+				<div class=" py-0.5 flex w-full justify-between">
+					<div class=" self-center text-xs font-medium">
+						{'format'} ({$i18n.t('Ollama')})
+					</div>
+					<button
+						class="p-1 px-3 text-xs flex rounded-sm transition"
+						on:click={() => {
+							params.format = (params?.format ?? null) === null ? 'json' : null;
+						}}
+						type="button"
+					>
+						{#if (params?.format ?? null) === null}
+							<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+						{:else}
+							<span class="ml-2 self-center">{$i18n.t('JSON')}</span>
+						{/if}
+					</button>
+				</div>
+			</Tooltip>
+
+			{#if (params?.format ?? null) !== null}
+				<div class="flex mt-0.5 space-x-2">
+					<Textarea
+						className="w-full  text-sm bg-transparent outline-hidden"
+						placeholder={$i18n.t('e.g. "json" or a JSON schema')}
+						bind:value={params.format}
+					/>
+				</div>
+			{/if}
+		</div>
+
+		<div class=" py-0.5 w-full justify-between">
+			<Tooltip
+				content={$i18n.t(
+					'This option controls how many tokens are preserved when refreshing the context. For example, if set to 2, the last 2 tokens of the conversation context will be retained. Preserving context can help maintain the continuity of a conversation, but it may reduce the ability to respond to new topics.'
+				)}
+				placement="top-start"
+				className="inline-tooltip"
+			>
+				<div class="flex w-full justify-between">
+					<div class=" self-center text-xs font-medium">
+						{'num_keep'} ({$i18n.t('Ollama')})
+					</div>
+
+					<button
+						class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+						type="button"
+						on:click={() => {
+							params.num_keep = (params?.num_keep ?? null) === null ? 24 : null;
+						}}
+					>
+						{#if (params?.num_keep ?? null) === null}
 							<span class="ml-2 self-center">{$i18n.t('Default')}</span>
 						{:else}
 							<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
@@ -1592,83 +1329,569 @@
 				</div>
 			</Tooltip>
 
-			{#if (params?.keep_alive ?? null) !== null}
+			{#if (params?.num_keep ?? null) !== null}
 				<div class="flex mt-0.5 space-x-2">
-					<input
-						class="w-full text-sm bg-transparent outline-hidden"
-						type="text"
-						placeholder={$i18n.t("e.g. '30s','10m'. Valid time units are 's', 'm', 'h'.")}
-						bind:value={params.keep_alive}
-					/>
+					<div class=" flex-1">
+						<input
+							id="steps-range"
+							type="range"
+							min="-1"
+							max="10240000"
+							step="1"
+							bind:value={params.num_keep}
+							class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+						/>
+					</div>
+					<div class="">
+						<input
+							bind:value={params.num_keep}
+							type="number"
+							class=" bg-transparent text-center w-14"
+							min="-1"
+							step="1"
+						/>
+					</div>
 				</div>
 			{/if}
 		</div>
 
-		{#if custom && admin}
-			<div class="flex flex-col justify-center">
-				{#each Object.keys(params?.custom_params ?? {}) as key}
-					<div class=" py-0.5 w-full justify-between mb-1">
-						<div class="flex w-full justify-between">
-							<div class=" self-center text-xs font-medium">
-								<input
-									type="text"
-									class=" text-xs w-full bg-transparent outline-none"
-									placeholder={$i18n.t('Custom Parameter Name')}
-									value={key}
-									on:change={(e) => {
-										const newKey = e.target.value.trim();
-										if (newKey && newKey !== key) {
-											params.custom_params[newKey] = params.custom_params[key];
-											delete params.custom_params[key];
-											params = {
-												...params,
-												custom_params: { ...params.custom_params }
-											};
-										}
-									}}
-								/>
-							</div>
-							<button
-								class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-								type="button"
-								on:click={() => {
-									delete params.custom_params[key];
-									params = {
-										...params,
-										custom_params: { ...params.custom_params }
-									};
-								}}
-							>
-								{$i18n.t('Remove')}
-							</button>
-						</div>
-						<div class="flex mt-0.5 space-x-2">
-							<div class=" flex-1">
-								<input
-									bind:value={params.custom_params[key]}
-									type="text"
-									class="text-sm w-full bg-transparent outline-hidden outline-none"
-									placeholder={$i18n.t('Custom Parameter Value')}
-								/>
-							</div>
-						</div>
+		<div class=" py-0.5 w-full justify-between">
+			<Tooltip
+				content={$i18n.t('Sets the size of the context window used to generate the next token.')}
+				placement="top-start"
+				className="inline-tooltip"
+			>
+				<div class="flex w-full justify-between">
+					<div class=" self-center text-xs font-medium">
+						{'num_ctx'} ({$i18n.t('Ollama')})
 					</div>
-				{/each}
 
-				<button
-					class=" flex gap-2 items-center w-full text-center justify-center mt-1 mb-5"
-					type="button"
-					on:click={() => {
-						params.custom_params = (params?.custom_params ?? {}) || {};
-						params.custom_params['custom_param_name'] = 'custom_param_value';
-					}}
-				>
-					<div>
-						<Plus />
+					<button
+						class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+						type="button"
+						on:click={() => {
+							params.num_ctx = (params?.num_ctx ?? null) === null ? 2048 : null;
+						}}
+					>
+						{#if (params?.num_ctx ?? null) === null}
+							<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+						{:else}
+							<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
+						{/if}
+					</button>
+				</div>
+			</Tooltip>
+
+			{#if (params?.num_ctx ?? null) !== null}
+				<div class="flex mt-0.5 space-x-2">
+					<div class=" flex-1">
+						<input
+							id="steps-range"
+							type="range"
+							min="-1"
+							max="10240000"
+							step="1"
+							bind:value={params.num_ctx}
+							class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+						/>
 					</div>
-					<div>{$i18n.t('Add Custom Parameter')}</div>
-				</button>
+					<div class="">
+						<input
+							bind:value={params.num_ctx}
+							type="number"
+							class=" bg-transparent text-center w-14"
+							min="-1"
+							step="1"
+						/>
+					</div>
+				</div>
+			{/if}
+		</div>
+
+		<div class=" py-0.5 w-full justify-between">
+			<Tooltip
+				content={$i18n.t(
+					'The batch size determines how many text requests are processed together at once. A higher batch size can increase the performance and speed of the model, but it also requires more memory.'
+				)}
+				placement="top-start"
+				className="inline-tooltip"
+			>
+				<div class="flex w-full justify-between">
+					<div class=" self-center text-xs font-medium">
+						{'num_batch'} ({$i18n.t('Ollama')})
+					</div>
+
+					<button
+						class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+						type="button"
+						on:click={() => {
+							params.num_batch = (params?.num_batch ?? null) === null ? 512 : null;
+						}}
+					>
+						{#if (params?.num_batch ?? null) === null}
+							<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+						{:else}
+							<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
+						{/if}
+					</button>
+				</div>
+			</Tooltip>
+
+			{#if (params?.num_batch ?? null) !== null}
+				<div class="flex mt-0.5 space-x-2">
+					<div class=" flex-1">
+						<input
+							id="steps-range"
+							type="range"
+							min="256"
+							max="8192"
+							step="256"
+							bind:value={params.num_batch}
+							class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+						/>
+					</div>
+					<div>
+						<input
+							bind:value={params.num_batch}
+							type="number"
+							class=" bg-transparent text-center w-14"
+							min="256"
+							step="256"
+						/>
+					</div>
+				</div>
+			{/if}
+		</div>
+
+		{#if admin}
+			<div class=" py-0.5 w-full justify-between">
+				<Tooltip
+					content={$i18n.t(
+						'Set the number of worker threads used for computation. This option controls how many threads are used to process incoming requests concurrently. Increasing this value can improve performance under high concurrency workloads but may also consume more CPU resources.'
+					)}
+					placement="top-start"
+					className="inline-tooltip"
+				>
+					<div class="flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">
+							{'num_thread'} ({$i18n.t('Ollama')})
+						</div>
+
+						<button
+							class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+							type="button"
+							on:click={() => {
+								params.num_thread = (params?.num_thread ?? null) === null ? 2 : null;
+							}}
+						>
+							{#if (params?.num_thread ?? null) === null}
+								<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+							{:else}
+								<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
+							{/if}
+						</button>
+					</div>
+				</Tooltip>
+
+				{#if (params?.num_thread ?? null) !== null}
+					<div class="flex mt-0.5 space-x-2">
+						<div class=" flex-1">
+							<input
+								id="steps-range"
+								type="range"
+								min="1"
+								max="256"
+								step="1"
+								bind:value={params.num_thread}
+								class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+							/>
+						</div>
+						<div class="">
+							<input
+								bind:value={params.num_thread}
+								type="number"
+								class=" bg-transparent text-center w-14"
+								min="1"
+								max="256"
+								step="1"
+							/>
+						</div>
+					</div>
+				{/if}
+			</div>
+
+			<div class=" py-0.5 w-full justify-between">
+				<Tooltip
+					content={$i18n.t(
+						'Set the number of layers, which will be off-loaded to GPU. Increasing this value can significantly improve performance for models that are optimized for GPU acceleration but may also consume more power and GPU resources.'
+					)}
+					placement="top-start"
+					className="inline-tooltip"
+				>
+					<div class="flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">
+							{'num_gpu'} ({$i18n.t('Ollama')})
+						</div>
+
+						<button
+							class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+							type="button"
+							on:click={() => {
+								params.num_gpu = (params?.num_gpu ?? null) === null ? 0 : null;
+							}}
+						>
+							{#if (params?.num_gpu ?? null) === null}
+								<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+							{:else}
+								<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
+							{/if}
+						</button>
+					</div>
+				</Tooltip>
+
+				{#if (params?.num_gpu ?? null) !== null}
+					<div class="flex mt-0.5 space-x-2">
+						<div class=" flex-1">
+							<input
+								id="steps-range"
+								type="range"
+								min="0"
+								max="256"
+								step="1"
+								bind:value={params.num_gpu}
+								class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+							/>
+						</div>
+						<div class="">
+							<input
+								bind:value={params.num_gpu}
+								type="number"
+								class=" bg-transparent text-center w-14"
+								min="0"
+								max="256"
+								step="1"
+							/>
+						</div>
+					</div>
+				{/if}
+			</div>
+
+			<div class=" py-0.5 w-full justify-between">
+				<Tooltip
+					content={$i18n.t(
+						'This option controls how long the model will stay loaded into memory following the request (default: 5m)'
+					)}
+					placement="top-start"
+					className="inline-tooltip"
+				>
+					<div class=" py-0.5 flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">
+							{'keep_alive'} ({$i18n.t('Ollama')})
+						</div>
+						<button
+							class="p-1 px-3 text-xs flex rounded-sm transition"
+							on:click={() => {
+								params.keep_alive = (params?.keep_alive ?? null) === null ? '5m' : null;
+							}}
+							type="button"
+						>
+							{#if (params?.keep_alive ?? null) === null}
+								<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+							{:else}
+								<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
+							{/if}
+						</button>
+					</div>
+				</Tooltip>
+
+				{#if (params?.keep_alive ?? null) !== null}
+					<div class="flex mt-0.5 space-x-2">
+						<input
+							class="w-full text-sm bg-transparent outline-hidden"
+							type="text"
+							placeholder={$i18n.t("e.g. '30s','10m'. Valid time units are 's', 'm', 'h'.")}
+							bind:value={params.keep_alive}
+						/>
+					</div>
+				{/if}
 			</div>
 		{/if}
+	</div>
+
+	<!-- Anthropic-specific parameters -->
+	<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+		<div class="text-sm font-medium mb-2">Anthropic Specific Parameters</div>
+
+		<!-- Thinking Enabled -->
+		<div class="py-0.5 w-full justify-between">
+			<Tooltip
+				content="Enable Claude's thinking mode for enhanced reasoning"
+				placement="top-start"
+				className="inline-tooltip"
+			>
+				<div class="flex w-full justify-between">
+					<div class="self-center text-xs font-medium">Thinking Enabled</div>
+					<button
+						class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+						type="button"
+						on:click={() => {
+							params.thinking_enabled = (params?.thinking_enabled ?? null) === null ? true : null;
+						}}
+					>
+						{#if (params?.thinking_enabled ?? null) === null}
+							<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+						{:else if params.thinking_enabled}
+							<span class="ml-2 self-center">{$i18n.t('On')}</span>
+						{:else}
+							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+						{/if}
+					</button>
+				</div>
+			</Tooltip>
+		</div>
+
+		{#if (params?.thinking_enabled ?? null) !== null && params.thinking_enabled}
+			<!-- Thinking Budget -->
+			<div class="py-0.5 w-full justify-between">
+				<Tooltip
+					content="Budget tokens for thinking (max 50K)"
+					placement="top-start"
+					className="inline-tooltip"
+				>
+					<div class="flex w-full justify-between">
+						<div class="self-center text-xs font-medium">Thinking Budget</div>
+						<button
+							class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+							type="button"
+							on:click={() => {
+								params.thinking_budget = (params?.thinking_budget ?? null) === null ? 1024 : null;
+							}}
+						>
+							{#if (params?.thinking_budget ?? null) === null}
+								<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+							{:else}
+								<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
+							{/if}
+						</button>
+					</div>
+				</Tooltip>
+
+				{#if (params?.thinking_budget ?? null) !== null}
+					<div class="flex mt-0.5 space-x-2">
+						<div class="flex-1">
+							<input
+								type="range"
+								min="1024"
+								max="50000"
+								step="1024"
+								bind:value={params.thinking_budget}
+								class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+							/>
+						</div>
+						<div>
+							<input
+								bind:value={params.thinking_budget}
+								type="number"
+								class="bg-transparent text-center w-20"
+								min="1024"
+								max="50000"
+								step="1024"
+							/>
+						</div>
+					</div>
+				{/if}
+			</div>
+		{/if}
+	</div>
+
+	<!-- Gemini-specific parameters -->
+	<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+		<div class="text-sm font-medium mb-2">Gemini Specific Parameters</div>
+
+		<!-- Include Thoughts -->
+		<div class="py-0.5 w-full justify-between">
+			<Tooltip
+				content={$i18n.t('Include thought summaries in the response when available')}
+				placement="top-start"
+				className="inline-tooltip"
+			>
+				<div class="flex w-full justify-between">
+					<div class="self-center text-xs font-medium">
+						{$i18n.t('Include Thoughts')}
+					</div>
+					<button
+						class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+						type="button"
+						on:click={() => {
+							params.include_thoughts = (params?.include_thoughts ?? null) === null ? true : null;
+						}}
+					>
+						{#if (params?.include_thoughts ?? null) === null}
+							<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+						{:else if params.include_thoughts}
+							<span class="ml-2 self-center">{$i18n.t('On')}</span>
+						{:else}
+							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+						{/if}
+					</button>
+				</div>
+			</Tooltip>
+		</div>
+
+		<!-- Thinking Level -->
+		<div class="py-0.5 w-full justify-between">
+			<Tooltip
+				content={$i18n.t('Control reasoning behavior. "Low" or "High" (Gemini 3+)')}
+				placement="top-start"
+				className="inline-tooltip"
+			>
+				<div class="flex w-full justify-between">
+					<div class="self-center text-xs font-medium">
+						{$i18n.t('Thinking Level')}
+					</div>
+					<button
+						class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+						type="button"
+						on:click={() => {
+							const levels = [null, 'low', 'high'];
+							const currentIndex = levels.indexOf(params?.thinking_level ?? null);
+							params.thinking_level = levels[(currentIndex + 1) % levels.length];
+						}}
+					>
+						{#if (params?.thinking_level ?? null) === null}
+							<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+						{:else}
+							<span class="ml-2 self-center"
+								>{$i18n.t(params.thinking_level === 'low' ? 'Low' : 'High')}</span
+							>
+						{/if}
+					</button>
+				</div>
+			</Tooltip>
+		</div>
+
+		<!-- Thinking Budget -->
+		{#if params?.thinking_level === null}
+			<div class="py-0.5 w-full justify-between">
+				<Tooltip
+					content={$i18n.t(
+						'Number of tokens to use for thinking. Set to 0 to disable, -1 for dynamic'
+					)}
+					placement="top-start"
+					className="inline-tooltip"
+				>
+					<div class="flex w-full justify-between">
+						<div class="self-center text-xs font-medium">
+							{$i18n.t('Thinking Budget')}
+						</div>
+						<button
+							class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+							type="button"
+							on:click={() => {
+								params.thinking_budget = (params?.thinking_budget ?? null) === null ? 1024 : null;
+							}}
+						>
+							{#if (params?.thinking_budget ?? null) === null}
+								<span class="ml-2 self-center">{$i18n.t('Default')}</span>
+							{:else}
+								<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
+							{/if}
+						</button>
+					</div>
+				</Tooltip>
+
+				{#if (params?.thinking_budget ?? null) !== null}
+					<div class="flex mt-0.5 space-x-2">
+						<div class="flex-1">
+							<input
+								type="range"
+								min="-1"
+								max="65536"
+								step="1"
+								bind:value={params.thinking_budget}
+								class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+							/>
+						</div>
+						<div>
+							<input
+								bind:value={params.thinking_budget}
+								type="number"
+								class="bg-transparent text-center w-20"
+								min="-1"
+								max="65536"
+								step="1"
+							/>
+						</div>
+					</div>
+				{/if}
+			</div>
+		{/if}
+	</div>
+
+	{#if custom && admin}
+		<div class="flex flex-col justify-center">
+			{#each Object.keys(params?.custom_params ?? {}) as key}
+				<div class=" py-0.5 w-full justify-between mb-1">
+					<div class="flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">
+							<input
+								type="text"
+								class=" text-xs w-full bg-transparent outline-none"
+								placeholder={$i18n.t('Custom Parameter Name')}
+								value={key}
+								on:change={(e) => {
+									const newKey = e.target.value.trim();
+									if (newKey && newKey !== key) {
+										params.custom_params[newKey] = params.custom_params[key];
+										delete params.custom_params[key];
+										params = {
+											...params,
+											custom_params: { ...params.custom_params }
+										};
+									}
+								}}
+							/>
+						</div>
+						<button
+							class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+							type="button"
+							on:click={() => {
+								delete params.custom_params[key];
+								params = {
+									...params,
+									custom_params: { ...params.custom_params }
+								};
+							}}
+						>
+							{$i18n.t('Remove')}
+						</button>
+					</div>
+					<div class="flex mt-0.5 space-x-2">
+						<div class=" flex-1">
+							<input
+								bind:value={params.custom_params[key]}
+								type="text"
+								class="text-sm w-full bg-transparent outline-hidden outline-none"
+								placeholder={$i18n.t('Custom Parameter Value')}
+							/>
+						</div>
+					</div>
+				</div>
+			{/each}
+
+			<button
+				class=" flex gap-2 items-center w-full text-center justify-center mt-1 mb-5"
+				type="button"
+				on:click={() => {
+					params.custom_params = (params?.custom_params ?? {}) || {};
+					params.custom_params['custom_param_name'] = 'custom_param_value';
+				}}
+			>
+				<div>
+					<Plus />
+				</div>
+				<div>{$i18n.t('Add Custom Parameter')}</div>
+			</button>
+		</div>
 	{/if}
 </div>

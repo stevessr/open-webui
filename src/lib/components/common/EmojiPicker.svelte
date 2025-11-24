@@ -8,6 +8,7 @@
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	import emojiGroups from '$lib/emoji-groups.json';
 	import emojiShortCodes from '$lib/emoji-shortcodes.json';
@@ -127,14 +128,13 @@
 		<slot />
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Content
-		class="max-w-full w-80 rounded-lg z-9999 shadow-lg dark:text-white"
-		id="glass"
+		class="transv2 max-w-full w-80 border border-gray-100  dark:border-gray-800   bg-white dark:bg-gray-850  rounded-3xl z-999 shadow-lg dark:text-white"
 		sideOffset={8}
 		{side}
 		{align}
 		transition={flyAndScale}
 	>
-		<div class="mb-1 px-3 pt-2 pb-2">
+		<div class="mb-1 px-4 pt-2.5 pb-2">
 			<input
 				type="text"
 				class="w-full text-sm bg-transparent outline-hidden"
@@ -169,20 +169,10 @@
 												class="p-1.5 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition"
 												on:click={() => selectEmoji(emojiItem)}
 											>
-											{#if emojiItem.shortCodes[0].startsWith('/') || emojiItem.shortCodes[0].startsWith('http')}
-												<img
-													src={emojiItem.shortCodes[0]}
-													alt={emojiItem.name}
-													title={emojiItem.name}
-													class="size-5"
-													loading="lazy"
-												/>
-											{:else}
-												<img
+												<ProfileImage
 													src="{WEBUI_BASE_URL}/assets/emojis/{emojiItem.name.toLowerCase()}.svg"
 													alt={emojiItem.name}
-													class="size-5"
-													loading="lazy"
+													className="size-5"
 												/>
 												{/if}
 											</button>

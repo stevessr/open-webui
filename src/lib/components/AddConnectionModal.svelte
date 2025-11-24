@@ -16,7 +16,9 @@
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Tags from './common/Tags.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import Textarea from './common/Textarea.svelte';
 
 	export let onSubmit: Function = () => {};
 	export let onDelete: Function = () => {};
@@ -41,6 +43,8 @@
 	let prefixId = '';
 	let enable = true;
 	let apiVersion = '';
+
+	let headers = '';
 
 	let tags = [];
 
@@ -69,6 +73,22 @@
 		// remove trailing slash from url
 		url = url.replace(/\/$/, '');
 
+		let _headers = null;
+
+		if (headers) {
+			try {
+				_headers = JSON.parse(headers);
+				if (typeof _headers !== 'object' || Array.isArray(_headers)) {
+					_headers = null;
+					throw new Error('Headers must be a valid JSON object');
+				}
+				headers = JSON.stringify(_headers, null, 2);
+			} catch (error) {
+				toast.error($i18n.t('Headers must be a valid JSON object'));
+				return;
+			}
+		}
+
 		const res = await verifyOpenAIConnection(
 			localStorage.token,
 			{
@@ -77,7 +97,8 @@
 				config: {
 					auth_type,
 					azure: azure,
-					api_version: apiVersion
+					api_version: apiVersion,
+					...(_headers ? { headers: _headers } : {})
 				}
 			},
 			direct
@@ -136,6 +157,19 @@
 			}
 		}
 
+		if (headers) {
+			try {
+				const _headers = JSON.parse(headers);
+				if (typeof _headers !== 'object' || Array.isArray(_headers)) {
+					throw new Error('Headers must be a valid JSON object');
+				}
+				headers = JSON.stringify(_headers, null, 2);
+			} catch (error) {
+				toast.error($i18n.t('Headers must be a valid JSON object'));
+				return;
+			}
+		}
+
 		// remove trailing slash from url
 		url = url.replace(/\/$/, '');
 
@@ -149,6 +183,7 @@
 				model_ids: modelIds,
 				connection_type: connectionType,
 				auth_type,
+				headers: headers ? JSON.parse(headers) : undefined,
 				...(!ollama && azure ? { azure: true, api_version: apiVersion } : {})
 			}
 		};
@@ -172,6 +207,9 @@
 			key = connection.key;
 
 			auth_type = connection.config.auth_type ?? 'bearer';
+			headers = connection.config?.headers
+				? JSON.stringify(connection.config.headers, null, 2)
+				: '';
 
 			enable = connection.config?.enable ?? true;
 			tags = connection.config?.tags ?? [];
@@ -319,24 +357,33 @@
 
 								<div class="flex gap-2">
 									<div class="flex-shrink-0 self-start">
-										<select
+										<Select
 											id="select-bearer-or-session"
-											class={`w-full text-sm bg-transparent pr-5 ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
+											className={`w-full text-sm bg-transparent ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
 											bind:value={auth_type}
-										>
-											<option value="none">{$i18n.t('None')}</option>
-											<option value="bearer">{$i18n.t('Bearer')}</option>
-
-											{#if !ollama}
-												<option value="session">{$i18n.t('Session')}</option>
-												{#if !direct}
-													<option value="system_oauth">{$i18n.t('OAuth')}</option>
-													{#if azure}
-														<option value="microsoft_entra_id">{$i18n.t('Entra ID')}</option>
-													{/if}
-												{/if}
-											{/if}
-										</select>
+											items={[
+												{ value: 'none', label: $i18n.t('None') },
+												{ value: 'bearer', label: $i18n.t('Bearer') },
+												...(!ollama
+													? [
+															{ value: 'session', label: $i18n.t('Session') },
+															...(!direct
+																? [
+																		{ value: 'system_oauth', label: $i18n.t('OAuth') },
+																		...(azure
+																			? [
+																					{
+																						value: 'microsoft_entra_id',
+																						label: $i18n.t('Entra ID')
+																					}
+																				]
+																			: [])
+																	]
+																: [])
+														]
+													: [])
+											]}
+										/>
 									</div>
 
 									<div class="flex flex-1 items-center">
@@ -375,6 +422,35 @@
 								</div>
 							</div>
 						</div>
+
+						{#if !ollama && !direct}
+							<div class="flex gap-2 mt-2">
+								<div class="flex flex-col w-full">
+									<label
+										for="headers-input"
+										class={`mb-0.5 text-xs text-gray-500
+								${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : ''}`}
+										>{$i18n.t('Headers')}</label
+									>
+
+									<div class="flex-1">
+										<Tooltip
+											content={$i18n.t(
+												'Enter additional headers in JSON format (e.g. {"X-Custom-Header": "value"}'
+											)}
+										>
+											<Textarea
+												className="w-full text-sm outline-hidden"
+												bind:value={headers}
+												placeholder={$i18n.t('Enter additional headers in JSON format')}
+												required={false}
+												minSize={30}
+											/>
+										</Tooltip>
+									</div>
+								</div>
+							</div>
+						{/if}
 
 						<div class="flex gap-2 mt-2">
 							<div class="flex flex-col w-full">

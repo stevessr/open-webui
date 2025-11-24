@@ -27,10 +27,11 @@
 	{channel}
 	edit={true}
 	{onUpdate}
-	onSubmit={async ({ name, access_control }) => {
+	onSubmit={async ({ name, access_control, meta }) => {
 		const res = await updateChannelById(localStorage.token, channel.id, {
 			name,
-			access_control
+			access_control,
+			meta
 		}).catch((error) => {
 			toast.error(error.message);
 		});
@@ -44,10 +45,11 @@
 />
 
 <div
+	id="sidebar-channel-item"
 	bind:this={itemElement}
-	class=" w-full {className} rounded-lg flex relative group hover:bg-gray-100 dark:hover:bg-gray-900 {$page
+	class=" w-full {className} rounded-xl flex relative group hover:bg-gray-100 dark:hover:bg-gray-900 {$page
 		.url.pathname === `/channels/${channel.id}`
-		? 'bg-gray-100 dark:bg-gray-900'
+		? 'bg-gray-100 dark:bg-gray-900 selected'
 		: ''} px-2.5 py-1"
 >
 	<a
@@ -77,7 +79,7 @@
 	</a>
 
 	{#if $user?.role === 'admin'}
-		<button
+		<div
 			class="absolute z-10 right-2 invisible group-hover:visible self-center flex items-center dark:text-gray-300"
 			on:click={(e) => {
 				e.stopPropagation();
@@ -87,6 +89,6 @@
 			<button class="p-0.5 dark:hover:bg-gray-850 rounded-lg touch-auto" on:click={(e) => {}}>
 				<Cog6 className="size-3.5" />
 			</button>
-		</button>
+		</div>
 	{/if}
 </div>

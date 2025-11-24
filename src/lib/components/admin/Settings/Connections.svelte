@@ -6,6 +6,9 @@
 
 	import { getOllamaConfig, updateOllamaConfig } from '$lib/apis/ollama';
 	import { getOpenAIConfig, updateOpenAIConfig, getOpenAIModels } from '$lib/apis/openai';
+	import { getAnthropicConfig, updateAnthropicConfig } from '$lib/apis/anthropic';
+	import { getGeminiConfig, updateGeminiConfig } from '$lib/apis/gemini';
+	import { getResponsesConfig, updateResponsesConfig } from '$lib/apis/responses';
 	import { getModels as _getModels, getBackendConfig } from '$lib/apis';
 	import { getConnectionsConfig, setConnectionsConfig } from '$lib/apis/configs';
 
@@ -17,6 +20,8 @@
 	import Plus from '$lib/components/icons/Plus.svelte';
 
 	import OpenAIConnection from './Connections/OpenAIConnection.svelte';
+	import AnthropicConnection from './Connections/AnthropicConnection.svelte';
+	import GeminiConnection from './Connections/GeminiConnection.svelte';
 	import AddConnectionModal from '$lib/components/AddConnectionModal.svelte';
 	import OllamaConnection from './Connections/OllamaConnection.svelte';
 
@@ -40,14 +45,32 @@
 	let OPENAI_API_BASE_URLS = [''];
 	let OPENAI_API_CONFIGS = {};
 
+	let ANTHROPIC_API_KEYS = [''];
+	let ANTHROPIC_API_BASE_URLS = [''];
+	let ANTHROPIC_API_CONFIGS = {};
+
+	let GEMINI_API_KEYS = [''];
+	let GEMINI_API_BASE_URLS = [''];
+	let GEMINI_API_CONFIGS = {};
+
+	let RESPONSES_API_KEYS = [''];
+	let RESPONSES_API_BASE_URLS = [''];
+	let RESPONSES_API_CONFIGS = {};
+
 	let ENABLE_OPENAI_API: null | boolean = null;
 	let ENABLE_OLLAMA_API: null | boolean = null;
+	let ENABLE_ANTHROPIC_API: null | boolean = null;
+	let ENABLE_GEMINI_API: null | boolean = null;
+	let ENABLE_RESPONSES_API: null | boolean = null;
 
 	let connectionsConfig = null;
 
 	let pipelineUrls = {};
 	let showAddOpenAIConnectionModal = false;
 	let showAddOllamaConnectionModal = false;
+	let showAddAnthropicConnectionModal = false;
+	let showAddGeminiConnectionModal = false;
+	let showAddResponsesConnectionModal = false;
 
 	const updateOpenAIHandler = async () => {
 		if (ENABLE_OPENAI_API !== null) {
@@ -136,10 +159,148 @@
 		await updateOllamaHandler();
 	};
 
+	const addAnthropicConnectionHandler = async (connection) => {
+		ANTHROPIC_API_BASE_URLS = [...ANTHROPIC_API_BASE_URLS, connection.url];
+		ANTHROPIC_API_KEYS = [...ANTHROPIC_API_KEYS, connection.key];
+		ANTHROPIC_API_CONFIGS[ANTHROPIC_API_BASE_URLS.length - 1] = connection.config;
+
+		await updateAnthropicHandler();
+	};
+
+	const addGeminiConnectionHandler = async (connection) => {
+		GEMINI_API_BASE_URLS = [...GEMINI_API_BASE_URLS, connection.url];
+		GEMINI_API_KEYS = [...GEMINI_API_KEYS, connection.key];
+		GEMINI_API_CONFIGS[GEMINI_API_BASE_URLS.length - 1] = connection.config;
+
+		await updateGeminiHandler();
+	};
+
+	const updateAnthropicHandler = async () => {
+		if (ENABLE_ANTHROPIC_API !== null) {
+			// Remove trailing slashes
+			ANTHROPIC_API_BASE_URLS = ANTHROPIC_API_BASE_URLS.map((url) => url.replace(/\/$/, ''));
+
+			// Check if API KEYS length is same than API URLS length
+			if (ANTHROPIC_API_KEYS.length !== ANTHROPIC_API_BASE_URLS.length) {
+				// if there are more keys than urls, remove the extra keys
+				if (ANTHROPIC_API_KEYS.length > ANTHROPIC_API_BASE_URLS.length) {
+					ANTHROPIC_API_KEYS = ANTHROPIC_API_KEYS.slice(0, ANTHROPIC_API_BASE_URLS.length);
+				}
+
+				// if there are more urls than keys, add empty keys
+				if (ANTHROPIC_API_KEYS.length < ANTHROPIC_API_BASE_URLS.length) {
+					const diff = ANTHROPIC_API_BASE_URLS.length - ANTHROPIC_API_KEYS.length;
+					for (let i = 0; i < diff; i++) {
+						ANTHROPIC_API_KEYS.push('');
+					}
+				}
+			}
+
+			const res = await updateAnthropicConfig(localStorage.token, {
+				ENABLE_ANTHROPIC_API: ENABLE_ANTHROPIC_API,
+				ANTHROPIC_API_BASE_URLS: ANTHROPIC_API_BASE_URLS,
+				ANTHROPIC_API_KEYS: ANTHROPIC_API_KEYS,
+				ANTHROPIC_API_CONFIGS: ANTHROPIC_API_CONFIGS
+			}).catch((error) => {
+				toast.error(`${error}`);
+			});
+
+			if (res) {
+				toast.success($i18n.t('Anthropic API settings updated'));
+				await models.set(await getModels());
+			}
+		}
+	};
+
+	const updateGeminiHandler = async () => {
+		if (ENABLE_GEMINI_API !== null) {
+			// Remove trailing slashes
+			GEMINI_API_BASE_URLS = GEMINI_API_BASE_URLS.map((url) => url.replace(/\/$/, ''));
+
+			// Check if API KEYS length is same than API URLS length
+			if (GEMINI_API_KEYS.length !== GEMINI_API_BASE_URLS.length) {
+				// if there are more keys than urls, remove the extra keys
+				if (GEMINI_API_KEYS.length > GEMINI_API_BASE_URLS.length) {
+					GEMINI_API_KEYS = GEMINI_API_KEYS.slice(0, GEMINI_API_BASE_URLS.length);
+				}
+
+				// if there are more urls than keys, add empty keys
+				if (GEMINI_API_KEYS.length < GEMINI_API_BASE_URLS.length) {
+					const diff = GEMINI_API_BASE_URLS.length - GEMINI_API_KEYS.length;
+					for (let i = 0; i < diff; i++) {
+						GEMINI_API_KEYS.push('');
+					}
+				}
+			}
+
+			const res = await updateGeminiConfig(localStorage.token, {
+				ENABLE_GEMINI_API: ENABLE_GEMINI_API,
+				GEMINI_API_BASE_URLS: GEMINI_API_BASE_URLS,
+				GEMINI_API_KEYS: GEMINI_API_KEYS,
+				GEMINI_API_CONFIGS: GEMINI_API_CONFIGS
+			}).catch((error) => {
+				toast.error(`${error}`);
+			});
+
+			if (res) {
+				toast.success($i18n.t('Gemini API settings updated'));
+				await models.set(await getModels());
+			}
+		}
+	};
+
+	const updateResponsesHandler = async () => {
+		if (ENABLE_RESPONSES_API !== null) {
+			// Remove trailing slashes
+			RESPONSES_API_BASE_URLS = RESPONSES_API_BASE_URLS.map((url) => url.replace(/\/$/, ''));
+
+			// Check if API KEYS length is same than API URLS length
+			if (RESPONSES_API_KEYS.length !== RESPONSES_API_BASE_URLS.length) {
+				// if there are more keys than urls, remove the extra keys
+				if (RESPONSES_API_KEYS.length > RESPONSES_API_BASE_URLS.length) {
+					RESPONSES_API_KEYS = RESPONSES_API_KEYS.slice(0, RESPONSES_API_BASE_URLS.length);
+				}
+
+				// if there are more urls than keys, add empty keys
+				if (RESPONSES_API_KEYS.length < RESPONSES_API_BASE_URLS.length) {
+					const diff = RESPONSES_API_BASE_URLS.length - RESPONSES_API_KEYS.length;
+					for (let i = 0; i < diff; i++) {
+						RESPONSES_API_KEYS.push('');
+					}
+				}
+			}
+
+			const res = await updateResponsesConfig(localStorage.token, {
+				ENABLE_RESPONSES_API: ENABLE_RESPONSES_API,
+				RESPONSES_API_BASE_URLS: RESPONSES_API_BASE_URLS,
+				RESPONSES_API_KEYS: RESPONSES_API_KEYS,
+				RESPONSES_API_CONFIGS: RESPONSES_API_CONFIGS
+			}).catch((error) => {
+				toast.error(`${error}`);
+			});
+
+			if (res) {
+				toast.success($i18n.t('OpenAI Responses API settings updated'));
+				await models.set(await getModels());
+			}
+		}
+	};
+
+	const addResponsesConnectionHandler = async (connection) => {
+		RESPONSES_API_BASE_URLS = [...RESPONSES_API_BASE_URLS, connection.url];
+		RESPONSES_API_KEYS = [...RESPONSES_API_KEYS, connection.key];
+		RESPONSES_API_CONFIGS[RESPONSES_API_BASE_URLS.length - 1] = connection.config;
+
+		await updateResponsesHandler();
+	};
+
 	onMount(async () => {
 		if ($user?.role === 'admin') {
 			let ollamaConfig = {};
 			let openaiConfig = {};
+			let anthropicConfig = {};
+			let geminiConfig = {};
+			let responsesConfig = {};
 
 			await Promise.all([
 				(async () => {
@@ -149,16 +310,40 @@
 					openaiConfig = await getOpenAIConfig(localStorage.token);
 				})(),
 				(async () => {
+					anthropicConfig = await getAnthropicConfig(localStorage.token);
+				})(),
+				(async () => {
+					geminiConfig = await getGeminiConfig(localStorage.token);
+				})(),
+				(async () => {
+					responsesConfig = await getResponsesConfig(localStorage.token);
+				})(),
+				(async () => {
 					connectionsConfig = await getConnectionsConfig(localStorage.token);
 				})()
 			]);
 
 			ENABLE_OPENAI_API = openaiConfig.ENABLE_OPENAI_API;
 			ENABLE_OLLAMA_API = ollamaConfig.ENABLE_OLLAMA_API;
+			ENABLE_ANTHROPIC_API = anthropicConfig.ENABLE_ANTHROPIC_API;
+			ENABLE_GEMINI_API = geminiConfig.ENABLE_GEMINI_API;
+			ENABLE_RESPONSES_API = responsesConfig.ENABLE_RESPONSES_API;
 
 			OPENAI_API_BASE_URLS = openaiConfig.OPENAI_API_BASE_URLS;
 			OPENAI_API_KEYS = openaiConfig.OPENAI_API_KEYS;
 			OPENAI_API_CONFIGS = openaiConfig.OPENAI_API_CONFIGS;
+
+			ANTHROPIC_API_BASE_URLS = anthropicConfig.ANTHROPIC_API_BASE_URLS;
+			ANTHROPIC_API_KEYS = anthropicConfig.ANTHROPIC_API_KEYS;
+			ANTHROPIC_API_CONFIGS = anthropicConfig.ANTHROPIC_API_CONFIGS;
+
+			GEMINI_API_BASE_URLS = geminiConfig.GEMINI_API_BASE_URLS;
+			GEMINI_API_KEYS = geminiConfig.GEMINI_API_KEYS;
+			GEMINI_API_CONFIGS = geminiConfig.GEMINI_API_CONFIGS;
+
+			RESPONSES_API_BASE_URLS = responsesConfig.RESPONSES_API_BASE_URLS;
+			RESPONSES_API_KEYS = responsesConfig.RESPONSES_API_KEYS;
+			RESPONSES_API_CONFIGS = responsesConfig.RESPONSES_API_CONFIGS;
 
 			OLLAMA_BASE_URLS = ollamaConfig.OLLAMA_BASE_URLS;
 			OLLAMA_API_CONFIGS = ollamaConfig.OLLAMA_API_CONFIGS;
@@ -184,6 +369,30 @@
 				});
 			}
 
+			if (ENABLE_ANTHROPIC_API) {
+				for (const [idx, url] of ANTHROPIC_API_BASE_URLS.entries()) {
+					if (!ANTHROPIC_API_CONFIGS[idx]) {
+						ANTHROPIC_API_CONFIGS[idx] = ANTHROPIC_API_CONFIGS[url] || {};
+					}
+				}
+			}
+
+			if (ENABLE_GEMINI_API) {
+				for (const [idx, url] of GEMINI_API_BASE_URLS.entries()) {
+					if (!GEMINI_API_CONFIGS[idx]) {
+						GEMINI_API_CONFIGS[idx] = GEMINI_API_CONFIGS[url] || {};
+					}
+				}
+			}
+
+			if (ENABLE_RESPONSES_API) {
+				for (const [idx, url] of RESPONSES_API_BASE_URLS.entries()) {
+					if (!RESPONSES_API_CONFIGS[idx]) {
+						RESPONSES_API_CONFIGS[idx] = RESPONSES_API_CONFIGS[url] || {};
+					}
+				}
+			}
+
 			if (ENABLE_OLLAMA_API) {
 				for (const [idx, url] of OLLAMA_BASE_URLS.entries()) {
 					if (!OLLAMA_API_CONFIGS[idx]) {
@@ -197,6 +406,9 @@
 	const submitHandler = async () => {
 		updateOpenAIHandler();
 		updateOllamaHandler();
+		updateAnthropicHandler();
+		updateGeminiHandler();
+		updateResponsesHandler();
 
 		dispatch('save');
 
@@ -215,11 +427,26 @@
 	onSubmit={addOllamaConnectionHandler}
 />
 
+<AddConnectionModal
+	bind:show={showAddAnthropicConnectionModal}
+	onSubmit={addAnthropicConnectionHandler}
+/>
+
+<AddConnectionModal
+	bind:show={showAddGeminiConnectionModal}
+	onSubmit={addGeminiConnectionHandler}
+/>
+
+<AddConnectionModal
+	bind:show={showAddResponsesConnectionModal}
+	onSubmit={addResponsesConnectionHandler}
+/>
+
 <form class="flex flex-col h-full justify-between text-sm" on:submit|preventDefault={submitHandler}>
 	<div class=" overflow-y-scroll scrollbar-hidden h-full">
-		{#if ENABLE_OPENAI_API !== null && ENABLE_OLLAMA_API !== null && connectionsConfig !== null}
+		{#if ENABLE_OPENAI_API !== null && ENABLE_OLLAMA_API !== null && ENABLE_ANTHROPIC_API !== null && ENABLE_GEMINI_API !== null && ENABLE_RESPONSES_API !== null && connectionsConfig !== null}
 			<div class="mb-3.5">
-				<div class=" mb-2.5 text-base font-medium">{$i18n.t('General')}</div>
+				<div class=" mt-0.5 mb-2.5 text-base font-medium">{$i18n.t('General')}</div>
 
 				<hr class=" border-gray-100 dark:border-gray-850 my-2" />
 
@@ -288,6 +515,193 @@
 							</div>
 						{/if}
 					</div>
+				</div>
+
+				<div class=" my-2">
+					<div class="flex justify-between items-center text-sm mb-2">
+						<div class="  font-medium">{$i18n.t('OpenAI Responses API')}</div>
+
+						<div class="mt-1">
+							<Switch
+								bind:state={ENABLE_RESPONSES_API}
+								on:change={async () => {
+									updateResponsesHandler();
+								}}
+							/>
+						</div>
+					</div>
+
+					{#if ENABLE_RESPONSES_API}
+						<div class="">
+							<div class="flex justify-between items-center">
+								<div class="font-medium text-xs">{$i18n.t('Manage OpenAI Responses API Connections')}</div>
+
+								<Tooltip content={$i18n.t(`Add Connection`)}>
+									<button
+										class="px-1"
+										on:click={() => {
+											showAddResponsesConnectionModal = true;
+										}}
+										type="button"
+									>
+										<Plus />
+									</button>
+								</Tooltip>
+							</div>
+
+							<div class="flex w-full gap-1.5">
+								<div class="flex-1 flex flex-col gap-1.5 mt-1.5">
+									{#each RESPONSES_API_BASE_URLS as url, idx}
+										<OpenAIConnection
+											bind:url={RESPONSES_API_BASE_URLS[idx]}
+											bind:key={RESPONSES_API_KEYS[idx]}
+											bind:config={RESPONSES_API_CONFIGS[idx]}
+											pipeline={false}
+											onSubmit={() => {
+												updateResponsesHandler();
+											}}
+											onDelete={() => {
+												RESPONSES_API_BASE_URLS = RESPONSES_API_BASE_URLS.filter((url, urlIdx) => idx !== urlIdx);
+												RESPONSES_API_KEYS = RESPONSES_API_KEYS.filter((key, keyIdx) => idx !== keyIdx);
+
+												let newConfig = {};
+												RESPONSES_API_BASE_URLS.forEach((url, newIdx) => {
+													newConfig[newIdx] =
+														RESPONSES_API_CONFIGS[newIdx < idx ? newIdx : newIdx + 1];
+												});
+												RESPONSES_API_CONFIGS = newConfig;
+												updateResponsesHandler();
+											}}
+										/>
+									{/each}
+								</div>
+							</div>
+						</div>
+					{/if}
+				</div>
+
+				<div class=" my-2">
+					<div class="flex justify-between items-center text-sm mb-2">
+						<div class="  font-medium">{$i18n.t('Anthropic API')}</div>
+
+						<div class="mt-1">
+							<Switch
+								bind:state={ENABLE_ANTHROPIC_API}
+								on:change={async () => {
+									updateAnthropicHandler();
+								}}
+							/>
+						</div>
+					</div>
+
+					{#if ENABLE_ANTHROPIC_API}
+						<div class="">
+							<div class="flex justify-between items-center">
+								<div class="font-medium text-xs">{$i18n.t('Manage Anthropic API Connections')}</div>
+
+								<Tooltip content={$i18n.t(`Add Connection`)}>
+									<button
+										class="px-1"
+										on:click={() => {
+											showAddAnthropicConnectionModal = true;
+										}}
+										type="button"
+									>
+										<Plus />
+									</button>
+								</Tooltip>
+							</div>
+
+							<div class="flex w-full gap-1.5">
+								<div class="flex-1 flex flex-col gap-1.5 mt-1.5">
+									{#each ANTHROPIC_API_BASE_URLS as url, idx}
+										<AnthropicConnection
+											bind:url={ANTHROPIC_API_BASE_URLS[idx]}
+											bind:key={ANTHROPIC_API_KEYS[idx]}
+											bind:config={ANTHROPIC_API_CONFIGS[idx]}
+											onSubmit={() => {
+												updateAnthropicHandler();
+											}}
+											onDelete={() => {
+												ANTHROPIC_API_BASE_URLS = ANTHROPIC_API_BASE_URLS.filter((url, urlIdx) => idx !== urlIdx);
+												ANTHROPIC_API_KEYS = ANTHROPIC_API_KEYS.filter((key, keyIdx) => idx !== keyIdx);
+
+												let newConfig = {};
+												ANTHROPIC_API_BASE_URLS.forEach((url, newIdx) => {
+													newConfig[newIdx] =
+														ANTHROPIC_API_CONFIGS[newIdx < idx ? newIdx : newIdx + 1];
+												});
+												ANTHROPIC_API_CONFIGS = newConfig;
+												updateAnthropicHandler();
+											}}
+										/>
+									{/each}
+								</div>
+							</div>
+						</div>
+					{/if}
+				</div>
+
+				<div class=" my-2">
+					<div class="flex justify-between items-center text-sm mb-2">
+						<div class="  font-medium">{$i18n.t('Gemini API')}</div>
+
+						<div class="mt-1">
+							<Switch
+								bind:state={ENABLE_GEMINI_API}
+								on:change={async () => {
+									updateGeminiHandler();
+								}}
+							/>
+						</div>
+					</div>
+
+					{#if ENABLE_GEMINI_API}
+						<div class="">
+							<div class="flex justify-between items-center">
+								<div class="font-medium text-xs">{$i18n.t('Manage Gemini API Connections')}</div>
+
+								<Tooltip content={$i18n.t(`Add Connection`)}>
+									<button
+										class="px-1"
+										on:click={() => {
+											showAddGeminiConnectionModal = true;
+										}}
+										type="button"
+									>
+										<Plus />
+									</button>
+								</Tooltip>
+							</div>
+
+							<div class="flex w-full gap-1.5">
+								<div class="flex-1 flex flex-col gap-1.5 mt-1.5">
+									{#each GEMINI_API_BASE_URLS as url, idx}
+										<GeminiConnection
+											bind:url={GEMINI_API_BASE_URLS[idx]}
+											bind:key={GEMINI_API_KEYS[idx]}
+											bind:config={GEMINI_API_CONFIGS[idx]}
+											onSubmit={() => {
+												updateGeminiHandler();
+											}}
+											onDelete={() => {
+												GEMINI_API_BASE_URLS = GEMINI_API_BASE_URLS.filter((url, urlIdx) => idx !== urlIdx);
+												GEMINI_API_KEYS = GEMINI_API_KEYS.filter((key, keyIdx) => idx !== keyIdx);
+
+												let newConfig = {};
+												GEMINI_API_BASE_URLS.forEach((url, newIdx) => {
+													newConfig[newIdx] =
+														GEMINI_API_CONFIGS[newIdx < idx ? newIdx : newIdx + 1];
+												});
+												GEMINI_API_CONFIGS = newConfig;
+												updateGeminiHandler();
+											}}
+										/>
+									{/each}
+								</div>
+							</div>
+						</div>
+					{/if}
 				</div>
 
 				<div class=" my-2">

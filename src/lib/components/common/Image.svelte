@@ -4,6 +4,7 @@
 	import { settings } from '$lib/stores';
 	import ImagePreview from './ImagePreview.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import ProfileImage from './ProfileImage.svelte';
 	import { getContext } from 'svelte';
 
 	export let src = '';
@@ -17,18 +18,20 @@
 	export let onDismiss = () => {};
 
 	const i18n = getContext('i18n');
+	let helper: string = '';
+	$: helper = src.startsWith('/') ? `${WEBUI_BASE_URL}${src}` : src;
 
 	let _src = '';
-	$: _src = src.startsWith('/') ? `${WEBUI_BASE_URL}${src}` : src;
+	$: _src = src.includes('api/v1/files') ? `${src}/content` : src;
 
 	let showImagePreview = false;
+	let isVideo = false;
 
-	const isVideo = (url: string) => {
-		if (!url) return false;
-		const u = url.toLowerCase();
-		if (u.startsWith('data:video/') || u.startsWith('blob:')) return true;
-		return ['.mp4', '.webm', '.ogg', '.ogv', '.mov', '.m4v', '.avi', '.mkv'].some((ext) => u.endsWith(ext));
-	};
+	$: isVideo =
+		_src &&
+		['.mp4', '.webm', '.ogg', '.avi', '.mov', '.wmv', '.flv', '.m4v'].some((ext) =>
+			_src.toLowerCase().includes(ext)
+		);
 </script>
 
 <ImagePreview bind:show={showImagePreview} src={_src} {alt} />
@@ -37,18 +40,18 @@
 	<button
 		class={className}
 		on:click={() => {
-			showImagePreview = true;
+			if (!isVideo) {
+				showImagePreview = true;
+			}
 		}}
-		aria-label={$i18n.t('Show image preview')}
+		aria-label={isVideo ? $i18n.t('Video content') : $i18n.t('Show image preview')}
 		type="button"
 	>
-		{#if isVideo(_src)}
-			<!-- svelte-ignore a11y-media-caption -->
-			<video src={_src} aria-label={alt} class={imageClassName} draggable="false" data-cy="video" disablePictureInPicture>
-				<track kind="captions" src="" />
-			</video>
+		{#if isVideo}
+			<video src={_src} class={imageClassName} controls data-cy="video" title={alt} autoplay muted
+			></video>
 		{:else}
-			<img src={_src} {alt} class={imageClassName} draggable="false" data-cy="image" />
+			<ProfileImage src={_src} className={imageClassName} {alt} />
 		{/if}
 	</button>
 

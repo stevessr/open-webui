@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getContext, createEventDispatcher, onMount } from 'svelte';
 	import { createNewChannel, deleteChannelById } from '$lib/apis/channels';
+	import { activeChannel } from '$lib/stores';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
@@ -22,18 +23,25 @@
 
 	let name = '';
 	let accessControl = {};
+	let background_image_url = '';
+	let background_opacity = 0.25;
 
 	let loading = false;
 
 	$: if (name) {
-		name = name.replace(/\s/g, '-').toLocaleLowerCase();
+		name = name.replace(/\\s/g, '-').toLocaleLowerCase();
 	}
 
 	const submitHandler = async () => {
 		loading = true;
 		await onSubmit({
-			name: name.replace(/\s/g, '-'),
-			access_control: accessControl
+			name: name.replace(/\\s/g, '-'),
+			access_control: accessControl,
+			meta: {
+				...(channel?.meta ?? {}),
+				background_image_url: background_image_url,
+				background_opacity: background_opacity
+			}
 		});
 		show = false;
 		loading = false;
@@ -42,10 +50,16 @@
 	const init = () => {
 		name = channel.name;
 		accessControl = channel.access_control;
+		background_image_url = channel.meta?.background_image_url ?? '';
+		background_opacity = channel.meta?.background_opacity ?? 0.25;
 	};
 
-	$: if (channel) {
-		init();
+	$: if (show) {
+		if (channel) {
+			init();
+		}
+	} else {
+		resetHandler();
 	}
 
 	let showDeleteConfirmDialog = false;
@@ -67,6 +81,28 @@
 		}
 
 		show = false;
+	};
+
+	const resetHandler = () => {
+		name = '';
+		accessControl = {};
+		background_image_url = '';
+		background_opacity = 0.25;
+		loading = false;
+	};
+	const updateChannelMeta = (key: string, value: any) => {
+		activeChannel.update((channel) => {
+			if (channel) {
+				return {
+					...channel,
+					meta: {
+						...(channel.meta ?? {}),
+						[key]: value
+					}
+				};
+			}
+			return channel;
+		});
 	};
 </script>
 
@@ -112,11 +148,66 @@
 						</div>
 					</div>
 
+					<div class="flex flex-col w-full mt-2">
+						<div class=" mb-1 text-xs text-gray-500">{$i18n.t('Background Image URL')}</div>
+						<div class="flex-1">
+							<input
+								class="w-full text-sm bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-700 outline-hidden"
+								type="text"
+								bind:value={background_image_url}
+								on:input={() => {
+									if ($activeChannel) {
+										$activeChannel.meta = {
+											...($activeChannel.meta ?? {}),
+											background_image_url: background_image_url
+										};
+									}
+								}}
+								placeholder="https://example.com/image.png"
+								autocomplete="off"
+							/>
+						</div>
+					</div>
+
+					{#if background_image_url}
+						<div class="flex flex-col w-full mt-2">
+							<VideoImage
+								src={background_image_url}
+								alt="background"
+								className="w-full h-32 object-cover rounded-lg "
+								opacity={background_opacity}
+							/>
+						</div>
+					{/if}
+
+					<div class="flex flex-col w-full mt-2">
+						<div class="flex justify-between">
+							<div class="text-xs text-gray-500">{$i18n.t('Background Opacity')}</div>
+							<div class="text-xs text-gray-500">{background_opacity}</div>
+						</div>
+						<input
+							type="range"
+							min="0"
+							max="1"
+							step="0.01"
+							bind:value={background_opacity}
+							on:input={() => {
+								if ($activeChannel) {
+									$activeChannel.meta = {
+										...($activeChannel.meta ?? {}),
+										background_opacity: background_opacity
+									};
+								}
+							}}
+							class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+						/>
+					</div>
+
 					<hr class=" border-gray-100 dark:border-gray-700/10 my-2.5 w-full" />
 
 					<div class="my-2 -mx-2">
-						<div class="px-3 py-2 rounded-lg">
-							<AccessControl bind:accessControl />
+						<div class="trans px-4 py-3 bg-gray-50 dark:bg-gray-950 rounded-3xl">
+							<AccessControl bind:accessControl accessRoles={['read', 'write']} />
 						</div>
 					</div>
 

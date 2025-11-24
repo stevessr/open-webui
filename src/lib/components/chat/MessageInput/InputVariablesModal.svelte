@@ -9,6 +9,7 @@
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import MapSelector from '$lib/components/common/Valves/MapSelector.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -96,22 +97,12 @@
 													{@const options = variableAttributes?.options ?? []}
 													{@const placeholder = variableAttributes?.placeholder ?? ''}
 
-													<select
-														class="w-full rounded-lg py-2 px-4 text-sm dark:text-gray-300 dark:bg-gray-850 outline-hidden border border-gray-100 dark:border-gray-850"
+													<Select
+														className="w-full rounded-lg py-2 px-4 text-sm dark:text-gray-300 dark:bg-gray-850 outline-hidden border border-gray-100 dark:border-gray-850"
 														bind:value={variableValues[variable]}
-														id="input-variable-{idx}"
-													>
-														{#if placeholder}
-															<option value="" disabled selected>
-																{placeholder}
-															</option>
-														{/if}
-														{#each options as option}
-															<option value={option} selected={option === variableValues[variable]}>
-																{option}
-															</option>
-														{/each}
-													</select>
+														{placeholder}
+														items={options.map((opt) => ({ value: opt, label: opt }))}
+													/>
 												{:else if variables[variable]?.type === 'checkbox'}
 													<div class="flex items-center space-x-2">
 														<div class="relative flex justify-center items-center gap-2">

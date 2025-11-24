@@ -5,7 +5,7 @@
 	import dayjs from '$lib/dayjs';
 
 	import { mobile, settings, user } from '$lib/stores';
-	import { WEBUI_BASE_URL } from '$lib/constants';
+	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { copyToClipboard, sanitizeResponseContent } from '$lib/utils';
@@ -16,6 +16,7 @@
 	import { toast } from 'svelte-sonner';
 	import Tag from '$lib/components/icons/Tag.svelte';
 	import Label from '$lib/components/icons/Label.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -76,23 +77,11 @@
 		<div class="flex items-center gap-2">
 			<div class="flex items-center min-w-fit">
 				<Tooltip content={$user?.role === 'admin' ? (item?.value ?? '') : ''} placement="top-start">
-					{#if item.model?.info?.meta?.profile_image_url.endsWith('.mp4') || item.model?.info?.meta?.profile_image_url.endsWith('.webm')}
-						<video
-							src={item.model?.info?.meta?.profile_image_url}
-							alt="Model"
-							class="rounded-full size-5 flex items-center object-cover"
-							autoplay
-							muted
-							loop
-						/>
-					{:else if item.model?.info?.meta?.profile_image_url}
-						<img
-							src={item.model?.info?.meta?.profile_image_url ??
-								`${WEBUI_BASE_URL}/static/favicon.png`}
-							alt="Model"
-							class="rounded-full size-5 flex items-center"
-						/>
-					{/if}
+					<ProfileImage
+						src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${item.model.id}&lang=${$i18n.language}`}
+						alt="Model"
+						className="rounded-full size-5 flex items-center"
+					/>
 				</Tooltip>
 			</div>
 

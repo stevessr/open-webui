@@ -5,6 +5,7 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Background from '$lib/components/common/Background.svelte';
 	import Sidebar from '$lib/components/icons/Sidebar.svelte';
+	import Background from '$lib/components/Background.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -17,10 +18,13 @@
 	</title>
 </svelte:head>
 
+<Background />
+
 <div
 	class=" flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out {$showSidebar
 		? 'md:max-w-[calc(100%-260px)]'
 		: ''} max-w-full"
+	id="playground-container"
 >
 	<Background />
 	<nav class="   px-2.5 pt-1.5 backdrop-blur-xl w-full drag-region relative z-10">

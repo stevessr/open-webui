@@ -18,6 +18,7 @@
 	} from '$lib/apis/functions';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Valves from '$lib/components/common/Valves.svelte';
 
@@ -147,44 +148,39 @@
 			<div class="space-y-1">
 				<div class="flex gap-2">
 					<div class="flex-1">
-						<select
-							class="  w-full rounded-sm text-xs py-2 px-1 bg-transparent outline-hidden"
+						<Select
+							className="w-full rounded-sm text-xs bg-transparent outline-hidden"
 							bind:value={tab}
 							placeholder={$i18n.t('Select')}
-						>
-							<option value="tools" class="bg-gray-100 dark:bg-gray-800">{$i18n.t('Tools')}</option>
-							<option value="functions" class="bg-gray-100 dark:bg-gray-800"
-								>{$i18n.t('Functions')}</option
-							>
-						</select>
+							items={[
+								{ value: 'tools', label: $i18n.t('Tools') },
+								{ value: 'functions', label: $i18n.t('Functions') }
+							]}
+						/>
 					</div>
 
 					<div class="flex-1">
-						<select
-							class="w-full rounded-sm py-2 px-1 text-xs bg-transparent outline-hidden"
+						<Select
+							className="w-full rounded-sm text-xs bg-transparent outline-hidden"
 							bind:value={selectedId}
-							on:change={async () => {
-								await tick();
-							}}
-						>
-							{#if tab === 'tools'}
-								<option value="" selected disabled class="bg-gray-100 dark:bg-gray-800"
-									>{$i18n.t('Select a tool')}</option
-								>
-
-								{#each $tools.filter((tool) => !tool?.id?.startsWith('server:')) as tool, toolIdx}
-									<option value={tool.id} class="bg-gray-100 dark:bg-gray-800">{tool.name}</option>
-								{/each}
-							{:else if tab === 'functions'}
-								<option value="" selected disabled class="bg-gray-100 dark:bg-gray-800"
-									>{$i18n.t('Select a function')}</option
-								>
-
-								{#each $functions as func, funcIdx}
-									<option value={func.id} class="bg-gray-100 dark:bg-gray-800">{func.name}</option>
-								{/each}
-							{/if}
-						</select>
+							items={tab === 'tools'
+								? [
+										{ value: '', label: $i18n.t('Select a tool'), disabled: true },
+										...$tools
+											.filter((tool) => !tool?.id?.startsWith('server:'))
+											.map((tool) => ({
+												value: tool.id,
+												label: tool.name
+											}))
+									]
+								: [
+										{ value: '', label: $i18n.t('Select a function'), disabled: true },
+										...$functions.map((func) => ({
+											value: func.id,
+											label: func.name
+										}))
+									]}
+						/>
 					</div>
 				</div>
 			</div>

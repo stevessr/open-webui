@@ -1,14 +1,27 @@
 import { APP_NAME } from '$lib/constants';
-import { type Writable, writable } from 'svelte/store';
+import { type Writable, writable, derived } from 'svelte/store';
 import type { ModelConfig } from '$lib/apis';
 import type { Banner } from '$lib/types';
 import type { Socket } from 'socket.io-client';
-
+import type { CloudFlareImgBedConfig } from '$lib/utils/cloudflare-imgbed';
 import emojiShortCodes from '$lib/emoji-shortcodes.json';
 
 // Backend
 export const WEBUI_NAME = writable(APP_NAME);
+
+export const WEBUI_VERSION = writable(null);
+export const WEBUI_DEPLOYMENT_ID = writable(null);
+
 export const config: Writable<Config | undefined> = writable(undefined);
+
+// Special behavior: Update WEBUI_NAME when config changes and name is " (Open WebUI)"
+config.subscribe(($config) => {
+	if ($config?.name === ' (Open WebUI)') {
+		WEBUI_NAME.set('Neko');
+	} else if ($config?.name) {
+		WEBUI_NAME.set($config.name);
+	}
+});
 export const user: Writable<SessionUser | undefined> = writable(undefined);
 
 // Electron App
@@ -47,6 +60,8 @@ export const chatId = writable('');
 export const chatTitle = writable('');
 
 export const channels = writable([]);
+export const activeChannel = writable(null);
+
 export const chats = writable(null);
 export const pinnedChats = writable([]);
 export const tags = writable([]);
@@ -67,6 +82,8 @@ export const banners: Writable<Banner[]> = writable([]);
 
 export const settings: Writable<Settings> = writable({});
 
+export const audioQueue = writable(null);
+
 export const showSidebar = writable(false);
 export const showSearch = writable(false);
 export const showSettings = writable(false);
@@ -75,11 +92,15 @@ export const showArchivedChats = writable(false);
 export const showChangelog = writable(false);
 
 export const showControls = writable(false);
+export const showEmbeds = writable(false);
 export const showOverview = writable(false);
 export const showArtifacts = writable(false);
 export const showCallOverlay = writable(false);
 
 export const artifactCode = writable(null);
+export const artifactContents = writable(null);
+
+export const embed = writable(null);
 
 export const temporaryChatEnabled = writable(false);
 export const scrollPaginationEnabled = writable(false);
@@ -154,6 +175,7 @@ type Settings = {
 	notifications?: any;
 	imageCompression?: boolean;
 	imageCompressionSize?: any;
+	textScale?: number;
 	widescreenMode?: null;
 	largeTextAsFile?: boolean;
 	promptAutocomplete?: boolean;
@@ -184,6 +206,7 @@ type Settings = {
 	notificationEnabled?: boolean;
 	highContrastMode?: boolean;
 	title?: TitleSettings;
+	showChatTitleInTab?: boolean;
 	splitLargeDeltas?: boolean;
 	chatDirection?: 'LTR' | 'RTL' | 'auto';
 	ctrlEnterToSend?: boolean;
@@ -198,6 +221,8 @@ type Settings = {
 	num_batch?: string;
 	num_keep?: string;
 	options?: ModelOptions;
+	useImgBed?: boolean;
+	imgBedConfig?: CloudFlareImgBedConfig;
 };
 
 type ModelOptions = {
@@ -247,7 +272,7 @@ type Config = {
 	features: {
 		auth: boolean;
 		auth_trusted_header: boolean;
-		enable_api_key: boolean;
+		enable_api_keys: boolean;
 		enable_signup: boolean;
 		enable_login_form: boolean;
 		enable_web_search?: boolean;
@@ -277,7 +302,7 @@ type PromptSuggestion = {
 	title: [string, string];
 };
 
-type SessionUser = {
+export type SessionUser = {
 	permissions: any;
 	id: string;
 	email: string;

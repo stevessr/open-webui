@@ -8,11 +8,15 @@
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import Select from '$lib/components/common/Select.svelte';
+	import DataList from '$lib/components/common/DataList.svelte';
 	const dispatch = createEventDispatcher();
 
 	const i18n = getContext('i18n');
 
 	export let saveSettings: Function;
+
+	$: voiceOptions = voices ? voices.map(voice => ({ value: voice.id, label: voice.name })) : [];
 
 	// Audio
 	let conversationMode = false;
@@ -129,7 +133,7 @@
 				const { KokoroTTS } = await import('kokoro-js');
 				TTSModel = await KokoroTTS.from_pretrained(model_id, {
 					dtype: TTSEngineConfig.dtype, // Options: "fp32", "fp16", "q8", "q4", "q4f16"
-					device: !!navigator?.gpu ? 'webgpu' : 'wasm', // Detect WebGPU
+					device: navigator?.gpu ? 'webgpu' : 'wasm', // Detect WebGPU
 					progress_callback: (e) => {
 						TTSModelProgress = e;
 						console.log(e);
@@ -175,7 +179,7 @@
 		dispatch('save');
 	}}
 >
-	<div class=" space-y-3 overflow-y-scroll max-h-[28rem] lg:max-h-full">
+	<div class=" space-y-3 overflow-y-scroll max-h-[28rem] md:max-h-full">
 		<div>
 			<div class=" mb-1 text-sm font-medium">{$i18n.t('STT Settings')}</div>
 
@@ -183,14 +187,15 @@
 				<div class=" py-0.5 flex w-full justify-between">
 					<div class=" self-center text-xs font-medium">{$i18n.t('Speech-to-Text Engine')}</div>
 					<div class="flex items-center relative">
-						<select
-							class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-right"
+						<Select
+							className="dark:bg-gray-900 w-fit text-xs bg-transparent outline-hidden text-right"
 							bind:value={STTEngine}
 							placeholder={$i18n.t('Select an engine')}
-						>
-							<option value="">{$i18n.t('Default')}</option>
-							<option value="web">{$i18n.t('Web API')}</option>
-						</select>
+							items={[
+								{ value: '', label: $i18n.t('Default') },
+								{ value: 'web', label: $i18n.t('Web API') }
+							]}
+						/>
 					</div>
 				</div>
 
@@ -242,14 +247,15 @@
 			<div class=" py-0.5 flex w-full justify-between">
 				<div class=" self-center text-xs font-medium">{$i18n.t('Text-to-Speech Engine')}</div>
 				<div class="flex items-center relative">
-					<select
-						class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-right"
+					<Select
+						className="dark:bg-gray-900 w-fit text-xs bg-transparent outline-hidden text-right"
 						bind:value={TTSEngine}
 						placeholder={$i18n.t('Select an engine')}
-					>
-						<option value="">{$i18n.t('Default')}</option>
-						<option value="browser-kokoro">{$i18n.t('Kokoro.js (Browser)')}</option>
-					</select>
+						items={[
+							{ value: '', label: $i18n.t('Default') },
+							{ value: 'browser-kokoro', label: $i18n.t('Kokoro.js (Browser)') }
+						]}
+					/>
 				</div>
 			</div>
 
@@ -257,17 +263,18 @@
 				<div class=" py-0.5 flex w-full justify-between">
 					<div class=" self-center text-xs font-medium">{$i18n.t('Kokoro.js Dtype')}</div>
 					<div class="flex items-center relative">
-						<select
-							class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-right"
+						<Select
+							className="dark:bg-gray-900 w-fit text-xs bg-transparent outline-hidden text-right"
 							bind:value={TTSEngineConfig.dtype}
 							placeholder={$i18n.t('Select dtype')}
-						>
-							<option value="" disabled selected>{$i18n.t('Select dtype')}</option>
-							<option value="fp32">fp32</option>
-							<option value="fp16">fp16</option>
-							<option value="q8">q8</option>
-							<option value="q4">q4</option>
-						</select>
+							items={[
+								{ value: '', label: $i18n.t('Select dtype'), disabled: true },
+								{ value: 'fp32', label: 'fp32' },
+								{ value: 'fp16', label: 'fp16' },
+								{ value: 'q8', label: 'q8' },
+								{ value: 'q4', label: 'q4' }
+							]}
+						/>
 					</div>
 				</div>
 			{/if}
@@ -314,18 +321,13 @@
 					<div class=" mb-2.5 text-sm font-medium">{$i18n.t('Set Voice')}</div>
 					<div class="flex w-full">
 						<div class="flex-1">
-							<input
-								list="voice-list"
-								class="w-full text-sm bg-transparent dark:text-gray-300 outline-hidden"
+							<DataList
 								bind:value={voice}
+								options={voiceOptions}
 								placeholder={$i18n.t('Select a voice')}
+								ariaLabel={$i18n.t('Voice')}
+								className="w-full text-sm bg-transparent dark:text-gray-300 outline-hidden"
 							/>
-
-							<datalist id="voice-list">
-								{#each voices as voice}
-									<option value={voice.id}>{voice.name}</option>
-								{/each}
-							</datalist>
 						</div>
 					</div>
 				</div>
@@ -352,19 +354,19 @@
 				<div class=" mb-2.5 text-sm font-medium">{$i18n.t('Set Voice')}</div>
 				<div class="flex w-full">
 					<div class="flex-1">
-						<select
-							class="w-full text-sm bg-transparent dark:text-gray-300 outline-hidden"
+						<Select
+							className="w-full text-sm bg-transparent dark:text-gray-300 outline-hidden"
 							bind:value={voice}
-						>
-							<option value="" selected={voice !== ''}>{$i18n.t('Default')}</option>
-							{#each voices.filter((v) => nonLocalVoices || v.localService === true) as _voice}
-								<option
-									value={_voice.name}
-									class="bg-gray-100 dark:bg-gray-700"
-									selected={voice === _voice.name}>{_voice.name}</option
-								>
-							{/each}
-						</select>
+							items={[
+								{ value: '', label: $i18n.t('Default') },
+								...voices
+									.filter((v) => nonLocalVoices || v.localService === true)
+									.map((_voice) => ({
+										value: _voice.name,
+										label: _voice.name
+									}))
+							]}
+						/>
 					</div>
 				</div>
 				<div class="flex items-center justify-between my-1.5">
@@ -382,18 +384,13 @@
 				<div class=" mb-2.5 text-sm font-medium">{$i18n.t('Set Voice')}</div>
 				<div class="flex w-full">
 					<div class="flex-1">
-						<input
-							list="voice-list"
-							class="w-full text-sm bg-transparent dark:text-gray-300 outline-hidden"
+						<DataList
 							bind:value={voice}
+							options={voiceOptions}
 							placeholder={$i18n.t('Select a voice')}
+							ariaLabel={$i18n.t('Voice')}
+							className="w-full text-sm bg-transparent dark:text-gray-300 outline-hidden"
 						/>
-
-						<datalist id="voice-list">
-							{#each voices as voice}
-								<option value={voice.id}>{voice.name}</option>
-							{/each}
-						</datalist>
 					</div>
 				</div>
 			</div>

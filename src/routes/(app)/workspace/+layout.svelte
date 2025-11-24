@@ -16,6 +16,7 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Background from '$lib/components/common/Background.svelte';
 	import Sidebar from '$lib/components/icons/Sidebar.svelte';
+	import Background from '$lib/components/Background.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -51,13 +52,14 @@
 </svelte:head>
 
 {#if loaded}
+	<Background />
 	<div
 		class=" relative flex flex-col w-full h-screen max-h-[100dvh] transition-width duration-200 ease-in-out {$showSidebar
 			? 'md:max-w-[calc(100%-260px)]'
 			: ''} max-w-full"
+			id="workspace-container"
 	>
-		<Background />
-		<nav class="   px-2.5 pt-1.5 backdrop-blur-xl drag-region relative z-10">
+		<nav class="   px-2.5 pt-1.5 drag-region">
 			<div class=" flex items-center gap-1">
 				{#if $mobile}
 					<div class="{$showSidebar ? 'md:hidden' : ''} self-center flex flex-none items-center">
@@ -126,11 +128,14 @@
 					</div>
 				</div>
 
-				<!-- <div class="flex items-center text-xl font-semibold">{$i18n.t('Workspace')}</div> -->
+				<!-- <div class="flex items-center text-xl font-medium">{$i18n.t('Workspace')}</div> -->
 			</div>
 		</nav>
 
-		<div class="  pb-1 px-[18px] flex-1 max-h-full overflow-y-auto" id="workspace-container">
+		<div
+			class="  pb-1 px-3 md:px-[18px] flex-1 max-h-full overflow-y-auto"
+			id="workspace-container"
+		>
 			<slot />
 		</div>
 	</div>

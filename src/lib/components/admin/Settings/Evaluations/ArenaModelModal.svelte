@@ -5,6 +5,7 @@
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import { models } from '$lib/stores';
 	import Plus from '$lib/components/icons/Plus.svelte';
 	import Minus from '$lib/components/icons/Minus.svelte';
@@ -14,6 +15,7 @@
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import { WEBUI_BASE_URL } from '$lib/constants';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 
 	export let show = false;
 	export let edit = false;
@@ -224,14 +226,14 @@
 									imageInputElement.click();
 								}}
 							>
-								<img
+								<ProfileImage
 									src={profileImageUrl}
-									class="size-16 rounded-full object-cover shrink-0"
+									className="size-16 rounded-full object-cover shrink-0"
 									alt="Profile"
 								/>
 
 								<div
-									class="absolute flex justify-center rounded-full bottom-0 left-0 right-0 top-0 h-full w-full overflow-hidden bg-gray-700 bg-fixed opacity-0 transition duration-300 ease-in-out hover:opacity-50"
+									class="trans absolute flex justify-center rounded-full bottom-0 left-0 right-0 top-0 h-full w-full overflow-hidden bg-gray-700 bg-fixed opacity-0 transition duration-300 ease-in-out hover:opacity-50"
 								>
 									<div class="my-auto text-white">
 										<PencilSolid className="size-4" />
@@ -298,7 +300,7 @@
 						<hr class=" border-gray-100 dark:border-gray-700/10 my-2.5 w-full" />
 
 						<div class="my-2 -mx-2">
-							<div class="px-3 py-2 rounded-lg">
+							<div class="trans px-4 py-3 bg-gray-50 dark:bg-gray-950 rounded-3xl">
 								<AccessControl bind:accessControl />
 							</div>
 						</div>
@@ -356,17 +358,16 @@
 						<hr class=" border-gray-100 dark:border-gray-700/10 my-2.5 w-full" />
 
 						<div class="flex items-center">
-							<select
-								class="w-full py-1 text-sm rounded-lg bg-transparent {selectedModelId
+							<Select
+								className="w-full py-1 text-sm rounded-lg bg-transparent {selectedModelId
 									? ''
 									: 'text-gray-500'} placeholder:text-gray-300 dark:placeholder:text-gray-700 outline-hidden"
 								bind:value={selectedModelId}
-							>
-								<option value="">{$i18n.t('Select a model')}</option>
-								{#each $models.filter((m) => m?.owned_by !== 'arena') as model}
-									<option value={model.id} class="bg-gray-50 dark:bg-gray-700">{model.name}</option>
-								{/each}
-							</select>
+								placeholder={$i18n.t('Select a model')}
+								items={$models
+									.filter((m) => m?.owned_by !== 'arena')
+									.map((m) => ({ value: m.id, label: m.name }))}
+							/>
 
 							<div>
 								<button

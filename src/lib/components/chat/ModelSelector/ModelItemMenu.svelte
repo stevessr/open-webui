@@ -44,11 +44,15 @@
 
 	<DropdownMenu.Content
 		strategy="fixed"
-		class="w-full max-w-[180px] text-sm rounded-2xl p-1 z-[9999999] bg-white dark:bg-gray-850 dark:text-white shadow-lg border border-gray-100  dark:border-gray-800"
-		sideOffset={-2}
-		side="bottom"
-		align="end"
+		class="transv2 w-full max-w-[180px] text-sm rounded-2xl p-1 z-[9999999] bg-white dark:bg-gray-850 dark:text-white shadow-lg border border-gray-100  dark:border-gray-800"
+		sideOffset={8}
+		side="right"
+		align="center"
 		transition={flyAndScale}
+		on:mousedown={(e) => {
+			e.preventDefault();
+			e.stopPropagation();
+		}}
 	>
 		<DropdownMenu.Item
 			type="button"

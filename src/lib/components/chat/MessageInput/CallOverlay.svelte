@@ -7,12 +7,15 @@
 	import { blobToFile } from '$lib/utils';
 	import { generateEmoji } from '$lib/apis';
 	import { synthesizeOpenAISpeech, transcribeAudio } from '$lib/apis/audio';
+	import { isVideoUrl } from '$lib/utils';
 
 	import { toast } from 'svelte-sonner';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import VideoInputMenu from './CallOverlay/VideoInputMenu.svelte';
+	import VideoImage from '$lib/components/common/VideoImage.svelte';
 	import { KokoroWorker } from '$lib/workers/KokoroWorker';
+	import { WEBUI_API_BASE_URL } from '$lib/constants';
 
 	const i18n = getContext('i18n');
 
@@ -50,7 +53,7 @@
 		const devices = await navigator.mediaDevices.enumerateDevices();
 		videoInputDevices = devices.filter((device) => device.kind === 'videoinput');
 
-		if (!!navigator.mediaDevices.getDisplayMedia) {
+		if (navigator.mediaDevices.getDisplayMedia) {
 			videoInputDevices = [
 				...videoInputDevices,
 				{
@@ -467,7 +470,7 @@
 				}
 
 				if ($settings.audio?.tts?.engine === 'browser-kokoro') {
-					const blob = await $TTSWorker
+					const url = await $TTSWorker
 						.generate({
 							text: content,
 							voice: $settings?.audio?.tts?.voice ?? $config?.audio?.tts?.voice
@@ -477,8 +480,8 @@
 							toast.error(`${error}`);
 						});
 
-					if (blob) {
-						audioCache.set(content, new Audio(blob));
+					if (url) {
+						audioCache.set(content, new Audio(url));
 					}
 				} else if ($config.audio.tts.engine !== '') {
 					const res = await synthesizeOpenAISpeech(
@@ -763,11 +766,15 @@
 							?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png'
 							? ' bg-cover bg-center bg-no-repeat'
 							: 'bg-black dark:bg-white'}  bg-black dark:bg-white"
-						style={(model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !==
-						'/static/favicon.png'
-							? `background-image: url('${model?.info?.meta?.profile_image_url}');`
-							: ''}
-					/>
+					>
+						<VideoImage
+							src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}&voice=true`}
+							className="rounded-full w-full h-full object-cover"
+							{autoplay}
+							{muted}
+							{loop}
+						/>
+					</div>
 				{/if}
 				<!-- navbar -->
 			</button>
@@ -845,11 +852,15 @@
 								?.profile_image_url ?? '/static/favicon.png') !== '/static/favicon.png'
 								? ' bg-cover bg-center bg-no-repeat'
 								: 'bg-black dark:bg-white'} "
-							style={(model?.info?.meta?.profile_image_url ?? '/static/favicon.png') !==
-							'/static/favicon.png'
-								? `background-image: url('${model?.info?.meta?.profile_image_url}');`
-								: ''}
-						/>
+						>
+							<VideoImage
+								src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}&voice=true`}
+								className="rounded-full w-full h-full object-cover"
+								{autoplay}
+								{muted}
+								{loop}
+							/>
+						</div>
 					{/if}
 				</button>
 			{:else}

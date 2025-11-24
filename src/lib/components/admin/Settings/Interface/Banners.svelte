@@ -2,6 +2,7 @@
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	import EllipsisVertical from '$lib/components/icons/EllipsisVertical.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import Sortable from 'sortablejs';
@@ -59,19 +60,17 @@
 			<EllipsisVertical className="size-4 cursor-move item-handle" />
 
 			<div class="flex flex-row flex-1 gap-2 items-start">
-				<select
-					class="w-fit capitalize rounded-xl text-xs bg-transparent outline-hidden pl-1 pr-5"
+				<Select
+					className="w-fit capitalize rounded-xl text-xs bg-transparent outline-hidden pl-1 pr-5"
 					bind:value={banner.type}
-					required
-				>
-					{#if banner.type == ''}
-						<option value="" selected disabled class="text-gray-900">{$i18n.t('Type')}</option>
-					{/if}
-					<option value="info" class="text-gray-900">{$i18n.t('Info')}</option>
-					<option value="warning" class="text-gray-900">{$i18n.t('Warning')}</option>
-					<option value="error" class="text-gray-900">{$i18n.t('Error')}</option>
-					<option value="success" class="text-gray-900">{$i18n.t('Success')}</option>
-				</select>
+					placeholder={banner.type === '' ? $i18n.t('Type') : ''}
+					items={[
+						{ value: 'info', label: $i18n.t('Info') },
+						{ value: 'warning', label: $i18n.t('Warning') },
+						{ value: 'error', label: $i18n.t('Error') },
+						{ value: 'success', label: $i18n.t('Success') }
+					]}
+				/>
 
 				<Textarea
 					className="mr-2 text-xs w-full bg-transparent outline-hidden resize-none"

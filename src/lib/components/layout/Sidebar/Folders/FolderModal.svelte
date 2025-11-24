@@ -12,15 +12,17 @@
 
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import Knowledge from '$lib/components/workspace/Models/Knowledge.svelte';
+	import UrlInputModal from '$lib/components/common/UrlInputModal.svelte';
+	import { getFolderById } from '$lib/apis/folders';
 	const i18n = getContext('i18n');
 
 	export let show = false;
 	export let onSubmit: Function = (e) => {};
 
+	export let folderId = null;
 	export let edit = false;
 
-	export let folder = null;
-
+	let folder = null;
 	let name = '';
 	let meta = {
 		background_image_url: null
@@ -31,6 +33,9 @@
 	};
 
 	let loading = false;
+
+	let showUrlModal = false;
+	let tempUrl = '';
 
 	const submitHandler = async () => {
 		loading = true;
@@ -50,17 +55,34 @@
 		loading = false;
 	};
 
-	const init = () => {
-		name = folder.name;
-		meta = folder.meta || {
-			background_image_url: null
-		};
-		data = folder.data || {
-			system_prompt: '',
-			files: []
-		};
+	const init = async () => {
+		if (folderId) {
+			folder = await getFolderById(localStorage.token, folderId).catch((error) => {
+				toast.error(`${error}`);
+				return null;
+			});
 
-		console.log(folder);
+			name = folder.name;
+			meta = folder.meta || {
+				background_image_url: null
+			};
+			data = folder.data || {
+				system_prompt: '',
+				files: []
+			};
+		}
+
+		focusInput();
+	};
+
+	const handleUrlSubmit = (e) => {
+		meta.background_image_url = e.detail;
+		showUrlModal = false;
+	};
+
+	const openUrlModal = () => {
+		tempUrl = meta.background_image_url || '';
+		showUrlModal = true;
 	};
 
 	const focusInput = async () => {
@@ -73,10 +95,6 @@
 	};
 
 	$: if (show) {
-		focusInput();
-	}
-
-	$: if (folder) {
 		init();
 	}
 
@@ -169,27 +187,36 @@
 						<div class="text-xs text-gray-500">{$i18n.t('Folder Background Image')}</div>
 
 						<div class="">
-							<button
-								aria-labelledby="chat-background-label background-image-url-state"
-								class="p-1 px-3 text-xs flex rounded-sm transition"
-								on:click={() => {
-									if (meta?.background_image_url !== null) {
-										meta.background_image_url = null;
-									} else {
-										const input = document.getElementById('folder-background-image-input');
-										if (input) {
-											input.click();
+							<div class="flex gap-2">
+								<button
+									aria-labelledby="chat-background-label background-image-url-state"
+									class="p-1 px-3 text-xs flex rounded-sm transition"
+									on:click={() => {
+										if (meta?.background_image_url !== null) {
+											meta.background_image_url = null;
+										} else {
+											const input = document.getElementById('folder-background-image-input');
+											if (input) {
+												input.click();
+											}
 										}
-									}
-								}}
-								type="button"
-							>
-								<span class="ml-2 self-center" id="background-image-url-state"
-									>{(meta?.background_image_url ?? null) === null
-										? $i18n.t('Upload')
-										: $i18n.t('Reset')}</span
+									}}
+									type="button"
 								>
-							</button>
+									<span class="ml-2 self-center" id="background-image-url-state"
+										>{(meta?.background_image_url ?? null) === null
+											? $i18n.t('Upload')
+											: $i18n.t('Reset')}</span
+									>
+								</button>
+								<button
+									class="p-1 px-3 text-xs flex rounded-sm transition"
+									on:click={openUrlModal}
+									type="button"
+								>
+									<span class="ml-2 self-center">{$i18n.t('URL')}</span>
+								</button>
+							</div>
 						</div>
 					</div>
 
@@ -254,3 +281,12 @@
 		</div>
 	</div>
 </Modal>
+
+<UrlInputModal
+	bind:show={showUrlModal}
+	title={$i18n.t('Enter Image URL')}
+	placeholder={$i18n.t('Enter image URL...')}
+	confirmText={$i18n.t('Set')}
+	bind:value={tempUrl}
+	on:submit={handleUrlSubmit}
+/>

@@ -1,4 +1,4 @@
-import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+import { WEBUI_API_BASE_URL, WEBUI_BASE_URL, ANTHROPIC_API_BASE_URL, Gemini_API_BASE_URL } from '$lib/constants';
 import { convertOpenApiToToolPayload } from '$lib/utils';
 import { getOpenAIModelsDirect } from './openai';
 
@@ -156,6 +156,287 @@ export const getModels = async (
 	}
 
 	return models;
+};
+
+const convertOpenAIToGemini = (body: any) => {
+	const contents = [];
+	let systemInstruction = null;
+
+	for (const msg of body.messages) {
+		if (msg.role === 'system') {
+			systemInstruction = {
+				parts: [{ text: msg.content }]
+			};
+		} else if (msg.role === 'user') {
+			if (Array.isArray(msg.content)) {
+				const parts = [];
+				for (const part of msg.content) {
+					if (part.type === 'text') {
+						parts.push({ text: part.text });
+					} else if (part.type === 'image_url') {
+						// This is a placeholder as handling image URLs requires fetching and converting to base64
+						// which is better handled in the backend or requires async conversion here.
+						// For now, we'll try to pass the URL if Gemini supports it or just text.
+						// NOTE: Gemini API via REST usually expects inline_data (base64) or file_data.
+						// We can't easily do that here without more logic.
+						// Assuming text-only for now or that backend handles it if we used backend.
+						// BUT we are using direct calls to backend proxy.
+
+						// If the URL is a data URL, we can parse it.
+						if (part.image_url.url.startsWith('data:')) {
+							const [mime, data] = part.image_url.url.split(';base64,');
+							parts.push({
+								inline_data: {
+									mime_type: mime.replace('data:', ''),
+									data: data
+								}
+							});
+						} else {
+							// For non-data URLs, we can't easily handle them here synchronously.
+							parts.push({ text: `[Image: ${part.image_url.url}]` });
+						}
+					}
+				}
+				contents.push({
+					role: 'user',
+					parts: parts
+				});
+			} else {
+				contents.push({
+					role: 'user',
+					parts: [{ text: msg.content }]
+				});
+			}
+		} else if (msg.role === 'assistant') {
+			contents.push({
+				role: 'model',
+				parts: [{ text: msg.content }]
+			});
+		}
+	}
+
+	const generationConfig: any = {};
+	if (body.max_tokens) generationConfig.maxOutputTokens = body.max_tokens;
+	if (body.temperature) generationConfig.temperature = body.temperature;
+	if (body.top_p) generationConfig.topP = body.top_p;
+	if (body.stop) generationConfig.stopSequences = Array.isArray(body.stop) ? body.stop : [body.stop];
+
+	const geminiPayload: any = {
+		contents,
+		generationConfig
+	};
+
+	if (systemInstruction) {
+		geminiPayload.systemInstruction = systemInstruction;
+	}
+
+	return geminiPayload;
+};
+
+const convertOpenAIToAnthropic = (body: any) => {
+	const messages = [];
+	let system = null;
+
+	for (const msg of body.messages) {
+		if (msg.role === 'system') {
+			system = msg.content;
+		} else {
+			if (Array.isArray(msg.content)) {
+				const content = [];
+				for (const part of msg.content) {
+					if (part.type === 'text') {
+						content.push({ type: 'text', text: part.text });
+					} else if (part.type === 'image_url') {
+						if (part.image_url.url.startsWith('data:')) {
+							const [mime, data] = part.image_url.url.split(';base64,');
+							content.push({
+								type: 'image',
+								source: {
+									type: 'base64',
+									media_type: mime.replace('data:', ''),
+									data: data
+								}
+							});
+						} else {
+							// Anthropic doesn't support image URLs directly in this format usually
+							content.push({ type: 'text', text: `[Image: ${part.image_url.url}]` });
+						}
+					}
+				}
+				messages.push({ ...msg, content });
+			} else {
+				messages.push(msg);
+			}
+		}
+	}
+
+	const anthropicPayload: any = {
+		model: body.model,
+		messages: messages,
+		max_tokens: body.max_tokens ?? 4096,
+		stream: body.stream ?? false,
+		...(system && { system: system }),
+		...(body.temperature && { temperature: body.temperature }),
+		...(body.top_p && { top_p: body.top_p }),
+		...(body.stop && { stop_sequences: Array.isArray(body.stop) ? body.stop : [body.stop] })
+	};
+
+	return anthropicPayload;
+};
+
+const convertOpenAIToResponses = (body: any) => {
+	const responsesPayload: any = {
+		model: body.model,
+		input: body.messages,
+		stream: body.stream ?? false,
+		...(body.temperature && { temperature: body.temperature }),
+		...(body.top_p && { top_p: body.top_p }),
+		...(body.stop && { stop: body.stop })
+	};
+
+	return responsesPayload;
+};
+
+const convertGeminiToOpenAI = (data: any) => {
+	const candidate = data.candidates?.[0];
+	const content = candidate?.content?.parts?.[0]?.text ?? '';
+	return {
+		choices: [
+			{
+				message: {
+					role: 'assistant',
+					content: content
+				},
+				finish_reason: candidate?.finishReason?.toLowerCase() ?? 'stop'
+			}
+		],
+		usage: {
+			prompt_tokens: data.usageMetadata?.promptTokenCount ?? 0,
+			completion_tokens: data.usageMetadata?.candidatesTokenCount ?? 0,
+			total_tokens: data.usageMetadata?.totalTokenCount ?? 0
+		}
+	};
+};
+
+const convertAnthropicToOpenAI = (data: any) => {
+	const content = data.content?.[0]?.text ?? '';
+	return {
+		choices: [
+			{
+				message: {
+					role: 'assistant',
+					content: content
+				},
+				finish_reason: data.stop_reason
+			}
+		],
+		usage: {
+			prompt_tokens: data.usage?.input_tokens ?? 0,
+			completion_tokens: data.usage?.output_tokens ?? 0,
+			total_tokens: (data.usage?.input_tokens ?? 0) + (data.usage?.output_tokens ?? 0)
+		}
+	};
+};
+
+export const generateChatCompletion = async (
+	token: string = '',
+	body: object,
+	url: string = `${WEBUI_BASE_URL}/api`
+) => {
+	let error = null;
+
+	// Update URL based on model provider
+	if ((body as any).model_item) {
+		const ownedBy = (body as any).model_item.owned_by;
+		if (ownedBy === 'anthropic') {
+			url = `${ANTHROPIC_API_BASE_URL}/messages`;
+			const anthropicBody = convertOpenAIToAnthropic(body);
+
+			return await fetch(url, {
+				method: 'POST',
+				headers: {
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(anthropicBody)
+			})
+				.then(async (res) => {
+					if (!res.ok) throw await res.json();
+					if ((body as any).stream) return res;
+					return convertAnthropicToOpenAI(await res.json());
+				})
+				.catch((err) => {
+					throw err?.detail ?? err;
+				});
+		} else if (ownedBy === 'gemini') {
+			const modelId = (body as any).model;
+			const stream = (body as any).stream ?? false;
+			const method = stream ? 'streamGenerateContent' : 'generateContent';
+			url = `${Gemini_API_BASE_URL}/models/${modelId}:${method}`;
+
+			const geminiBody = convertOpenAIToGemini({ ...body, stream: stream });
+
+			return await fetch(url, {
+				method: 'POST',
+				headers: {
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(geminiBody)
+			})
+				.then(async (res) => {
+					if (!res.ok) throw await res.json();
+					if (stream) return res;
+					return convertGeminiToOpenAI(await res.json());
+				})
+				.catch((err) => {
+					throw err?.detail ?? err;
+				});
+		} else if (ownedBy === 'responses') {
+			url = `${WEBUI_BASE_URL}/api/responses`;
+			const responsesBody = convertOpenAIToResponses(body);
+
+			return await fetch(url, {
+				method: 'POST',
+				headers: {
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(responsesBody)
+			})
+				.then(async (res) => {
+					if (!res.ok) throw await res.json();
+					return res;
+				})
+				.catch((err) => {
+					throw err?.detail ?? err;
+				});
+		}
+	}
+
+	const res = await fetch(`${url}/chat/completions`, {
+		method: 'POST',
+		headers: {
+			Authorization: `Bearer ${token}`,
+			'Content-Type': 'application/json'
+		},
+		credentials: 'include',
+		body: JSON.stringify(body)
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err?.detail ?? err;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 type ChatCompletedForm = {
@@ -337,14 +618,8 @@ export const getToolServerData = async (token: string, url: string) => {
 		throw error;
 	}
 
-	const data = {
-		openapi: res,
-		info: res.info,
-		specs: convertOpenApiToToolPayload(res)
-	};
-
-	console.log(data);
-	return data;
+	console.log(res);
+	return res;
 };
 
 export const getToolServersData = async (servers: object[]) => {
@@ -356,6 +631,7 @@ export const getToolServersData = async (servers: object[]) => {
 					let error = null;
 
 					let toolServerToken = null;
+
 					const auth_type = server?.auth_type ?? 'bearer';
 					if (auth_type === 'bearer') {
 						toolServerToken = server?.key;
@@ -365,18 +641,34 @@ export const getToolServersData = async (servers: object[]) => {
 						toolServerToken = localStorage.token;
 					}
 
-					const data = await getToolServerData(
-						toolServerToken,
-						(server?.path ?? '').includes('://')
-							? server?.path
-							: `${server?.url}${(server?.path ?? '').startsWith('/') ? '' : '/'}${server?.path}`
-					).catch((err) => {
-						error = err;
-						return null;
-					});
+					let res = null;
+					const specType = server?.spec_type ?? 'url';
 
-					if (data) {
-						const { openapi, info, specs } = data;
+					if (specType === 'url') {
+						res = await getToolServerData(
+							toolServerToken,
+							(server?.path ?? '').includes('://')
+								? server?.path
+								: `${server?.url}${(server?.path ?? '').startsWith('/') ? '' : '/'}${server?.path}`
+						).catch((err) => {
+							error = err;
+							return null;
+						});
+					} else if ((specType === 'json' && server?.spec) ?? null) {
+						try {
+							res = JSON.parse(server?.spec);
+						} catch (e) {
+							error = 'Failed to parse JSON spec';
+						}
+					}
+
+					if (res) {
+						const { openapi, info, specs } = {
+							openapi: res,
+							info: res.info,
+							specs: convertOpenApiToToolPayload(res)
+						};
+
 						return {
 							url: server?.url,
 							openapi: openapi,
@@ -483,7 +775,10 @@ export const executeToolServer = async (
 			headers
 		};
 
-		if (['post', 'put', 'patch'].includes(httpMethod.toLowerCase()) && operation.requestBody) {
+		if (
+			['post', 'put', 'patch', 'delete'].includes(httpMethod.toLowerCase()) &&
+			operation.requestBody
+		) {
 			requestOptions.body = JSON.stringify(bodyParams);
 		}
 
@@ -493,18 +788,25 @@ export const executeToolServer = async (
 			throw new Error(`HTTP error! Status: ${res.status}. Message: ${resText}`);
 		}
 
-		let responseData;
-		try {
-			responseData = await res.json();
-		} catch (err) {
-			responseData = await res.text();
-		}
+		// make a clone of res and extract headers
+		const responseHeaders = {};
+		res.headers.forEach((value, key) => {
+			responseHeaders[key] = value;
+		});
 
-		return responseData;
+		const text = await res.text();
+		let responseData;
+
+		try {
+			responseData = JSON.parse(text);
+		} catch {
+			responseData = text;
+		}
+		return [responseData, responseHeaders];
 	} catch (err: any) {
 		error = err.message;
 		console.error('API Request Error:', error);
-		return { error };
+		return [{ error }, null];
 	}
 };
 
@@ -1380,6 +1682,33 @@ export const getChangelog = async () => {
 	return res;
 };
 
+export const getVersion = async (token: string) => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_BASE_URL}/api/version`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
+};
+
 export const getVersionUpdates = async (token: string) => {
 	let error = null;
 
@@ -1622,7 +1951,7 @@ export interface ModelMeta {
 	profile_image_url?: string;
 }
 
-export interface ModelParams {}
+export interface ModelParams { }
 
 export type GlobalModelConfig = ModelConfig[];
 

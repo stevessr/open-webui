@@ -23,12 +23,7 @@
 			href="/static/apple-touch-icon.png"
 			crossorigin="use-credentials"
 		/>
-		<link
-			rel="manifest"
-			href="/manifest.json"
-			crossorigin="use-credentials"
-			crossorigin="use-credentials"
-		/>
+		<link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
 		<meta
 			name="viewport"
 			content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
@@ -38,6 +33,8 @@
 
 		<script src="/static/loader.js" defer crossorigin="use-credentials"></script>
 		<link rel="stylesheet" href="/static/custom.css" crossorigin="use-credentials" />
+
+		<link rel="stylesheet" type="text/css" href="/assets/inject.css" />
 
 		<script>
 			function resizeIframe(obj) {
@@ -71,6 +68,15 @@
 				} else if (localStorage.theme === 'her') {
 					document.documentElement.classList.add('her');
 					metaThemeColorTag.setAttribute('content', '#983724');
+				} else if (localStorage.theme === 'macaron') {
+					document.documentElement.classList.add('light');
+					document.documentElement.classList.add('macaron');
+					const link = document.createElement('link');
+					link.rel = 'stylesheet';
+					link.href = '/assets/css/macaron.css';
+					link.id = 'macaron-theme';
+					document.head.appendChild(link);
+					metaThemeColorTag.setAttribute('content', '#f9e6f0');
 				} else {
 					document.documentElement.classList.add('dark');
 					metaThemeColorTag.setAttribute('content', '#171717');
@@ -107,8 +113,8 @@
 				});
 			})();
 		</script>
-		<link rel="stylesheet" type="text/css" href="/assets/inject.css" />
-		<title>Neko UI</title>
+
+		<title>Neko</title>
 
 		%sveltekit.head%
 	</head>
@@ -179,72 +185,105 @@
 			</span> -->
 		</div>
 	</body>
-</html>
 
-<style type="text/css" nonce="">
-	html {
-		overflow-y: hidden !important;
-		overscroll-behavior-y: none;
-	}
+	<style type="text/css" nonce="">
+		html {
+			overflow-y: hidden !important;
+			overscroll-behavior-y: none;
+		}
 
-	#splash-screen {
-		background: #fff;
-	}
+		#splash-screen {
+			background: #fff;
+		}
 
-	html.dark #splash-screen {
-		background: #000;
-	}
+		html.dark #splash-screen {
+			background: #000;
+		}
 
-	html.her #splash-screen {
-		background: #983724;
-	}
+		html.her #splash-screen {
+			background: #983724;
+		}
 
-	#logo-her {
-		display: none;
-	}
+		html.macaron #splash-screen {
+			background: #f9e6f0;
+		}
 
-	#progress-background {
-		display: none;
-	}
-
-	#progress-bar {
-		display: none;
-	}
-
-	html.her #logo {
-		display: none;
-	}
-
-	html.her #logo-her {
-		display: block;
-		filter: invert(1);
-	}
-
-	html.her #progress-background {
-		display: block;
-	}
-
-	html.her #progress-bar {
-		display: block;
-	}
-
-	@media (max-width: 24rem) {
-		html.her #progress-background {
+		#logo-her {
 			display: none;
+		}
+
+		#progress-background {
+			display: none;
+		}
+
+		#progress-bar {
+			display: none;
+		}
+
+		html.her #logo {
+			display: none;
+		}
+
+		html.her #logo-her {
+			display: block;
+			filter: invert(1);
+		}
+
+		html.her #progress-background {
+			display: block;
 		}
 
 		html.her #progress-bar {
+			display: block;
+		}
+
+		#logo-her {
 			display: none;
 		}
-	}
 
-	@keyframes pulse {
-		50% {
-			opacity: 0.65;
+		#progress-background {
+			display: none;
 		}
-	}
 
-	.animate-pulse-fast {
-		animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-	}
-</style>
+		#progress-bar {
+			display: none;
+		}
+
+		html.her #logo {
+			display: none;
+		}
+
+		html.her #logo-her {
+			display: block;
+			filter: invert(1);
+		}
+
+		html.her #progress-background {
+			display: block;
+		}
+
+		html.her #progress-bar {
+			display: block;
+		}
+
+		@media (max-width: 24rem) {
+			html.her #progress-background {
+				display: none;
+			}
+
+			html.her #progress-bar {
+				display: none;
+			}
+		}
+
+		@keyframes pulse {
+			50% {
+				opacity: 0.65;
+			}
+		}
+
+		.animate-pulse-fast {
+			animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+		}
+	</style>
+</html>

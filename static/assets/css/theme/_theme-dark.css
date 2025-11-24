@@ -1,0 +1,13 @@
+/* Dark Theme Specific Styles */
+
+html.dark #splash-screen {
+  background: var(--bg-primary);
+}
+
+/* Dark theme textarea styles */
+html.dark textarea,
+html.dark .theme-textarea {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-primary) !important;
+}

@@ -1,7 +1,7 @@
 import { browser, dev } from '$app/environment';
 // import { version } from '../../package.json';
 
-export const APP_NAME = 'Neko UI';
+export const APP_NAME = 'Neko';
 
 export const WEBUI_HOSTNAME = browser ? (dev ? `${location.hostname}:8080` : ``) : '';
 export const WEBUI_BASE_URL = browser ? (localStorage.getItem('custom_webui_base_url') || (dev ? `http://${WEBUI_HOSTNAME}` : ``)) : ``;
@@ -9,6 +9,8 @@ export const WEBUI_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1`;
 
 export const OLLAMA_API_BASE_URL = `${WEBUI_BASE_URL}/ollama`;
 export const OPENAI_API_BASE_URL = `${WEBUI_BASE_URL}/openai`;
+export const Gemini_API_BASE_URL = `${WEBUI_BASE_URL}/gemini`;
+export const ANTHROPIC_API_BASE_URL = `${WEBUI_BASE_URL}/anthropic`;
 export const AUDIO_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1/audio`;
 export const IMAGES_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1/images`;
 export const RETRIEVAL_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1/retrieval`;

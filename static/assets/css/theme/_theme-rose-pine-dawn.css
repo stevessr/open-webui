@@ -1,0 +1,8 @@
+/* Rose Pine Dawn Theme Styles */
+
+.rose-pine-dawn textarea,
+.rose-pine-dawn .theme-textarea {
+  background-color: #faf4ed !important;
+  color: #575279 !important;
+  border: 1px solid #dfdad9 !important;
+}

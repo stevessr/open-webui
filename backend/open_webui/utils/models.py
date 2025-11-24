@@ -6,12 +6,13 @@ import sys
 from aiocache import cached
 from fastapi import Request
 
-from open_webui.routers import openai, ollama
+from open_webui.routers import openai, ollama, responses, anthropic, gemini
 from open_webui.functions import get_function_models
 
 
 from open_webui.models.functions import Functions
 from open_webui.models.models import Models
+from open_webui.models.groups import Groups
 
 
 from open_webui.utils.plugin import (
@@ -57,6 +58,57 @@ async def fetch_openai_models(request: Request, user: UserModel = None):
     return openai_response["data"]
 
 
+async def fetch_responses_models(request: Request, user: UserModel = None):
+    # Responses API uses the same endpoint as OpenAI but returns models with "responses" tag
+    if not request.app.state.config.ENABLE_RESPONSES_API:
+        return []
+
+    try:
+        responses_response = await responses.get_models(request, user=user)
+        # Add a "responses" tag to distinguish these models
+        models = responses_response.get("data", [])
+        for model in models:
+            model_id = model.get("id") or model.get("name", "unknown")
+
+            # Ensure name field is set - use id if name is missing or empty
+            if not model.get("name"):
+                model["name"] = model_id
+
+            model["owned_by"] = "responses"
+            # Add a tag to indicate this is a responses API model
+            if "tags" not in model:
+                model["tags"] = []
+            model["tags"].append({"name": "responses"})
+        return models
+    except Exception as e:
+        log.error(f"Error fetching responses models: {e}")
+        return []
+
+
+async def fetch_anthropic_models(request: Request, user: UserModel = None):
+    if not request.app.state.config.ENABLE_ANTHROPIC_API:
+        return []
+
+    try:
+        anthropic_response = await anthropic.get_models(request, user=user)
+        return anthropic_response.get("data", [])
+    except Exception as e:
+        log.error(f"Error fetching anthropic models: {e}")
+        return []
+
+
+async def fetch_gemini_models(request: Request, user: UserModel = None):
+    if not request.app.state.config.ENABLE_GEMINI_API:
+        return []
+
+    try:
+        gemini_response = await gemini.get_models(request, user=user)
+        return gemini_response.get("data", [])
+    except Exception as e:
+        log.error(f"Error fetching gemini models: {e}")
+        return []
+
+
 async def get_all_base_models(request: Request, user: UserModel = None):
     openai_task = (
         fetch_openai_models(request, user)
@@ -68,13 +120,47 @@ async def get_all_base_models(request: Request, user: UserModel = None):
         if request.app.state.config.ENABLE_OLLAMA_API
         else asyncio.sleep(0, result=[])
     )
+    anthropic_task = (
+        fetch_anthropic_models(request, user)
+        if request.app.state.config.ENABLE_ANTHROPIC_API
+        else asyncio.sleep(0, result=[])
+    )
+    gemini_task = (
+        fetch_gemini_models(request, user)
+        if request.app.state.config.ENABLE_GEMINI_API
+        else asyncio.sleep(0, result=[])
+    )
+    responses_task = (
+        fetch_responses_models(request, user)
+        if request.app.state.config.ENABLE_RESPONSES_API
+        else asyncio.sleep(0, result=[])
+    )
     function_task = get_function_models(request)
 
-    openai_models, ollama_models, function_models = await asyncio.gather(
-        openai_task, ollama_task, function_task
+    (
+        openai_models,
+        ollama_models,
+        anthropic_models,
+        gemini_models,
+        responses_models,
+        function_models,
+    ) = await asyncio.gather(
+        openai_task,
+        ollama_task,
+        anthropic_task,
+        gemini_task,
+        responses_task,
+        function_task,
     )
 
-    return function_models + openai_models + ollama_models
+    return (
+        function_models
+        + openai_models
+        + anthropic_models
+        + gemini_models
+        + responses_models
+        + ollama_models
+    )
 
 
 async def get_all_models(request, refresh: bool = False, user: UserModel = None):
@@ -151,12 +237,15 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
         if custom_model.base_model_id is None:
             # Applied directly to a base model
             for model in models:
-                if custom_model.id == model["id"] or (
-                    model.get("owned_by") == "ollama"
-                    and custom_model.id
-                    == model["id"].split(":")[
-                        0
-                    ]  # Ollama may return model ids in different formats (e.g., 'llama3' vs. 'llama3:7b')
+                if (
+                    custom_model.id == model["id"]
+                    or (
+                        model.get("owned_by") == "ollama"
+                        and custom_model.id
+                        == model["id"].split(":")[
+                            0
+                        ]  # Ollama may return model ids in different formats (e.g., 'llama3' vs. 'llama3:7b')
+                    )
                 ):
                     if custom_model.is_active:
                         model["name"] = custom_model.name
@@ -166,13 +255,18 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
                         action_ids = []
                         filter_ids = []
 
-                        if "info" in model and "meta" in model["info"]:
-                            action_ids.extend(
-                                model["info"]["meta"].get("actionIds", [])
-                            )
-                            filter_ids.extend(
-                                model["info"]["meta"].get("filterIds", [])
-                            )
+                        if "info" in model:
+                            if "meta" in model["info"]:
+                                action_ids.extend(
+                                    model["info"]["meta"].get("actionIds", [])
+                                )
+                                filter_ids.extend(
+                                    model["info"]["meta"].get("filterIds", [])
+                                )
+
+                            if "params" in model["info"]:
+                                # Remove params to avoid exposing sensitive info
+                                del model["info"]["params"]
 
                         model["action_ids"] = action_ids
                         model["filter_ids"] = filter_ids
@@ -182,21 +276,39 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
         elif custom_model.is_active and (
             custom_model.id not in [model["id"] for model in models]
         ):
+            # Custom model based on a base model
             owned_by = "openai"
             pipe = None
 
+            for m in models:
+                if (
+                    custom_model.base_model_id == m["id"]
+                    or custom_model.base_model_id == m["id"].split(":")[0]
+                ):
+                    owned_by = m.get("owned_by", "unknown")
+                    if "pipe" in m:
+                        pipe = m["pipe"]
+                    break
+
+            model = {
+                "id": f"{custom_model.id}",
+                "name": custom_model.name,
+                "object": "model",
+                "created": custom_model.created_at,
+                "owned_by": owned_by,
+                "preset": True,
+                **({"pipe": pipe} if pipe is not None else {}),
+            }
+
+            info = custom_model.model_dump()
+            if "params" in info:
+                # Remove params to avoid exposing sensitive info
+                del info["params"]
+
+            model["info"] = info
+
             action_ids = []
             filter_ids = []
-
-            for model in models:
-                if (
-                    custom_model.base_model_id == model["id"]
-                    or custom_model.base_model_id == model["id"].split(":")[0]
-                ):
-                    owned_by = model.get("owned_by", "unknown owner")
-                    if "pipe" in model:
-                        pipe = model["pipe"]
-                    break
 
             if custom_model.meta:
                 meta = custom_model.meta.model_dump()
@@ -207,20 +319,10 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
                 if "filterIds" in meta:
                     filter_ids.extend(meta["filterIds"])
 
-            models.append(
-                {
-                    "id": f"{custom_model.id}",
-                    "name": custom_model.name,
-                    "object": "model",
-                    "created": custom_model.created_at,
-                    "owned_by": owned_by,
-                    "info": custom_model.model_dump(),
-                    "preset": True,
-                    **({"pipe": pipe} if pipe is not None else {}),
-                    "action_ids": action_ids,
-                    "filter_ids": filter_ids,
-                }
-            )
+            model["action_ids"] = action_ids
+            model["filter_ids"] = filter_ids
+
+            models.append(model)
 
     # Process action_ids to get the actions
     def get_action_items_from_module(function, module):
@@ -263,6 +365,7 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
                 "icon": function.meta.manifest.get("icon_url", None)
                 or getattr(module, "icon_url", None)
                 or getattr(module, "icon", None),
+                "has_user_valves": hasattr(module, "UserValves"),
             }
         ]
 
@@ -342,6 +445,7 @@ def get_filtered_models(models, user):
         or (user.role == "admin" and not BYPASS_ADMIN_ACCESS_CONTROL)
     ) and not BYPASS_MODEL_ACCESS_CONTROL:
         filtered_models = []
+        user_group_ids = {group.id for group in Groups.get_groups_by_member_id(user.id)}
         for model in models:
             if model.get("arena"):
                 if has_access(
@@ -350,6 +454,7 @@ def get_filtered_models(models, user):
                     access_control=model.get("info", {})
                     .get("meta", {})
                     .get("access_control", {}),
+                    user_group_ids=user_group_ids,
                 ):
                     filtered_models.append(model)
                 continue
@@ -363,6 +468,7 @@ def get_filtered_models(models, user):
                         user.id,
                         type="read",
                         access_control=model_info.access_control,
+                        user_group_ids=user_group_ids,
                     )
                 ):
                     filtered_models.append(model)

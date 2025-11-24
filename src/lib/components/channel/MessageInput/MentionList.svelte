@@ -8,6 +8,7 @@
 	import Lock from '$lib/components/icons/Lock.svelte';
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
 	import { searchUsers } from '$lib/apis/users';
+	import VideoImage from '$lib/components/common/VideoImage.svelte';
 
 	export let query = '';
 
@@ -170,11 +171,10 @@
 								{/if}
 							</div>
 						{:else if item.type === 'model'}
-							<img
-								src={item?.data?.info?.meta?.profile_image_url ??
-									`${WEBUI_BASE_URL}/static/favicon.png`}
+							<VideoImage
+								src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${item.id}&lang=${$i18n.language}`}
 								alt={item?.data?.name ?? item.id}
-								class="rounded-full size-5 items-center mr-2"
+								className="rounded-full size-5 items-center mr-2"
 							/>
 						{:else if item.type === 'user'}
 							<img

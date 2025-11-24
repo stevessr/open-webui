@@ -8,6 +8,7 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -41,7 +42,7 @@
 		{#if config}
 			<div>
 				<div class="mb-3.5">
-					<div class=" mb-2.5 text-base font-medium">{$i18n.t('General')}</div>
+					<div class=" mt-0.5 mb-2.5 text-base font-medium">{$i18n.t('General')}</div>
 
 					<hr class=" border-gray-100 dark:border-gray-850 my-2" />
 
@@ -59,17 +60,12 @@
 						<div class="flex w-full justify-between">
 							<div class=" self-center text-xs font-medium">{$i18n.t('Code Execution Engine')}</div>
 							<div class="flex items-center relative">
-								<select
-									class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-right"
+								<Select
+									className="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-right"
 									bind:value={config.CODE_EXECUTION_ENGINE}
 									placeholder={$i18n.t('Select a engine')}
-									required
-								>
-									<option disabled selected value="">{$i18n.t('Select a engine')}</option>
-									{#each engines as engine}
-										<option value={engine}>{engine}</option>
-									{/each}
-								</select>
+									items={engines.map((e) => ({ value: e, label: e }))}
+								/>
 							</div>
 						</div>
 
@@ -108,15 +104,16 @@
 								</div>
 
 								<div>
-									<select
-										class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-left"
+									<Select
+										className="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-left"
 										bind:value={config.CODE_EXECUTION_JUPYTER_AUTH}
 										placeholder={$i18n.t('Select an auth method')}
-									>
-										<option selected value="">{$i18n.t('None')}</option>
-										<option value="token">{$i18n.t('Token')}</option>
-										<option value="password">{$i18n.t('Password')}</option>
-									</select>
+										items={[
+											{ value: '', label: $i18n.t('None') },
+											{ value: 'token', label: $i18n.t('Token') },
+											{ value: 'password', label: $i18n.t('Password') }
+										]}
+									/>
 								</div>
 							</div>
 
@@ -164,7 +161,7 @@
 				</div>
 
 				<div class="mb-3.5">
-					<div class=" mb-2.5 text-base font-medium">{$i18n.t('Code Interpreter')}</div>
+					<div class=" mt-0.5 mb-2.5 text-base font-medium">{$i18n.t('Code Interpreter')}</div>
 
 					<hr class=" border-gray-100 dark:border-gray-850 my-2" />
 
@@ -185,17 +182,12 @@
 									{$i18n.t('Code Interpreter Engine')}
 								</div>
 								<div class="flex items-center relative">
-									<select
-										class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-right"
+									<Select
+										className="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-right"
 										bind:value={config.CODE_INTERPRETER_ENGINE}
 										placeholder={$i18n.t('Select a engine')}
-										required
-									>
-										<option disabled selected value="">{$i18n.t('Select a engine')}</option>
-										{#each engines as engine}
-											<option value={engine}>{engine}</option>
-										{/each}
-									</select>
+										items={engines.map((e) => ({ value: e, label: e }))}
+									/>
 								</div>
 							</div>
 
@@ -234,15 +226,16 @@
 									</div>
 
 									<div>
-										<select
-											class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-left"
+										<Select
+											className="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 p-1 text-xs bg-transparent outline-hidden text-left"
 											bind:value={config.CODE_INTERPRETER_JUPYTER_AUTH}
 											placeholder={$i18n.t('Select an auth method')}
-										>
-											<option selected value="">{$i18n.t('None')}</option>
-											<option value="token">{$i18n.t('Token')}</option>
-											<option value="password">{$i18n.t('Password')}</option>
-										</select>
+											items={[
+												{ value: '', label: $i18n.t('None') },
+												{ value: 'token', label: $i18n.t('Token') },
+												{ value: 'password', label: $i18n.t('Password') }
+											]}
+										/>
 									</div>
 								</div>
 

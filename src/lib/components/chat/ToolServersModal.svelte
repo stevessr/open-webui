@@ -46,8 +46,8 @@
 				<div class=" text-sm dark:text-gray-300 mb-1">
 					{#each selectedTools as tool}
 						<Collapsible buttonClassName="w-full mb-0.5">
-							<div>
-								<div class="text-sm font-medium dark:text-gray-100 text-gray-800">
+							<div class="truncate">
+								<div class="text-sm font-medium dark:text-gray-100 text-gray-800 truncate">
 									{tool?.name}
 								</div>
 
@@ -74,7 +74,7 @@
 
 			<div class="px-5 pb-5 w-full flex flex-col justify-center">
 				<div class=" text-xs text-gray-600 dark:text-gray-300 mb-2">
-					{$i18n.t('Neko UI can use tools provided by any OpenAPI server.')} <br /><a
+					{$i18n.t('Neko can use tools provided by any OpenAPI server.')} <br /><a
 						class="underline"
 						href="https://github.com/open-webui/openapi-servers"
 						target="_blank">{$i18n.t('Learn more about OpenAPI tool servers.')}</a

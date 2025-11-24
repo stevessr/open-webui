@@ -10,11 +10,12 @@
 
 	import AdvancedParams from './Advanced/AdvancedParams.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
+	import Select from '$lib/components/common/Select.svelte';
 	export let saveSettings: Function;
 	export let getModels: Function;
 
 	// General
-	let themes = ['dark', 'light', 'oled-dark'];
+	let themes = ['dark', 'light', 'oled-dark', 'macaron'];
 	let selectedTheme = 'system';
 
 	let languages: Awaited<ReturnType<typeof getLanguages>> = [];
@@ -120,7 +121,7 @@
 	});
 
 	const applyTheme = (_theme: string) => {
-		let themeToApply = _theme === 'oled-dark' ? 'dark' : _theme === 'her' ? 'light' : _theme;
+		let themeToApply = _theme === 'oled-dark' ? 'dark' : _theme === 'her' ? 'light' : _theme === 'macaron' ? 'light' : _theme;
 
 		if (_theme === 'system') {
 			themeToApply = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -183,77 +184,72 @@
 		console.log(_theme);
 	};
 
-	const themeChangeHandler = (_theme: string) => {
-		theme.set(_theme);
-		localStorage.setItem('theme', _theme);
-		applyTheme(_theme);
-	};
+  const themeChangeHandler = (_theme: string) => {
+    theme.set(_theme);
+    localStorage.setItem('theme', _theme);
+    applyTheme(_theme);
+
+    if (_theme === 'macaron') {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/assets/css/macaron.css';
+      link.id = 'macaron-theme';
+      document.head.appendChild(link);
+    } else {
+      const link = document.getElementById('macaron-theme');
+      if (link) {
+        link.remove();
+      }
+    }
+  };
 </script>
 
 <div class="flex flex-col h-full justify-between text-sm" id="tab-general">
-	<div class="  overflow-y-scroll max-h-[28rem] lg:max-h-full">
+	<div class="  overflow-y-scroll max-h-[28rem] md:max-h-full">
 		<div class="">
 			<div class=" mb-1 text-sm font-medium">{$i18n.t('WebUI Settings')}</div>
 
 			<div class="flex w-full justify-between">
 				<div class=" self-center text-xs font-medium">{$i18n.t('Theme')}</div>
 				<div class="flex items-center relative">
-					<select
-						class="dark:bg-gray-900 w-fit pr-8 rounded-sm py-2 px-2 text-xs bg-transparent text-right {$settings.highContrastMode
+					<Select
+						className="dark:bg-gray-900 w-fit text-xs bg-transparent text-right {$settings.highContrastMode
 							? ''
 							: 'outline-hidden'}"
 						bind:value={selectedTheme}
 						placeholder={$i18n.t('Select a theme')}
-						on:change={() => themeChangeHandler(selectedTheme)}
-					>
-						<option value="system">⚙️ {$i18n.t('System')}</option>
-						<option value="dark">🌑 {$i18n.t('Dark')}</option>
-						<option value="oled-dark">🌃 {$i18n.t('OLED Dark')}</option>
-						<option value="light">☀️ {$i18n.t('Light')}</option>
-						<option value="her">🌷 Her</option>
-						<!-- <option value="rose-pine dark">🪻 {$i18n.t('Rosé Pine')}</option>
-						<option value="rose-pine-dawn light">🌷 {$i18n.t('Rosé Pine Dawn')}</option> -->
-					</select>
+						items={[
+							{ value: 'system', label: '⚙️ ' + $i18n.t('System') },
+							{ value: 'dark', label: '🌑 ' + $i18n.t('Dark') },
+							{ value: 'oled-dark', label: '🌃 ' + $i18n.t('OLED Dark') },
+							{ value: 'light', label: '☀️ ' + $i18n.t('Light') },
+							{ value: 'her', label: '🌷 Her' },
+							{ value: 'macaron', label: '🍬 ' + $i18n.t('Macaron') }
+						]}
+						on:change={(e) => themeChangeHandler(e.detail.value)}
+					/>
 				</div>
 			</div>
 
 			<div class=" flex w-full justify-between">
 				<div class=" self-center text-xs font-medium">{$i18n.t('Language')}</div>
 				<div class="flex items-center relative">
-					<select
-						class="dark:bg-gray-900 w-fit pr-8 rounded-sm py-2 px-2 text-xs bg-transparent text-right {$settings.highContrastMode
+					<Select
+						className="dark:bg-gray-900 w-fit text-xs bg-transparent text-right {$settings.highContrastMode
 							? ''
 							: 'outline-hidden'}"
 						bind:value={lang}
 						placeholder={$i18n.t('Select a language')}
+						items={languages.map((language) => ({
+							value: language['code'],
+							label: language['title']
+						}))}
 						on:change={(e) => {
-							changeLanguage(lang);
+							changeLanguage(e.detail.value);
 						}}
-					>
-						{#each languages as language}
-							<option value={language['code']}>{language['title']}</option>
-						{/each}
-					</select>
+					/>
 				</div>
 			</div>
-			{#if $i18n.language === 'en-US' && !($config?.license_metadata ?? false)}
-				<div
-					class="mb-2 text-xs {($settings?.highContrastMode ?? false)
-						? 'text-gray-800 dark:text-gray-100'
-						: 'text-gray-400 dark:text-gray-500'}"
-				>
-					Couldn't find your language?
-					<a
-						class="font-medium underline {($settings?.highContrastMode ?? false)
-							? 'text-gray-700 dark:text-gray-200'
-							: 'text-gray-300'}"
-						href="https://github.com/open-webui/open-webui/blob/main/docs/CONTRIBUTING.md#-translations-and-internationalization"
-						target="_blank"
-					>
-						Help us translate Neko UI!
-					</a>
-				</div>
-			{/if}
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
@@ -276,8 +272,8 @@
 			</div>
 		</div>
 
-		{#if $user?.role === 'admin' || ($user?.permissions.chat?.system_prompt ?? true)}
-			<hr class="border-gray-50 dark:border-gray-850 my-3" />
+		{#if $user?.role === 'admin' || (($user?.permissions.chat?.controls ?? true) && ($user?.permissions.chat?.system_prompt ?? true))}
+			<hr class="border-gray-100/50 dark:border-gray-850 my-3" />
 
 			<div>
 				<div class=" my-2.5 text-sm font-medium">{$i18n.t('System Prompt')}</div>
@@ -285,15 +281,15 @@
 					bind:value={system}
 					className={'w-full text-sm outline-hidden resize-vertical' +
 						($settings.highContrastMode
-							? ' p-2.5 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-850 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 overflow-y-hidden'
-							: ' bg-white dark:text-gray-300 dark:bg-gray-900')}
+							? ' p-2.5 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-transparent text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 overflow-y-hidden'
+							: '  dark:text-gray-300 ')}
 					rows="4"
 					placeholder={$i18n.t('Enter system prompt here')}
 				/>
 			</div>
 		{/if}
 
-		{#if $user?.role === 'admin' || ($user?.permissions.chat?.controls ?? true)}
+		{#if $user?.role === 'admin' || (($user?.permissions.chat?.controls ?? true) && ($user?.permissions.chat?.params ?? true))}
 			<div class="mt-2 space-y-3 pr-1.5">
 				<div class="flex justify-between items-center text-sm">
 					<div class="  font-medium">{$i18n.t('Advanced Parameters')}</div>

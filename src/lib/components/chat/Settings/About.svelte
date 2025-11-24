@@ -45,7 +45,7 @@
 </script>
 
 <div id="tab-about" class="flex flex-col h-full justify-between space-y-3 text-sm mb-6">
-	<div class=" space-y-3 overflow-y-scroll max-h-[28rem] lg:max-h-full">
+	<div class=" space-y-3 overflow-y-scroll max-h-[28rem] md:max-h-full">
 		<div>
 			<div class=" mb-2.5 text-sm font-medium flex space-x-2 items-center">
 				<div>
@@ -57,7 +57,7 @@
 				<div class="flex flex-col text-xs text-gray-700 dark:text-gray-200">
 					<div class="flex gap-1">
 						<Tooltip content={WEBUI_BUILD_HASH}>
-							v{WEBUI_VERSION}
+							v{WEBUI_VERSION} ({WEBUI_BUILD_HASH})
 						</Tooltip>
 
 						{#if $config?.features?.enable_version_update_check}
@@ -112,40 +112,6 @@
 
 		<hr class=" border-gray-100 dark:border-gray-850" />
 
-		{#if $config?.license_metadata}
-			<div class="mb-2 text-xs">
-				{#if !$WEBUI_NAME.includes('Neko UI')}
-					<span class=" text-gray-500 dark:text-gray-300 font-medium">{$WEBUI_NAME}</span> -
-				{/if}
-
-				<span class=" capitalize">{$config?.license_metadata?.type}</span> license purchased by
-				<span class=" capitalize">{$config?.license_metadata?.organization_name}</span>
-			</div>
-		{:else}
-			<div class="flex space-x-1">
-				<a href="https://discord.gg/5rJgQTnV4s" target="_blank">
-					<img
-						alt="Discord"
-						src="https://img.shields.io/badge/Discord-Open_WebUI-blue?logo=discord&logoColor=white"
-					/>
-				</a>
-
-				<a href="https://twitter.com/OpenWebUI" target="_blank">
-					<img
-						alt="X (formerly Twitter) Follow"
-						src="https://img.shields.io/twitter/follow/OpenWebUI"
-					/>
-				</a>
-
-				<a href="https://github.com/open-webui/open-webui" target="_blank">
-					<img
-						alt="Github Repo"
-						src="https://img.shields.io/github/stars/open-webui/open-webui?style=social&label=Star us on Github"
-					/>
-				</a>
-			</div>
-		{/if}
-
 		<div class="mt-2 text-xs text-gray-400 dark:text-gray-500">
 			Emoji graphics provided by
 			<a href="https://github.com/jdecked/twemoji" target="_blank">Twemoji</a>, licensed under
@@ -157,7 +123,7 @@
 				class="text-xs text-gray-400 dark:text-gray-500">Copyright (c) {new Date().getFullYear()} <a
 					href="https://openwebui.com"
 					target="_blank"
-					class="underline">Neko UI (Timothy Jaeryang Baek)</a
+					class="underline">Neko (Timothy Jaeryang Baek)</a
 				>
 All rights reserved.
 
@@ -175,9 +141,9 @@ modification, are permitted provided that the following conditions are met:
 	contributors may be used to endorse or promote products derived from
 	this software without specific prior written permission.
 
-4. Notwithstanding any other provision of this License, and as a material condition of the rights granted herein, licensees are strictly prohibited from altering, removing, obscuring, or replacing any "Neko UI" branding, including but not limited to the name, logo, or any visual, textual, or symbolic identifiers that distinguish the software and its interfaces, in any deployment or distribution, regardless of the number of users, except as explicitly set forth in Clauses 5 and 6 below.
+4. Notwithstanding any other provision of this License, and as a material condition of the rights granted herein, licensees are strictly prohibited from altering, removing, obscuring, or replacing any "Neko" branding, including but not limited to the name, logo, or any visual, textual, or symbolic identifiers that distinguish the software and its interfaces, in any deployment or distribution, regardless of the number of users, except as explicitly set forth in Clauses 5 and 6 below.
 
-5. The branding restriction enumerated in Clause 4 shall not apply in the following limited circumstances: (i) deployments or distributions where the total number of end users (defined as individual natural persons with direct access to the application) does not exceed fifty (50) within any rolling thirty (30) day period; (ii) cases in which the licensee is an official contributor to the codebase—with a substantive code change successfully merged into the main branch of the official codebase maintained by the copyright holder—who has obtained specific prior written permission for branding adjustment from the copyright holder; or (iii) where the licensee has obtained a duly executed enterprise license expressly permitting such modification. For all other cases, any removal or alteration of the "Neko UI" branding shall constitute a material breach of license.
+5. The branding restriction enumerated in Clause 4 shall not apply in the following limited circumstances: (i) deployments or distributions where the total number of end users (defined as individual natural persons with direct access to the application) does not exceed fifty (50) within any rolling thirty (30) day period; (ii) cases in which the licensee is an official contributor to the codebase—with a substantive code change successfully merged into the main branch of the official codebase maintained by the copyright holder—who has obtained specific prior written permission for branding adjustment from the copyright holder; or (iii) where the licensee has obtained a duly executed enterprise license expressly permitting such modification. For all other cases, any removal or alteration of the "Neko" branding shall constitute a material breach of license.
 
 6. All code, modifications, or derivative works incorporated into this project prior to the incorporation of this branding clause remain licensed under the BSD 3-Clause License, and prior contributors retain all BSD-3 rights therein; if any such contributor requests the removal of their BSD-3-licensed code, the copyright holder will do so, and any replacement code will be licensed under the project's primary license then in effect. By contributing after this clause's adoption, you agree to the project's Contributor License Agreement (CLA) and to these updated terms for all new contributions.
 
