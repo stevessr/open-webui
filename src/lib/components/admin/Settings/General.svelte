@@ -203,33 +203,7 @@
 								{$i18n.t('Documentation')}
 							</a>
 						</div>
-
-						<div class="mt-1">
-							<div class="flex space-x-1">
-								<a href="https://discord.gg/5rJgQTnV4s" target="_blank">
-									<img
-										alt="Discord"
-										src="https://img.shields.io/badge/Discord-Open_WebUI-blue?logo=discord&logoColor=white"
-									/>
-								</a>
-
-								<a href="https://twitter.com/OpenWebUI" target="_blank">
-									<img
-										alt="X (formerly Twitter) Follow"
-										src="https://img.shields.io/twitter/follow/OpenWebUI"
-									/>
-								</a>
-
-								<a href="https://github.com/open-webui/open-webui" target="_blank">
-									<img
-										alt="Github Repo"
-										src="https://img.shields.io/github/stars/open-webui/open-webui?style=social&label=Star us on Github"
-									/>
-								</a>
-							</div>
-						</div>
 					</div>
-
 				</div>
 
 				<div class="mb-3">
@@ -256,16 +230,17 @@
 					<div class="  mb-2.5 flex w-full justify-between">
 						<div class=" self-center text-xs font-medium">{$i18n.t('Default Group')}</div>
 						<div class="flex items-center relative">
-							<select
-								class="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
+							<Select
+								className="dark:bg-gray-900 w-fit pr-8 rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
 								bind:value={adminConfig.DEFAULT_GROUP_ID}
 								placeholder={$i18n.t('Select a group')}
-							>
-								<option value={""}>None</option>
-								{#each groups as group}
-									<option value={group.id}>{group.name}</option>
-								{/each}
-							</select>
+								items={
+									[{ value: '', label: $i18n.t('None') }, ...groups.map((group) => ({
+									value: group.id,
+									label: DOMPurify.sanitize(group.name)
+								}))]
+								}
+							></Select>
 						</div>
 					</div>
 
