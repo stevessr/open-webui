@@ -17,22 +17,43 @@
 	let func = null;
 
 	const saveHandler = async (data) => {
-		console.log(data);
+		console.log('🔍 [saveHandler] 开始执行');
+		console.log('📊 [saveHandler] 接收到的数据：', data);
+		console.log('📝 [saveHandler] data.content:', data.content);
 
 		const manifest = extractFrontmatter(data.content);
-		if (compareVersion(manifest?.required_open_webui_version ?? '0.0.0', WEBUI_VERSION)) {
-			console.log('Version is lower than required');
-			toast.error(
-				$i18n.t(
-					'Neko version (v{{OPEN_WEBUI_VERSION}}) is lower than required version (v{{REQUIRED_VERSION}})',
-					{
-						OPEN_WEBUI_VERSION: WEBUI_VERSION,
-						REQUIRED_VERSION: manifest?.required_open_webui_version ?? '0.0.0'
-					}
-				)
+		console.log('📋 [saveHandler] 提取的 manifest:', manifest);
+		console.log('🔍 [saveHandler] manifest?.required_open_webui_version:', manifest?.required_open_webui_version);
+		console.log('🌐 [saveHandler] WEBUI_VERSION:', WEBUI_VERSION);
+
+		try {
+			const comparisonResult = compareVersion(
+				manifest?.required_open_webui_version ?? '0.0.0',
+				WEBUI_VERSION
 			);
+			console.log('⚖️ [saveHandler] 版本比较结果：', comparisonResult);
+
+			if (comparisonResult) {
+				console.log('📉 [saveHandler] 版本过低，显示错误');
+				toast.error(
+					$i18n.t(
+						'Neko version (v{{OPEN_WEBUI_VERSION}}) is lower than required version (v{{REQUIRED_VERSION}})',
+						{
+							OPEN_WEBUI_VERSION: WEBUI_VERSION,
+							REQUIRED_VERSION: manifest?.required_open_webui_version ?? '0.0.0'
+						}
+					)
+				);
+				return;
+			}
+		} catch (error) {
+			console.error('❌ [saveHandler] 版本比较出错：', error);
+			console.error('❌ [saveHandler] 错误堆栈：', error.stack);
+			toast.error('Version comparison failed');
 			return;
 		}
+
+		console.log('✅ [saveHandler] 版本检查通过，继续保存');
 
 		const res = await createNewFunction(localStorage.token, {
 			id: data.id,
@@ -61,6 +82,10 @@
 	};
 
 	onMount(() => {
+		console.log('🚀 [Create Function Page] 页面加载完成');
+		console.log('📊 [Create Function Page] 初始 func 数据：', func);
+		console.log('🔍 [Create Function Page] clone 状态：', clone);
+
 		window.addEventListener('message', async (event) => {
 			if (
 				!['https://openwebui.com', 'https://www.openwebui.com', 'http://localhost:9999'].includes(
@@ -70,7 +95,7 @@
 				return;
 
 			func = JSON.parse(event.data);
-			console.log(func);
+			console.log('📨 [Create Function Page] 从消息接收 func:', func);
 		});
 
 		if (window.opener ?? false) {
@@ -81,11 +106,12 @@
 			func = JSON.parse(sessionStorage.function);
 			sessionStorage.removeItem('function');
 
-			console.log(func);
+			console.log('💾 [Create Function Page] 从 sessionStorage 恢复 func:', func);
 			clone = true;
 		}
 
 		mounted = true;
+		console.log('✅ [Create Function Page] 页面挂载完成');
 	});
 </script>
 
