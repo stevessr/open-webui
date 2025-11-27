@@ -241,13 +241,14 @@ class SearchForm(BaseModel):
 async def get_status(request: Request):
     return {
         "status": True,
-        "chunk_size": request.app.state.config.CHUNK_SIZE,
-        "chunk_overlap": request.app.state.config.CHUNK_OVERLAP,
-        "template": request.app.state.config.RAG_TEMPLATE,
-        "embedding_engine": request.app.state.config.RAG_EMBEDDING_ENGINE,
-        "embedding_model": request.app.state.config.RAG_EMBEDDING_MODEL,
-        "reranking_model": request.app.state.config.RAG_RERANKING_MODEL,
-        "embedding_batch_size": request.app.state.config.RAG_EMBEDDING_BATCH_SIZE,
+        "CHUNK_SIZE": request.app.state.config.CHUNK_SIZE,
+        "CHUNK_OVERLAP": request.app.state.config.CHUNK_OVERLAP,
+        "RAG_TEMPLATE": request.app.state.config.RAG_TEMPLATE,
+        "RAG_EMBEDDING_ENGINE": request.app.state.config.RAG_EMBEDDING_ENGINE,
+        "RAG_EMBEDDING_MODEL": request.app.state.config.RAG_EMBEDDING_MODEL,
+        "RAG_RERANKING_MODEL": request.app.state.config.RAG_RERANKING_MODEL,
+        "RAG_EMBEDDING_BATCH_SIZE": request.app.state.config.RAG_EMBEDDING_BATCH_SIZE,
+        "ENABLE_ASYNC_EMBEDDING": request.app.state.config.ENABLE_ASYNC_EMBEDDING,
     }
 
 
@@ -255,9 +256,10 @@ async def get_status(request: Request):
 async def get_embedding_config(request: Request, user=Depends(get_admin_user)):
     return {
         "status": True,
-        "embedding_engine": request.app.state.config.RAG_EMBEDDING_ENGINE,
-        "embedding_model": request.app.state.config.RAG_EMBEDDING_MODEL,
-        "embedding_batch_size": request.app.state.config.RAG_EMBEDDING_BATCH_SIZE,
+        "RAG_EMBEDDING_ENGINE": request.app.state.config.RAG_EMBEDDING_ENGINE,
+        "RAG_EMBEDDING_MODEL": request.app.state.config.RAG_EMBEDDING_MODEL,
+        "RAG_EMBEDDING_BATCH_SIZE": request.app.state.config.RAG_EMBEDDING_BATCH_SIZE,
+        "ENABLE_ASYNC_EMBEDDING": request.app.state.config.ENABLE_ASYNC_EMBEDDING,
         "openai_config": {
             "url": request.app.state.config.RAG_OPENAI_API_BASE_URL,
             "key": request.app.state.config.RAG_OPENAI_API_KEY,
@@ -294,18 +296,13 @@ class EmbeddingModelUpdateForm(BaseModel):
     openai_config: Optional[OpenAIConfigForm] = None
     ollama_config: Optional[OllamaConfigForm] = None
     azure_openai_config: Optional[AzureOpenAIConfigForm] = None
-    embedding_engine: str
-    embedding_model: str
-    embedding_batch_size: Optional[int] = 1
+    RAG_EMBEDDING_ENGINE: str
+    RAG_EMBEDDING_MODEL: str
+    RAG_EMBEDDING_BATCH_SIZE: Optional[int] = 1
+    ENABLE_ASYNC_EMBEDDING: Optional[bool] = True
 
 
-@router.post("/embedding/update")
-async def update_embedding_config(
-    request: Request, form_data: EmbeddingModelUpdateForm, user=Depends(get_admin_user)
-):
-    log.info(
-        f"Updating embedding model: {request.app.state.config.RAG_EMBEDDING_MODEL} to {form_data.embedding_model}"
-    )
+def unload_embedding_model(request: Request):
     if request.app.state.config.RAG_EMBEDDING_ENGINE == "":
         # unloads current internal embedding model and clears VRAM cache
         request.app.state.ef = None
@@ -318,9 +315,25 @@ async def update_embedding_config(
 
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
+
+
+@router.post("/embedding/update")
+async def update_embedding_config(
+    request: Request, form_data: EmbeddingModelUpdateForm, user=Depends(get_admin_user)
+):
+    log.info(
+        f"Updating embedding model: {request.app.state.config.RAG_EMBEDDING_MODEL} to {form_data.RAG_EMBEDDING_MODEL}"
+    )
+    unload_embedding_model(request)
     try:
-        request.app.state.config.RAG_EMBEDDING_ENGINE = form_data.embedding_engine
-        request.app.state.config.RAG_EMBEDDING_MODEL = form_data.embedding_model
+        request.app.state.config.RAG_EMBEDDING_ENGINE = form_data.RAG_EMBEDDING_ENGINE
+        request.app.state.config.RAG_EMBEDDING_MODEL = form_data.RAG_EMBEDDING_MODEL
+        request.app.state.config.RAG_EMBEDDING_BATCH_SIZE = (
+            form_data.RAG_EMBEDDING_BATCH_SIZE
+        )
+        request.app.state.config.ENABLE_ASYNC_EMBEDDING = (
+            form_data.ENABLE_ASYNC_EMBEDDING
+        )
 
         if request.app.state.config.RAG_EMBEDDING_ENGINE in [
             "ollama",
@@ -353,10 +366,6 @@ async def update_embedding_config(
                 request.app.state.config.RAG_AZURE_OPENAI_API_VERSION = (
                     form_data.azure_openai_config.version
                 )
-
-            request.app.state.config.RAG_EMBEDDING_BATCH_SIZE = (
-                form_data.embedding_batch_size
-            )
 
         request.app.state.ef = get_ef(
             request.app.state.config.RAG_EMBEDDING_ENGINE,
@@ -391,13 +400,15 @@ async def update_embedding_config(
                 if request.app.state.config.RAG_EMBEDDING_ENGINE == "azure_openai"
                 else None
             ),
+            enable_async=request.app.state.config.ENABLE_ASYNC_EMBEDDING,
         )
 
         return {
             "status": True,
-            "embedding_engine": request.app.state.config.RAG_EMBEDDING_ENGINE,
-            "embedding_model": request.app.state.config.RAG_EMBEDDING_MODEL,
-            "embedding_batch_size": request.app.state.config.RAG_EMBEDDING_BATCH_SIZE,
+            "RAG_EMBEDDING_ENGINE": request.app.state.config.RAG_EMBEDDING_ENGINE,
+            "RAG_EMBEDDING_MODEL": request.app.state.config.RAG_EMBEDDING_MODEL,
+            "RAG_EMBEDDING_BATCH_SIZE": request.app.state.config.RAG_EMBEDDING_BATCH_SIZE,
+            "ENABLE_ASYNC_EMBEDDING": request.app.state.config.ENABLE_ASYNC_EMBEDDING,
             "openai_config": {
                 "url": request.app.state.config.RAG_OPENAI_API_BASE_URL,
                 "key": request.app.state.config.RAG_OPENAI_API_KEY,
@@ -1238,7 +1249,7 @@ def save_docs_to_vector_db(
 
         return ", ".join(docs_info)
 
-    log.info(
+    log.debug(
         f"save_docs_to_vector_db: document {_get_docs_info(docs)} {collection_name}"
     )
 
@@ -1430,6 +1441,9 @@ def process_file(
     form_data: ProcessFileForm,
     user=Depends(get_verified_user),
 ):
+    """
+    Process a file and save its content to the vector database.
+    """
     if user.role == "admin":
         file = Files.get_file_by_id(form_data.file_id)
     else:
@@ -1656,7 +1670,7 @@ class ProcessTextForm(BaseModel):
 
 
 @router.post("/process/text")
-def process_text(
+async def process_text(
     request: Request,
     form_data: ProcessTextForm,
     user=Depends(get_verified_user),
@@ -1674,7 +1688,9 @@ def process_text(
     text_content = form_data.content
     log.debug(f"text_content: {text_content}")
 
-    result = save_docs_to_vector_db(request, docs, collection_name, user=user)
+    result = await run_in_threadpool(
+        save_docs_to_vector_db, request, docs, collection_name, user=user
+    )
     if result:
         return {
             "status": True,
@@ -1690,7 +1706,7 @@ def process_text(
 
 @router.post("/process/youtube")
 @router.post("/process/web")
-def process_web(
+async def process_web(
     request: Request, form_data: ProcessUrlForm, user=Depends(get_verified_user)
 ):
     try:
@@ -1698,11 +1714,14 @@ def process_web(
         if not collection_name:
             collection_name = calculate_sha256_string(form_data.url)[:63]
 
-        content, docs = get_content_from_url(request, form_data.url)
+        content, docs = await run_in_threadpool(
+            get_content_from_url, request, form_data.url
+        )
         log.debug(f"text_content: {content}")
 
         if not request.app.state.config.BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL:
-            save_docs_to_vector_db(
+            await run_in_threadpool(
+                save_docs_to_vector_db,
                 request,
                 docs,
                 collection_name,
@@ -2394,7 +2413,7 @@ class BatchProcessFilesResponse(BaseModel):
 
 
 @router.post("/process/files/batch")
-def process_files_batch(
+async def process_files_batch(
     request: Request,
     form_data: BatchProcessFilesForm,
     user=Depends(get_verified_user),
@@ -2449,10 +2468,11 @@ def process_files_batch(
     # Save all documents in one batch
     if all_docs:
         try:
-            save_docs_to_vector_db(
-                request=request,
-                docs=all_docs,
-                collection_name=collection_name,
+            await run_in_threadpool(
+                save_docs_to_vector_db,
+                request,
+                all_docs,
+                collection_name,
                 add=True,
                 user=user,
             )

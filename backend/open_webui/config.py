@@ -583,14 +583,16 @@ OAUTH_ROLES_CLAIM = PersistentConfig(
     os.environ.get("OAUTH_ROLES_CLAIM", "roles"),
 )
 
-SEP = os.environ.get("OAUTH_ROLES_SEPARATOR", ",")
+OAUTH_ROLES_SEPARATOR = os.environ.get("OAUTH_ROLES_SEPARATOR", ",")
 
 OAUTH_ALLOWED_ROLES = PersistentConfig(
     "OAUTH_ALLOWED_ROLES",
     "oauth.allowed_roles",
     [
         role.strip()
-        for role in os.environ.get("OAUTH_ALLOWED_ROLES", f"user{SEP}admin").split(SEP)
+        for role in os.environ.get(
+            "OAUTH_ALLOWED_ROLES", f"user{OAUTH_ROLES_SEPARATOR}admin"
+        ).split(OAUTH_ROLES_SEPARATOR)
         if role
     ],
 )
@@ -600,7 +602,9 @@ OAUTH_ADMIN_ROLES = PersistentConfig(
     "oauth.admin_roles",
     [
         role.strip()
-        for role in os.environ.get("OAUTH_ADMIN_ROLES", "admin").split(SEP)
+        for role in os.environ.get("OAUTH_ADMIN_ROLES", "admin").split(
+            OAUTH_ROLES_SEPARATOR
+        )
         if role
     ],
 )
@@ -2845,6 +2849,12 @@ RAG_EMBEDDING_BATCH_SIZE = PersistentConfig(
         os.environ.get("RAG_EMBEDDING_BATCH_SIZE")
         or os.environ.get("RAG_EMBEDDING_OPENAI_BATCH_SIZE", "1")
     ),
+)
+
+ENABLE_ASYNC_EMBEDDING = PersistentConfig(
+    "ENABLE_ASYNC_EMBEDDING",
+    "rag.enable_async_embedding",
+    os.environ.get("ENABLE_ASYNC_EMBEDDING", "True").lower() == "true",
 )
 
 RAG_EMBEDDING_QUERY_PREFIX = os.environ.get("RAG_EMBEDDING_QUERY_PREFIX", None)
