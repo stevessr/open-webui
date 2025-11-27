@@ -171,7 +171,11 @@ class Pipe:
         """
         根据 groundingMetadata 将引用内嵌到文本中。
         """
-        if not metadata or "groundingChunks" not in metadata or "groundingSupports" not in metadata:
+        if (
+            not metadata
+            or "groundingChunks" not in metadata
+            or "groundingSupports" not in metadata
+        ):
             return text
 
         chunks = metadata["groundingChunks"]
@@ -198,7 +202,7 @@ class Pipe:
                             # 使用 Markdown 链接格式 [n](uri)
                             if uri:
                                 citations.append(f"[{idx + 1}]({uri})")
-                
+
                 if citations:
                     citation_str = " " + ", ".join(citations)
                     insertions.append((end_index, citation_str))
@@ -212,7 +216,7 @@ class Pipe:
             # 确保索引在范围内 (API 应该保证，但为了安全)
             if 0 <= idx <= len(result_text):
                 result_text = result_text[:idx] + citation_str + result_text[idx:]
-        
+
         return result_text
 
     async def process_stream(
@@ -223,17 +227,18 @@ class Pipe:
     ) -> AsyncGenerator[str, None]:
         """
         处理来自 Gemini API 的 SSE 流。
-        注意：为了支持内嵌引用 (Inline Grounding)，普通文本会被缓冲直到流结束或收到元数据，
-        而思考过程 (Thought) 会实时流式传输。
+        修改版 v2：
+        1. 实时输出文本（不缓冲）。
+        2. 实时收集引用来源。
+        3. 流结束后，将收集到的来源用 <details> 包裹输出在末尾。
         """
         finish_reason_received = False
         stream_iterator = response.aiter_lines()
         content_yielded = False
         is_thinking = False
-        
-        # 缓冲区
-        text_buffer = []
-        grounding_metadata = None
+
+        # 用于收集流过程中出现的所有唯一来源 (URI -> Title)
+        unique_sources = {}
 
         try:
             while True:
@@ -258,9 +263,21 @@ class Pipe:
                         if candidates:
                             candidate = candidates[0]
 
-                            # 1. 捕获 Grounding Metadata (通常在最后一个 chunk)
-                            if "groundingMetadata" in candidate:
-                                grounding_metadata = candidate["groundingMetadata"]
+                            # 1. 捕获并收集引用源 (Grounding Metadata)
+                            current_grounding_metadata = candidate.get(
+                                "groundingMetadata"
+                            )
+                            if current_grounding_metadata:
+                                chunks = current_grounding_metadata.get(
+                                    "groundingChunks", []
+                                )
+                                for source_chunk in chunks:
+                                    if "web" in source_chunk:
+                                        uri = source_chunk["web"].get("uri")
+                                        title = source_chunk["web"].get("title", "来源")
+                                        if uri:
+                                            # 使用 URI 作为键进行去重，保留 (或更新) 标题
+                                            unique_sources[uri] = title
 
                             if (
                                 "content" in candidate
@@ -273,7 +290,7 @@ class Pipe:
                                             f"检测到函数调用：{part['functionCall']}"
                                         )
                                         detected_tool_calls.append(part["functionCall"])
-                                        continue  # 工具调用不显示文本
+                                        continue
 
                                     # 3. 处理文本和思考
                                     text_content = part.get("text", "")
@@ -283,21 +300,31 @@ class Pipe:
                                         content_yielded = True
 
                                         if is_thought:
-                                            # 如果是思考，直接流式输出
+                                            # 思考内容直接输出
                                             if not is_thinking:
                                                 yield "<think>"
                                                 is_thinking = True
                                             yield text_content
                                         else:
-                                            # 如果是正文，先结束思考标签（如果有关闭的话）
+                                            # 正文内容
                                             if is_thinking:
                                                 yield "</think>"
                                                 is_thinking = False
-                                            
-                                            # 累积正文到 history 用于下一次 context
+
                                             accumulated_text.append(text_content)
-                                            # 缓冲正文用于最后处理引用
-                                            text_buffer.append(text_content)
+
+                                            # 尝试对当前片段进行内嵌引用处理
+                                            # 即使这里处理了，下面的 finally 块也会再次输出完整的列表作为兜底
+                                            if current_grounding_metadata:
+                                                processed_text = (
+                                                    self.insert_grounding_citations(
+                                                        text_content,
+                                                        current_grounding_metadata,
+                                                    )
+                                                )
+                                                yield processed_text
+                                            else:
+                                                yield text_content
 
                         if candidates and candidates[0].get("finishReason"):
                             finish_reason_received = True
@@ -317,16 +344,16 @@ class Pipe:
                 yield "</think>"
 
         finally:
-            # 流结束，处理缓冲的文本和引用
-            full_text = "".join(text_buffer)
-            
-            if grounding_metadata and full_text:
-                # 如果有引用元数据，进行内嵌处理
-                cited_text = self.insert_grounding_citations(full_text, grounding_metadata)
-                yield cited_text
-            elif full_text:
-                # 如果没有元数据，直接输出缓冲的文本
-                yield full_text
+            # === 新增逻辑：在流结束时输出折叠的引用列表 ===
+            if unique_sources:
+                yield "\n\n<details>\n<summary>参考资料 (Sources)</summary>\n\n"
+
+                # 遍历字典生成列表，i 是序号
+                for i, (uri, title) in enumerate(unique_sources.items(), 1):
+                    # 格式：1. [标题](链接)
+                    yield f"{i}. [{title}]({uri})\n"
+
+                yield "\n</details>"
 
             if (
                 not finish_reason_received
@@ -473,7 +500,7 @@ class Pipe:
                     result = await __event_call__(
                         {"name": func_name, "arguments": func_args}
                     )
-                    
+
                     # 将工具返回值作为内容的一部分返回
                     if result:
                         yield str(result)
