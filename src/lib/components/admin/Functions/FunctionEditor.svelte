@@ -256,20 +256,38 @@ class Pipe:
 `;
 
 	const saveHandler = async () => {
-		loading = true;
-		onSave({
+		console.log('💾 [FunctionEditor saveHandler] 开始执行');
+		console.log('📊 [FunctionEditor saveHandler] 准备传递的数据：', {
 			id,
 			name,
 			meta,
-			content
+			content: content.substring(0, 100) + '...' // 只显示前 100 个字符
 		});
+
+		loading = true;
+
+		try {
+			onSave({
+				id,
+				name,
+				meta,
+				content
+			});
+			console.log('✅ [FunctionEditor saveHandler] onSave 调用成功');
+		} catch (error) {
+			console.error('❌ [FunctionEditor saveHandler] onSave 调用失败：', error);
+		}
 	};
 
 	const submitHandler = async () => {
+		console.log('🚀 [FunctionEditor submitHandler] 表单提交开始');
+
 		if (codeEditor) {
+			console.log('📝 [FunctionEditor submitHandler] 更新内容');
 			content = _content;
 			await tick();
 
+			console.log('🎨 [FunctionEditor submitHandler] 格式化代码');
 			const res = await codeEditor.formatPythonCodeHandler();
 			await tick();
 
@@ -277,11 +295,22 @@ class Pipe:
 			await tick();
 
 			if (res) {
-				console.info('Code formatted successfully');
+				console.info('✅ [FunctionEditor submitHandler] 代码格式化成功');
 
-				saveHandler();
+				try {
+					await saveHandler();
+					console.log('✅ [FunctionEditor submitHandler] saveHandler 调用成功');
+				} catch (error) {
+					console.error('❌ [FunctionEditor submitHandler] saveHandler 调用失败：', error);
+				}
+			} else {
+				console.warn('⚠️ [FunctionEditor submitHandler] 代码格式化失败');
 			}
+		} else {
+			console.warn('⚠️ [FunctionEditor submitHandler] codeEditor 不存在');
 		}
+
+		console.log('🏁 [FunctionEditor submitHandler] 表单提交结束');
 	};
 </script>
 
