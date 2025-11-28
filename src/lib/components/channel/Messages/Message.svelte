@@ -37,10 +37,14 @@
 	import Emoji from '$lib/components/common/Emoji.svelte';
 	import Skeleton from '$lib/components/chat/Messages/Skeleton.svelte';
 	import ArrowUpLeftAlt from '$lib/components/icons/ArrowUpLeftAlt.svelte';
+<<<<<<< HEAD
 	import PinSlash from '$lib/components/icons/PinSlash.svelte';
 	import Pin from '$lib/components/icons/Pin.svelte';
 
 	export let className = '';
+=======
+	import VideoImage from '$lib/components/common/VideoImage.svelte';
+>>>>>>> db3d8adbb (simple)
 
 	export let message;
 	export let channel;
@@ -237,17 +241,22 @@
 					}}
 				>
 					{#if message?.reply_to_message?.meta?.model_id}
-						<img
+						<VideoImage
 							src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${message.reply_to_message.meta.model_id}`}
 							alt={message.reply_to_message.meta.model_name ??
 								message.reply_to_message.meta.model_id}
 							class="size-4 ml-0.5 rounded-full object-cover"
 						/>
 					{:else}
+<<<<<<< HEAD
 						<img
 							src={message.reply_to_message.user?.role === 'webhook'
 								? `${WEBUI_API_BASE_URL}/channels/webhooks/${message.reply_to_message.user?.id}/profile/image`
 								: `${WEBUI_API_BASE_URL}/users/${message.reply_to_message.user?.id}/profile/image`}
+=======
+						<VideoImage
+							src={`${WEBUI_API_BASE_URL}/users/${message.reply_to_message.user?.id}/profile/image`}
+>>>>>>> db3d8adbb (simple)
 							alt={message.reply_to_message.user?.name ?? $i18n.t('Unknown User')}
 							class="size-4 ml-0.5 rounded-full object-cover"
 						/>

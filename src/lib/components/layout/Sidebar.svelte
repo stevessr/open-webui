@@ -600,7 +600,11 @@
 
 <ChannelModal
 	bind:show={showCreateChannel}
+<<<<<<< HEAD
 	onSubmit={async ({ type, name, is_private, access_control, group_ids, user_ids }) => {
+=======
+	onSubmit={async ({ type, name, access_control, meta, user_ids }) => {
+>>>>>>> db3d8adbb (simple)
 		name = name?.trim();
 
 		if (type === 'dm') {
@@ -620,7 +624,11 @@
 			name: name,
 			is_private: is_private,
 			access_control: access_control,
+<<<<<<< HEAD
 			group_ids: group_ids,
+=======
+			meta: meta,
+>>>>>>> db3d8adbb (simple)
 			user_ids: user_ids
 		}).catch((error) => {
 			toast.error(`${error}`);

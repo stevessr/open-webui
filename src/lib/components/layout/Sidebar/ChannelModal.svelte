@@ -63,6 +63,15 @@
 		}
 
 		await onSubmit({
+<<<<<<< HEAD
+=======
+			name: name.replace(/\\s/g, '-'),
+			meta: {
+				...(channel?.meta ?? {}),
+				background_image_url: background_image_url,
+				background_opacity: background_opacity
+			},
+>>>>>>> db3d8adbb (simple)
 			type: type,
 			name: name.replace(/\s/g, '-'),
 			is_private: type === 'group' ? isPrivate : null,
