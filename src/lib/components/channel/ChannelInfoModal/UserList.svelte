@@ -33,6 +33,7 @@
 	import Markdown from '$lib/components/chat/Messages/Markdown.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import ProfilePreview from '../Messages/Message/ProfilePreview.svelte';
+	import VideoImage from '$lib/components/common/VideoImage.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -188,8 +189,8 @@
 								<div class="px-3 py-1.5 font-medium text-gray-900 dark:text-white flex-1">
 									<div class="flex items-center gap-2">
 										<ProfilePreview {user} side="right" align="center" sideOffset={6}>
-											<img
-												class="rounded-2xl w-6 h-6 object-cover flex-shrink-0"
+											<VideoImage
+												className="rounded-2xl w-6 h-6 object-cover flex-shrink-0"
 												src={`${WEBUI_API_BASE_URL}/users/${user.id}/profile/image`}
 												alt="user"
 											/>

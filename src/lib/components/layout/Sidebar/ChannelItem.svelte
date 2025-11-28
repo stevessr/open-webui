@@ -14,6 +14,7 @@
 	import Hashtag from '$lib/components/icons/Hashtag.svelte';
 	import Users from '$lib/components/icons/Users.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import VideoImage from '$lib/components/common/VideoImage.svelte';
 
 	export let onUpdate: Function = () => {};
 
@@ -86,10 +87,10 @@
 					{#if channel?.users}
 						<div class="flex ml-[1px] mr-0.5">
 							{#each channel.users.filter((u) => u.id !== $user?.id).slice(0, 2) as u, index}
-								<img
+								<VideoImage
 									src={`${WEBUI_API_BASE_URL}/users/${u.id}/profile/image`}
 									alt={u.name}
-									class=" size-5.5 rounded-full border-2 border-white dark:border-gray-900 {index ===
+									className=" size-5.5 rounded-full border-2 border-white dark:border-gray-900 {index ===
 									1
 										? '-ml-2.5'
 										: ''}"

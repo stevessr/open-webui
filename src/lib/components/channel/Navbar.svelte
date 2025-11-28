@@ -19,6 +19,7 @@
 	import UserAlt from '../icons/UserAlt.svelte';
 	import ChannelInfoModal from './ChannelInfoModal.svelte';
 	import Users from '../icons/Users.svelte';
+	import VideoImage from '../common/VideoImage.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -68,10 +69,10 @@
 							{#if channel?.users}
 								<div class="flex mr-1.5">
 									{#each channel.users.filter((u) => u.id !== $user?.id).slice(0, 2) as u, index}
-										<img
+										<VideoImage
 											src={`${WEBUI_API_BASE_URL}/users/${u.id}/profile/image`}
 											alt={u.name}
-											class=" size-6.5 rounded-full border-2 border-white dark:border-gray-900 {index ===
+											className=" size-6.5 rounded-full border-2 border-white dark:border-gray-900 {index ===
 											1
 												? '-ml-3'
 												: ''}"
