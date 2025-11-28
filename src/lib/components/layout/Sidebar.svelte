@@ -64,6 +64,7 @@
 	import { slide } from 'svelte/transition';
 	import HotkeyHint from '../common/HotkeyHint.svelte';
 	import ProfileImage from '../common/ProfileImage.svelte';
+	import { key } from 'vega';
 
 	const BREAKPOINT = 768;
 
@@ -91,8 +92,11 @@
 	}
 
 	const initFolders = async () => {
+		if ($config?.features?.enable_folders === false) {
+			return;
+		}
+
 		const folderList = await getFolders(localStorage.token).catch((error) => {
-			toast.error(`${error}`);
 			return [];
 		});
 		_folders.set(folderList.sort((a, b) => b.updated_at - a.updated_at));
@@ -178,7 +182,11 @@
 	};
 
 	const initChannels = async () => {
-		await channels.set(await getChannels(localStorage.token));
+		await channels.set(
+			(await getChannels(localStorage.token)).sort((a, b) =>
+				a.type === b.type ? 0 : a.type === 'dm' ? 1 : -1
+			)
+		);
 	};
 
 	const initChatList = async () => {
@@ -480,16 +488,27 @@
 <ChannelModal
 	bind:show={showCreateChannel}
 	onSubmit={async ({ name, access_control, meta }) => {
+	onSubmit={async ({ type, name, access_control, user_ids }) => {
 		name = name?.trim();
-		if (!name) {
-			toast.error($i18n.t('Channel name cannot be empty.'));
-			return;
+
+		if (type === 'dm') {
+			if (!user_ids || user_ids.length === 0) {
+				toast.error($i18n.t('Please select at least one user for Direct Message channel.'));
+				return;
+			}
+		} else {
+			if (!name) {
+				toast.error($i18n.t('Channel name cannot be empty.'));
+				return;
+			}
 		}
 
 		const res = await createNewChannel(localStorage.token, {
+			type: type,
 			name: name,
 			access_control: access_control,
 			meta: meta
+			user_ids: user_ids
 		}).catch((error) => {
 			toast.error(`${error}`);
 			return null;
@@ -499,6 +518,8 @@
 			$socket.emit('join-channels', { auth: { token: $user?.token } });
 			await initChannels();
 			showCreateChannel = false;
+
+			goto(`/channels/${res.id}`);
 		}
 	}}
 />
@@ -715,6 +736,9 @@
 	</div>
 {/if}
 
+<!-- {$i18n.t('New Folder')} -->
+<!-- {$i18n.t('Pinned')} -->
+
 {#if $showSidebar}
 	<div
 		bind:this={navElement}
@@ -911,29 +935,34 @@
 						name={$i18n.t('Channels')}
 						chevron={false}
 						dragAndDrop={false}
-						onAdd={async () => {
-							if ($user?.role === 'admin') {
-								await tick();
+						onAdd={$user?.role === 'admin'
+							? async () => {
+									await tick();
 
-								setTimeout(() => {
-									showCreateChannel = true;
-								}, 0);
-							}
-						}}
+									setTimeout(() => {
+										showCreateChannel = true;
+									}, 0);
+								}
+							: null}
 						onAddLabel={$i18n.t('Create Channel')}
 					>
-						{#each $channels as channel}
+						{#each $channels as channel, channelIdx (`${channel?.id}`)}
 							<ChannelItem
 								{channel}
 								onUpdate={async () => {
 									await initChannels();
 								}}
 							/>
+
+							{#if channelIdx < $channels.length - 1 && channel.type !== $channels[channelIdx + 1]?.type}<hr
+									class=" border-gray-100/40 dark:border-gray-800/10 my-1.5 w-full"
+								/>
+							{/if}
 						{/each}
 					</Folder>
 				{/if}
 
-				{#if folders}
+				{#if $config?.features?.enable_folders && ($user?.role === 'admin' || ($user?.permissions?.features?.folders ?? true))}
 					<Folder
 						id="sidebar-folders"
 						className="px-2 mt-0.5"

@@ -12,6 +12,7 @@
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import UserListSelector from '$lib/components/workspace/common/UserListSelector.svelte';
 	const i18n = getContext('i18n');
 
 	export let show = false;
@@ -21,10 +22,13 @@
 	export let channel = null;
 	export let edit = false;
 
+	let type = '';
 	let name = '';
+
 	let accessControl = {};
 	let background_image_url = '';
 	let background_opacity = 0.25;
+	let userIds = [];
 
 	let loading = false;
 
@@ -36,22 +40,26 @@
 		loading = true;
 		await onSubmit({
 			name: name.replace(/\\s/g, '-'),
-			access_control: accessControl,
 			meta: {
 				...(channel?.meta ?? {}),
 				background_image_url: background_image_url,
 				background_opacity: background_opacity
 			}
+			type: type,
+			access_control: accessControl,
+			user_ids: userIds
 		});
 		show = false;
 		loading = false;
 	};
 
 	const init = () => {
-		name = channel.name;
+		type = channel?.type ?? '';
+		name = channel?.name ?? '';
 		accessControl = channel.access_control;
 		background_image_url = channel.meta?.background_image_url ?? '';
 		background_opacity = channel.meta?.background_opacity ?? 0.25;
+		userIds = channel?.user_ids ?? [];
 	};
 
 	$: if (show) {
@@ -84,10 +92,12 @@
 	};
 
 	const resetHandler = () => {
+		type = '';
 		name = '';
 		accessControl = {};
 		background_image_url = '';
 		background_opacity = 0.25;
+		userIds = [];
 		loading = false;
 	};
 	const updateChannelMeta = (key: string, value: any) => {
@@ -134,81 +144,52 @@
 						submitHandler();
 					}}
 				>
+					{#if !edit}
+						<div class="flex flex-col w-full mt-2">
+							<div class=" mb-1 text-xs text-gray-500">{$i18n.t('Channel Type')}</div>
+
+							<div class="flex-1">
+								<select
+									class="w-full text-sm bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-700 outline-hidden"
+									bind:value={type}
+								>
+									<option value="">{$i18n.t('Channel')}</option>
+									<option value="dm">{$i18n.t('Direct Message')}</option>
+								</select>
+							</div>
+						</div>
+					{/if}
+
 					<div class="flex flex-col w-full mt-2">
-						<div class=" mb-1 text-xs text-gray-500">{$i18n.t('Channel Name')}</div>
+						<div class=" mb-1 text-xs text-gray-500">
+							{$i18n.t('Channel Name')}
+							<span class="text-xs text-gray-200 dark:text-gray-800 ml-0.5"
+								>{type === 'dm' ? `${$i18n.t('Optional')}` : ''}</span
+							>
+						</div>
 
 						<div class="flex-1">
 							<input
 								class="w-full text-sm bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-700 outline-hidden"
 								type="text"
 								bind:value={name}
-								placeholder={$i18n.t('new-channel')}
+								placeholder={`${$i18n.t('new-channel')}`}
 								autocomplete="off"
+								required={type !== 'dm'}
 							/>
 						</div>
 					</div>
 
-					<div class="flex flex-col w-full mt-2">
-						<div class=" mb-1 text-xs text-gray-500">{$i18n.t('Background Image URL')}</div>
-						<div class="flex-1">
-							<input
-								class="w-full text-sm bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-700 outline-hidden"
-								type="text"
-								bind:value={background_image_url}
-								on:input={() => {
-									if ($activeChannel) {
-										$activeChannel.meta = {
-											...($activeChannel.meta ?? {}),
-											background_image_url: background_image_url
-										};
-									}
-								}}
-								placeholder="https://example.com/image.png"
-								autocomplete="off"
-							/>
-						</div>
-					</div>
+					<hr class=" border-gray-100/40 dark:border-gray-700/10 my-2.5 w-full" />
 
-					{#if background_image_url}
-						<div class="flex flex-col w-full mt-2">
-							<VideoImage
-								src={background_image_url}
-								alt="background"
-								className="w-full h-32 object-cover rounded-lg "
-								opacity={background_opacity}
-							/>
-						</div>
-					{/if}
-
-					<div class="flex flex-col w-full mt-2">
-						<div class="flex justify-between">
-							<div class="text-xs text-gray-500">{$i18n.t('Background Opacity')}</div>
-							<div class="text-xs text-gray-500">{background_opacity}</div>
-						</div>
-						<input
-							type="range"
-							min="0"
-							max="1"
-							step="0.01"
-							bind:value={background_opacity}
-							on:input={() => {
-								if ($activeChannel) {
-									$activeChannel.meta = {
-										...($activeChannel.meta ?? {}),
-										background_opacity: background_opacity
-									};
-								}
-							}}
-							class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-						/>
-					</div>
-
-					<hr class=" border-gray-100 dark:border-gray-700/10 my-2.5 w-full" />
-
-					<div class="my-2 -mx-2">
-						<div class="trans px-4 py-3 bg-gray-50 dark:bg-gray-950 rounded-3xl">
-							<AccessControl bind:accessControl accessRoles={['read', 'write']} />
-						</div>
+					<div class="-mx-2">
+						{#if type === 'dm'}
+							<UserListSelector bind:userIds />
+						{:else}
+							<div class="px-4 py-3 bg-gray-50 dark:bg-gray-950 rounded-3xl">
+								<AccessControl bind:accessControl accessRoles={['read', 'write']} />
+							</div>
+						{/if}
 					</div>
 
 					<div class="flex justify-end pt-3 text-sm font-medium gap-1.5">
