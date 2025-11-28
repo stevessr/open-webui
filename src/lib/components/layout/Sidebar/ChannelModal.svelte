@@ -44,7 +44,7 @@
 				...(channel?.meta ?? {}),
 				background_image_url: background_image_url,
 				background_opacity: background_opacity
-			}
+			},
 			type: type,
 			access_control: accessControl,
 			user_ids: userIds
