@@ -512,13 +512,26 @@ export const copyToClipboard = async (text, html = null, formatted = false) => {
 };
 
 export const compareVersion = (latest, current) => {
-	return current === '0.0.0'
+	console.log('⚖️ [compareVersion] 开始比较版本');
+	console.log('📊 [compareVersion] latest:', latest, `(${typeof latest})`);
+	console.log('📊 [compareVersion] current:', current, `(${typeof current})`);
+
+	// 添加防御性检查
+	if (latest == null || current == null) {
+		console.log('⚖️ [compareVersion] 参数为空，返回 false');
+		return false;
+	}
+
+	const result = current === '0.0.0'
 		? false
 		: current.localeCompare(latest, undefined, {
 				numeric: true,
 				sensitivity: 'case',
 				caseFirst: 'upper'
 			}) < 0;
+
+	console.log('✅ [compareVersion] 比较结果:', result);
+	return result;
 };
 
 export const extractCurlyBraceWords = (text) => {

@@ -22,6 +22,7 @@
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
 	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import VideoImage from '$lib/components/common/VideoImage.svelte';
 
 	export let groupId: string;
 	export let userCount = 0;
@@ -113,7 +114,7 @@
 					class="w-full text-sm text-left text-gray-500 dark:text-gray-400 table-auto max-w-full"
 				>
 					<thead class="text-xs text-gray-800 uppercase bg-transparent dark:text-gray-200">
-						<tr class=" border-b-[1.5px] border-gray-50 dark:border-gray-850">
+						<tr class=" border-b-[1.5px] border-gray-50/50 dark:border-gray-800/10">
 							<th
 								scope="col"
 								class="px-2.5 py-2 cursor-pointer text-left w-8"
@@ -238,8 +239,8 @@
 								<td class="px-3 py-1 font-medium text-gray-900 dark:text-white max-w-48">
 									<Tooltip content={user.email} placement="top-start">
 										<div class="flex items-center">
-											<img
-												class="rounded-full w-6 h-6 object-cover mr-2.5 flex-shrink-0"
+											<VideoImage
+												className="rounded-full w-6 h-6 object-cover mr-2.5 flex-shrink-0"
 												src={`${WEBUI_API_BASE_URL}/users/${user.id}/profile/image`}
 												alt="user"
 											/>
