@@ -16,6 +16,7 @@
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Checkbox from '$lib/components/common/Checkbox.svelte';
+	import VideoImage from '$lib/components/common/VideoImage.svelte';
 
 	export let onChange: Function = () => {};
 	export let userIds = [];
@@ -195,7 +196,7 @@
 									<div class="px-3 py-1.5 font-medium text-gray-900 dark:text-white flex-1">
 										<div class="flex items-center gap-2">
 											<ProfilePreview {user} side="right" align="center" sideOffset={6}>
-												<img
+												<VideoImage
 													class="rounded-2xl w-6 h-6 object-cover flex-shrink-0"
 													src={`${WEBUI_API_BASE_URL}/users/${user.id}/profile/image`}
 													alt="user"

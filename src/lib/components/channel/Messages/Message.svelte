@@ -36,6 +36,7 @@
 	import Emoji from '$lib/components/common/Emoji.svelte';
 	import Skeleton from '$lib/components/chat/Messages/Skeleton.svelte';
 	import ArrowUpLeftAlt from '$lib/components/icons/ArrowUpLeftAlt.svelte';
+	import VideoImage from '$lib/components/common/VideoImage.svelte';
 
 	export let message;
 	export let showUserProfile = true;
@@ -177,14 +178,14 @@
 					}}
 				>
 					{#if message?.reply_to_message?.meta?.model_id}
-						<img
+						<VideoImage
 							src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${message.reply_to_message.meta.model_id}`}
 							alt={message.reply_to_message.meta.model_name ??
 								message.reply_to_message.meta.model_id}
 							class="size-4 ml-0.5 rounded-full object-cover"
 						/>
 					{:else}
-						<img
+						<VideoImage
 							src={`${WEBUI_API_BASE_URL}/users/${message.reply_to_message.user?.id}/profile/image`}
 							alt={message.reply_to_message.user?.name ?? $i18n.t('Unknown User')}
 							class="size-4 ml-0.5 rounded-full object-cover"

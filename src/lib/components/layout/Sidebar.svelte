@@ -487,8 +487,7 @@
 
 <ChannelModal
 	bind:show={showCreateChannel}
-	onSubmit={async ({ name, access_control, meta }) => {
-	onSubmit={async ({ type, name, access_control, user_ids }) => {
+	onSubmit={async ({ type, name, access_control, meta, user_ids }) => {
 		name = name?.trim();
 
 		if (type === 'dm') {
@@ -507,7 +506,7 @@
 			type: type,
 			name: name,
 			access_control: access_control,
-			meta: meta
+			meta: meta,
 			user_ids: user_ids
 		}).catch((error) => {
 			toast.error(`${error}`);
