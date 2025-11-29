@@ -20,16 +20,22 @@
 	import ChannelInfoModal from './ChannelInfoModal.svelte';
 	import Users from '../icons/Users.svelte';
 	import VideoImage from '../common/VideoImage.svelte';
+	import Pin from '../icons/Pin.svelte';
+	import PinnedMessagesModal from './PinnedMessagesModal.svelte';
 
 	const i18n = getContext('i18n');
 
+	let showChannelPinnedMessagesModal = false;
 	let showChannelInfoModal = false;
 
 	export let channel;
+
+	export let onPin = (messageId, pinned) => {};
 </script>
 
+<PinnedMessagesModal bind:show={showChannelPinnedMessagesModal} {channel} {onPin} />
 <ChannelInfoModal bind:show={showChannelInfoModal} {channel} />
-<nav class="sticky top-0 z-30 w-full px-1.5 py-1 -mb-8 flex items-center drag-region">
+<nav class="sticky top-0 z-30 w-full px-1.5 py-1 -mb-8 flex items-center drag-region flex flex-col">
 
 	<div class=" flex max-w-full w-full mx-auto px-1 pt-0.5 bg-transparent">
 		<div class="flex items-center w-full max-w-full">
@@ -109,25 +115,42 @@
 			</div>
 
 			<div class="self-start flex flex-none items-center text-gray-600 dark:text-gray-400 gap-1">
-				{#if channel?.user_count !== undefined}
-					<Tooltip content={$i18n.t('Users')}>
+				{#if channel}
+					<Tooltip content={$i18n.t('Pinned Messages')}>
 						<button
-							class=" flex cursor-pointer py-1 px-1.5 border dark:border-gray-850 border-gray-50 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-850 transition"
-							aria-label="User Count"
+							class=" flex cursor-pointer py-1.5 px-1.5 border dark:border-gray-850 border-gray-50 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-850 transition"
+							aria-label="Pinned Messages"
 							type="button"
 							on:click={() => {
-								showChannelInfoModal = true;
+								showChannelPinnedMessagesModal = true;
 							}}
 						>
 							<div class=" flex items-center gap-0.5 m-auto self-center">
-								<UserAlt className=" size-4" strokeWidth="1.5" />
-
-								<div class="text-sm">
-									{channel.user_count}
-								</div>
+								<Pin className=" size-4" strokeWidth="1.5" />
 							</div>
 						</button>
 					</Tooltip>
+
+					{#if channel?.user_count !== undefined}
+						<Tooltip content={$i18n.t('Users')}>
+							<button
+								class=" flex cursor-pointer py-1 px-1.5 border dark:border-gray-850 border-gray-50 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-850 transition"
+								aria-label="User Count"
+								type="button"
+								on:click={() => {
+									showChannelInfoModal = true;
+								}}
+							>
+								<div class=" flex items-center gap-0.5 m-auto self-center">
+									<UserAlt className=" size-4" strokeWidth="1.5" />
+
+									<div class="text-sm">
+										{channel.user_count}
+									</div>
+								</div>
+							</button>
+						</Tooltip>
+					{/if}
 				{/if}
 
 				{#if $user !== undefined}

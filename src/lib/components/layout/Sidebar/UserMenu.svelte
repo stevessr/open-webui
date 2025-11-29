@@ -29,6 +29,8 @@
 	export let help = false;
 	export let className = 'max-w-[240px]';
 
+	export let showActiveUsers = true;
+
 	const dispatch = createEventDispatcher();
 
 	let usage = null;
@@ -253,26 +255,38 @@
 				<div class=" self-center truncate">{$i18n.t('Sign Out')}</div>
 			</DropdownMenu.Item>
 
-			{#if help && usage && usage?.user_ids?.length > 0}
-				<hr class=" border-gray-50 dark:border-gray-800 my-1 p-0" />
-				<Tooltip
-					content={usage?.model_ids && usage?.model_ids.length > 0
-						? `${$i18n.t('Running')}: ${usage.model_ids.join(', ')} ✨`
-						: ''}
-				>
-					<div
-						class="flex rounded-xl py-1 px-3 text-xs gap-2.5 items-center"
-						on:mouseenter={() => {
-							getUsageInfo();
-						}}
+			{#if showActiveUsers && usage}
+				{#if usage?.user_count}
+					<hr class=" border-gray-50 dark:border-gray-800 my-1 p-0" />
+
+					<Tooltip
+						content={usage?.model_ids && usage?.model_ids.length > 0
+							? `${$i18n.t('Running')}: ${usage.model_ids.join(', ')} ✨`
+							: ''}
 					>
-						<div class=" flex items-center">
-							<span class="relative flex size-2">
-								<span
-									class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"
-								></span>
-								<span class="relative inline-flex rounded-full size-2 bg-green-500"></span>
-							</span>
+						<div
+							class="flex rounded-xl py-1 px-3 text-xs gap-2.5 items-center"
+							on:mouseenter={() => {
+								getUsageInfo();
+							}}
+						>
+							<div class=" flex items-center">
+								<span class="relative flex size-2">
+									<span
+										class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"
+									/>
+									<span class="relative inline-flex rounded-full size-2 bg-green-500" />
+								</span>
+							</div>
+
+							<div class=" ">
+								<span class="">
+									{$i18n.t('Active Users')}:
+								</span>
+								<span class=" font-semibold">
+									{usage?.user_count}
+								</span>
+							</div>
 						</div>
 						<div class=" ">
 							<span class="">
