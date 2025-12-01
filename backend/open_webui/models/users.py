@@ -7,6 +7,9 @@ from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL
 from open_webui.models.chats import Chats
 from open_webui.models.groups import Groups, GroupMember
+from open_webui.models.channels import ChannelMember
+
+
 from open_webui.utils.misc import throttle
 
 
@@ -104,6 +107,12 @@ class UserModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UserStatusModel(UserModel):
+    is_active: bool = False
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ApiKey(Base):
     __tablename__ = "api_key"
 
@@ -176,7 +185,7 @@ class UserIdNameResponse(BaseModel):
 class UserIdNameStatusResponse(BaseModel):
     id: str
     name: str
-    is_active: bool = False
+    is_active: Optional[bool] = None
 
 
 class UserInfoListResponse(BaseModel):
@@ -311,6 +320,17 @@ class UsersTable:
                         )
                     )
 
+                channel_id = filter.get("channel_id")
+                if channel_id:
+                    query = query.filter(
+                        exists(
+                            select(ChannelMember.id).where(
+                                ChannelMember.user_id == User.id,
+                                ChannelMember.channel_id == channel_id,
+                            )
+                        )
+                    )
+
                 user_ids = filter.get("user_ids")
                 group_ids = filter.get("group_ids")
 
@@ -417,7 +437,7 @@ class UsersTable:
                 "total": total,
             }
 
-    def get_users_by_user_ids(self, user_ids: list[str]) -> list[UserModel]:
+    def get_users_by_user_ids(self, user_ids: list[str]) -> list[UserStatusModel]:
         with get_db() as db:
             users = db.query(User).filter(User.id.in_(user_ids)).all()
             return [UserModel.model_validate(user) for user in users]

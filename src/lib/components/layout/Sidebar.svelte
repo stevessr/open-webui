@@ -182,9 +182,18 @@
 	};
 
 	const initChannels = async () => {
+		// default (none), group, dm type
 		await channels.set(
 			(await getChannels(localStorage.token)).sort((a, b) =>
-				a.type === b.type ? 0 : a.type === 'dm' ? 1 : -1
+				a.type === b.type
+					? 0
+					: a.type === 'dm'
+						? 1
+						: a.type === 'group'
+							? b.type === 'dm'
+								? -1
+								: 0
+							: -1
 			)
 		);
 	};
@@ -487,7 +496,7 @@
 
 <ChannelModal
 	bind:show={showCreateChannel}
-	onSubmit={async ({ type, name, access_control, meta, user_ids }) => {
+	onSubmit={async ({ type, name, is_private, access_control, meta, group_ids, user_ids }) => {
 		name = name?.trim();
 
 		if (type === 'dm') {
@@ -505,8 +514,10 @@
 		const res = await createNewChannel(localStorage.token, {
 			type: type,
 			name: name,
+			is_private: is_private,
 			access_control: access_control,
 			meta: meta,
+			group_ids: group_ids,
 			user_ids: user_ids
 		}).catch((error) => {
 			toast.error(`${error}`);
@@ -564,7 +575,7 @@
 
 {#if !$mobile && !$showSidebar}
 	<div
-		class=" pt-[7px] pb-2 px-1.5 flex flex-col justify-between text-black dark:text-white hover:bg-gray-50/30 dark:hover:bg-gray-950/30 h-full z-10 transition-all border-e-[0.5px] border-gray-50 dark:border-gray-850"
+		class=" pt-[7px] pb-2 px-2 flex flex-col justify-between text-black dark:text-white hover:bg-gray-50/30 dark:hover:bg-gray-950/30 h-full z-10 transition-all border-e-[0.5px] border-gray-50 dark:border-gray-850/30"
 		id="sidebar"
 	>
 		<button
@@ -705,7 +716,7 @@
 
 		<div>
 			<div>
-				<div class=" py-0.5">
+				<div class=" py-2 flex justify-center items-center">
 					{#if $user !== undefined && $user !== null}
 						<UserMenu
 							role={$user?.role}
@@ -719,13 +730,26 @@
 							<div
 								class=" cursor-pointer flex rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition group"
 							>
-								<div class=" self-center flex items-center justify-center size-9">
+								<div class="self-center relative">
 									<ProfileImage
 										src={`${WEBUI_API_BASE_URL}/users/${$user?.id}/profile/image`}
-										className=" size-6 object-cover rounded-full"
+										className=" size-7 object-cover rounded-full"
 										alt={$i18n.t('Open User Profile Menu')}
 										aria-label={$i18n.t('Open User Profile Menu')}
 									/>
+
+									<div class="absolute -bottom-0.5 -right-0.5">
+										<span class="relative flex size-2.5">
+											<span
+												class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"
+											></span>
+											<span
+												class="relative inline-flex size-2.5 rounded-full {true
+													? 'bg-green-500'
+													: 'bg-gray-300 dark:bg-gray-700'} border-2 border-white dark:border-gray-900"
+											></span>
+										</span>
+									</div>
 								</div>
 							</div>
 						</UserMenu>
@@ -758,7 +782,7 @@
 				: 'invisible'}"
 		>
 			<div
-				class="sidebar px-2 pt-2 pb-1.5 flex justify-between space-x-1 text-gray-600 dark:text-gray-400 sticky top-0 z-10 -mb-3"
+				class="sidebar px-[0.5625rem] pt-2 pb-1.5 flex justify-between space-x-1 text-gray-600 dark:text-gray-400 sticky top-0 z-10 -mb-3"
 			>
 				<a
 					class="flex items-center rounded-xl size-8.5 h-full justify-center hover:bg-gray-100/50 dark:hover:bg-gray-850/50 transition no-drag-region"
@@ -818,7 +842,7 @@
 				}}
 			>
 				<div class="pb-1.5">
-					<div class="px-1.5 flex justify-center text-gray-800 dark:text-gray-200">
+					<div class="px-[0.4375rem] flex justify-center text-gray-800 dark:text-gray-200">
 						<a
 							id="sidebar-new-chat-button"
 							class="group grow flex items-center space-x-3 rounded-2xl px-2.5 py-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition outline-none"
@@ -839,7 +863,7 @@
 						</a>
 					</div>
 
-					<div class="px-1.5 flex justify-center text-gray-800 dark:text-gray-200">
+					<div class="px-[0.4375rem] flex justify-center text-gray-800 dark:text-gray-200">
 						<button
 							id="sidebar-search-button"
 							class="group grow flex items-center space-x-3 rounded-2xl px-2.5 py-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition outline-none"
@@ -861,7 +885,7 @@
 					</div>
 
 					{#if ($config?.features?.enable_notes ?? false) && ($user?.role === 'admin' || ($user?.permissions?.features?.notes ?? true))}
-						<div class="px-1.5 flex justify-center text-gray-800 dark:text-gray-200">
+						<div class="px-[0.4375rem] flex justify-center text-gray-800 dark:text-gray-200">
 							<a
 								id="sidebar-notes-button"
 								class="grow flex items-center space-x-3 rounded-2xl px-2.5 py-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition"
@@ -882,7 +906,7 @@
 					{/if}
 
 					{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models || $user?.permissions?.workspace?.knowledge || $user?.permissions?.workspace?.prompts || $user?.permissions?.workspace?.tools}
-						<div class="px-1.5 flex justify-center text-gray-800 dark:text-gray-200">
+						<div class="px-[0.4375rem] flex justify-center text-gray-800 dark:text-gray-200">
 							<a
 								id="sidebar-workspace-button"
 								class="grow flex items-center space-x-3 rounded-2xl px-2.5 py-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition"
@@ -928,14 +952,14 @@
 					</Folder>
 				{/if}
 
-				{#if $config?.features?.enable_channels && ($user?.role === 'admin' || $channels.length > 0)}
+				{#if $config?.features?.enable_channels && ($user?.role === 'admin' || ($user?.permissions?.features?.channels ?? true))}
 					<Folder
 						id="sidebar-channels"
 						className="px-2 mt-0.5"
 						name={$i18n.t('Channels')}
 						chevron={false}
 						dragAndDrop={false}
-						onAdd={$user?.role === 'admin'
+						onAdd={$user?.role === 'admin' || ($user?.permissions?.features?.channels ?? true)
 							? async () => {
 									await tick();
 
@@ -1265,12 +1289,25 @@
 							<div
 								class=" flex items-center rounded-2xl py-2 px-1.5 w-full hover:bg-gray-100/50 dark:hover:bg-gray-900/50 transition"
 							>
-								<div class=" self-center mr-3">
+								<div class=" self-center mr-3 relative">
 									<ProfileImage
 										src={`${WEBUI_API_BASE_URL}/users/${$user?.id}/profile/image`}
-										className=" size-6 object-cover rounded-full"
+										className=" size-7 object-cover rounded-full"
 										alt={$i18n.t('Open User Profile Menu')}
 									/>
+
+									<div class="absolute -bottom-0.5 -right-0.5">
+										<span class="relative flex size-2.5">
+											<span
+												class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"
+											></span>
+											<span
+												class="relative inline-flex size-2.5 rounded-full {true
+													? 'bg-green-500'
+													: 'bg-gray-300 dark:bg-gray-700'} border-2 border-white dark:border-gray-900"
+											></span>
+										</span>
+									</div>
 								</div>
 								<div class=" self-center font-medium">{$user?.name}</div>
 							</div>

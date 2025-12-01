@@ -481,7 +481,26 @@
 	};
 
 	const channelEventHandler = async (event) => {
+		console.log('channelEventHandler', event);
 		if (event.data?.type === 'typing') {
+			return;
+		}
+
+		// handle channel created event
+		if (event.data?.type === 'channel:created') {
+			await channels.set(
+				(await getChannels(localStorage.token)).sort((a, b) =>
+					a.type === b.type
+						? 0
+						: a.type === 'dm'
+							? 1
+							: a.type === 'group'
+								? b.type === 'dm'
+									? -1
+									: 0
+								: -1
+				)
+			);
 			return;
 		}
 
@@ -522,7 +541,15 @@
 				} else {
 					await channels.set(
 						(await getChannels(localStorage.token)).sort((a, b) =>
-							a.type === b.type ? 0 : a.type === 'dm' ? 1 : -1
+							a.type === b.type
+								? 0
+								: a.type === 'dm'
+									? 1
+									: a.type === 'group'
+										? b.type === 'dm'
+											? -1
+											: 0
+										: -1
 						)
 					);
 				}
