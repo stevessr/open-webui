@@ -535,7 +535,7 @@
 										<div class="flex-shrink-0 self-start">
 											<Select
 												id="select-bearer-or-session"
-												className={`w-full text-sm bg-transparent ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
+												className={`dark:bg-gray-900 w-full text-sm bg-transparent pr-5 ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
 												bind:value={spec_type}
 												items={[
 													{ value: 'url', label: $i18n.t('URL') },
@@ -646,7 +646,7 @@
 									<div class="flex-shrink-0 self-start">
 										<Select
 											id="select-bearer-or-session"
-											className={`w-full text-sm bg-transparent ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
+											className={`dark:bg-gray-900 w-full text-sm bg-transparent pr-5 ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
 											bind:value={auth_type}
 											items={[
 												{ value: 'none', label: $i18n.t('None') },
@@ -821,10 +821,8 @@
 
 							<hr class=" border-gray-100 dark:border-gray-700/10 my-2.5 w-full" />
 
-							<div class="my-2 -mx-2">
-								<div class="trans px-4 py-3 bg-gray-50 dark:bg-gray-950 rounded-3xl">
-									<AccessControl bind:accessControl />
-								</div>
+							<div class="my-2">
+								<AccessControl bind:accessControl />
 							</div>
 						{/if}
 					</div>
