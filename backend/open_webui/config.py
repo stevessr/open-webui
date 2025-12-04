@@ -1589,6 +1589,10 @@ USER_PERMISSIONS_FEATURES_NOTES = (
     os.environ.get("USER_PERMISSIONS_FEATURES_NOTES", "True").lower() == "true"
 )
 
+USER_PERMISSIONS_FEATURES_CHANNELS = (
+    os.environ.get("USER_PERMISSIONS_FEATURES_CHANNELS", "True").lower() == "true"
+)
+
 USER_PERMISSIONS_FEATURES_API_KEYS = (
     os.environ.get("USER_PERMISSIONS_FEATURES_API_KEYS", "False").lower() == "true"
 )
@@ -1643,8 +1647,9 @@ DEFAULT_USER_PERMISSIONS = {
     "features": {
         # General features
         "api_keys": USER_PERMISSIONS_FEATURES_API_KEYS,
-        "folders": USER_PERMISSIONS_FEATURES_FOLDERS,
         "notes": USER_PERMISSIONS_FEATURES_NOTES,
+        "folders": USER_PERMISSIONS_FEATURES_FOLDERS,
+        "channels": USER_PERMISSIONS_FEATURES_CHANNELS,
         "direct_tool_servers": USER_PERMISSIONS_FEATURES_DIRECT_TOOL_SERVERS,
         # Chat features
         "web_search": USER_PERMISSIONS_FEATURES_WEB_SEARCH,
@@ -2717,6 +2722,12 @@ DOCUMENT_INTELLIGENCE_KEY = PersistentConfig(
     "DOCUMENT_INTELLIGENCE_KEY",
     "rag.document_intelligence_key",
     os.getenv("DOCUMENT_INTELLIGENCE_KEY", ""),
+)
+
+DOCUMENT_INTELLIGENCE_MODEL = PersistentConfig(
+    "DOCUMENT_INTELLIGENCE_MODEL",
+    "rag.document_intelligence_model",
+    os.getenv("DOCUMENT_INTELLIGENCE_MODEL", "prebuilt-layout"),
 )
 
 MISTRAL_OCR_API_BASE_URL = PersistentConfig(
