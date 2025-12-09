@@ -495,7 +495,7 @@
 
 <ChannelModal
 	bind:show={showCreateChannel}
-	onSubmit={async ({ type, name, is_private, access_control, meta, group_ids, user_ids }) => {
+	onSubmit={async ({ type, name, is_private, access_control, meta , group_ids, user_ids }) => {
 		name = name?.trim();
 
 		if (type === 'dm') {
