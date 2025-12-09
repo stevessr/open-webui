@@ -48,7 +48,7 @@
 		if (pipeline && (pipeline?.valves ?? false)) {
 			for (const property in valves_spec.properties) {
 				if (valves_spec.properties[property]?.type === 'array') {
-					valves[property] = valves[property].split(',').map((v) => v.trim());
+					valves[property] = (valves[property] ?? '').split(',').map((v) => v.trim());
 				}
 			}
 
@@ -416,7 +416,7 @@
 					</div>
 				</div>
 
-				<hr class="border-gray-100 dark:border-gray-850 my-3 w-full" />
+				<hr class="border-gray-100/30 dark:border-gray-850/30 my-3 w-full" />
 
 				{#if pipelines !== null}
 					{#if pipelines.length > 0}
