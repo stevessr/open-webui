@@ -785,7 +785,6 @@ def get_embedding_function(
     enable_async=True,
 ) -> Awaitable:
     if embedding_engine == "":
-        # Sentence transformers: CPU-bound sync operation
         async def async_embedding_function(query, prefix=None, user=None):
             return await asyncio.to_thread(
                 (
@@ -1247,7 +1246,6 @@ class RerankCompressor(BaseDocumentCompressor):
         if reranking:
             scores = self.reranking_function(query, documents)
         else:
-            from sentence_transformers import util
 
             query_embedding = await self.embedding_function(
                 query, RAG_EMBEDDING_QUERY_PREFIX

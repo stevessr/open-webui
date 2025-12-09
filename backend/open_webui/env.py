@@ -40,8 +40,6 @@ except ImportError:
 
 DOCKER = os.environ.get("DOCKER", "False").lower() == "true"
 
-# Device type configuration has been removed as local inference is no longer supported
-DEVICE_TYPE = "cpu"
 
 ####################################
 # LOGGING
@@ -56,9 +54,6 @@ else:
 log = logging.getLogger(__name__)
 log.info(f"GLOBAL_LOG_LEVEL: {GLOBAL_LOG_LEVEL}")
 
-if "cuda_error" in locals():
-    log.exception(cuda_error)
-    del cuda_error
 
 log_sources = [
     "AUDIO",

@@ -100,12 +100,7 @@ from open_webui.config import (
 )
 from open_webui.env import (
     SRC_LOG_LEVELS,
-    DEVICE_TYPE,
     DOCKER,
-    SENTENCE_TRANSFORMERS_BACKEND,
-    SENTENCE_TRANSFORMERS_MODEL_KWARGS,
-    SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND,
-    SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS,
 )
 
 from open_webui.constants import ERROR_MESSAGES
@@ -257,11 +252,6 @@ def unload_embedding_model(request: Request):
         import gc
 
         gc.collect()
-        if DEVICE_TYPE == "cuda":
-            import torch
-
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
 
 
 @router.post("/embedding/update")
@@ -840,11 +830,6 @@ async def update_rag_config(
         import gc
 
         gc.collect()
-        if DEVICE_TYPE == "cuda":
-            import torch
-
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
     request.app.state.config.RAG_RERANKING_ENGINE = (
         form_data.RAG_RERANKING_ENGINE
         if form_data.RAG_RERANKING_ENGINE is not None
