@@ -629,6 +629,12 @@ OAUTH_ACCESS_TOKEN_REQUEST_INCLUDE_CLIENT_ID = (
     == "true"
 )
 
+OAUTH_AUDIENCE = PersistentConfig(
+    "OAUTH_AUDIENCE",
+    "oauth.audience",
+    os.environ.get("OAUTH_AUDIENCE", ""),
+)
+
 
 def load_oauth_providers():
     OAUTH_PROVIDERS.clear()
@@ -2724,6 +2730,12 @@ DOCUMENT_INTELLIGENCE_KEY = PersistentConfig(
     os.getenv("DOCUMENT_INTELLIGENCE_KEY", ""),
 )
 
+DOCUMENT_INTELLIGENCE_MODEL = PersistentConfig(
+    "DOCUMENT_INTELLIGENCE_MODEL",
+    "rag.document_intelligence_model",
+    os.getenv("DOCUMENT_INTELLIGENCE_MODEL", "prebuilt-layout"),
+)
+
 MISTRAL_OCR_API_BASE_URL = PersistentConfig(
     "MISTRAL_OCR_API_BASE_URL",
     "rag.MISTRAL_OCR_API_BASE_URL",
@@ -3120,6 +3132,12 @@ WEB_LOADER_CONCURRENT_REQUESTS = PersistentConfig(
     "WEB_LOADER_CONCURRENT_REQUESTS",
     "rag.web.loader.concurrent_requests",
     int(os.getenv("WEB_LOADER_CONCURRENT_REQUESTS", "10")),
+)
+
+WEB_LOADER_TIMEOUT = PersistentConfig(
+    "WEB_LOADER_TIMEOUT",
+    "rag.web.loader.timeout",
+    os.getenv("WEB_LOADER_TIMEOUT", ""),
 )
 
 

@@ -21,6 +21,7 @@ from open_webui.models.users import (
     UserInfoListResponse,
     UserInfoListResponse,
     UserRoleUpdateForm,
+    UserStatus,
     Users,
     UserSettings,
     UserUpdateForm,
@@ -300,6 +301,43 @@ async def update_user_settings_by_session_user(
 
 
 ############################
+# GetUserStatusBySessionUser
+############################
+
+
+@router.get("/user/status")
+async def get_user_status_by_session_user(user=Depends(get_verified_user)):
+    user = Users.get_user_by_id(user.id)
+    if user:
+        return user
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.USER_NOT_FOUND,
+        )
+
+
+############################
+# UpdateUserStatusBySessionUser
+############################
+
+
+@router.post("/user/status/update")
+async def update_user_status_by_session_user(
+    form_data: UserStatus, user=Depends(get_verified_user)
+):
+    user = Users.get_user_by_id(user.id)
+    if user:
+        user = Users.update_user_status_by_id(user.id, form_data)
+        return user
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.USER_NOT_FOUND,
+        )
+
+
+############################
 # GetUserInfoBySessionUser
 ############################
 
@@ -350,9 +388,11 @@ async def update_user_info_by_session_user(
 ############################
 
 
-class UserActiveResponse(BaseModel):
+class UserActiveResponse(UserStatus):
     name: str
     profile_image_url: Optional[str] = None
+    groups: Optional[list] = []
+
     is_active: bool
     model_config = ConfigDict(extra="allow")
 
@@ -373,12 +413,12 @@ async def get_user_by_id(user_id: str, user=Depends(get_verified_user)):
             )
 
     user = Users.get_user_by_id(user_id)
-
     if user:
+        groups = Groups.get_groups_by_member_id(user_id)
         return UserActiveResponse(
             **{
-                "id": user.id,
-                "name": user.name,
+                **user.model_dump(),
+                "groups": [{"id": group.id, "name": group.name} for group in groups],
                 "is_active": Users.is_user_active(user_id),
             }
         )

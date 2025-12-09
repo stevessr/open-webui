@@ -458,12 +458,6 @@ async def chat_completion_tools_handler(
                             }
                         )
 
-                print(
-                    f"Tool {tool_function_name} result: {tool_result}",
-                    tool_result_files,
-                    tool_result_embeds,
-                )
-
                 if tool_result:
                     tool = tools[tool_function_name]
                     tool_id = tool.get("tool_id", "")
@@ -489,12 +483,6 @@ async def chat_completion_tools_handler(
                             ],
                             "tool_result": True,
                         }
-                    )
-
-                    # Citation is not enabled for this tool
-                    body["messages"] = add_or_update_user_message(
-                        f"\nTool `{tool_name}` Output: {tool_result}",
-                        body["messages"],
                     )
 
                     if (
@@ -728,17 +716,18 @@ async def chat_web_search_handler(
     return form_data
 
 
-def get_last_images(message_list):
+def get_images_from_messages(message_list):
     images = []
+
     for message in reversed(message_list):
-        images_flag = False
+
+        message_images = []
         for file in message.get("files", []):
             if file.get("type") == "image":
-                images.append(file.get("url"))
-                images_flag = True
+                message_images.append(file.get("url"))
 
-        if images_flag:
-            break
+        if message_images:
+            images.append(message_images)
 
     return images
 
@@ -792,7 +781,16 @@ async def chat_image_generation_handler(
     user_message = get_last_user_message(message_list)
 
     prompt = user_message
-    input_images = get_last_images(message_list)
+    message_images = get_images_from_messages(message_list)
+
+    # Limit to first 2 sets of images
+    # We may want to change this in the future to allow more images
+    input_images = []
+    for idx, images in enumerate(message_images):
+        if idx >= 2:
+            break
+        for image in images:
+            input_images.append(image)
 
     system_message_content = ""
 

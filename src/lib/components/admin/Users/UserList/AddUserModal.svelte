@@ -181,7 +181,7 @@
 
 								<div class="flex-1">
 									<Select
-										className="w-full capitalize rounded-lg text-sm bg-transparent dark:disabled:text-gray-500 outline-hidden"
+										className="dark:bg-gray-900 w-full capitalize rounded-lg text-sm bg-transparent dark:disabled:text-gray-500 outline-hidden"
 										bind:value={_user.role}
 										placeholder={$i18n.t('Enter Your Role')}
 										items={[
