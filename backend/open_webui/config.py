@@ -2847,7 +2847,7 @@ RAG_ALLOWED_FILE_EXTENSIONS = PersistentConfig(
 RAG_EMBEDDING_ENGINE = PersistentConfig(
     "RAG_EMBEDDING_ENGINE",
     "rag.embedding_engine",
-    os.environ.get("RAG_EMBEDDING_ENGINE", ""),
+    os.environ.get("RAG_EMBEDDING_ENGINE", "openai"),  # Changed from "" to "openai" to use external service by default
 )
 
 PDF_EXTRACT_IMAGES = PersistentConfig(
@@ -2859,7 +2859,7 @@ PDF_EXTRACT_IMAGES = PersistentConfig(
 RAG_EMBEDDING_MODEL = PersistentConfig(
     "RAG_EMBEDDING_MODEL",
     "rag.embedding_model",
-    os.environ.get("RAG_EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2"),
+    os.environ.get("RAG_EMBEDDING_MODEL", "text-embedding-3-small"),  # Changed from local model to OpenAI default
 )
 log.info(f"Embedding model set: {RAG_EMBEDDING_MODEL.value}")
 
@@ -2898,7 +2898,7 @@ RAG_EMBEDDING_PREFIX_FIELD_NAME = os.environ.get(
 RAG_RERANKING_ENGINE = PersistentConfig(
     "RAG_RERANKING_ENGINE",
     "rag.reranking_engine",
-    os.environ.get("RAG_RERANKING_ENGINE", ""),
+    os.environ.get("RAG_RERANKING_ENGINE", "external"),  # Changed from "" to "external" to use external service by default
 )
 
 RAG_RERANKING_MODEL = PersistentConfig(
@@ -3730,7 +3730,7 @@ IMAGES_EDIT_COMFYUI_WORKFLOW_NODES = PersistentConfig(
 WHISPER_MODEL = PersistentConfig(
     "WHISPER_MODEL",
     "audio.stt.whisper_model",
-    os.getenv("WHISPER_MODEL", "base"),
+    os.getenv("WHISPER_MODEL", "whisper-1"),  # Changed from "base" to "whisper-1" for OpenAI Whisper API
 )
 
 WHISPER_MODEL_DIR = os.getenv("WHISPER_MODEL_DIR", f"{CACHE_DIR}/whisper/models")
@@ -3774,7 +3774,7 @@ AUDIO_STT_OPENAI_API_KEY = PersistentConfig(
 AUDIO_STT_ENGINE = PersistentConfig(
     "AUDIO_STT_ENGINE",
     "audio.stt.engine",
-    os.getenv("AUDIO_STT_ENGINE", ""),
+    os.getenv("AUDIO_STT_ENGINE", "openai"),  # Changed from "" to "openai" to use external service by default
 )
 
 AUDIO_STT_MODEL = PersistentConfig(
@@ -3876,7 +3876,7 @@ AUDIO_TTS_API_KEY = PersistentConfig(
 AUDIO_TTS_ENGINE = PersistentConfig(
     "AUDIO_TTS_ENGINE",
     "audio.tts.engine",
-    os.getenv("AUDIO_TTS_ENGINE", ""),
+    os.getenv("AUDIO_TTS_ENGINE", "openai"),  # Changed from "" to "openai" to use external service by default
 )
 
 

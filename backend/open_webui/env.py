@@ -40,33 +40,8 @@ except ImportError:
 
 DOCKER = os.environ.get("DOCKER", "False").lower() == "true"
 
-# device type embedding models - "cpu" (default), "cuda" (nvidia gpu required) or "mps" (apple silicon) - choosing this right can lead to better performance
-USE_CUDA = os.environ.get("USE_CUDA_DOCKER", "false")
-
-if USE_CUDA.lower() == "true":
-    try:
-        import torch
-
-        assert torch.cuda.is_available(), "CUDA not available"
-        DEVICE_TYPE = "cuda"
-    except Exception as e:
-        cuda_error = (
-            "Error when testing CUDA but USE_CUDA_DOCKER is true. "
-            f"Resetting USE_CUDA_DOCKER to false: {e}"
-        )
-        os.environ["USE_CUDA_DOCKER"] = "false"
-        USE_CUDA = "false"
-        DEVICE_TYPE = "cpu"
-else:
-    DEVICE_TYPE = "cpu"
-
-try:
-    import torch
-
-    if torch.backends.mps.is_available() and torch.backends.mps.is_built():
-        DEVICE_TYPE = "mps"
-except Exception:
-    pass
+# Device type configuration has been removed as local inference is no longer supported
+DEVICE_TYPE = "cpu"
 
 ####################################
 # LOGGING
@@ -739,49 +714,8 @@ AIOHTTP_CLIENT_SESSION_TOOL_SERVER_SSL = (
 )
 
 
-####################################
-# SENTENCE TRANSFORMERS
-####################################
 
 
-SENTENCE_TRANSFORMERS_BACKEND = os.environ.get("SENTENCE_TRANSFORMERS_BACKEND", "")
-if SENTENCE_TRANSFORMERS_BACKEND == "":
-    SENTENCE_TRANSFORMERS_BACKEND = "torch"
-
-
-SENTENCE_TRANSFORMERS_MODEL_KWARGS = os.environ.get(
-    "SENTENCE_TRANSFORMERS_MODEL_KWARGS", ""
-)
-if SENTENCE_TRANSFORMERS_MODEL_KWARGS == "":
-    SENTENCE_TRANSFORMERS_MODEL_KWARGS = None
-else:
-    try:
-        SENTENCE_TRANSFORMERS_MODEL_KWARGS = json.loads(
-            SENTENCE_TRANSFORMERS_MODEL_KWARGS
-        )
-    except Exception:
-        SENTENCE_TRANSFORMERS_MODEL_KWARGS = None
-
-
-SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND = os.environ.get(
-    "SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND", ""
-)
-if SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND == "":
-    SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND = "torch"
-
-
-SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS = os.environ.get(
-    "SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS", ""
-)
-if SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS == "":
-    SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS = None
-else:
-    try:
-        SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS = json.loads(
-            SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS
-        )
-    except Exception:
-        SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS = None
 
 ####################################
 # OFFLINE_MODE
