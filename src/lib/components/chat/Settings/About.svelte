@@ -59,75 +59,9 @@
 						<Tooltip content={WEBUI_BUILD_HASH}>
 							v{WEBUI_VERSION} ({WEBUI_BUILD_HASH})
 						</Tooltip>
-
-						{#if $config?.features?.enable_version_update_check}
-							<a
-								href="https://github.com/open-webui/open-webui/releases/tag/v{version.latest}"
-								target="_blank"
-							>
-								{updateAvailable === null
-									? $i18n.t('Checking for updates...')
-									: updateAvailable
-										? `(v${version.latest} ${$i18n.t('available!')})`
-										: $i18n.t('(latest)')}
-							</a>
-						{/if}
-					</div>
-
-					<button
-						class=" underline flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-500"
-						on:click={() => {
-							showChangelog.set(true);
-						}}
-					>
-						<div>{$i18n.t("See what's new")}</div>
-					</button>
-				</div>
-
-				{#if $config?.features?.enable_version_update_check}
-					<button
-						class=" text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800 transition rounded-lg font-medium"
-						on:click={() => {
-							checkForVersionUpdates();
-						}}
-					>
-						{$i18n.t('Check for updates')}
-					</button>
-				{/if}
-			</div>
-		</div>
-
-		{#if ollamaVersion}
-			<hr class=" border-gray-100/30 dark:border-gray-850/30" />
-
-			<div>
-				<div class=" mb-2.5 text-sm font-medium">{$i18n.t('Ollama Version')}</div>
-				<div class="flex w-full">
-					<div class="flex-1 text-xs text-gray-700 dark:text-gray-200">
-						{ollamaVersion ?? 'N/A'}
 					</div>
 				</div>
 			</div>
-		{/if}
-
-		<hr class=" border-gray-100/30 dark:border-gray-850/30" />
-
-		<div class="mt-2 text-xs text-gray-400 dark:text-gray-500">
-			Emoji graphics provided by
-			<a href="https://github.com/jdecked/twemoji" target="_blank">Twemoji</a>, licensed under
-			<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC-BY 4.0</a>.
-		</div>
-
-</pre>
-		</div>
-
-		<div class="mt-2 text-xs text-gray-400 dark:text-gray-500">
-			{$i18n.t('Created by')}
-			<a
-				class=" text-gray-500 dark:text-gray-300 font-medium"
-				href="https://github.com/tjbck"
-				target="_blank">Timothy J. Baek</a
-			>
 		</div>
 	</div>
 </div>

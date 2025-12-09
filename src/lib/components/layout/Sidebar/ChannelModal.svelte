@@ -76,6 +76,7 @@
 	};
 
 	const init = () => {
+		if ($user?.role === 'admin') {
 		background_image_url = channel.meta?.background_image_url ?? '';
 		background_opacity = channel.meta?.background_opacity ?? 0.25;
 			channelTypes = ['', 'group', 'dm'];
@@ -91,6 +92,7 @@
 			accessControl = channel.access_control;
 			userIds = channel?.user_ids ?? [];
 		}
+	};
 
 	$: if (show) {
 		init();
