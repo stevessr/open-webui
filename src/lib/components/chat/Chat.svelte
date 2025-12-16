@@ -2263,17 +2263,16 @@
 			generating = true;
 			const [res, controller] = await generateMoACompletion(
 				localStorage.token,
-				message.model,
-				history.messages[message.parentId].content,
+				message.model ?? '',
+				message.parentId ? history.messages[message.parentId].content : '',
 				responses
 			);
 
 			if (res && res.ok && res.body && generating) {
-				generationController = controller;
+				generationController = controller as AbortController;
 				const textStream = await createOpenAITextStream(
 					res.body,
-					$settings.splitLargeChunks,
-					$models.find((m) => m.id === message.model)?.owned_by ?? 'openai'
+					Boolean($settings?.splitLargeChunks ?? false)
 				);
 				for await (const update of textStream) {
 					const { value, done, sources, error, usage } = update;
@@ -2361,7 +2360,7 @@
 	};
 
 	const MAX_DRAFT_LENGTH = 5000;
-	let saveDraftTimeout = null;
+	let saveDraftTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	const saveDraft = async (draft, chatId = null) => {
 		if (saveDraftTimeout) {
@@ -2440,7 +2439,7 @@
 
 <div
 	class="h-screen max-h-[100dvh] transition-width duration-200 ease-in-out {$showSidebar
-		? '  md:max-w-[calc(100%-260px)]'
+		? '  md:max-w-[calc(100%-var(--sidebar-width))]'
 		: ' '} w-full max-w-full flex flex-col"
 	id="chat-container"
 >

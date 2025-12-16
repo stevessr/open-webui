@@ -33,6 +33,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 
+from open_webui.utils.misc import strict_match_mime_type
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.headers import include_user_info_headers
 from open_webui.config import (
@@ -49,7 +50,6 @@ from open_webui.env import (
     AIOHTTP_CLIENT_SESSION_SSL,
     AIOHTTP_CLIENT_TIMEOUT,
     SRC_LOG_LEVELS,
-    DEVICE_TYPE,
     ENABLE_FORWARD_USER_INFO_HEADERS,
 )
 
@@ -123,27 +123,8 @@ def convert_audio_to_mp3(file_path):
 
 
 def set_faster_whisper_model(model: str, auto_update: bool = False):
-    whisper_model = None
-    if model:
-        from faster_whisper import WhisperModel
-
-        faster_whisper_kwargs = {
-            "model_size_or_path": model,
-            "device": DEVICE_TYPE if DEVICE_TYPE and DEVICE_TYPE == "cuda" else "cpu",
-            "compute_type": "int8",
-            "download_root": WHISPER_MODEL_DIR,
-            "local_files_only": not auto_update,
-        }
-
-        try:
-            whisper_model = WhisperModel(**faster_whisper_kwargs)
-        except Exception:
-            log.warning(
-                "WhisperModel initialization failed, attempting download with local_files_only=False"
-            )
-            faster_whisper_kwargs["local_files_only"] = False
-            whisper_model = WhisperModel(**faster_whisper_kwargs)
-    return whisper_model
+    # Local whisper models have been removed - only external STT services are supported
+    raise Exception("Local whisper models are no longer supported")
 
 
 ##########################################
@@ -313,18 +294,9 @@ async def update_audio_config(
 
 
 def load_speech_pipeline(request):
-    from transformers import pipeline
-    from datasets import load_dataset
-
-    if request.app.state.speech_synthesiser is None:
-        request.app.state.speech_synthesiser = pipeline(
-            "text-to-speech", "microsoft/speecht5_tts"
-        )
-
-    if request.app.state.speech_speaker_embeddings_dataset is None:
-        request.app.state.speech_speaker_embeddings_dataset = load_dataset(
-            "Matthijs/cmu-arctic-xvectors", split="validation"
-        )
+    # Local transformers-based speech synthesis has been removed
+    # Only external TTS services are supported
+    pass
 
 
 @router.post("/speech")
@@ -525,43 +497,10 @@ async def speech(request: Request, user=Depends(get_verified_user)):
             )
 
     elif request.app.state.config.TTS_ENGINE == "transformers":
-        payload = None
-        try:
-            payload = json.loads(body.decode("utf-8"))
-        except Exception as e:
-            log.exception(e)
-            raise HTTPException(status_code=400, detail="Invalid JSON payload")
-
-        import torch
-        import soundfile as sf
-
-        load_speech_pipeline(request)
-
-        embeddings_dataset = request.app.state.speech_speaker_embeddings_dataset
-
-        speaker_index = 6799
-        try:
-            speaker_index = embeddings_dataset["filename"].index(
-                request.app.state.config.TTS_MODEL
-            )
-        except Exception:
-            pass
-
-        speaker_embedding = torch.tensor(
-            embeddings_dataset[speaker_index]["xvector"]
-        ).unsqueeze(0)
-
-        speech = request.app.state.speech_synthesiser(
-            payload["input"],
-            forward_params={"speaker_embeddings": speaker_embedding},
+        raise HTTPException(
+            status_code=400,
+            detail="Local transformers TTS engine is no longer supported. Please use external TTS services like OpenAI, ElevenLabs, or Azure."
         )
-
-        sf.write(file_path, speech["audio"], samplerate=speech["sampling_rate"])
-
-        async with aiofiles.open(file_body_path, "w") as f:
-            await f.write(json.dumps(payload))
-
-        return FileResponse(file_path)
 
 
 def transcription_handler(request, file_path, metadata, user=None):
@@ -577,33 +516,10 @@ def transcription_handler(request, file_path, metadata, user=None):
     ]
 
     if request.app.state.config.STT_ENGINE == "":
-        if request.app.state.faster_whisper_model is None:
-            request.app.state.faster_whisper_model = set_faster_whisper_model(
-                request.app.state.config.WHISPER_MODEL
-            )
-
-        model = request.app.state.faster_whisper_model
-        segments, info = model.transcribe(
-            file_path,
-            beam_size=5,
-            vad_filter=request.app.state.config.WHISPER_VAD_FILTER,
-            language=languages[0],
+        raise HTTPException(
+            status_code=400,
+            detail="Local whisper STT engine is no longer supported. Please use external STT services like OpenAI, Azure, or Deepgram."
         )
-        log.info(
-            "Detected language '%s' with probability %f"
-            % (info.language, info.language_probability)
-        )
-
-        transcript = "".join([segment.text for segment in list(segments)])
-        data = {"text": transcript.strip()}
-
-        # save the transcript to a json file
-        transcript_file = f"{file_dir}/{id}.json"
-        with open(transcript_file, "w") as f:
-            json.dump(data, f)
-
-        log.debug(data)
-        return data
     elif request.app.state.config.STT_ENGINE == "openai":
         r = None
         try:
@@ -1155,17 +1071,9 @@ def transcription(
 
     stt_supported_content_types = getattr(
         request.app.state.config, "STT_SUPPORTED_CONTENT_TYPES", []
-    )
+    ) or ["audio/*", "video/webm"]
 
-    if not any(
-        fnmatch(file.content_type, content_type)
-        for content_type in (
-            stt_supported_content_types
-            if stt_supported_content_types
-            and any(t.strip() for t in stt_supported_content_types)
-            else ["audio/*", "video/webm"]
-        )
-    ):
+    if not strict_match_mime_type(stt_supported_content_types, file.content_type):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.FILE_NOT_SUPPORTED,

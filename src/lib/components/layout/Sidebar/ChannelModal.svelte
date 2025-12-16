@@ -7,6 +7,7 @@
 	import { goto } from '$app/navigation';
 
 	import { createNewChannel, deleteChannelById } from '$lib/apis/channels';
+	import { activeChannel } from '$lib/stores';
 	import { user } from '$lib/stores';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
@@ -76,9 +77,9 @@
 	};
 
 	const init = () => {
-		if ($user?.role === 'admin') {
 		background_image_url = channel.meta?.background_image_url ?? '';
 		background_opacity = channel.meta?.background_opacity ?? 0.25;
+		if ($user?.role === 'admin') {
 			channelTypes = ['', 'group', 'dm'];
 		} else {
 			channelTypes = ['group', 'dm'];

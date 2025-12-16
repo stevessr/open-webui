@@ -100,12 +100,7 @@ from open_webui.config import (
 )
 from open_webui.env import (
     SRC_LOG_LEVELS,
-    DEVICE_TYPE,
     DOCKER,
-    SENTENCE_TRANSFORMERS_BACKEND,
-    SENTENCE_TRANSFORMERS_MODEL_KWARGS,
-    SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND,
-    SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS,
 )
 
 from open_webui.constants import ERROR_MESSAGES
@@ -127,18 +122,7 @@ def get_ef(
 ):
     ef = None
     if embedding_model and engine == "":
-        from sentence_transformers import SentenceTransformer
-
-        try:
-            ef = SentenceTransformer(
-                get_model_path(embedding_model, auto_update),
-                device=DEVICE_TYPE,
-                trust_remote_code=RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE,
-                backend=SENTENCE_TRANSFORMERS_BACKEND,
-                model_kwargs=SENTENCE_TRANSFORMERS_MODEL_KWARGS,
-            )
-        except Exception as e:
-            log.debug(f"Error loading SentenceTransformer: {e}")
+        raise Exception("Local sentence transformers embeddings are no longer supported. Please use external embedding services like OpenAI, Azure, or Ollama.")
 
     return ef
 
@@ -153,17 +137,7 @@ def get_rf(
     rf = None
     if reranking_model:
         if any(model in reranking_model for model in ["jinaai/jina-colbert-v2"]):
-            try:
-                from open_webui.retrieval.models.colbert import ColBERT
-
-                rf = ColBERT(
-                    get_model_path(reranking_model, auto_update),
-                    env="docker" if DOCKER else None,
-                )
-
-            except Exception as e:
-                log.error(f"ColBERT: {e}")
-                raise Exception(ERROR_MESSAGES.DEFAULT(e))
+            raise Exception("Local ColBERT reranking is no longer supported. Please use external reranking services.")
         else:
             if engine == "external":
                 try:
@@ -178,39 +152,7 @@ def get_rf(
                     log.error(f"ExternalReranking: {e}")
                     raise Exception(ERROR_MESSAGES.DEFAULT(e))
             else:
-                import sentence_transformers
-
-                try:
-                    rf = sentence_transformers.CrossEncoder(
-                        get_model_path(reranking_model, auto_update),
-                        device=DEVICE_TYPE,
-                        trust_remote_code=RAG_RERANKING_MODEL_TRUST_REMOTE_CODE,
-                        backend=SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND,
-                        model_kwargs=SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS,
-                    )
-                except Exception as e:
-                    log.error(f"CrossEncoder: {e}")
-                    raise Exception(ERROR_MESSAGES.DEFAULT("CrossEncoder error"))
-
-                # Safely adjust pad_token_id if missing as some models do not have this in config
-                try:
-                    model_cfg = getattr(rf, "model", None)
-                    if model_cfg and hasattr(model_cfg, "config"):
-                        cfg = model_cfg.config
-                        if getattr(cfg, "pad_token_id", None) is None:
-                            # Fallback to eos_token_id when available
-                            eos = getattr(cfg, "eos_token_id", None)
-                            if eos is not None:
-                                cfg.pad_token_id = eos
-                                log.debug(
-                                    f"Missing pad_token_id detected; set to eos_token_id={eos}"
-                                )
-                            else:
-                                log.warning(
-                                    "Neither pad_token_id nor eos_token_id present in model config"
-                                )
-                except Exception as e2:
-                    log.warning(f"Failed to adjust pad_token_id on CrossEncoder: {e2}")
+                raise Exception("Local sentence transformers reranking is no longer supported. Please use external reranking services or set engine to 'external'.")
 
     return rf
 
@@ -310,11 +252,6 @@ def unload_embedding_model(request: Request):
         import gc
 
         gc.collect()
-        if DEVICE_TYPE == "cuda":
-            import torch
-
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
 
 
 @router.post("/embedding/update")
@@ -507,6 +444,7 @@ async def get_rag_config(request: Request, user=Depends(get_admin_user)):
             "BYPASS_WEB_SEARCH_WEB_LOADER": request.app.state.config.BYPASS_WEB_SEARCH_WEB_LOADER,
             "OLLAMA_CLOUD_WEB_SEARCH_API_KEY": request.app.state.config.OLLAMA_CLOUD_WEB_SEARCH_API_KEY,
             "SEARXNG_QUERY_URL": request.app.state.config.SEARXNG_QUERY_URL,
+            "SEARXNG_LANGUAGE": request.app.state.config.SEARXNG_LANGUAGE,
             "YACY_QUERY_URL": request.app.state.config.YACY_QUERY_URL,
             "YACY_USERNAME": request.app.state.config.YACY_USERNAME,
             "YACY_PASSWORD": request.app.state.config.YACY_PASSWORD,
@@ -566,6 +504,7 @@ class WebConfig(BaseModel):
     BYPASS_WEB_SEARCH_WEB_LOADER: Optional[bool] = None
     OLLAMA_CLOUD_WEB_SEARCH_API_KEY: Optional[str] = None
     SEARXNG_QUERY_URL: Optional[str] = None
+    SEARXNG_LANGUAGE: Optional[str] = None
     YACY_QUERY_URL: Optional[str] = None
     YACY_USERNAME: Optional[str] = None
     YACY_PASSWORD: Optional[str] = None
@@ -893,11 +832,6 @@ async def update_rag_config(
         import gc
 
         gc.collect()
-        if DEVICE_TYPE == "cuda":
-            import torch
-
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
     request.app.state.config.RAG_RERANKING_ENGINE = (
         form_data.RAG_RERANKING_ENGINE
         if form_data.RAG_RERANKING_ENGINE is not None
@@ -1026,6 +960,7 @@ async def update_rag_config(
             form_data.web.OLLAMA_CLOUD_WEB_SEARCH_API_KEY
         )
         request.app.state.config.SEARXNG_QUERY_URL = form_data.web.SEARXNG_QUERY_URL
+        request.app.state.config.SEARXNG_LANGUAGE = form_data.web.SEARXNG_LANGUAGE
         request.app.state.config.YACY_QUERY_URL = form_data.web.YACY_QUERY_URL
         request.app.state.config.YACY_USERNAME = form_data.web.YACY_USERNAME
         request.app.state.config.YACY_PASSWORD = form_data.web.YACY_PASSWORD
@@ -1181,6 +1116,7 @@ async def update_rag_config(
             "BYPASS_WEB_SEARCH_WEB_LOADER": request.app.state.config.BYPASS_WEB_SEARCH_WEB_LOADER,
             "OLLAMA_CLOUD_WEB_SEARCH_API_KEY": request.app.state.config.OLLAMA_CLOUD_WEB_SEARCH_API_KEY,
             "SEARXNG_QUERY_URL": request.app.state.config.SEARXNG_QUERY_URL,
+            "SEARXNG_LANGUAGE": request.app.state.config.SEARXNG_LANGUAGE,
             "YACY_QUERY_URL": request.app.state.config.YACY_QUERY_URL,
             "YACY_USERNAME": request.app.state.config.YACY_USERNAME,
             "YACY_PASSWORD": request.app.state.config.YACY_PASSWORD,
@@ -1815,11 +1751,13 @@ def search_web(
             raise Exception("No PERPLEXITY_API_KEY found in environment variables")
     elif engine == "searxng":
         if request.app.state.config.SEARXNG_QUERY_URL:
+            searxng_kwargs = {"language": request.app.state.config.SEARXNG_LANGUAGE}
             return search_searxng(
                 request.app.state.config.SEARXNG_QUERY_URL,
                 query,
                 request.app.state.config.WEB_SEARCH_RESULT_COUNT,
                 request.app.state.config.WEB_SEARCH_DOMAIN_FILTER_LIST,
+                **searxng_kwargs,
             )
         else:
             raise Exception("No SEARXNG_QUERY_URL found in environment variables")

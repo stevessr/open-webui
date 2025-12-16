@@ -315,6 +315,7 @@ from open_webui.config import (
     SERPAPI_API_KEY,
     SERPAPI_ENGINE,
     SEARXNG_QUERY_URL,
+    SEARXNG_LANGUAGE,
     YACY_QUERY_URL,
     YACY_USERNAME,
     YACY_PASSWORD,
@@ -986,6 +987,7 @@ app.state.config.ENABLE_ONEDRIVE_INTEGRATION = ENABLE_ONEDRIVE_INTEGRATION
 
 app.state.config.OLLAMA_CLOUD_WEB_SEARCH_API_KEY = OLLAMA_CLOUD_WEB_SEARCH_API_KEY
 app.state.config.SEARXNG_QUERY_URL = SEARXNG_QUERY_URL
+app.state.config.SEARXNG_LANGUAGE = SEARXNG_LANGUAGE
 app.state.config.YACY_QUERY_URL = YACY_QUERY_URL
 app.state.config.YACY_USERNAME = YACY_USERNAME
 app.state.config.YACY_PASSWORD = YACY_PASSWORD
@@ -1055,42 +1057,11 @@ except Exception as e:
     pass
 
 
-app.state.EMBEDDING_FUNCTION = get_embedding_function(
-    app.state.config.RAG_EMBEDDING_ENGINE,
-    app.state.config.RAG_EMBEDDING_MODEL,
-    embedding_function=app.state.ef,
-    url=(
-        app.state.config.RAG_OPENAI_API_BASE_URL
-        if app.state.config.RAG_EMBEDDING_ENGINE == "openai"
-        else (
-            app.state.config.RAG_OLLAMA_BASE_URL
-            if app.state.config.RAG_EMBEDDING_ENGINE == "ollama"
-            else app.state.config.RAG_AZURE_OPENAI_BASE_URL
-        )
-    ),
-    key=(
-        app.state.config.RAG_OPENAI_API_KEY
-        if app.state.config.RAG_EMBEDDING_ENGINE == "openai"
-        else (
-            app.state.config.RAG_OLLAMA_API_KEY
-            if app.state.config.RAG_EMBEDDING_ENGINE == "ollama"
-            else app.state.config.RAG_AZURE_OPENAI_API_KEY
-        )
-    ),
-    embedding_batch_size=app.state.config.RAG_EMBEDDING_BATCH_SIZE,
-    azure_api_version=(
-        app.state.config.RAG_AZURE_OPENAI_API_VERSION
-        if app.state.config.RAG_EMBEDDING_ENGINE == "azure_openai"
-        else None
-    ),
-    enable_async=app.state.config.ENABLE_ASYNC_EMBEDDING,
-)
+# Local embedding function has been removed - only external embedding services are supported
+app.state.EMBEDDING_FUNCTION = None
 
-app.state.RERANKING_FUNCTION = get_reranking_function(
-    app.state.config.RAG_RERANKING_ENGINE,
-    app.state.config.RAG_RERANKING_MODEL,
-    reranking_function=app.state.rf,
-)
+# Local reranking function has been removed - only external reranking services are supported
+app.state.RERANKING_FUNCTION = None
 
 ########################################
 #
@@ -1217,6 +1188,7 @@ app.state.config.TTS_AZURE_SPEECH_BASE_URL = AUDIO_TTS_AZURE_SPEECH_BASE_URL
 app.state.config.TTS_AZURE_SPEECH_OUTPUT_FORMAT = AUDIO_TTS_AZURE_SPEECH_OUTPUT_FORMAT
 
 
+# Local audio models have been removed - only external audio services are supported
 app.state.faster_whisper_model = None
 app.state.speech_synthesiser = None
 app.state.speech_speaker_embeddings_dataset = None

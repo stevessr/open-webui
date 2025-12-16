@@ -2,12 +2,11 @@
 	import { toast } from 'svelte-sonner';
 
 	import { onMount, getContext, tick } from 'svelte';
-	import { models, tools, functions, knowledge as knowledgeCollections, user } from '$lib/stores';
+	import { models, tools, functions, user } from '$lib/stores';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import { getTools } from '$lib/apis/tools';
 	import { getFunctions } from '$lib/apis/functions';
-	import { getKnowledgeBases } from '$lib/apis/knowledge';
 
 	import AdvancedParams from '$lib/components/chat/Settings/Advanced/AdvancedParams.svelte';
 	import Tags from '$lib/components/common/Tags.svelte';
@@ -227,7 +226,6 @@
 	onMount(async () => {
 		await tools.set(await getTools(localStorage.token));
 		await functions.set(await getFunctions(localStorage.token));
-		await knowledgeCollections.set([...(await getKnowledgeBases(localStorage.token))]);
 
 		// Scroll to top 'workspace-container' element
 		const workspaceContainer = document.getElementById('workspace-container');
@@ -367,7 +365,7 @@
 			on:change={() => {
 				let reader = new FileReader();
 				reader.onload = (event) => {
-					let originalImageUrl = `${event.target.result}`;
+					let originalImageUrl = `${event.target?.result}`;
 
 					const img = new Image();
 					img.src = originalImageUrl;
@@ -415,12 +413,12 @@
 					inputFiles &&
 					inputFiles.length > 0 &&
 					['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'image/svg+xml'].includes(
-						inputFiles[0]['type']
+						(inputFiles[0] as any)?.['type']
 					)
 				) {
 					reader.readAsDataURL(inputFiles[0]);
 				} else {
-					console.log(`Unsupported File Type '${inputFiles[0]['type']}'.`);
+					console.log(`Unsupported File Type '${(inputFiles[0] as any)?.['type']}'.`);
 					inputFiles = null;
 				}
 			}}
@@ -729,22 +727,22 @@
 					<hr class=" border-gray-100/30 dark:border-gray-850/30 my-2" />
 
 					<div class="my-2">
-						<ToolsSelector bind:selectedToolIds={toolIds} tools={$tools} />
+						<ToolsSelector bind:selectedToolIds={toolIds} tools={$tools ?? []} />
 					</div>
 
-					{#if $functions.filter((func) => func.type === 'filter').length > 0 || $functions.filter((func) => func.type === 'action').length > 0}
+					{#if ($functions ?? []).filter((func) => func.type === 'filter').length > 0 || ($functions ?? []).filter((func) => func.type === 'action').length > 0}
 						<hr class=" border-gray-100/30 dark:border-gray-850/30 my-2" />
 
-						{#if $functions.filter((func) => func.type === 'filter').length > 0}
+						{#if ($functions ?? []).filter((func) => func.type === 'filter').length > 0}
 							<div class="my-2">
 								<FiltersSelector
 									bind:selectedFilterIds={filterIds}
-									filters={$functions.filter((func) => func.type === 'filter')}
+									filters={($functions ?? []).filter((func) => func.type === 'filter')}
 								/>
 							</div>
 
 							{#if filterIds.length > 0}
-								{@const toggleableFilters = $functions.filter(
+								{@const toggleableFilters = ($functions ?? []).filter(
 									(func) =>
 										func.type === 'filter' &&
 										(filterIds.includes(func.id) || func?.is_global) &&
@@ -762,11 +760,11 @@
 							{/if}
 						{/if}
 
-						{#if $functions.filter((func) => func.type === 'action').length > 0}
+						{#if ($functions ?? []).filter((func) => func.type === 'action').length > 0}
 							<div class="my-2">
 								<ActionsSelector
 									bind:selectedActionIds={actionIds}
-									actions={$functions.filter((func) => func.type === 'action')}
+									actions={($functions ?? []).filter((func) => func.type === 'action')}
 								/>
 							</div>
 						{/if}

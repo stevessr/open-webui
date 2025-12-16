@@ -30,8 +30,8 @@
 {#if loaded}
 	<Background opacity={0.25} />
 	<div
-		class="relative z-10 flex flex-col h-screen max-h-[100dvh] flex-1 transition-width duration-200 ease-in-out {$showSidebar
-			? 'md:max-w-[calc(100%-260px)]'
+		class=" flex flex-col h-screen max-h-[100dvh] flex-1 transition-width duration-200 ease-in-out {$showSidebar
+			? 'md:max-w-[calc(100%-var(--sidebar-width))]'
 			: ' md:max-w-[calc(100%-49px)]'}  w-full max-w-full"
 			id="admin-container"
 	>
