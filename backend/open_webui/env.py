@@ -55,32 +55,6 @@ log = logging.getLogger(__name__)
 log.info(f"GLOBAL_LOG_LEVEL: {GLOBAL_LOG_LEVEL}")
 
 
-log_sources = [
-    "AUDIO",
-    "COMFYUI",
-    "CONFIG",
-    "DB",
-    "IMAGES",
-    "MAIN",
-    "MODELS",
-    "OLLAMA",
-    "OPENAI",
-    "RAG",
-    "WEBHOOK",
-    "SOCKET",
-    "OAUTH",
-]
-
-SRC_LOG_LEVELS = {}
-
-for source in log_sources:
-    log_env_var = source + "_LOG_LEVEL"
-    SRC_LOG_LEVELS[source] = os.environ.get(log_env_var, "").upper()
-    if SRC_LOG_LEVELS[source] not in logging.getLevelNamesMapping():
-        SRC_LOG_LEVELS[source] = GLOBAL_LOG_LEVEL
-    log.info(f"{log_env_var}: {SRC_LOG_LEVELS[source]}")
-
-log.setLevel(SRC_LOG_LEVELS["CONFIG"])
 
 WEBUI_NAME = os.environ.get("WEBUI_NAME", "Open WebUI")
 if WEBUI_NAME != "Open WebUI":
@@ -333,6 +307,11 @@ if DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL is not None:
         )
     except Exception:
         DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL = 0.0
+
+# Enable public visibility of active user count (when disabled, only admins can see it)
+ENABLE_PUBLIC_ACTIVE_USERS_COUNT = (
+    os.environ.get("ENABLE_PUBLIC_ACTIVE_USERS_COUNT", "True").lower() == "true"
+)
 
 RESET_CONFIG_ON_START = (
     os.environ.get("RESET_CONFIG_ON_START", "False").lower() == "true"

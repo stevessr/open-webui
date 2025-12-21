@@ -2657,6 +2657,12 @@ MINERU_API_URL = PersistentConfig(
     os.environ.get("MINERU_API_URL", "http://localhost:8000"),
 )
 
+MINERU_API_TIMEOUT = PersistentConfig(
+    "MINERU_API_TIMEOUT",
+    "rag.mineru_api_timeout",
+    os.environ.get("MINERU_API_TIMEOUT", "300"),
+)
+
 MINERU_API_KEY = PersistentConfig(
     "MINERU_API_KEY",
     "rag.mineru_api_key",
@@ -2928,6 +2934,12 @@ RAG_EXTERNAL_RERANKER_API_KEY = PersistentConfig(
     "RAG_EXTERNAL_RERANKER_API_KEY",
     "rag.external_reranker_api_key",
     os.environ.get("RAG_EXTERNAL_RERANKER_API_KEY", ""),
+)
+
+RAG_EXTERNAL_RERANKER_TIMEOUT = PersistentConfig(
+    "RAG_EXTERNAL_RERANKER_TIMEOUT",
+    "rag.external_reranker_timeout",
+    os.environ.get("RAG_EXTERNAL_RERANKER_TIMEOUT", ""),
 )
 
 
