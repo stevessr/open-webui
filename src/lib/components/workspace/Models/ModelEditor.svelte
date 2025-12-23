@@ -484,7 +484,6 @@
 									>
 								</div>
 							</div>
-						</button>
 
 						<div class="flex w-full mt-1 justify-between gap-2">
 							<button

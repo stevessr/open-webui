@@ -581,7 +581,7 @@
 		}
 	};
 
-	const uploadFileHandler = async (file, , process = true, itemData = {},fullContext: boolean = false) => {
+	const uploadFileHandler = async (file, process = true, itemData = {},fullContext: boolean = false) => {
 		if ($_user?.role !== 'admin' && !($_user?.permissions?.chat?.file_upload ?? true)) {
 			toast.error($i18n.t('You do not have permission to upload files.'));
 			return null;
@@ -1591,7 +1591,6 @@
 												console.error('OneDrive Error:', error);
 											}
 										}}
-										{onUpload}
 										onClose={async () => {
 											await tick();
 
