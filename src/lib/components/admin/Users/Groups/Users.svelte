@@ -31,7 +31,7 @@
 	let total = null;
 
 	let query = '';
-	let orderBy = `group_id:${groupId}`; // default sort key
+	let orderBy = 'created_at'; // default sort key
 	let direction = 'desc'; // default sort order
 
 	let page = 1;
@@ -43,6 +43,7 @@
 			orderBy = key;
 			direction = 'asc';
 		}
+		page = 1;
 	};
 
 	const getUserList = async () => {
@@ -76,7 +77,6 @@
 			});
 		}
 
-		page = 1;
 		getUserList();
 	};
 
