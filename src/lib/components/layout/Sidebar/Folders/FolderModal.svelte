@@ -220,16 +220,7 @@
 						</div>
 					</div>
 
-					<input
-						id="folder-background-url-input"
-						class="w-full text-sm bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-700 outline-hidden border border-gray-300 dark:border-gray-600 rounded px-2 py-1 mt-1"
-						type="url"
-						value={meta.background_image_url || ''}
-						on:input={function(e) { meta.background_image_url = e.target.value.trim() || null; }}
-						placeholder={$i18n.t('Enter image URL')}
-					/>
-
-					<hr class=" border-gray-50 dark:border-gray-850 my-2.5 w-full" />
+					<hr class=" border-gray-50 dark:border-gray-850/30 my-2.5 w-full" />
 
 					{#if $user?.role === 'admin' || ($user?.permissions.chat?.system_prompt ?? true)}
 						<div class="my-1">

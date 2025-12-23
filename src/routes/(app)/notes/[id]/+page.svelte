@@ -19,8 +19,11 @@
 </script>
 
 {#if loaded}
-<div id="note-container" class="w-full h-full {$showSidebar ? 'md:max-w-[calc(100%-260px)]' : ''}">
-	<Background opacity={0.3} />
-	<NoteEditor id={$page.params.id} />
-</div>
+	<div
+		id="note-container"
+		class="w-full h-full {$showSidebar ? 'md:max-w-[calc(100%-var(--sidebar-width))]' : ''}"
+	>
+		<Background opacity={0.3} />
+		<NoteEditor id={$page.params.id} />
+	</div>
 {/if}

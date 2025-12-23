@@ -12,7 +12,10 @@ import re
 
 from urllib.parse import quote
 from huggingface_hub import snapshot_download
-from langchain.retrievers import ContextualCompressionRetriever, EnsembleRetriever
+from langchain_classic.retrievers import (
+    ContextualCompressionRetriever,
+    EnsembleRetriever,
+)
 from langchain_community.retrievers import BM25Retriever
 from langchain_core.documents import Document
 
@@ -37,7 +40,6 @@ from open_webui.retrieval.loaders.youtube import YoutubeLoader
 
 
 from open_webui.env import (
-    SRC_LOG_LEVELS,
     OFFLINE_MODE,
     ENABLE_FORWARD_USER_INFO_HEADERS,
 )
@@ -48,7 +50,6 @@ from open_webui.config import (
 )
 
 log = logging.getLogger(__name__)
-log.setLevel(SRC_LOG_LEVELS["RAG"])
 
 
 from typing import Any
@@ -89,6 +90,20 @@ class VectorSearchRetriever(BaseRetriever):
     collection_name: Any
     embedding_function: Any
     top_k: int
+
+    def _get_relevant_documents(
+        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
+    ) -> list[Document]:
+        """Get documents relevant to a query.
+
+        Args:
+            query: String to find relevant documents for.
+            run_manager: The callback handler to use.
+
+        Returns:
+            List of relevant documents.
+        """
+        return []
 
     async def _aget_relevant_documents(
         self,
@@ -768,9 +783,9 @@ def get_embedding_function(
     key,
     embedding_batch_size,
     azure_api_version=None,
+    enable_async=True,
 ) -> Awaitable:
     if embedding_engine == "":
-        # Sentence transformers: CPU-bound sync operation
         async def async_embedding_function(query, prefix=None, user=None):
             return await asyncio.to_thread(
                 (
@@ -802,16 +817,26 @@ def get_embedding_function(
                     query[i : i + embedding_batch_size]
                     for i in range(0, len(query), embedding_batch_size)
                 ]
-                log.debug(
-                    f"generate_multiple_async: Processing {len(batches)} batches in parallel"
-                )
 
-                # Execute all batches in parallel
-                tasks = [
-                    embedding_function(batch, prefix=prefix, user=user)
-                    for batch in batches
-                ]
-                batch_results = await asyncio.gather(*tasks)
+                if enable_async:
+                    log.debug(
+                        f"generate_multiple_async: Processing {len(batches)} batches in parallel"
+                    )
+                    # Execute all batches in parallel
+                    tasks = [
+                        embedding_function(batch, prefix=prefix, user=user)
+                        for batch in batches
+                    ]
+                    batch_results = await asyncio.gather(*tasks)
+                else:
+                    log.debug(
+                        f"generate_multiple_async: Processing {len(batches)} batches sequentially"
+                    )
+                    batch_results = []
+                    for batch in batches:
+                        batch_results.append(
+                            await embedding_function(batch, prefix=prefix, user=user)
+                        )
 
                 # Flatten results
                 embeddings = []
@@ -1063,23 +1088,19 @@ async def get_sources_from_items(
                         or knowledge_base.user_id == user.id
                         or has_access(user.id, "read", knowledge_base.access_control)
                     ):
-
-                        file_ids = knowledge_base.data.get("file_ids", [])
+                        files = Knowledges.get_files_by_id(knowledge_base.id)
 
                         documents = []
                         metadatas = []
-                        for file_id in file_ids:
-                            file_object = Files.get_file_by_id(file_id)
-
-                            if file_object:
-                                documents.append(file_object.data.get("content", ""))
-                                metadatas.append(
-                                    {
-                                        "file_id": file_id,
-                                        "name": file_object.filename,
-                                        "source": file_object.filename,
-                                    }
-                                )
+                        for file in files:
+                            documents.append(file.data.get("content", ""))
+                            metadatas.append(
+                                {
+                                    "file_id": file.id,
+                                    "name": file.filename,
+                                    "source": file.filename,
+                                }
+                            )
 
                         query_result = {
                             "documents": [documents],
@@ -1174,44 +1195,8 @@ async def get_sources_from_items(
 
 
 def get_model_path(model: str, update_model: bool = False):
-    # Construct huggingface_hub kwargs with local_files_only to return the snapshot path
-    cache_dir = os.getenv("SENTENCE_TRANSFORMERS_HOME")
-
-    local_files_only = not update_model
-
-    if OFFLINE_MODE:
-        local_files_only = True
-
-    snapshot_kwargs = {
-        "cache_dir": cache_dir,
-        "local_files_only": local_files_only,
-    }
-
-    log.debug(f"model: {model}")
-    log.debug(f"snapshot_kwargs: {snapshot_kwargs}")
-
-    # Inspiration from upstream sentence_transformers
-    if (
-        os.path.exists(model)
-        or ("\\" in model or model.count("/") > 1)
-        and local_files_only
-    ):
-        # If fully qualified path exists, return input, else set repo_id
-        return model
-    elif "/" not in model:
-        # Set valid repo_id for model short-name
-        model = "sentence-transformers" + "/" + model
-
-    snapshot_kwargs["repo_id"] = model
-
-    # Attempt to query the huggingface_hub library to determine the local path and/or to update
-    try:
-        model_repo_path = snapshot_download(**snapshot_kwargs)
-        log.debug(f"model_repo_path: {model_repo_path}")
-        return model_repo_path
-    except Exception as e:
-        log.exception(f"Cannot determine model snapshot path: {e}")
-        return model
+    # Local model loading has been removed - only external embedding services are supported
+    raise Exception("Local model loading is no longer supported. Please use external embedding services like OpenAI, Azure, or Ollama.")
 
 
 import operator
@@ -1231,6 +1216,25 @@ class RerankCompressor(BaseDocumentCompressor):
         extra = "forbid"
         arbitrary_types_allowed = True
 
+    def compress_documents(
+        self,
+        documents: Sequence[Document],
+        query: str,
+        callbacks: Optional[Callbacks] = None,
+    ) -> Sequence[Document]:
+        """Compress retrieved documents given the query context.
+
+        Args:
+            documents: The retrieved documents.
+            query: The query context.
+            callbacks: Optional callbacks to run during compression.
+
+        Returns:
+            The compressed documents.
+
+        """
+        return []
+
     async def acompress_documents(
         self,
         documents: Sequence[Document],
@@ -1241,11 +1245,8 @@ class RerankCompressor(BaseDocumentCompressor):
 
         scores = None
         if reranking:
-            scores = self.reranking_function(
-                [(query, doc.page_content) for doc in documents]
-            )
+            scores = await asyncio.to_thread(self.reranking_function, query, documents)
         else:
-            from sentence_transformers import util
 
             query_embedding = await self.embedding_function(
                 query, RAG_EMBEDDING_QUERY_PREFIX

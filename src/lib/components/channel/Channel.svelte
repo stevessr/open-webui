@@ -4,11 +4,19 @@
 
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { v4 as uuidv4 } from 'uuid';
 
-	import { chatId, showSidebar, socket, user } from '$lib/stores';
-	import Background from '$lib/components/Background.svelte';
+	import {
+		chatId,
+		channels,
+		channelId as _channelId,
+		showSidebar,
+		socket,
+		user
+	} from '$lib/stores';
 	import { getChannelById, getChannelMessages, sendMessage } from '$lib/apis/channels';
 	import { searchUsers } from '$lib/apis/users';
+	import Background from '$lib/components/Background.svelte';
 
 	import Messages from './Messages.svelte';
 	import MessageInput from './MessageInput.svelte';
@@ -17,8 +25,11 @@
 	import EllipsisVertical from '../icons/EllipsisVertical.svelte';
 	import Thread from './Thread.svelte';
 	import i18n from '$lib/i18n';
+	import Spinner from '../common/Spinner.svelte';
 
 	export let id = '';
+
+	let currentId = null;
 
 	let scrollEnd = true;
 	let messagesContainerElement = null;
@@ -46,7 +57,37 @@
 		}
 	};
 
+	const updateLastReadAt = async (channelId) => {
+		$socket?.emit('events:channel', {
+			channel_id: channelId,
+			message_id: null,
+			data: {
+				type: 'last_read_at'
+			}
+		});
+
+		channels.set(
+			$channels.map((channel) => {
+				if (channel.id === channelId) {
+					return {
+						...channel,
+						unread_count: 0
+					};
+				}
+				return channel;
+			})
+		);
+	};
+
 	const initHandler = async () => {
+		if (currentId) {
+			updateLastReadAt(currentId);
+		}
+
+		currentId = id;
+		updateLastReadAt(id);
+		_channelId.set(id);
+
 		top = false;
 		messages = null;
 		channel = null;
@@ -86,7 +127,8 @@
 
 			if (type === 'message') {
 				if ((data?.parent_id ?? null) === null) {
-					messages = [data, ...messages];
+					const tempId = data?.temp_id ?? null;
+					messages = [{ ...data, temp_id: null }, ...messages.filter((m) => m?.temp_id !== tempId)];
 
 					if (typingUsers.find((user) => user.id === event.user.id)) {
 						typingUsers = typingUsers.filter((user) => user.id !== event.user.id);
@@ -151,11 +193,30 @@
 			return;
 		}
 
-		const res = await sendMessage(localStorage.token, id, {
+		const tempId = uuidv4();
+
+		const message = {
+			temp_id: tempId,
 			content: content,
 			data: data,
 			reply_to_id: replyToMessage?.id ?? null
-		}).catch((error) => {
+		};
+
+		const ts = Date.now() * 1000000; // nanoseconds
+		messages = [
+			{
+				...message,
+				id: tempId,
+				user_id: $user?.id,
+				user: $user,
+				reply_to_message: replyToMessage ?? null,
+				created_at: ts,
+				updated_at: ts
+			},
+			...messages
+		];
+
+		const res = await sendMessage(localStorage.token, id, message).catch((error) => {
 			toast.error(`${error}`);
 			return null;
 		});
@@ -178,6 +239,8 @@
 				}
 			}
 		});
+
+		updateLastReadAt(id);
 	};
 
 	let mediaQuery;
@@ -205,12 +268,32 @@
 	});
 
 	onDestroy(() => {
+		// last read at
+		updateLastReadAt(id);
+		_channelId.set(null);
 		$socket?.off('events:channel', channelEventHandler);
 	});
 </script>
 
 <svelte:head>
-	<title>#{channel?.name ?? 'Channel'} • Neko</title>
+	{#if channel?.type === 'dm'}
+		<title
+			>{channel?.name.trim() ||
+				channel?.users.reduce((a, e, i, arr) => {
+					if (e.id === $user?.id) {
+						return a;
+					}
+
+					if (a) {
+						return `${a}, ${e.name}`;
+					} else {
+						return e.name;
+					}
+				}, '')} • Neko</title
+		>
+	{:else}
+		<title>#{channel?.name ?? 'Channel'} • Neko</title>
+	{/if}
 </svelte:head>
 <Background
 	opacity={channel?.meta?.background_opacity}
@@ -219,16 +302,34 @@
 
 <div
 	class="h-screen max-h-[100dvh] transition-width duration-200 ease-in-out {$showSidebar
-		? 'md:max-w-[calc(100%-260px)]'
+		? 'md:max-w-[calc(100%-var(--sidebar-width))]'
 		: ''} w-full max-w-full flex flex-col"
 	id="channel-container"
 >
 	<PaneGroup direction="horizontal" class="w-full h-full">
 		<Pane defaultSize={50} minSize={50} class="h-full flex flex-col w-full relative">
-			<Navbar {channel} />
+			<Navbar
+				{channel}
+				onPin={(messageId, pinned) => {
+					messages = messages.map((message) => {
+						if (message.id === messageId) {
+							return {
+								...message,
+								is_pinned: pinned
+							};
+						}
+						return message;
+					});
+				}}
+				onUpdate={async () => {
+					channel = await getChannelById(localStorage.token, id).catch((error) => {
+						return null;
+					});
+				}}
+			/>
 
-			<div class="flex-1 overflow-y-auto">
-				{#if channel}
+			{#if channel && messages !== null}
+				<div class="flex-1 overflow-y-auto">
 					<div
 						class=" pb-2.5 max-w-full z-10 scrollbar-hidden w-full h-full pt-6 flex-1 flex flex-col-reverse overflow-auto"
 						id="messages-container"
@@ -268,28 +369,34 @@
 							/>
 						{/key}
 					</div>
-				{/if}
-			</div>
+				</div>
 
-			<div class=" pb-[1rem] px-2.5">
-				<MessageInput
-					id="root"
-					bind:chatInputElement
-					bind:replyToMessage
-					{typingUsers}
-					userSuggestions={true}
-					users={channelUsers}
-					channelSuggestions={true}
-					disabled={!channel?.write_access}
-					placeholder={!channel?.write_access
-						? $i18n.t('You do not have permission to send messages in this channel.')
-						: $i18n.t('Type here...')}
-					{onChange}
-					onSubmit={submitHandler}
-					{scrollToBottom}
-					{scrollEnd}
-				/>
-			</div>
+				<div class=" pb-[1rem] px-2.5">
+					<MessageInput
+						id="root"
+						bind:chatInputElement
+						bind:replyToMessage
+						{typingUsers}
+						{channel}
+						userSuggestions={true}
+						channelSuggestions={true}
+						disabled={!channel?.write_access}
+						placeholder={!channel?.write_access
+							? $i18n.t('You do not have permission to send messages in this channel.')
+							: $i18n.t('Type here...')}
+						{onChange}
+						onSubmit={submitHandler}
+						{scrollToBottom}
+						{scrollEnd}
+					/>
+				</div>
+			{:else}
+				<div class=" flex items-center justify-center h-full w-full">
+					<div class="m-auto">
+						<Spinner className="size-5" />
+					</div>
+				</div>
+			{/if}
 		</Pane>
 
 		{#if !largeScreen}
@@ -313,7 +420,7 @@
 			{/if}
 		{:else if threadId !== null}
 			<PaneResizer
-				class="relative flex items-center justify-center group border-l border-gray-50 dark:border-gray-850 hover:border-gray-200 dark:hover:border-gray-800  transition z-20"
+				class="relative flex items-center justify-center group border-l border-gray-50 dark:border-gray-850/30 hover:border-gray-200 dark:hover:border-gray-800  transition z-20"
 				id="controls-resizer"
 			>
 				<div

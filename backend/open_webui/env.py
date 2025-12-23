@@ -40,33 +40,6 @@ except ImportError:
 
 DOCKER = os.environ.get("DOCKER", "False").lower() == "true"
 
-# device type embedding models - "cpu" (default), "cuda" (nvidia gpu required) or "mps" (apple silicon) - choosing this right can lead to better performance
-USE_CUDA = os.environ.get("USE_CUDA_DOCKER", "false")
-
-if USE_CUDA.lower() == "true":
-    try:
-        import torch
-
-        assert torch.cuda.is_available(), "CUDA not available"
-        DEVICE_TYPE = "cuda"
-    except Exception as e:
-        cuda_error = (
-            "Error when testing CUDA but USE_CUDA_DOCKER is true. "
-            f"Resetting USE_CUDA_DOCKER to false: {e}"
-        )
-        os.environ["USE_CUDA_DOCKER"] = "false"
-        USE_CUDA = "false"
-        DEVICE_TYPE = "cpu"
-else:
-    DEVICE_TYPE = "cpu"
-
-try:
-    import torch
-
-    if torch.backends.mps.is_available() and torch.backends.mps.is_built():
-        DEVICE_TYPE = "mps"
-except Exception:
-    pass
 
 ####################################
 # LOGGING
@@ -81,36 +54,8 @@ else:
 log = logging.getLogger(__name__)
 log.info(f"GLOBAL_LOG_LEVEL: {GLOBAL_LOG_LEVEL}")
 
-if "cuda_error" in locals():
-    log.exception(cuda_error)
-    del cuda_error
 
-log_sources = [
-    "AUDIO",
-    "COMFYUI",
-    "CONFIG",
-    "DB",
-    "IMAGES",
-    "MAIN",
-    "MODELS",
-    "OLLAMA",
-    "OPENAI",
-    "RAG",
-    "WEBHOOK",
-    "SOCKET",
-    "OAUTH",
-]
-
-SRC_LOG_LEVELS = {}
-
-for source in log_sources:
-    log_env_var = source + "_LOG_LEVEL"
-    SRC_LOG_LEVELS[source] = os.environ.get(log_env_var, "").upper()
-    if SRC_LOG_LEVELS[source] not in logging.getLevelNamesMapping():
-        SRC_LOG_LEVELS[source] = GLOBAL_LOG_LEVEL
-    log.info(f"{log_env_var}: {SRC_LOG_LEVELS[source]}")
-
-log.setLevel(SRC_LOG_LEVELS["CONFIG"])
+SRC_LOG_LEVELS = {}  # Legacy variable, do not remove
 
 WEBUI_NAME = os.environ.get("WEBUI_NAME", "Open WebUI")
 if WEBUI_NAME != "Open WebUI":
@@ -364,6 +309,11 @@ if DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL is not None:
     except Exception:
         DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL = 0.0
 
+# Enable public visibility of active user count (when disabled, only admins can see it)
+ENABLE_PUBLIC_ACTIVE_USERS_COUNT = (
+    os.environ.get("ENABLE_PUBLIC_ACTIVE_USERS_COUNT", "True").lower() == "true"
+)
+
 RESET_CONFIG_ON_START = (
     os.environ.get("RESET_CONFIG_ON_START", "False").lower() == "true"
 )
@@ -394,6 +344,13 @@ try:
         REDIS_SENTINEL_MAX_RETRY_COUNT = 2
 except ValueError:
     REDIS_SENTINEL_MAX_RETRY_COUNT = 2
+
+
+REDIS_SOCKET_CONNECT_TIMEOUT = os.environ.get("REDIS_SOCKET_CONNECT_TIMEOUT", "")
+try:
+    REDIS_SOCKET_CONNECT_TIMEOUT = float(REDIS_SOCKET_CONNECT_TIMEOUT)
+except ValueError:
+    REDIS_SOCKET_CONNECT_TIMEOUT = None
 
 ####################################
 # UVICORN WORKERS
@@ -439,7 +396,13 @@ PASSWORD_VALIDATION_REGEX_PATTERN = os.environ.get(
     "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$",
 )
 
-PASSWORD_VALIDATION_REGEX_PATTERN = re.compile(PASSWORD_VALIDATION_REGEX_PATTERN)
+try:
+    PASSWORD_VALIDATION_REGEX_PATTERN = re.compile(PASSWORD_VALIDATION_REGEX_PATTERN)
+except Exception as e:
+    log.error(f"Invalid PASSWORD_VALIDATION_REGEX_PATTERN: {e}")
+    PASSWORD_VALIDATION_REGEX_PATTERN = re.compile(
+        "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$"
+    )
 
 
 BYPASS_MODEL_ACCESS_CONTROL = (
@@ -546,6 +509,10 @@ if LICENSE_PUBLIC_KEY:
 # MODELS
 ####################################
 
+ENABLE_CUSTOM_MODEL_FALLBACK = (
+    os.environ.get("ENABLE_CUSTOM_MODEL_FALLBACK", "False").lower() == "true"
+)
+
 MODELS_CACHE_TTL = os.environ.get("MODELS_CACHE_TTL", "1")
 if MODELS_CACHE_TTL == "":
     MODELS_CACHE_TTL = None
@@ -561,7 +528,8 @@ else:
 ####################################
 
 ENABLE_CHAT_RESPONSE_BASE64_IMAGE_URL_CONVERSION = (
-    os.environ.get("REPLACE_IMAGE_URLS_IN_CHAT_RESPONSE", "False").lower() == "true"
+    os.environ.get("ENABLE_CHAT_RESPONSE_BASE64_IMAGE_URL_CONVERSION", "False").lower()
+    == "true"
 )
 
 CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE = os.environ.get(
@@ -619,9 +587,16 @@ ENABLE_WEBSOCKET_SUPPORT = (
 WEBSOCKET_MANAGER = os.environ.get("WEBSOCKET_MANAGER", "")
 
 WEBSOCKET_REDIS_OPTIONS = os.environ.get("WEBSOCKET_REDIS_OPTIONS", "")
+
+
 if WEBSOCKET_REDIS_OPTIONS == "":
-    log.debug("No WEBSOCKET_REDIS_OPTIONS provided, defaulting to None")
-    WEBSOCKET_REDIS_OPTIONS = None
+    if REDIS_SOCKET_CONNECT_TIMEOUT:
+        WEBSOCKET_REDIS_OPTIONS = {
+            "socket_connect_timeout": REDIS_SOCKET_CONNECT_TIMEOUT
+        }
+    else:
+        log.debug("No WEBSOCKET_REDIS_OPTIONS provided, defaulting to None")
+        WEBSOCKET_REDIS_OPTIONS = None
 else:
     try:
         WEBSOCKET_REDIS_OPTIONS = json.loads(WEBSOCKET_REDIS_OPTIONS)
@@ -724,49 +699,8 @@ AIOHTTP_CLIENT_SESSION_TOOL_SERVER_SSL = (
 )
 
 
-####################################
-# SENTENCE TRANSFORMERS
-####################################
 
 
-SENTENCE_TRANSFORMERS_BACKEND = os.environ.get("SENTENCE_TRANSFORMERS_BACKEND", "")
-if SENTENCE_TRANSFORMERS_BACKEND == "":
-    SENTENCE_TRANSFORMERS_BACKEND = "torch"
-
-
-SENTENCE_TRANSFORMERS_MODEL_KWARGS = os.environ.get(
-    "SENTENCE_TRANSFORMERS_MODEL_KWARGS", ""
-)
-if SENTENCE_TRANSFORMERS_MODEL_KWARGS == "":
-    SENTENCE_TRANSFORMERS_MODEL_KWARGS = None
-else:
-    try:
-        SENTENCE_TRANSFORMERS_MODEL_KWARGS = json.loads(
-            SENTENCE_TRANSFORMERS_MODEL_KWARGS
-        )
-    except Exception:
-        SENTENCE_TRANSFORMERS_MODEL_KWARGS = None
-
-
-SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND = os.environ.get(
-    "SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND", ""
-)
-if SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND == "":
-    SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND = "torch"
-
-
-SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS = os.environ.get(
-    "SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS", ""
-)
-if SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS == "":
-    SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS = None
-else:
-    try:
-        SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS = json.loads(
-            SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS
-        )
-    except Exception:
-        SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS = None
 
 ####################################
 # OFFLINE_MODE

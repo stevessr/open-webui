@@ -112,7 +112,9 @@
 		if (channelSuggestions) {
 			// Add a dummy channel item
 			_channels = [
-				...$channels.map((c) => ({ type: 'channel', id: c.id, label: c.name, data: c }))
+				...$channels
+					.filter((c) => c?.type !== 'dm')
+					.map((c) => ({ type: 'channel', id: c.id, label: c.name, data: c }))
 			];
 		} else {
 			if (userSuggestions) {
@@ -177,10 +179,10 @@
 								className="rounded-full size-5 items-center mr-2"
 							/>
 						{:else if item.type === 'user'}
-							<img
+							<VideoImage
 								src={`${WEBUI_API_BASE_URL}/users/${item.id}/profile/image`}
 								alt={item?.label ?? item.id}
-								class="rounded-full size-5 items-center mr-2"
+								className="rounded-full size-5 items-center mr-2"
 							/>
 						{/if}
 

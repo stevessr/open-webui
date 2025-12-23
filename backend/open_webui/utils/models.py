@@ -6,6 +6,7 @@ import sys
 from aiocache import cached
 from fastapi import Request
 
+from open_webui.socket.utils import RedisDict
 from open_webui.routers import openai, ollama, responses, anthropic, gemini
 from open_webui.functions import get_function_models
 
@@ -27,13 +28,12 @@ from open_webui.config import (
     DEFAULT_ARENA_MODEL,
 )
 
-from open_webui.env import BYPASS_MODEL_ACCESS_CONTROL, SRC_LOG_LEVELS, GLOBAL_LOG_LEVEL
+from open_webui.env import BYPASS_MODEL_ACCESS_CONTROL, GLOBAL_LOG_LEVEL
 from open_webui.models.users import UserModel
 
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
-log.setLevel(SRC_LOG_LEVELS["MAIN"])
 
 
 async def fetch_ollama_models(request: Request, user: UserModel = None):
@@ -278,6 +278,8 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
         ):
             # Custom model based on a base model
             owned_by = "openai"
+            connection_type = None
+
             pipe = None
 
             for m in models:
@@ -288,6 +290,8 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
                     owned_by = m.get("owned_by", "unknown")
                     if "pipe" in m:
                         pipe = m["pipe"]
+
+                    connection_type = m.get("connection_type", None)
                     break
 
             model = {
@@ -296,6 +300,7 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
                 "object": "model",
                 "created": custom_model.created_at,
                 "owned_by": owned_by,
+                "connection_type": connection_type,
                 "preset": True,
                 **({"pipe": pipe} if pipe is not None else {}),
             }
@@ -411,7 +416,12 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
 
     log.debug(f"get_all_models() returned {len(models)} models")
 
-    request.app.state.MODELS = {model["id"]: model for model in models}
+    models_dict = {model["id"]: model for model in models}
+    if isinstance(request.app.state.MODELS, RedisDict):
+        request.app.state.MODELS.set(models_dict)
+    else:
+        request.app.state.MODELS = models_dict
+
     return models
 
 
@@ -444,6 +454,12 @@ def get_filtered_models(models, user):
         user.role == "user"
         or (user.role == "admin" and not BYPASS_ADMIN_ACCESS_CONTROL)
     ) and not BYPASS_MODEL_ACCESS_CONTROL:
+        model_ids = [model["id"] for model in models if not model.get("arena")]
+        model_infos = {
+            model_info.id: model_info
+            for model_info in Models.get_models_by_ids(model_ids)
+        }
+
         filtered_models = []
         user_group_ids = {group.id for group in Groups.get_groups_by_member_id(user.id)}
         for model in models:
@@ -459,7 +475,7 @@ def get_filtered_models(models, user):
                     filtered_models.append(model)
                 continue
 
-            model_info = Models.get_model_by_id(model["id"])
+            model_info = model_infos.get(model["id"], None)
             if model_info:
                 if (
                     (user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL)

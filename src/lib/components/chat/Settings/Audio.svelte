@@ -313,7 +313,7 @@
 			</div>
 		</div>
 
-		<hr class=" border-gray-100 dark:border-gray-850" />
+		<hr class=" border-gray-100/30 dark:border-gray-850/30" />
 
 		{#if TTSEngine === 'browser-kokoro'}
 			{#if TTSModel}
@@ -355,7 +355,7 @@
 				<div class="flex w-full">
 					<div class="flex-1">
 						<Select
-							className="w-full text-sm bg-transparent dark:text-gray-300 outline-hidden"
+							className="dark:bg-gray-900 w-full text-sm bg-transparent dark:text-gray-300 outline-hidden"
 							bind:value={voice}
 							items={[
 								{ value: '', label: $i18n.t('Default') },
