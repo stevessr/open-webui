@@ -49,7 +49,7 @@ from open_webui.env import (
     ENV,
     AIOHTTP_CLIENT_SESSION_SSL,
     AIOHTTP_CLIENT_TIMEOUT,
-    SRC_LOG_LEVELS,
+    DEVICE_TYPE,
     ENABLE_FORWARD_USER_INFO_HEADERS,
 )
 
@@ -63,7 +63,6 @@ AZURE_MAX_FILE_SIZE_MB = 200
 AZURE_MAX_FILE_SIZE = AZURE_MAX_FILE_SIZE_MB * 1024 * 1024  # Convert MB to bytes
 
 log = logging.getLogger(__name__)
-log.setLevel(SRC_LOG_LEVELS["AUDIO"])
 
 SPEECH_CACHE_DIR = CACHE_DIR / "audio" / "speech"
 SPEECH_CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -1068,10 +1067,9 @@ def transcription(
     user=Depends(get_verified_user),
 ):
     log.info(f"file.content_type: {file.content_type}")
-
     stt_supported_content_types = getattr(
         request.app.state.config, "STT_SUPPORTED_CONTENT_TYPES", []
-    ) or ["audio/*", "video/webm"]
+    )
 
     if not strict_match_mime_type(stt_supported_content_types, file.content_type):
         raise HTTPException(
