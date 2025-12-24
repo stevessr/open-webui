@@ -20,7 +20,7 @@ jobs:
           bun-version: latest
 
       - name: Install Dependencies
-        run: bun install --frozen-lockfile
+        run: bun install
         # The 'pnpm update' command is usually for updating your lockfile,
         # typically done locally. 'pnpm install' is for CI.
 
