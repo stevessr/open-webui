@@ -72,7 +72,7 @@ jobs:
             ${{ runner.os }}-bun-
 
       - name: Install Dependencies
-        run: bun install --frozen-lockfile
+        run: bun install
 
       - name: Fix missing Dependencies
         run: |
@@ -129,7 +129,7 @@ jobs:
             ${{ runner.os }}-bun-
 
       - name: Install Dependencies
-        run: bun install --frozen-lockfile
+        run: bun install
 
       - name: Fix missing Dependencies
         run: |
