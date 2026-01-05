@@ -22,6 +22,8 @@ from open_webui.models.chats import Chats
 from open_webui.routers.files import upload_file_handler, get_file_content_by_id
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.headers import include_user_info_headers
+from open_webui.internal.db import get_session
+from sqlalchemy.orm import Session
 from open_webui.utils.images.comfyui import (
     ComfyUICreateImageForm,
     ComfyUIEditImageForm,
@@ -461,6 +463,7 @@ class CreateImageForm(BaseModel):
     prompt: str
     size: Optional[str] = None
     n: int = 1
+    steps: Optional[int] = None
     negative_prompt: Optional[str] = None
 
 
@@ -496,7 +499,7 @@ def get_image_data(data: str, headers=None):
         return None, None
 
 
-def upload_image(request, image_data, content_type, metadata, user):
+def upload_image(request, image_data, content_type, metadata, user, db=None):
     image_format = mimetypes.guess_extension(content_type)
     file = UploadFile(
         file=io.BytesIO(image_data),
@@ -524,6 +527,7 @@ def upload_image(request, image_data, content_type, metadata, user):
                 message_id=message_id,
                 file_ids=[file_item.id],
                 user_id=user.id,
+                db=db,
             )
 
     url = request.app.url_path_for("get_file_content_by_id", id=file_item.id)
@@ -703,8 +707,12 @@ async def image_generations(
                 "n": form_data.n,
             }
 
-            if request.app.state.config.IMAGE_STEPS is not None:
-                data["steps"] = request.app.state.config.IMAGE_STEPS
+            if request.app.state.config.IMAGE_STEPS is not None or form_data.steps is not None:
+                data["steps"] = (
+                    form_data.steps
+                    if form_data.steps is not None
+                    else request.app.state.config.IMAGE_STEPS
+                )
 
             if form_data.negative_prompt is not None:
                 data["negative_prompt"] = form_data.negative_prompt
@@ -762,8 +770,12 @@ async def image_generations(
                 "height": height,
             }
 
-            if request.app.state.config.IMAGE_STEPS is not None:
-                data["steps"] = request.app.state.config.IMAGE_STEPS
+            if request.app.state.config.IMAGE_STEPS is not None or form_data.steps is not None:
+                data["steps"] = (
+                    form_data.steps
+                    if form_data.steps is not None
+                    else request.app.state.config.IMAGE_STEPS
+                )
 
             if form_data.negative_prompt is not None:
                 data["negative_prompt"] = form_data.negative_prompt

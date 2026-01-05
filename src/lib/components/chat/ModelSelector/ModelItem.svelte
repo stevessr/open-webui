@@ -80,7 +80,8 @@
 					<ProfileImage
 						src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${item.model.id}&lang=${$i18n.language}`}
 						alt="Model"
-						className="rounded-full size-5 flex items-center"
+						class="rounded-full size-5 flex items-center"
+						loading="lazy"
 					/>
 				</Tooltip>
 			</div>

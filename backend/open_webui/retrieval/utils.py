@@ -42,6 +42,7 @@ from open_webui.retrieval.loaders.youtube import YoutubeLoader
 from open_webui.env import (
     OFFLINE_MODE,
     ENABLE_FORWARD_USER_INFO_HEADERS,
+    AIOHTTP_CLIENT_SESSION_SSL,
 )
 from open_webui.config import (
     RAG_EMBEDDING_QUERY_PREFIX,
@@ -762,7 +763,10 @@ async def agenerate_ollama_batch_embeddings(
 
         async with aiohttp.ClientSession(trust_env=True) as session:
             async with session.post(
-                f"{url}/api/embed", headers=headers, json=form_data
+                f"{url}/api/embed",
+                headers=headers,
+                json=form_data,
+                ssl=AIOHTTP_CLIENT_SESSION_SSL,
             ) as r:
                 r.raise_for_status()
                 data = await r.json()
@@ -790,7 +794,9 @@ def get_embedding_function(
             return await asyncio.to_thread(
                 (
                     lambda query, prefix=None: embedding_function.encode(
-                        query, **({"prompt": prefix} if prefix else {})
+                        query,
+                        batch_size=int(embedding_batch_size),
+                        **({"prompt": prefix} if prefix else {}),
                     ).tolist()
                 ),
                 query,

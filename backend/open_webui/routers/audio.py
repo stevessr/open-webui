@@ -38,6 +38,7 @@ from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.headers import include_user_info_headers
 from open_webui.config import (
     WHISPER_MODEL_AUTO_UPDATE,
+    WHISPER_COMPUTE_TYPE,
     WHISPER_MODEL_DIR,
     CACHE_DIR,
     WHISPER_LANGUAGE,
@@ -122,8 +123,27 @@ def convert_audio_to_mp3(file_path):
 
 
 def set_faster_whisper_model(model: str, auto_update: bool = False):
-    # Local whisper models have been removed - only external STT services are supported
-    raise Exception("Local whisper models are no longer supported")
+    whisper_model = None
+    if model:
+        from faster_whisper import WhisperModel
+
+        faster_whisper_kwargs = {
+            "model_size_or_path": model,
+            "device": DEVICE_TYPE if DEVICE_TYPE and DEVICE_TYPE == "cuda" else "cpu",
+            "compute_type": WHISPER_COMPUTE_TYPE,
+            "download_root": WHISPER_MODEL_DIR,
+            "local_files_only": not auto_update,
+        }
+
+        try:
+            whisper_model = WhisperModel(**faster_whisper_kwargs)
+        except Exception:
+            log.warning(
+                "WhisperModel initialization failed, attempting download with local_files_only=False"
+            )
+            faster_whisper_kwargs["local_files_only"] = False
+            whisper_model = WhisperModel(**faster_whisper_kwargs)
+    return whisper_model
 
 
 ##########################################
