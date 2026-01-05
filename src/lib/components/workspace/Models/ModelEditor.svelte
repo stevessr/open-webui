@@ -412,12 +412,12 @@
 		/>
 
 		{#if !edit || (edit && model)}
-			<form
-				class="flex flex-col md:flex-row w-full gap-3 md:gap-6"
-				on:submit|preventDefault={() => {
-					submitHandler();
-				}}
-			/>
+		<form
+			class="flex flex-col md:flex-row w-full gap-3 md:gap-6"
+			on:submit|preventDefault={() => {
+				submitHandler();
+			}}
+		>
 		<div class="w-full">
 			<div class="flex flex-col md:flex-row gap-4 w-full">
 				<div class="self-center md:self-start flex justify-center my-2 shrink-0">
