@@ -398,12 +398,14 @@ PASSWORD_VALIDATION_REGEX_PATTERN = os.environ.get(
     "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$",
 )
 
+
 try:
+    PASSWORD_VALIDATION_REGEX_PATTERN = rf"{PASSWORD_VALIDATION_REGEX_PATTERN}"
     PASSWORD_VALIDATION_REGEX_PATTERN = re.compile(PASSWORD_VALIDATION_REGEX_PATTERN)
 except Exception as e:
     log.error(f"Invalid PASSWORD_VALIDATION_REGEX_PATTERN: {e}")
     PASSWORD_VALIDATION_REGEX_PATTERN = re.compile(
-        "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$"
+        r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$"
     )
 
 
@@ -639,6 +641,8 @@ except ValueError:
     WEBSOCKET_SERVER_PING_INTERVAL = 25
 
 
+REQUESTS_VERIFY = os.environ.get("REQUESTS_VERIFY", "True").lower() == "true"
+
 AIOHTTP_CLIENT_TIMEOUT = os.environ.get("AIOHTTP_CLIENT_TIMEOUT", "")
 
 if AIOHTTP_CLIENT_TIMEOUT == "":
@@ -704,6 +708,16 @@ AIOHTTP_CLIENT_SESSION_TOOL_SERVER_SSL = (
 
 
 
+# Whether to apply sigmoid normalization to CrossEncoder reranking scores.
+# When enabled (default), scores are normalized to 0-1 range for proper
+# relevance threshold behavior with MS MARCO models.
+SENTENCE_TRANSFORMERS_CROSS_ENCODER_SIGMOID_ACTIVATION_FUNCTION = (
+    os.environ.get(
+        "SENTENCE_TRANSFORMERS_CROSS_ENCODER_SIGMOID_ACTIVATION_FUNCTION", "True"
+    ).lower()
+    == "true"
+)
+
 ####################################
 # OFFLINE_MODE
 ####################################
@@ -720,6 +734,11 @@ if OFFLINE_MODE:
 ####################################
 # AUDIT LOGGING
 ####################################
+
+
+ENABLE_AUDIT_STDOUT = os.getenv("ENABLE_AUDIT_STDOUT", "False").lower() == "true"
+ENABLE_AUDIT_LOGS_FILE = os.getenv("ENABLE_AUDIT_LOGS_FILE", "True").lower() == "true"
+
 # Where to store log file
 # Defaults to the DATA_DIR/audit.log. To set AUDIT_LOGS_FILE_PATH you need to
 # provide the whole path, like: /app/audit.log

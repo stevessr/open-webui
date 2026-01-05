@@ -892,15 +892,8 @@
 
 	const initNewChat = async () => {
 		console.log('initNewChat');
-		if ($user?.role !== 'admin') {
-			if ($user?.permissions?.chat?.temporary_enforced) {
-				await temporaryChatEnabled.set(true);
-			}
-
-			if (!$user?.permissions?.chat?.temporary) {
-				await temporaryChatEnabled.set(false);
-				return;
-			}
+		if ($user?.role !== 'admin' && $user?.permissions?.chat?.temporary_enforced) {
+			await temporaryChatEnabled.set(true);
 		}
 
 		if ($settings?.temporaryChatByDefault ?? false) {
@@ -910,6 +903,10 @@
 				// if set to null set to false; refer to temp chat toggle click handler
 				await temporaryChatEnabled.set(false);
 			}
+		}
+
+		if ($user?.role !== 'admin' && !$user?.permissions?.chat?.temporary) {
+			await temporaryChatEnabled.set(false);
 		}
 
 		const availableModels = $models
@@ -1115,7 +1112,7 @@
 
 				if (history.currentId) {
 					for (const message of Object.values(history.messages)) {
-						if (message.role === 'assistant') {
+						if (message && message.role === 'assistant') {
 							message.done = true;
 						}
 					}
@@ -1743,13 +1740,18 @@
 
 				if (model) {
 					// If there are image files, check if model is vision capable
+					// Skip this check if image generation is enabled, as images may be for editing or are generated outputs in the history
 					const hasImages = createMessagesList(_history, parentId).some((message) =>
 						message.files?.some(
 							(file) => file.type === 'image' || file?.content_type?.startsWith('image/')
 						)
 					);
 
-					if (hasImages && !(model.info?.meta?.capabilities?.vision ?? true)) {
+					if (
+						hasImages &&
+						!(model.info?.meta?.capabilities?.vision ?? true) &&
+						!imageGenerationEnabled
+					) {
 						toast.error(
 							$i18n.t('Model {{modelName}} is not vision capable', {
 								modelName: model.name ?? model.id
@@ -2135,8 +2137,10 @@
 
 			const responseMessage = history.messages[history.currentId];
 			// Set all response messages to done
-			for (const messageId of history.messages[responseMessage.parentId].childrenIds) {
-				history.messages[messageId].done = true;
+			if (responseMessage.parentId && history.messages[responseMessage.parentId]) {
+				for (const messageId of history.messages[responseMessage.parentId].childrenIds) {
+					history.messages[messageId].done = true;
+				}
 			}
 
 			history.messages[history.currentId] = responseMessage;
@@ -2191,6 +2195,11 @@
 
 		if (history.currentId) {
 			let userMessage = history.messages[message.parentId];
+
+			if (!userMessage) {
+				toast.error($i18n.t('Parent message not found'));
+				return;
+			}
 
 			if (autoScroll) {
 				scrollToBottom();

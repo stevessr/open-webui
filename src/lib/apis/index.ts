@@ -2,9 +2,6 @@ import { WEBUI_API_BASE_URL, WEBUI_BASE_URL, ANTHROPIC_API_BASE_URL, Gemini_API_
 import { convertOpenApiToToolPayload } from '$lib/utils';
 import { getOpenAIModelsDirect } from './openai';
 
-import { parse } from 'yaml';
-import { toast } from 'svelte-sonner';
-
 export const getModels = async (
 	token: string = '',
 	connections: object | null = null,
@@ -597,7 +594,7 @@ export const getToolServerData = async (token: string, url: string) => {
 			// Check if URL ends with .yaml or .yml to determine format
 			if (url.toLowerCase().endsWith('.yaml') || url.toLowerCase().endsWith('.yml')) {
 				if (!res.ok) throw await res.text();
-				const text = await res.text();
+				const [text, { parse }] = await Promise.all([res.text(), import('yaml')]);
 				return parse(text);
 			} else {
 				if (!res.ok) throw await res.json();
@@ -663,6 +660,13 @@ export const getToolServersData = async (servers: object[]) => {
 					}
 
 					if (res) {
+						if (!res.paths) {
+							return {
+								error: 'Invalid OpenAPI spec',
+								url: server?.url
+							};
+						}
+
 						const { openapi, info, specs } = {
 							openapi: res,
 							info: res.info,

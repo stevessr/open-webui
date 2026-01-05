@@ -477,6 +477,24 @@
 							<div class="mb-2.5 flex w-full flex-col">
 								<div>
 									<div class=" self-center text-xs font-medium mb-1">
+										{$i18n.t('Jina API Base URL')}
+									</div>
+
+									<div class="flex w-full">
+										<div class="flex-1">
+											<input
+												class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+												type="text"
+												placeholder={$i18n.t('Enter Jina API Base URL')}
+												bind:value={webConfig.JINA_API_BASE_URL}
+												autocomplete="off"
+											/>
+										</div>
+									</div>
+								</div>
+
+								<div class="mt-2">
+									<div class=" self-center text-xs font-medium mb-1">
 										{$i18n.t('Jina API Key')}
 									</div>
 
@@ -630,6 +648,24 @@
 										bind:value={webConfig.FIRECRAWL_API_KEY}
 									/>
 								</div>
+
+								<div class="mt-2">
+									<div class=" self-center text-xs font-medium mb-1">
+										{$i18n.t('Firecrawl Timeout (s)')}
+									</div>
+
+									<div class="flex w-full">
+										<div class="flex-1">
+											<input
+												class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+												type="number"
+												placeholder={$i18n.t('Enter Firecrawl Timeout')}
+												bind:value={webConfig.FIRECRAWL_TIMEOUT}
+												autocomplete="off"
+											/>
+										</div>
+									</div>
+								</div>
 							</div>
 						{:else if webConfig.WEB_SEARCH_ENGINE === 'external'}
 							<div class="mb-2.5 flex w-full flex-col">
@@ -663,7 +699,37 @@
 								</div>
 							</div>
 						{/if}
+
+					{#if webConfig.WEB_SEARCH_ENGINE === 'duckduckgo'}
+						<div class="mb-2.5 flex w-full flex-col">
+							<div>
+								<div class=" self-center text-xs font-medium mb-1">
+									{$i18n.t('DDGS Backend')}
+								</div>
+
+								<div class="flex w-full">
+									<div class="flex-1">
+										<select
+											class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+											bind:value={webConfig.DDGS_BACKEND}
+										>
+											<option value="auto">{$i18n.t('Auto (Random)')}</option>
+											<option value="bing">{$i18n.t('Bing')}</option>
+											<option value="brave">{$i18n.t('Brave')}</option>
+											<option value="duckduckgo">{$i18n.t('DuckDuckGo')}</option>
+											<option value="google">{$i18n.t('Google')}</option>
+											<option value="grokipedia">{$i18n.t('Grokipedia')}</option>
+											<option value="mojeek">{$i18n.t('Mojeek')}</option>
+											<option value="wikipedia">{$i18n.t('Wikipedia')}</option>
+											<option value="yahoo">{$i18n.t('Yahoo')}</option>
+											<option value="yandex">{$i18n.t('Yandex')}</option>
+										</select>
+									</div>
+								</div>
+							</div>
+						</div>
 					{/if}
+				{/if}
 
 					{#if webConfig.ENABLE_WEB_SEARCH}
 						<div class="mb-2.5 flex w-full flex-col">
