@@ -796,7 +796,7 @@
 					{#if $user !== undefined && $user !== null}
 						<UserMenu
 							role={$user?.role}
-							profile={true}
+							profile={$config?.features?.enable_user_status ?? true}
 							showActiveUsers={false}
 							on:show={(e) => {
 								if (e.detail === 'archived-chat') {
@@ -815,18 +815,20 @@
 										aria-label={$i18n.t('Open User Profile Menu')}
 									/>
 
-									<div class="absolute -bottom-0.5 -right-0.5">
-										<span class="relative flex size-2.5">
-											<span
-												class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"
-											></span>
-											<span
-												class="relative inline-flex size-2.5 rounded-full {true
-													? 'bg-green-500'
-													: 'bg-gray-300 dark:bg-gray-700'} border-2 border-white dark:border-gray-900"
-											></span>
-										</span>
-									</div>
+									{#if $config?.features?.enable_user_status}
+										<div class="absolute -bottom-0.5 -right-0.5">
+											<span class="relative flex size-2.5">
+												<span
+													class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"
+												></span>
+												<span
+													class="relative inline-flex size-2.5 rounded-full {true
+														? 'bg-green-500'
+														: 'bg-gray-300 dark:bg-gray-700'} border-2 border-white dark:border-gray-900"
+												></span>
+											</span>
+										</div>
+									{/if}
 								</div>
 							</div>
 						</UserMenu>
@@ -1359,7 +1361,7 @@
 					{#if $user !== undefined && $user !== null}
 						<UserMenu
 							role={$user?.role}
-							profile={true}
+							profile={$config?.features?.enable_user_status ?? true}
 							showActiveUsers={false}
 							on:show={(e) => {
 								if (e.detail === 'archived-chat') {
@@ -1377,18 +1379,20 @@
 										alt={$i18n.t('Open User Profile Menu')}
 									/>
 
-									<div class="absolute -bottom-0.5 -right-0.5">
-										<span class="relative flex size-2.5">
-											<span
-												class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"
-											></span>
-											<span
-												class="relative inline-flex size-2.5 rounded-full {true
-													? 'bg-green-500'
-													: 'bg-gray-300 dark:bg-gray-700'} border-2 border-white dark:border-gray-900"
-											></span>
-										</span>
-									</div>
+									{#if $config?.features?.enable_user_status}
+										<div class="absolute -bottom-0.5 -right-0.5">
+											<span class="relative flex size-2.5">
+												<span
+													class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"
+												></span>
+												<span
+													class="relative inline-flex size-2.5 rounded-full {true
+														? 'bg-green-500'
+														: 'bg-gray-300 dark:bg-gray-700'} border-2 border-white dark:border-gray-900"
+												></span>
+											</span>
+										</div>
+									{/if}
 								</div>
 								<div class=" self-center font-medium">{$user?.name}</div>
 							</div>

@@ -1604,6 +1604,15 @@ USER_PERMISSIONS_FEATURES_API_KEYS = (
     os.environ.get("USER_PERMISSIONS_FEATURES_API_KEYS", "False").lower() == "true"
 )
 
+USER_PERMISSIONS_FEATURES_MEMORIES = (
+    os.environ.get("USER_PERMISSIONS_FEATURES_MEMORIES", "True").lower() == "true"
+)
+
+
+USER_PERMISSIONS_SETTINGS_INTERFACE = (
+    os.environ.get("USER_PERMISSIONS_SETTINGS_INTERFACE", "True").lower() == "true"
+)
+
 
 DEFAULT_USER_PERMISSIONS = {
     "workspace": {
@@ -1662,6 +1671,10 @@ DEFAULT_USER_PERMISSIONS = {
         "web_search": USER_PERMISSIONS_FEATURES_WEB_SEARCH,
         "image_generation": USER_PERMISSIONS_FEATURES_IMAGE_GENERATION,
         "code_interpreter": USER_PERMISSIONS_FEATURES_CODE_INTERPRETER,
+        "memories": USER_PERMISSIONS_FEATURES_MEMORIES,
+    },
+    "settings": {
+        "interface": USER_PERMISSIONS_SETTINGS_INTERFACE,
     },
 }
 
@@ -1693,6 +1706,12 @@ ENABLE_NOTES = PersistentConfig(
     "ENABLE_NOTES",
     "notes.enable",
     os.environ.get("ENABLE_NOTES", "True").lower() == "true",
+)
+
+ENABLE_USER_STATUS = PersistentConfig(
+    "ENABLE_USER_STATUS",
+    "users.enable_status",
+    os.environ.get("ENABLE_USER_STATUS", "True").lower() == "true",
 )
 
 ENABLE_EVALUATION_ARENA_MODELS = PersistentConfig(
@@ -2207,6 +2226,12 @@ ENABLE_CODE_INTERPRETER = PersistentConfig(
     "ENABLE_CODE_INTERPRETER",
     "code_interpreter.enable",
     os.environ.get("ENABLE_CODE_INTERPRETER", "True").lower() == "true",
+)
+
+ENABLE_MEMORIES = PersistentConfig(
+    "ENABLE_MEMORIES",
+    "memories.enable",
+    os.environ.get("ENABLE_MEMORIES", "True").lower() == "true",
 )
 
 CODE_INTERPRETER_ENGINE = PersistentConfig(
@@ -3853,11 +3878,9 @@ WHISPER_MODEL_AUTO_UPDATE = (
     and os.environ.get("WHISPER_MODEL_AUTO_UPDATE", "").lower() == "true"
 )
 
-WHISPER_VAD_FILTER = PersistentConfig(
-    "WHISPER_VAD_FILTER",
-    "audio.stt.whisper_vad_filter",
-    os.getenv("WHISPER_VAD_FILTER", "False").lower() == "true",
-)
+WHISPER_VAD_FILTER = os.getenv("WHISPER_VAD_FILTER", "False").lower() == "true"
+
+WHISPER_MULTILINGUAL = os.getenv("WHISPER_MULTILINGUAL", "False").lower() == "true"
 
 WHISPER_LANGUAGE = os.getenv("WHISPER_LANGUAGE", "").lower() or None
 

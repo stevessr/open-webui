@@ -35,13 +35,16 @@ from pydantic import BaseModel
 
 from open_webui.utils.misc import strict_match_mime_type
 from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.access_control import has_permission
 from open_webui.utils.headers import include_user_info_headers
 from open_webui.config import (
     WHISPER_MODEL_AUTO_UPDATE,
     WHISPER_COMPUTE_TYPE,
     WHISPER_MODEL_DIR,
+    WHISPER_VAD_FILTER,
     CACHE_DIR,
     WHISPER_LANGUAGE,
+    WHISPER_MULTILINGUAL,
     ELEVENLABS_API_BASE_URL,
 )
 
@@ -320,6 +323,20 @@ def load_speech_pipeline(request):
 
 @router.post("/speech")
 async def speech(request: Request, user=Depends(get_verified_user)):
+    if request.app.state.config.TTS_ENGINE == "":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
+
+    if user.role != "admin" and not has_permission(
+        user.id, "chat.tts", request.app.state.config.USER_PERMISSIONS
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
+
     body = await request.body()
     name = hashlib.sha256(
         body
@@ -535,9 +552,18 @@ def transcription_handler(request, file_path, metadata, user=None):
     ]
 
     if request.app.state.config.STT_ENGINE == "":
-        raise HTTPException(
-            status_code=400,
-            detail="Local whisper STT engine is no longer supported. Please use external STT services like OpenAI, Azure, or Deepgram."
+        if request.app.state.faster_whisper_model is None:
+            request.app.state.faster_whisper_model = set_faster_whisper_model(
+                request.app.state.config.WHISPER_MODEL
+            )
+
+        model = request.app.state.faster_whisper_model
+        segments, info = model.transcribe(
+            file_path,
+            beam_size=5,
+            vad_filter=WHISPER_VAD_FILTER,
+            language=languages[0],
+            multilingual=WHISPER_MULTILINGUAL,
         )
     elif request.app.state.config.STT_ENGINE == "openai":
         r = None
@@ -1086,6 +1112,19 @@ def transcription(
     language: Optional[str] = Form(None),
     user=Depends(get_verified_user),
 ):
+    if request.app.state.config.STT_ENGINE == "":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
+
+    if user.role != "admin" and not has_permission(
+        user.id, "chat.stt", request.app.state.config.USER_PERMISSIONS
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
     log.info(f"file.content_type: {file.content_type}")
     stt_supported_content_types = getattr(
         request.app.state.config, "STT_SUPPORTED_CONTENT_TYPES", []

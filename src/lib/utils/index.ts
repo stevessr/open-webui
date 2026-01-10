@@ -357,9 +357,9 @@ export const generateInitialsImage = (name) => {
 	const initials =
 		sanitizedName.length > 0
 			? sanitizedName[0] +
-			(sanitizedName.split(' ').length > 1
-				? sanitizedName[sanitizedName.lastIndexOf(' ') + 1]
-				: '')
+				(sanitizedName.split(' ').length > 1
+					? sanitizedName[sanitizedName.lastIndexOf(' ') + 1]
+					: '')
 			: '';
 
 	ctx.fillText(initials.toUpperCase(), canvas.width / 2, canvas.height / 2);
@@ -529,8 +529,6 @@ export const compareVersion = (latest, current) => {
 				sensitivity: 'case',
 				caseFirst: 'upper'
 			}) < 0;
-
-	console.log('✅ [compareVersion] 比较结果:', result);
 	return result;
 };
 
@@ -907,8 +905,8 @@ export const extractSentences = (text: string) => {
 		return placeholder;
 	});
 
-	// Split the modified text into sentences based on common punctuation marks, avoiding these blocks
-	let sentences = text.split(/(?<=[.!?])\s+/);
+	// Split the modified text into sentences based on common punctuation marks or newlines, avoiding these blocks
+	let sentences = text.split(/(?<=[.!?])\s+|\n+/);
 
 	// Restore code blocks and process sentences
 	sentences = sentences.map((sentence) => {
