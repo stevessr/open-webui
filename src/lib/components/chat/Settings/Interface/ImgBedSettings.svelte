@@ -32,7 +32,10 @@
 	const uploadChannelItems = [
 		{ value: 'telegram', label: 'Telegram' },
 		{ value: 'cfr2', label: 'CF R2' },
-		{ value: 's3', label: 'S3' }
+		{ value: 's3', label: 'S3' },
+		{ value: 'discord', label: 'Discord' },
+		{ value: 'huggingface', label: 'HuggingFace' },
+		{ value: 'external', label: 'External' }
 	];
 
 	$: nameTypeItems = [
