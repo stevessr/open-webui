@@ -7,7 +7,7 @@ export interface CloudFlareImgBedConfig {
 	baseUrl: string; // 例如：https://your.domain
 	authCode?: string; // 上传认证码
 	apiToken?: string; // API Token (需要 upload 权限)
-	uploadChannel?: 'telegram' | 'cfr2' | 's3'; // 上传渠道
+	uploadChannel?: 'telegram' | 'cfr2' | 's3' | 'discord' | 'huggingface' | 'external'; // 上传渠道
 	serverCompress?: boolean; // 服务端压缩
 	autoRetry?: boolean; // 失败时自动切换渠道重试
 	uploadNameType?: 'default' | 'index' | 'origin' | 'short'; // 文件命名方式
@@ -55,8 +55,10 @@ export async function uploadImageToImgBed(
 		headers = {}
 	} = config;
 
+	const cleanBaseUrl = baseUrl.replace(/\/+$/, '');
+
 	// 构建上传 URL 和查询参数
-	const uploadUrl = new URL(`${baseUrl}/upload`);
+	const uploadUrl = new URL(`${cleanBaseUrl}/upload`);
 
 	// 添加查询参数
 	if (authCode) {
@@ -111,8 +113,6 @@ export async function uploadImageToImgBed(
 		if (Array.isArray(result) && result.length > 0 && result[0].src) {
 			const imagePath = result[0].src;
 
-			// 确保 baseUrl 没有尾部斜杠，imagePath 以 / 开头
-			const cleanBaseUrl = baseUrl.replace(/\/$/, '');
 			const fullUrl = returnFormat === 'full' && imagePath.startsWith('http')
 				? imagePath
 				: `${cleanBaseUrl}${imagePath}`;

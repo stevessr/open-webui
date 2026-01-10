@@ -14,6 +14,9 @@
 	export let muted = true;
 	export let loop = true;
 	export let style: string = '';
+	export let loadingattr: 'eager' | 'lazy' = 'lazy';
+	export { className as class }; // 支持 class 作为别名
+	export { loadingattr as loading };
 
 	const currentDomain = typeof window !== 'undefined' ? window.location.hostname : '';
 
@@ -31,6 +34,7 @@
 		{muted}
 		{loop}
 		{style}
+		loading={loadingattr}
 		on:error={(e) => {
 			if (currentDomain == '') return; // In non-browser environments, do nothing
 
@@ -62,7 +66,7 @@
 		{alt}
 		class="rounded-full {className} object-cover"
 		{style}
-		loading="lazy"
+		loading={loadingattr}
 		on:error={(e) => {
 			if (currentDomain == '') return; // In non-browser environments, do nothing
 
