@@ -84,15 +84,16 @@ async def get_users(
     users = result["users"]
     total = result["total"]
 
+    # Fetch groups for all users in a single query to avoid N+1
+    user_ids = [user.id for user in users]
+    user_groups = Groups.get_groups_by_member_ids(user_ids, db=db)
+
     return {
         "users": [
             UserGroupIdsModel(
                 **{
                     **user.model_dump(),
-                    "group_ids": [
-                        group.id
-                        for group in Groups.get_groups_by_member_id(user.id, db=db)
-                    ],
+                    "group_ids": [group.id for group in user_groups.get(user.id, [])],
                 }
             )
             for user in users
@@ -225,6 +226,11 @@ class FeaturesPermissions(BaseModel):
     web_search: bool = True
     image_generation: bool = True
     code_interpreter: bool = True
+    memories: bool = True
+
+
+class SettingsPermissions(BaseModel):
+    interface: bool = True
 
 
 class UserPermissions(BaseModel):
@@ -232,6 +238,7 @@ class UserPermissions(BaseModel):
     sharing: SharingPermissions
     chat: ChatPermissions
     features: FeaturesPermissions
+    settings: SettingsPermissions
 
 
 @router.get("/default/permissions", response_model=UserPermissions)
@@ -248,6 +255,9 @@ async def get_default_user_permissions(request: Request, user=Depends(get_admin_
         ),
         "features": FeaturesPermissions(
             **request.app.state.config.USER_PERMISSIONS.get("features", {})
+        ),
+        "settings": SettingsPermissions(
+            **request.app.state.config.USER_PERMISSIONS.get("settings", {})
         ),
     }
 
@@ -323,8 +333,15 @@ async def update_user_settings_by_session_user(
 
 @router.get("/user/status")
 async def get_user_status_by_session_user(
-    user=Depends(get_verified_user), db: Session = Depends(get_session)
+    request: Request,
+    user=Depends(get_verified_user),
+    db: Session = Depends(get_session),
 ):
+    if not request.app.state.config.ENABLE_USER_STATUS:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=ERROR_MESSAGES.ACTION_PROHIBITED,
+        )
     user = Users.get_user_by_id(user.id, db=db)
     if user:
         return user
@@ -342,10 +359,16 @@ async def get_user_status_by_session_user(
 
 @router.post("/user/status/update")
 async def update_user_status_by_session_user(
+    request: Request,
     form_data: UserStatus,
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
 ):
+    if not request.app.state.config.ENABLE_USER_STATUS:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=ERROR_MESSAGES.ACTION_PROHIBITED,
+        )
     user = Users.get_user_by_id(user.id, db=db)
     if user:
         user = Users.update_user_status_by_id(user.id, form_data, db=db)

@@ -162,6 +162,7 @@ from open_webui.config import (
     CODE_INTERPRETER_JUPYTER_AUTH_TOKEN,
     CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD,
     CODE_INTERPRETER_JUPYTER_TIMEOUT,
+    ENABLE_MEMORIES,
     # Image
     AUTOMATIC1111_API_AUTH,
     AUTOMATIC1111_BASE_URL,
@@ -385,6 +386,7 @@ from open_webui.config import (
     FOLDER_MAX_FILE_COUNT,
     ENABLE_CHANNELS,
     ENABLE_NOTES,
+    ENABLE_USER_STATUS,
     ENABLE_COMMUNITY_SHARING,
     ENABLE_MESSAGE_RATING,
     ENABLE_USER_WEBHOOKS,
@@ -501,6 +503,10 @@ from open_webui.env import (
     AIOHTTP_CLIENT_SESSION_SSL,
     ENABLE_STAR_SESSIONS_MIDDLEWARE,
     ENABLE_PUBLIC_ACTIVE_USERS_COUNT,
+    # Admin Account Runtime Creation
+    WEBUI_ADMIN_EMAIL,
+    WEBUI_ADMIN_PASSWORD,
+    WEBUI_ADMIN_NAME,
 )
 
 
@@ -525,6 +531,7 @@ from open_webui.utils.auth import (
     decode_token,
     get_admin_user,
     get_verified_user,
+    create_admin_user,
 )
 from open_webui.utils.plugin import install_tool_and_function_dependencies
 from open_webui.utils.oauth import (
@@ -602,6 +609,12 @@ async def lifespan(app: FastAPI):
 
     if LICENSE_KEY:
         get_license_data(app, LICENSE_KEY)
+
+    # Create admin account from env vars if specified and no users exist
+    if WEBUI_ADMIN_EMAIL and WEBUI_ADMIN_PASSWORD:
+        if create_admin_user(WEBUI_ADMIN_EMAIL, WEBUI_ADMIN_PASSWORD, WEBUI_ADMIN_NAME):
+            # Disable signup since we now have an admin
+            app.state.config.ENABLE_SIGNUP = False
 
     # This should be blocking (sync) so functions are not deactivated on first /get_models calls
     # when the first user lands on the / route.
@@ -838,6 +851,7 @@ app.state.config.ENABLE_NOTES = ENABLE_NOTES
 app.state.config.ENABLE_COMMUNITY_SHARING = ENABLE_COMMUNITY_SHARING
 app.state.config.ENABLE_MESSAGE_RATING = ENABLE_MESSAGE_RATING
 app.state.config.ENABLE_USER_WEBHOOKS = ENABLE_USER_WEBHOOKS
+app.state.config.ENABLE_USER_STATUS = ENABLE_USER_STATUS
 
 app.state.config.ENABLE_EVALUATION_ARENA_MODELS = ENABLE_EVALUATION_ARENA_MODELS
 app.state.config.EVALUATION_ARENA_MODELS = EVALUATION_ARENA_MODELS
@@ -1125,6 +1139,7 @@ app.state.config.CODE_INTERPRETER_JUPYTER_TIMEOUT = CODE_INTERPRETER_JUPYTER_TIM
 app.state.config.IMAGE_GENERATION_ENGINE = IMAGE_GENERATION_ENGINE
 app.state.config.ENABLE_IMAGE_GENERATION = ENABLE_IMAGE_GENERATION
 app.state.config.ENABLE_IMAGE_PROMPT_GENERATION = ENABLE_IMAGE_PROMPT_GENERATION
+app.state.config.ENABLE_MEMORIES = ENABLE_MEMORIES
 
 app.state.config.IMAGE_GENERATION_MODEL = IMAGE_GENERATION_MODEL
 app.state.config.IMAGE_SIZE = IMAGE_SIZE
@@ -1178,7 +1193,6 @@ app.state.config.STT_OPENAI_API_BASE_URL = AUDIO_STT_OPENAI_API_BASE_URL
 app.state.config.STT_OPENAI_API_KEY = AUDIO_STT_OPENAI_API_KEY
 
 app.state.config.WHISPER_MODEL = WHISPER_MODEL
-app.state.config.WHISPER_VAD_FILTER = WHISPER_VAD_FILTER
 app.state.config.DEEPGRAM_API_KEY = DEEPGRAM_API_KEY
 
 app.state.config.AUDIO_STT_AZURE_API_KEY = AUDIO_STT_AZURE_API_KEY
@@ -2021,10 +2035,12 @@ async def get_app_config(request: Request):
                     "enable_community_sharing": app.state.config.ENABLE_COMMUNITY_SHARING,
                     "enable_message_rating": app.state.config.ENABLE_MESSAGE_RATING,
                     "enable_user_webhooks": app.state.config.ENABLE_USER_WEBHOOKS,
+                    "enable_user_status": app.state.config.ENABLE_USER_STATUS,
                     "enable_admin_export": ENABLE_ADMIN_EXPORT,
                     "enable_admin_chat_access": ENABLE_ADMIN_CHAT_ACCESS,
                     "enable_google_drive_integration": app.state.config.ENABLE_GOOGLE_DRIVE_INTEGRATION,
                     "enable_onedrive_integration": app.state.config.ENABLE_ONEDRIVE_INTEGRATION,
+                    "enable_memories": app.state.config.ENABLE_MEMORIES,
                     **(
                         {
                             "enable_onedrive_personal": ENABLE_ONEDRIVE_PERSONAL,

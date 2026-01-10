@@ -800,6 +800,7 @@ async def generate_chat_completion(
     form_data: dict,
     user=Depends(get_verified_user),
     bypass_filter: Optional[bool] = False,
+    bypass_system_prompt: bool = False,
     db: Session = Depends(get_session),
 ):
     if BYPASS_MODEL_ACCESS_CONTROL:
@@ -830,14 +831,18 @@ async def generate_chat_completion(
             system = params.pop("system", None)
 
             payload = apply_model_params_to_body_openai(params, payload)
-            payload = apply_system_prompt_to_body(system, payload, metadata, user)
+            if not bypass_system_prompt:
+                payload = apply_system_prompt_to_body(system, payload, metadata, user)
 
         # Check if user has access to the model
         if not bypass_filter and user.role == "user":
             if not (
                 user.id == model_info.user_id
                 or has_access(
-                    user.id, type="read", access_control=model_info.access_control, db=db
+                    user.id,
+                    type="read",
+                    access_control=model_info.access_control,
+                    db=db,
                 )
             ):
                 raise HTTPException(

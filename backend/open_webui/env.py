@@ -311,6 +311,11 @@ if DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL is not None:
     except Exception:
         DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL = 0.0
 
+# When enabled, get_db_context reuses existing sessions; set to False to always create new sessions
+DATABASE_ENABLE_SESSION_SHARING = (
+    os.environ.get("DATABASE_ENABLE_SESSION_SHARING", "False").lower() == "true"
+)
+
 # Enable public visibility of active user count (when disabled, only admins can see it)
 ENABLE_PUBLIC_ACTIVE_USERS_COUNT = (
     os.environ.get("ENABLE_PUBLIC_ACTIVE_USERS_COUNT", "True").lower() == "true"
@@ -325,6 +330,8 @@ ENABLE_REALTIME_CHAT_SAVE = (
 )
 
 ENABLE_QUERIES_CACHE = os.environ.get("ENABLE_QUERIES_CACHE", "False").lower() == "true"
+
+RAG_SYSTEM_CONTEXT = os.environ.get("RAG_SYSTEM_CONTEXT", "False").lower() == "true"
 
 ####################################
 # REDIS
@@ -380,6 +387,16 @@ ENABLE_INITIAL_ADMIN_SIGNUP = (
 ENABLE_SIGNUP_PASSWORD_CONFIRMATION = (
     os.environ.get("ENABLE_SIGNUP_PASSWORD_CONFIRMATION", "False").lower() == "true"
 )
+
+####################################
+# Admin Account Runtime Creation
+####################################
+
+# Optional env vars for creating an admin account on startup
+# Useful for headless/automated deployments
+WEBUI_ADMIN_EMAIL = os.environ.get("WEBUI_ADMIN_EMAIL", "")
+WEBUI_ADMIN_PASSWORD = os.environ.get("WEBUI_ADMIN_PASSWORD", "")
+WEBUI_ADMIN_NAME = os.environ.get("WEBUI_ADMIN_NAME", "Admin")
 
 WEBUI_AUTH_TRUSTED_EMAIL_HEADER = os.environ.get(
     "WEBUI_AUTH_TRUSTED_EMAIL_HEADER", None

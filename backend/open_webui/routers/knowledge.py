@@ -1,8 +1,11 @@
 from typing import List, Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
+from fastapi.responses import StreamingResponse
 from fastapi.concurrency import run_in_threadpool
 import logging
+import io
+import zipfile
 
 from sqlalchemy.orm import Session
 from open_webui.internal.db import get_session
@@ -25,7 +28,7 @@ from open_webui.routers.retrieval import (
 from open_webui.storage.provider import Storage
 
 from open_webui.constants import ERROR_MESSAGES
-from open_webui.utils.auth import get_verified_user
+from open_webui.utils.auth import get_verified_user, get_admin_user
 from open_webui.utils.access_control import has_access, has_permission
 
 
@@ -42,6 +45,54 @@ router = APIRouter()
 ############################
 
 PAGE_ITEM_COUNT = 30
+
+############################
+# Knowledge Base Embedding
+############################
+
+KNOWLEDGE_BASES_COLLECTION = "knowledge-bases"
+
+
+async def embed_knowledge_base_metadata(
+    request: Request,
+    knowledge_base_id: str,
+    name: str,
+    description: str,
+) -> bool:
+    """Generate and store embedding for knowledge base."""
+    try:
+        content = f"{name}\n\n{description}" if description else name
+        embedding = await request.app.state.EMBEDDING_FUNCTION(content)
+        VECTOR_DB_CLIENT.upsert(
+            collection_name=KNOWLEDGE_BASES_COLLECTION,
+            items=[
+                {
+                    "id": knowledge_base_id,
+                    "text": content,
+                    "vector": embedding,
+                    "metadata": {
+                        "knowledge_base_id": knowledge_base_id,
+                    },
+                }
+            ],
+        )
+        return True
+    except Exception as e:
+        log.error(f"Failed to embed knowledge base {knowledge_base_id}: {e}")
+        return False
+
+
+def remove_knowledge_base_metadata_embedding(knowledge_base_id: str) -> bool:
+    """Remove knowledge base embedding."""
+    try:
+        VECTOR_DB_CLIENT.delete(
+            collection_name=KNOWLEDGE_BASES_COLLECTION,
+            ids=[knowledge_base_id],
+        )
+        return True
+    except Exception as e:
+        log.debug(f"Failed to remove embedding for {knowledge_base_id}: {e}")
+        return False
 
 
 class KnowledgeAccessResponse(KnowledgeUserResponse):
@@ -202,6 +253,13 @@ async def create_new_knowledge(
     knowledge = Knowledges.insert_new_knowledge(user.id, form_data, db=db)
 
     if knowledge:
+        # Embed knowledge base for semantic search
+        await embed_knowledge_base_metadata(
+            request,
+            knowledge.id,
+            knowledge.name,
+            knowledge.description,
+        )
         return knowledge
     else:
         raise HTTPException(
@@ -276,6 +334,30 @@ async def reindex_knowledge_files(
 
     log.info(f"Reindexing completed.")
     return True
+
+
+############################
+# ReindexKnowledgeBases
+############################
+
+
+@router.post("/metadata/reindex", response_model=dict)
+async def reindex_knowledge_base_metadata_embeddings(
+    request: Request,
+    user=Depends(get_admin_user),
+    db: Session = Depends(get_session),
+):
+    """Batch embed all existing knowledge bases. Admin only."""
+    knowledge_bases = Knowledges.get_knowledge_bases(db=db)
+    log.info(f"Reindexing embeddings for {len(knowledge_bases)} knowledge bases")
+
+    success_count = 0
+    for kb in knowledge_bases:
+        if await embed_knowledge_base_metadata(request, kb.id, kb.name, kb.description):
+            success_count += 1
+
+    log.info(f"Embedding reindex complete: {success_count}/{len(knowledge_bases)}")
+    return {"total": len(knowledge_bases), "success": success_count}
 
 
 ############################
@@ -366,6 +448,13 @@ async def update_knowledge_by_id(
 
     knowledge = Knowledges.update_knowledge_by_id(id=id, form_data=form_data, db=db)
     if knowledge:
+        # Re-embed knowledge base for semantic search
+        await embed_knowledge_base_metadata(
+            request,
+            knowledge.id,
+            knowledge.name,
+            knowledge.description,
+        )
         return KnowledgeFilesResponse(
             **knowledge.model_dump(),
             files=Knowledges.get_file_metadatas_by_id(knowledge.id, db=db),
@@ -715,6 +804,10 @@ async def delete_knowledge_by_id(
     except Exception as e:
         log.debug(e)
         pass
+
+    # Remove knowledge base embedding
+    remove_knowledge_base_metadata_embedding(id)
+
     result = Knowledges.delete_knowledge_by_id(id=id, db=db)
     return result
 
@@ -836,4 +929,52 @@ async def add_files_to_knowledge_batch(
     return KnowledgeFilesResponse(
         **knowledge.model_dump(),
         files=Knowledges.get_file_metadatas_by_id(knowledge.id, db=db),
+    )
+
+
+############################
+# ExportKnowledgeById
+############################
+
+
+@router.get("/{id}/export")
+async def export_knowledge_by_id(
+    id: str, user=Depends(get_admin_user), db: Session = Depends(get_session)
+):
+    """
+    Export a knowledge base as a zip file containing .txt files.
+    Admin only.
+    """
+
+    knowledge = Knowledges.get_knowledge_by_id(id=id, db=db)
+    if not knowledge:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+
+    files = Knowledges.get_files_by_id(id, db=db)
+
+    # Create zip file in memory
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        for file in files:
+            content = file.data.get("content", "") if file.data else ""
+            if content:
+                # Use original filename with .txt extension
+                filename = file.filename
+                if not filename.endswith(".txt"):
+                    filename = f"{filename}.txt"
+                zf.writestr(filename, content)
+
+    zip_buffer.seek(0)
+
+    # Sanitize knowledge name for filename
+    safe_name = "".join(c if c.isalnum() or c in " -_" else "_" for c in knowledge.name)
+    zip_filename = f"{safe_name}.zip"
+
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={"Content-Disposition": f"attachment; filename={zip_filename}"},
     )

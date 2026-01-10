@@ -190,6 +190,32 @@ async def update_profile(
 
 
 ############################
+# Update Timezone
+############################
+
+
+class UpdateTimezoneForm(BaseModel):
+    timezone: str
+
+
+@router.post("/update/timezone")
+async def update_timezone(
+    form_data: UpdateTimezoneForm,
+    session_user=Depends(get_current_user),
+    db: Session = Depends(get_session),
+):
+    if session_user:
+        Users.update_user_by_id(
+            session_user.id,
+            {"timezone": form_data.timezone},
+            db=db,
+        )
+        return {"status": True}
+    else:
+        raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+
+
+############################
 # Update Password
 ############################
 
@@ -991,8 +1017,10 @@ async def get_admin_config(request: Request, user=Depends(get_admin_user)):
         "ENABLE_FOLDERS": request.app.state.config.ENABLE_FOLDERS,
         "FOLDER_MAX_FILE_COUNT": request.app.state.config.FOLDER_MAX_FILE_COUNT,
         "ENABLE_CHANNELS": request.app.state.config.ENABLE_CHANNELS,
+        "ENABLE_MEMORIES": request.app.state.config.ENABLE_MEMORIES,
         "ENABLE_NOTES": request.app.state.config.ENABLE_NOTES,
         "ENABLE_USER_WEBHOOKS": request.app.state.config.ENABLE_USER_WEBHOOKS,
+        "ENABLE_USER_STATUS": request.app.state.config.ENABLE_USER_STATUS,
         "PENDING_USER_OVERLAY_TITLE": request.app.state.config.PENDING_USER_OVERLAY_TITLE,
         "PENDING_USER_OVERLAY_CONTENT": request.app.state.config.PENDING_USER_OVERLAY_CONTENT,
         "RESPONSE_WATERMARK": request.app.state.config.RESPONSE_WATERMARK,
@@ -1015,8 +1043,10 @@ class AdminConfig(BaseModel):
     ENABLE_FOLDERS: bool
     FOLDER_MAX_FILE_COUNT: Optional[int | str] = None
     ENABLE_CHANNELS: bool
+    ENABLE_MEMORIES: bool
     ENABLE_NOTES: bool
     ENABLE_USER_WEBHOOKS: bool
+    ENABLE_USER_STATUS: bool
     PENDING_USER_OVERLAY_TITLE: Optional[str] = None
     PENDING_USER_OVERLAY_CONTENT: Optional[str] = None
     RESPONSE_WATERMARK: Optional[str] = None
@@ -1041,11 +1071,10 @@ async def update_admin_config(
 
     request.app.state.config.ENABLE_FOLDERS = form_data.ENABLE_FOLDERS
     request.app.state.config.FOLDER_MAX_FILE_COUNT = (
-        int(form_data.FOLDER_MAX_FILE_COUNT)
-        if form_data.FOLDER_MAX_FILE_COUNT
-        else None
+        int(form_data.FOLDER_MAX_FILE_COUNT) if form_data.FOLDER_MAX_FILE_COUNT else ""
     )
     request.app.state.config.ENABLE_CHANNELS = form_data.ENABLE_CHANNELS
+    request.app.state.config.ENABLE_MEMORIES = form_data.ENABLE_MEMORIES
     request.app.state.config.ENABLE_NOTES = form_data.ENABLE_NOTES
 
     if form_data.DEFAULT_USER_ROLE in ["pending", "user", "admin"]:
@@ -1065,6 +1094,7 @@ async def update_admin_config(
     request.app.state.config.ENABLE_MESSAGE_RATING = form_data.ENABLE_MESSAGE_RATING
 
     request.app.state.config.ENABLE_USER_WEBHOOKS = form_data.ENABLE_USER_WEBHOOKS
+    request.app.state.config.ENABLE_USER_STATUS = form_data.ENABLE_USER_STATUS
 
     request.app.state.config.PENDING_USER_OVERLAY_TITLE = (
         form_data.PENDING_USER_OVERLAY_TITLE
@@ -1091,8 +1121,10 @@ async def update_admin_config(
         "ENABLE_FOLDERS": request.app.state.config.ENABLE_FOLDERS,
         "FOLDER_MAX_FILE_COUNT": request.app.state.config.FOLDER_MAX_FILE_COUNT,
         "ENABLE_CHANNELS": request.app.state.config.ENABLE_CHANNELS,
+        "ENABLE_MEMORIES": request.app.state.config.ENABLE_MEMORIES,
         "ENABLE_NOTES": request.app.state.config.ENABLE_NOTES,
         "ENABLE_USER_WEBHOOKS": request.app.state.config.ENABLE_USER_WEBHOOKS,
+        "ENABLE_USER_STATUS": request.app.state.config.ENABLE_USER_STATUS,
         "PENDING_USER_OVERLAY_TITLE": request.app.state.config.PENDING_USER_OVERLAY_TITLE,
         "PENDING_USER_OVERLAY_CONTENT": request.app.state.config.PENDING_USER_OVERLAY_CONTENT,
         "RESPONSE_WATERMARK": request.app.state.config.RESPONSE_WATERMARK,
