@@ -13,7 +13,10 @@ export const getResponsesConfig = async (token: string) => {
 		}
 	})
 		.then(async (res) => {
-			if (!res.ok) throw await res.json();
+			if (!res.ok) {
+				if (res.status === 404) return null;
+				throw await res.json();
+			}
 			return res.json();
 		})
 		.catch((err) => {
