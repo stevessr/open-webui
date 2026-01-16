@@ -945,6 +945,9 @@ AZURE_STORAGE_ENDPOINT = os.environ.get("AZURE_STORAGE_ENDPOINT", None)
 AZURE_STORAGE_CONTAINER_NAME = os.environ.get("AZURE_STORAGE_CONTAINER_NAME", None)
 AZURE_STORAGE_KEY = os.environ.get("AZURE_STORAGE_KEY", None)
 
+CLOUDFLARE_IMGBED_URL = os.environ.get("CLOUDFLARE_IMGBED_URL", None)
+CLOUDFLARE_IMGBED_API_KEY = os.environ.get("CLOUDFLARE_IMGBED_API_KEY", None)
+
 ####################################
 # File Upload DIR
 ####################################
