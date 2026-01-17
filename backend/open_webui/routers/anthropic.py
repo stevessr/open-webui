@@ -37,6 +37,8 @@ from open_webui.env import SRC_LOG_LEVELS
 from open_webui.utils.payload import (
     apply_model_params_to_body_openai,
     apply_system_prompt_to_body,
+    convert_openai_tool_choice_to_anthropic,
+    convert_openai_tools_to_anthropic,
 )
 from open_webui.utils.misc import (
     stream_chunks_handler,
@@ -422,10 +424,12 @@ async def generate_chat_completion(
         }
 
     if "tool_choice" in payload:
-        anthropic_payload["tool_choice"] = payload["tool_choice"]
+        tool_choice = convert_openai_tool_choice_to_anthropic(payload["tool_choice"])
+        if tool_choice:
+            anthropic_payload["tool_choice"] = tool_choice
 
     if "tools" in payload:
-        anthropic_payload["tools"] = payload["tools"]
+        anthropic_payload["tools"] = convert_openai_tools_to_anthropic(payload["tools"])
 
     request_url = f"{url}/messages"
     payload_json = json.dumps(anthropic_payload)
