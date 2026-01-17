@@ -1708,7 +1708,7 @@
 															<div class="size-4 items-center flex justify-center">
 																<ProfileImage
 																	src={filter.icon}
-																	className="size-3.5 {filter.icon.includes('svg')
+																	class="size-3.5 {filter.icon.includes('svg')
 																		? 'dark:invert-[80%]'
 																		: ''}"
 																	alt={filter.name}

@@ -16,4 +16,4 @@
 				: `${WEBUI_BASE_URL}/user.gif`;
 </script>
 
-<ProfileImage src={processedSrc} className="{className} object-cover rounded-full" alt="profile" />
+<ProfileImage src={processedSrc} class="{className} object-cover rounded-full" alt="profile" />

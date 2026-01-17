@@ -238,7 +238,7 @@
 									<span class="sr-only">{$i18n.t('User menu')}</span>
 									<ProfileImage
 										src={`${WEBUI_API_BASE_URL}/users/${$user?.id}/profile/image`}
-										className="size-6 object-cover rounded-full"
+										class="size-6 object-cover rounded-full"
 										alt=""
 									/>
 								</div>

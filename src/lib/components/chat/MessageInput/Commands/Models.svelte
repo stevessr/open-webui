@@ -86,7 +86,7 @@
 					<ProfileImage
 						src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model.id}&lang=${$i18n.language}`}
 						alt={model?.name ?? model.id}
-						className="rounded-full size-5 items-center mr-2"
+						class="rounded-full size-5 items-center mr-2"
 					/>
 					<div class="truncate">
 						{model.name}

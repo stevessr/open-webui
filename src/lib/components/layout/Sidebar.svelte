@@ -674,7 +674,7 @@
 						<div class=" self-center flex items-center justify-center size-9">
 							<ProfileImage
 								src="{WEBUI_BASE_URL}/static/favicon.png"
-								className="sidebar-new-chat-icon size-6 rounded-full group-hover:hidden"
+								class="sidebar-new-chat-icon size-6 rounded-full group-hover:hidden"
 								alt=""
 							/>
 
@@ -810,7 +810,7 @@
 								<div class="self-center relative">
 									<ProfileImage
 										src={`${WEBUI_API_BASE_URL}/users/${$user?.id}/profile/image`}
-										className=" size-7 object-cover rounded-full"
+										class=" size-7 object-cover rounded-full"
 										alt={$i18n.t('Open User Profile Menu')}
 										aria-label={$i18n.t('Open User Profile Menu')}
 									/>
@@ -871,7 +871,7 @@
 				>
 					<ProfileImage
 						src={`${WEBUI_BASE_URL}/static/favicon.png`}
-						className="sidebar-new-chat-icon size-6 rounded-full"
+						class="sidebar-new-chat-icon size-6 rounded-full"
 						alt=""
 					/>
 				</a>
@@ -1375,7 +1375,7 @@
 								<div class=" self-center mr-3 relative">
 									<ProfileImage
 										src={`${WEBUI_API_BASE_URL}/users/${$user?.id}/profile/image`}
-										className=" size-7 object-cover rounded-full"
+										class=" size-7 object-cover rounded-full"
 										alt={$i18n.t('Open User Profile Menu')}
 									/>
 

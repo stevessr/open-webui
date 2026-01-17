@@ -461,13 +461,13 @@
 								<ProfileImage
 									src={info.meta.profile_image_url}
 									alt="model profile"
-									className="rounded-xl sm:size-60 size-max object-cover shrink-0"
+									class="rounded-xl sm:size-60 size-max object-cover shrink-0"
 								/>
 							{:else}
 								<ProfileImage
 									src={`${WEBUI_BASE_URL}/static/favicon.png`}
 									alt="model profile"
-									className=" rounded-xl sm:size-60 size-max object-cover shrink-0"
+									class=" rounded-xl sm:size-60 size-max object-cover shrink-0"
 								/>
 							{/if}
 

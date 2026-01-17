@@ -62,7 +62,7 @@
 		{#if tempValue && tempValue.trim()}
 			<div class="mt-4 flex flex-col items-center">
 				<div class="text-sm text-gray-600 dark:text-gray-400 mb-2">Preview:</div>
-				<ProfileImage src={tempValue.trim()} name={userName} className="w-24 h-24" alt="preview" />
+				<ProfileImage src={tempValue.trim()} name={userName} class="w-24 h-24" alt="preview" />
 			</div>
 		{/if}
 

@@ -94,7 +94,7 @@
 			<ProfileImage
 				src={profileImageUrl}
 				name={user?.name}
-				className={imageClassName}
+				class={imageClassName}
 				alt="profile"
 			/>
 

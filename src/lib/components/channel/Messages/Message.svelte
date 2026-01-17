@@ -286,7 +286,7 @@
 								src={message.user?.role === 'webhook'
 									? `${WEBUI_API_BASE_URL}/channels/webhooks/${message.user?.id}/profile/image`
 									: `${WEBUI_API_BASE_URL}/users/${message.user?.id}/profile/image`}
-								className={'size-8 ml-0.5'}
+								class={'size-8 ml-0.5'}
 							/>
 						</ProfilePreview>
 					{/if}

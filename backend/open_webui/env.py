@@ -57,6 +57,19 @@ log.info(f"GLOBAL_LOG_LEVEL: {GLOBAL_LOG_LEVEL}")
 
 SRC_LOG_LEVELS = {}  # Legacy variable, do not remove
 
+_src_log_levels_raw = os.environ.get("SRC_LOG_LEVELS", "")
+if _src_log_levels_raw:
+    try:
+        _src_log_levels = json.loads(_src_log_levels_raw)
+        if isinstance(_src_log_levels, dict):
+            SRC_LOG_LEVELS.update(_src_log_levels)
+    except Exception as exc:
+        log.warning("Invalid SRC_LOG_LEVELS JSON, using defaults: %s", exc)
+
+# Default to GLOBAL_LOG_LEVEL so routers don't KeyError on missing keys.
+SRC_LOG_LEVELS.setdefault("OPENAI", GLOBAL_LOG_LEVEL)
+SRC_LOG_LEVELS.setdefault("RAG", GLOBAL_LOG_LEVEL)
+
 WEBUI_NAME = os.environ.get("WEBUI_NAME", "Open WebUI")
 if WEBUI_NAME != "Open WebUI":
     WEBUI_NAME += " (Open WebUI)"
@@ -332,6 +345,64 @@ ENABLE_REALTIME_CHAT_SAVE = (
 ENABLE_QUERIES_CACHE = os.environ.get("ENABLE_QUERIES_CACHE", "False").lower() == "true"
 
 RAG_SYSTEM_CONTEXT = os.environ.get("RAG_SYSTEM_CONTEXT", "False").lower() == "true"
+
+####################################
+# ML DEVICE / SENTENCE_TRANSFORMERS
+####################################
+
+DEVICE_TYPE = os.environ.get("DEVICE_TYPE", "cpu").strip().lower()
+if DEVICE_TYPE == "":
+    DEVICE_TYPE = "cpu"
+
+SENTENCE_TRANSFORMERS_BACKEND = os.environ.get("SENTENCE_TRANSFORMERS_BACKEND", "")
+if SENTENCE_TRANSFORMERS_BACKEND == "":
+    SENTENCE_TRANSFORMERS_BACKEND = None
+
+SENTENCE_TRANSFORMERS_MODEL_KWARGS_RAW = os.environ.get(
+    "SENTENCE_TRANSFORMERS_MODEL_KWARGS", ""
+)
+if SENTENCE_TRANSFORMERS_MODEL_KWARGS_RAW == "":
+    SENTENCE_TRANSFORMERS_MODEL_KWARGS = {}
+else:
+    try:
+        SENTENCE_TRANSFORMERS_MODEL_KWARGS = json.loads(
+            SENTENCE_TRANSFORMERS_MODEL_KWARGS_RAW
+        )
+        if not isinstance(SENTENCE_TRANSFORMERS_MODEL_KWARGS, dict):
+            raise ValueError("SENTENCE_TRANSFORMERS_MODEL_KWARGS must be a JSON object")
+    except Exception as exc:
+        log.warning(
+            "Invalid SENTENCE_TRANSFORMERS_MODEL_KWARGS, defaulting to {}: %s",
+            exc,
+        )
+        SENTENCE_TRANSFORMERS_MODEL_KWARGS = {}
+
+SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND = os.environ.get(
+    "SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND", ""
+)
+if SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND == "":
+    SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND = None
+
+SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS_RAW = os.environ.get(
+    "SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS", ""
+)
+if SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS_RAW == "":
+    SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS = {}
+else:
+    try:
+        SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS = json.loads(
+            SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS_RAW
+        )
+        if not isinstance(SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS, dict):
+            raise ValueError(
+                "SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS must be a JSON object"
+            )
+    except Exception as exc:
+        log.warning(
+            "Invalid SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS, defaulting to {}: %s",
+            exc,
+        )
+        SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS = {}
 
 ####################################
 # REDIS

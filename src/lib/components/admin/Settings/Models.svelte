@@ -362,7 +362,7 @@
 									<ProfileImage
 										src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model.id}`}
 										alt="modelfile profile"
-										className="rounded-full w-full h-auto object-cover"
+										class="rounded-full w-full h-auto object-cover"
 									/>
 								</div>
 							</div>

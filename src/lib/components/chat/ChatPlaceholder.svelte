@@ -55,7 +55,7 @@
 						>
 							<ProfileImage
 								src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}`}
-								className=" size-[2.7rem] rounded-full border-[1px] border-gray-100 dark:border-none"
+								class=" size-[2.7rem] rounded-full border-[1px] border-gray-100 dark:border-none"
 								alt="logo"
 							/>
 						</Tooltip>

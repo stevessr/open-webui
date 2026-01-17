@@ -51,7 +51,7 @@
 			<video src={_src} class={imageClassName} controls data-cy="video" title={alt} autoplay muted
 			></video>
 		{:else}
-			<ProfileImage src={_src} className={imageClassName} {alt} />
+			<ProfileImage src={_src} class={imageClassName} {alt} />
 		{/if}
 	</button>
 

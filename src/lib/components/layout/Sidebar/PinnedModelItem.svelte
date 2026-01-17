@@ -38,7 +38,7 @@
 			<div class="self-center shrink-0">
 				<ProfileImage
 					src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model.id}&lang=${$i18n.language}`}
-					className="size-5 rounded-full -translate-x-[0.5px]"
+					class="size-5 rounded-full -translate-x-[0.5px]"
 					alt="logo"
 				/>
 			</div>

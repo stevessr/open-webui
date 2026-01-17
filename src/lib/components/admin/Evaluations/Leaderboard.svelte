@@ -181,7 +181,7 @@
 								<ProfileImage
 									src="{WEBUI_API_BASE_URL}/models/model/profile/image?id={model.id}"
 									alt={model.name}
-									className="size-5 rounded-full object-cover"
+									class="size-5 rounded-full object-cover"
 								/>
 								<span class="font-medium text-gray-800 dark:text-gray-200">{model.name}</span>
 							</div>
