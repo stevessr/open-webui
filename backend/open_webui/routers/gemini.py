@@ -38,6 +38,8 @@ from open_webui.env import SRC_LOG_LEVELS
 from open_webui.utils.payload import (
     apply_model_params_to_body_openai,
     apply_system_prompt_to_body,
+    convert_openai_tool_choice_to_gemini,
+    convert_openai_tools_to_gemini,
 )
 from open_webui.utils.misc import (
     stream_chunks_handler,
@@ -423,6 +425,18 @@ async def generate_content(
     # Use the form_data directly as it's already in Gemini format
     gemini_payload = form_data
 
+    if "tools" in gemini_payload:
+        gemini_payload["tools"] = convert_openai_tools_to_gemini(
+            gemini_payload["tools"]
+        )
+
+    if "tool_choice" in gemini_payload and "tool_config" not in gemini_payload:
+        tool_config = convert_openai_tool_choice_to_gemini(
+            gemini_payload["tool_choice"]
+        )
+        if tool_config:
+            gemini_payload["tool_config"] = tool_config
+
     # Construct the direct Gemini API URL
     request_url = f"{url}/models/{model}:generateContent?key={key}"
     payload_json = json.dumps(gemini_payload)
@@ -503,6 +517,18 @@ async def stream_generate_content(
 
     # Use the form_data directly as it's already in Gemini format
     gemini_payload = form_data
+
+    if "tools" in gemini_payload:
+        gemini_payload["tools"] = convert_openai_tools_to_gemini(
+            gemini_payload["tools"]
+        )
+
+    if "tool_choice" in gemini_payload and "tool_config" not in gemini_payload:
+        tool_config = convert_openai_tool_choice_to_gemini(
+            gemini_payload["tool_choice"]
+        )
+        if tool_config:
+            gemini_payload["tool_config"] = tool_config
 
     # Construct the direct Gemini API URL
     request_url = f"{url}/models/{model}:streamGenerateContent?key={key}"
