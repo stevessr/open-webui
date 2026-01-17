@@ -26,6 +26,7 @@
 	import FaceSmile from '$lib/components/icons/FaceSmile.svelte';
 	import UserStatusModal from './UserStatusModal.svelte';
 	import Emoji from '$lib/components/common/Emoji.svelte';
+	import ProfileImage from '$lib/components/common/ProfileImage.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import { updateUserStatus } from '$lib/apis/users';
 	import { toast } from 'svelte-sonner';
@@ -85,7 +86,7 @@
 
 	<slot name="content">
 		<DropdownMenu.Content
-			class="w-full {className}  rounded-2xl px-1 py-1  border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg text-sm"
+			class="w-full {className}  rounded-2xl px-1 py-1  border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg text-sm transv2"
 			sideOffset={4}
 			side="top"
 			align="end"
@@ -94,7 +95,7 @@
 			{#if profile}
 				<div class=" flex gap-3.5 w-full p-2.5 items-center">
 					<div class=" items-center flex shrink-0">
-						<img
+						<ProfileImage
 							src={`${WEBUI_API_BASE_URL}/users/${$user?.id}/profile/image`}
 							class=" size-10 object-cover rounded-full"
 							alt="profile"
