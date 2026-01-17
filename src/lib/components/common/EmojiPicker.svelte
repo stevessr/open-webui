@@ -162,7 +162,7 @@
 												<ProfileImage
 													src="{WEBUI_BASE_URL}/assets/emojis/{emojiItem.name.toLowerCase()}.svg"
 													alt={emojiItem.name}
-													className="size-5"
+													class="size-5"
 												/>
 											</button>
 										</Tooltip>

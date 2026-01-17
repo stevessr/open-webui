@@ -58,5 +58,5 @@
 		Your browser does not support the video tag.
 	</video>
 {:else}
-	<ProfileImage src={processedSrc} {alt} {className} style="opacity: {opacity}" />
+	<ProfileImage src={processedSrc} {alt} class={className} style="opacity: {opacity}" />
 {/if}

@@ -232,7 +232,7 @@
 							>
 								<ProfileImage
 									src={profileImageUrl}
-									className="size-16 rounded-full object-cover shrink-0"
+									class="size-16 rounded-full object-cover shrink-0"
 									alt="Profile"
 								/>
 
