@@ -21,7 +21,7 @@ on:
 jobs:
   build:
     name: 'Format & Build Frontend'
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
@@ -45,6 +45,8 @@ jobs:
 
       - name: Build Frontend
         run: npm run build
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
 
   test-frontend:
     name: 'Frontend Unit Tests'
