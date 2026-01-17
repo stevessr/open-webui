@@ -21,12 +21,16 @@
 	const currentDomain = typeof window !== 'undefined' ? window.location.hostname : '';
 
 	let hasErrorRetried = false;
+	let isVideoFallback = false;
 
 	$: processedSrc = convertToProxyUrl(src, currentDomain);
-	$: if (src) hasErrorRetried = false; // Reset error retry state when src changes
+	$: if (src) {
+		hasErrorRetried = false; // Reset error retry state when src changes
+		isVideoFallback = false;
+	}
 </script>
 
-{#if processedSrc && isVideoUrl(processedSrc)}
+{#if processedSrc && (isVideoUrl(processedSrc) || isVideoFallback)}
 	<video
 		src={processedSrc}
 		class="rounded-full {className} object-cover"
@@ -74,6 +78,13 @@
 
 			// 如果已经重试过一次，不再处理错误
 			if (hasErrorRetried) return;
+
+			// If we got an image error for a non-video URL, try rendering as video.
+			if (src && !isVideoUrl(src)) {
+				isVideoFallback = true;
+				hasErrorRetried = true;
+				return;
+			}
 
 			// If error occurs and src is not already a proxy URL, try proxy
 			if (src && src !== processedSrc) {
