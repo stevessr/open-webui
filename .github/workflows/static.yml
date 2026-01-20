@@ -20,7 +20,7 @@ jobs:
           bun-version: latest
 
       - name: Install Dependencies
-        run: bun install
+        run: bun install --no-cache
 
       - name: Cache node modules
         uses: actions/cache@v4
@@ -61,7 +61,7 @@ jobs:
             ${{ runner.os }}-bun-
 
       - name: Install Dependencies
-        run: bun install
+        run: bun install --no-cache
 
       - name: Cache build artifacts
         uses: actions/cache@v4
@@ -116,7 +116,7 @@ jobs:
             ${{ runner.os }}-bun-
 
       - name: Install Dependencies
-        run: bun install
+        run: bun install --no-cache
 
       - name: Cache build artifacts
         uses: actions/cache@v4
