@@ -83,7 +83,7 @@ jobs:
         env:
           APP_BUILD_HASH: ${{ github.sha }}
           VITE_BUILD_TIME: ${{ github.event.head_commit.timestamp }}
-        run: bun pyodide:fetch
+        run: bun vite build
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
