@@ -496,6 +496,8 @@ except Exception as e:
         r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$"
     )
 
+PASSWORD_VALIDATION_HINT = os.environ.get("PASSWORD_VALIDATION_HINT", "")
+
 
 BYPASS_MODEL_ACCESS_CONTROL = (
     os.environ.get("BYPASS_MODEL_ACCESS_CONTROL", "False").lower() == "true"
@@ -714,7 +716,11 @@ WEBSOCKET_SERVER_LOGGING = (
     os.environ.get("WEBSOCKET_SERVER_LOGGING", "False").lower() == "true"
 )
 WEBSOCKET_SERVER_ENGINEIO_LOGGING = (
-    os.environ.get("WEBSOCKET_SERVER_LOGGING", "False").lower() == "true"
+    os.environ.get(
+        "WEBSOCKET_SERVER_ENGINEIO_LOGGING",
+        os.environ.get("WEBSOCKET_SERVER_LOGGING", "False"),
+    ).lower()
+    == "true"
 )
 WEBSOCKET_SERVER_PING_TIMEOUT = os.environ.get("WEBSOCKET_SERVER_PING_TIMEOUT", "20")
 try:

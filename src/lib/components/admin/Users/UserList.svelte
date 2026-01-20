@@ -98,6 +98,10 @@
 		}
 	};
 
+	$: if (query) {
+		page = 1;
+	}
+
 	$: if (query !== null && page !== null && orderBy !== null && direction !== null) {
 		getUserList();
 	}
