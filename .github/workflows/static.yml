@@ -21,17 +21,6 @@ jobs:
 
       - name: Install Dependencies
         run: bun install
-        # The 'pnpm update' command is usually for updating your lockfile,
-        # typically done locally. 'pnpm install' is for CI.
-
-      - name: Fix missing Dependencies
-        run: |
-          bun add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
-          bun add onnxruntime-web
-          bun add lowlight
-          bun add @floating-ui/utils
-          bun add y-protocols
-        # Consider if these need --save-dev or just --save depending on their usage
 
       - name: Cache node modules
         uses: actions/cache@v4
@@ -74,14 +63,6 @@ jobs:
       - name: Install Dependencies
         run: bun install
 
-      - name: Fix missing Dependencies
-        run: |
-          bun add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
-          bun add onnxruntime-web
-          bun add lowlight
-          bun add @floating-ui/utils
-          bun add y-protocols
-
       - name: Cache build artifacts
         uses: actions/cache@v4
         with:
@@ -92,11 +73,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-build-
 
+      - name: prepare pyodide
+        env:
+          APP_BUILD_HASH: ${{ github.sha }}
+          VITE_BUILD_TIME: ${{ github.event.head_commit.timestamp }}
+        run: bun pyodide:fetch
+
       - name: Build Frontend
         env:
           APP_BUILD_HASH: ${{ github.sha }}
           VITE_BUILD_TIME: ${{ github.event.head_commit.timestamp }}
-        run: bun run build
+        run: bun pyodide:fetch
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -130,14 +117,6 @@ jobs:
 
       - name: Install Dependencies
         run: bun install
-
-      - name: Fix missing Dependencies
-        run: |
-          bun add @codemirror/view @codemirror/state @codemirror/autocomplete @codemirror/commands @codemirror/language @codemirror/closebrackets
-          bun add onnxruntime-web
-          bun add lowlight
-          bun add @floating-ui/utils
-          bun add y-protocols
 
       - name: Cache build artifacts
         uses: actions/cache@v4
