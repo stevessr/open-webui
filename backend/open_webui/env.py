@@ -182,6 +182,8 @@ ENABLE_STAR_SESSIONS_MIDDLEWARE = (
     os.environ.get("ENABLE_STAR_SESSIONS_MIDDLEWARE", "False").lower() == "true"
 )
 
+ENABLE_EASTER_EGGS = os.environ.get("ENABLE_EASTER_EGGS", "True").lower() == "true"
+
 ####################################
 # WEBUI_BUILD_HASH
 ####################################
@@ -560,6 +562,12 @@ OAUTH_CLIENT_INFO_ENCRYPTION_KEY = os.environ.get(
 
 OAUTH_SESSION_TOKEN_ENCRYPTION_KEY = os.environ.get(
     "OAUTH_SESSION_TOKEN_ENCRYPTION_KEY", WEBUI_SECRET_KEY
+)
+
+# Token Exchange Configuration
+# Allows external apps to exchange OAuth tokens for OpenWebUI tokens
+ENABLE_OAUTH_TOKEN_EXCHANGE = (
+    os.environ.get("ENABLE_OAUTH_TOKEN_EXCHANGE", "False").lower() == "true"
 )
 
 ####################################

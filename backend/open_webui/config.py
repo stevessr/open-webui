@@ -257,7 +257,7 @@ class AppConfig:
             self._state[key].value = value
             self._state[key].save()
 
-            if self._redis:
+            if self._redis and ENABLE_PERSISTENT_CONFIG:
                 redis_key = f"{self._redis_key_prefix}:config:{key}"
                 self._redis.set(redis_key, json.dumps(self._state[key].value))
 
@@ -265,8 +265,8 @@ class AppConfig:
         if key not in self._state:
             raise AttributeError(f"Config key '{key}' not found")
 
-        # If Redis is available, check for an updated value
-        if self._redis:
+        # If Redis is available and persistent config is enabled, check for an updated value
+        if self._redis and ENABLE_PERSISTENT_CONFIG:
             redis_key = f"{self._redis_key_prefix}:config:{key}"
             redis_value = self._redis.get(redis_key)
 
@@ -2941,6 +2941,12 @@ PDF_EXTRACT_IMAGES = PersistentConfig(
     "PDF_EXTRACT_IMAGES",
     "rag.pdf_extract_images",
     os.environ.get("PDF_EXTRACT_IMAGES", "False").lower() == "true",
+)
+
+PDF_LOADER_MODE = PersistentConfig(
+    "PDF_LOADER_MODE",
+    "rag.pdf_loader_mode",
+    os.environ.get("PDF_LOADER_MODE", "page"),
 )
 
 RAG_EMBEDDING_MODEL = PersistentConfig(

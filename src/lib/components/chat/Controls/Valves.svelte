@@ -163,11 +163,15 @@
 						<Select
 							className="w-full rounded-sm text-xs bg-transparent outline-hidden"
 							bind:value={selectedId}
+							on:change={async () => {
+								await tick();
+							}}
 							items={tab === 'tools'
 								? [
 										{ value: '', label: $i18n.t('Select a tool'), disabled: true },
 										...$tools
 											.filter((tool) => !tool?.id?.startsWith('server:'))
+											.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
 											.map((tool) => ({
 												value: tool.id,
 												label: tool.name
@@ -175,10 +179,12 @@
 									]
 								: [
 										{ value: '', label: $i18n.t('Select a function'), disabled: true },
-										...$functions.map((func) => ({
-											value: func.id,
-											label: func.name
-										}))
+										...$functions
+											.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+											.map((func) => ({
+												value: func.id,
+												label: func.name
+											}))
 									]}
 						/>
 					</div>
