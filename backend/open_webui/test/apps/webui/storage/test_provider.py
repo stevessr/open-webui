@@ -25,6 +25,7 @@ def test_imports():
     provider.S3StorageProvider
     provider.GCSStorageProvider
     provider.AzureStorageProvider
+    provider.CloudFlareImgBedStorageProvider
     provider.Storage
 
 
@@ -54,6 +55,22 @@ def test_class_instantiation():
     provider.S3StorageProvider()
     provider.GCSStorageProvider()
     provider.AzureStorageProvider()
+    # CloudFlareImgBedStorageProvider requires CLOUDFLARE_IMGBED_URL to be set
+    # so we test it separately below
+
+
+def test_cloudflare_imgbed_instantiation(monkeypatch):
+    # Test that CloudFlareImgBedStorageProvider requires URL
+    monkeypatch.setattr(provider, "CLOUDFLARE_IMGBED_URL", None)
+    with pytest.raises(RuntimeError):
+        provider.CloudFlareImgBedStorageProvider()
+
+    # Test successful instantiation
+    monkeypatch.setattr(provider, "CLOUDFLARE_IMGBED_URL", "https://example.com")
+    monkeypatch.setattr(provider, "CLOUDFLARE_IMGBED_API_KEY", "test-key")
+    storage = provider.CloudFlareImgBedStorageProvider()
+    assert storage.base_url == "https://example.com"
+    assert storage.api_key == "test-key"
 
 
 class TestLocalStorageProvider:
