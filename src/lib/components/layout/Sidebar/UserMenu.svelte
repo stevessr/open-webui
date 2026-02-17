@@ -85,6 +85,7 @@
 
 	<slot name="content">
 		<DropdownMenu.Content
+			id="user-menu"
 			class="w-full {className}  rounded-2xl px-1 py-1  border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg text-sm"
 			sideOffset={4}
 			side="top"
@@ -110,9 +111,6 @@
 							{#if $user?.is_active ?? true}
 								<div>
 									<span class="relative flex size-2">
-										<span
-											class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"
-										/>
 										<span class="relative inline-flex rounded-full size-2 bg-green-500" />
 									</span>
 								</div>
@@ -371,9 +369,6 @@
 						>
 							<div class=" flex items-center">
 								<span class="relative flex size-2">
-									<span
-										class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"
-									/>
 									<span class="relative inline-flex rounded-full size-2 bg-green-500" />
 								</span>
 							</div>

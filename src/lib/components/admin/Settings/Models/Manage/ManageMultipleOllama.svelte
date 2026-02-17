@@ -20,5 +20,7 @@
 		/>
 	</div>
 
-	<ManageOllama urlIdx={selectedUrlIdx} />
+	<div>
+		<ManageOllama urlIdx={selectedUrlIdx} />
+	</div>
 {/if}

@@ -6,6 +6,7 @@ from open_webui.utils.misc import (
 )
 
 from typing import Callable, Optional
+import copy
 import json
 
 
@@ -276,6 +277,112 @@ def convert_messages_openai_to_ollama(messages: list[dict]) -> list[dict]:
     return ollama_messages
 
 
+def _extract_openai_function_specs(tools: list[dict]) -> list[dict]:
+    function_specs = []
+    for tool in tools or []:
+        if isinstance(tool, dict) and "function" in tool:
+            spec = tool.get("function", {})
+            if spec:
+                function_specs.append(spec)
+        elif isinstance(tool, dict) and "name" in tool and "parameters" in tool:
+            function_specs.append(tool)
+    return function_specs
+
+
+def convert_openai_tools_to_anthropic(tools: list[dict]) -> list[dict]:
+    if not tools:
+        return []
+
+    # If already Anthropic format, return as-is
+    if any(isinstance(tool, dict) and "input_schema" in tool for tool in tools):
+        return tools
+
+    function_specs = _extract_openai_function_specs(tools)
+    converted = []
+    for spec in function_specs:
+        converted.append(
+            {
+                "name": spec.get("name", ""),
+                "description": spec.get("description", ""),
+                "input_schema": spec.get("parameters", {}) or {},
+            }
+        )
+    return converted
+
+
+def convert_openai_tool_choice_to_anthropic(tool_choice):
+    if not tool_choice:
+        return None
+
+    if isinstance(tool_choice, str):
+        if tool_choice in ("auto", "any", "none"):
+            return {"type": tool_choice}
+        return None
+
+    if isinstance(tool_choice, dict):
+        if tool_choice.get("type") == "tool" and tool_choice.get("name"):
+            return tool_choice
+        if tool_choice.get("type") == "function":
+            name = tool_choice.get("function", {}).get("name")
+            if name:
+                return {"type": "tool", "name": name}
+    return None
+
+
+def convert_openai_tools_to_gemini(tools: list[dict]) -> list[dict]:
+    if not tools:
+        return []
+
+    # If already Gemini format, return as-is
+    if any(isinstance(tool, dict) and "function_declarations" in tool for tool in tools):
+        return tools
+
+    function_specs = _extract_openai_function_specs(tools)
+    if not function_specs:
+        return []
+
+    return [
+        {
+            "function_declarations": [
+                {
+                    "name": spec.get("name", ""),
+                    "description": spec.get("description", ""),
+                    "parameters": spec.get("parameters", {}) or {},
+                }
+                for spec in function_specs
+            ]
+        }
+    ]
+
+
+def convert_openai_tool_choice_to_gemini(tool_choice):
+    if not tool_choice:
+        return None
+
+    if isinstance(tool_choice, str):
+        if tool_choice == "auto":
+            mode = "AUTO"
+        elif tool_choice == "none":
+            mode = "NONE"
+        elif tool_choice == "any":
+            mode = "ANY"
+        else:
+            return None
+        return {"function_calling_config": {"mode": mode}}
+
+    if isinstance(tool_choice, dict):
+        if tool_choice.get("type") == "function":
+            name = tool_choice.get("function", {}).get("name")
+            if name:
+                return {
+                    "function_calling_config": {
+                        "mode": "ANY",
+                        "allowed_function_names": [name],
+                    }
+                }
+    return None
+
+
 def convert_payload_openai_to_ollama(openai_payload: dict) -> dict:
     """
     Converts a payload formatted for OpenAI's API to be compatible with Ollama's API endpoint for chat completions.
@@ -286,6 +393,13 @@ def convert_payload_openai_to_ollama(openai_payload: dict) -> dict:
     Returns:
         dict: A modified payload compatible with the Ollama API.
     """
+    # Shallow copy metadata separately (may contain non-picklable objects)
+    metadata = openai_payload.get("metadata")
+    openai_payload = copy.deepcopy(
+        {k: v for k, v in openai_payload.items() if k != "metadata"}
+    )
+    if metadata is not None:
+        openai_payload["metadata"] = dict(metadata)
     ollama_payload = {}
 
     # Mapping basic model and message details
@@ -385,6 +499,32 @@ def convert_embedding_payload_openai_to_ollama(openai_payload: dict) -> dict:
 
     # Optionally forward other fields if present
     for optional_key in ("options", "truncate", "keep_alive"):
+        if optional_key in openai_payload:
+            ollama_payload[optional_key] = openai_payload[optional_key]
+
+    return ollama_payload
+
+
+def convert_embed_payload_openai_to_ollama(openai_payload: dict) -> dict:
+    """
+    Convert an embeddings request payload from OpenAI format to Ollama's
+    /api/embed format, which supports batch input natively.
+
+    Args:
+        openai_payload (dict): The original payload designed for OpenAI API usage.
+            Expected keys: "model", "input" (str or list[str]).
+
+    Returns:
+        dict: A payload compatible with the Ollama /api/embed endpoint.
+    """
+    ollama_payload = {"model": openai_payload.get("model")}
+    input_value = openai_payload.get("input")
+
+    # /api/embed accepts 'input' as a string or list of strings directly
+    ollama_payload["input"] = input_value
+
+    # Optionally forward other fields if present
+    for optional_key in ("truncate", "options", "keep_alive"):
         if optional_key in openai_payload:
             ollama_payload[optional_key] = openai_payload[optional_key]
 
