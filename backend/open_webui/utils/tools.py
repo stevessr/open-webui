@@ -38,6 +38,7 @@ from open_webui.utils.misc import is_string_allowed
 from open_webui.models.tools import Tools
 from open_webui.models.users import UserModel
 from open_webui.models.groups import Groups
+from open_webui.models.access_grants import AccessGrants
 from open_webui.utils.plugin import load_tool_module_by_id
 from open_webui.utils.access_control import has_access
 from open_webui.config import BYPASS_ADMIN_ACCESS_CONTROL
@@ -47,6 +48,7 @@ from open_webui.env import (
     AIOHTTP_CLIENT_SESSION_TOOL_SERVER_SSL,
     ENABLE_FORWARD_USER_INFO_HEADERS,
     FORWARD_SESSION_INFO_HEADER_CHAT_ID,
+    FORWARD_SESSION_INFO_HEADER_MESSAGE_ID,
 )
 from open_webui.utils.headers import include_user_info_headers
 from open_webui.tools.builtin import (
@@ -76,6 +78,7 @@ from open_webui.tools.builtin import (
     search_knowledge_files,
     query_knowledge_files,
     view_knowledge_file,
+    view_skill,
 )
 
 import copy
@@ -148,8 +151,9 @@ def has_tool_server_access(
     if user_group_ids is None:
         user_group_ids = {group.id for group in Groups.get_groups_by_member_id(user.id)}
 
-    access_control = server_connection.get("config", {}).get("access_control", None)
-    return has_access(user.id, "read", access_control, user_group_ids)
+    server_config = server_connection.get("config", {})
+    access_grants = server_config.get("access_grants", [])
+    return has_access(user.id, "read", access_grants, user_group_ids)
 
 
 async def get_tools(
@@ -168,7 +172,13 @@ async def get_tools(
             if (
                 not (user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL)
                 and tool.user_id != user.id
-                and not has_access(user.id, "read", tool.access_control, user_group_ids)
+                and not AccessGrants.has_access(
+                    user_id=user.id,
+                    resource_type="tool",
+                    resource_id=tool.id,
+                    permission="read",
+                    user_group_ids=user_group_ids,
+                )
             ):
                 log.warning(f"Access denied to tool {tool_id} for user {user.id}")
                 continue
@@ -343,7 +353,13 @@ async def get_tools(
                             headers = include_user_info_headers(headers, user)
                             metadata = extra_params.get("__metadata__", {})
                             if metadata and metadata.get("chat_id"):
-                                headers[FORWARD_SESSION_INFO_HEADER_CHAT_ID] = metadata.get("chat_id")
+                                headers[FORWARD_SESSION_INFO_HEADER_CHAT_ID] = (
+                                    metadata.get("chat_id")
+                                )
+                            if metadata and metadata.get("message_id"):
+                                headers[FORWARD_SESSION_INFO_HEADER_MESSAGE_ID] = (
+                                    metadata.get("message_id")
+                                )
 
                         def make_tool_function(
                             function_name, tool_server_data, headers
@@ -407,9 +423,8 @@ def get_builtin_tools(
 
     # Helper to get model capabilities (defaults to True if not specified)
     def get_model_capability(name: str, default: bool = True) -> bool:
-        return (
-            (model.get("info", {}).get("meta", {}).get("capabilities") or {})
-            .get(name, default)
+        return (model.get("info", {}).get("meta", {}).get("capabilities") or {}).get(
+            name, default
         )
 
     # Helper to check if a builtin tool category is enabled via meta.builtinTools
@@ -456,6 +471,7 @@ def get_builtin_tools(
         is_builtin_tool_enabled("web_search")
         and getattr(request.app.state.config, "ENABLE_WEB_SEARCH", False)
         and get_model_capability("web_search")
+        and features.get("web_search")
     ):
         builtin_functions.extend([search_web, fetch_url])
 
@@ -464,12 +480,14 @@ def get_builtin_tools(
         is_builtin_tool_enabled("image_generation")
         and getattr(request.app.state.config, "ENABLE_IMAGE_GENERATION", False)
         and get_model_capability("image_generation")
+        and features.get("image_generation")
     ):
         builtin_functions.append(generate_image)
     if (
         is_builtin_tool_enabled("image_generation")
         and getattr(request.app.state.config, "ENABLE_IMAGE_EDIT", False)
         and get_model_capability("image_generation")
+        and features.get("image_generation")
     ):
         builtin_functions.append(edit_image)
 
@@ -478,17 +496,22 @@ def get_builtin_tools(
         is_builtin_tool_enabled("code_interpreter")
         and getattr(request.app.state.config, "ENABLE_CODE_INTERPRETER", True)
         and get_model_capability("code_interpreter")
+        and features.get("code_interpreter")
     ):
         builtin_functions.append(execute_code)
 
     # Notes tools - search, view, create, and update user's notes (if builtin category enabled AND notes enabled globally)
-    if is_builtin_tool_enabled("notes") and getattr(request.app.state.config, "ENABLE_NOTES", False):
+    if is_builtin_tool_enabled("notes") and getattr(
+        request.app.state.config, "ENABLE_NOTES", False
+    ):
         builtin_functions.extend(
             [search_notes, view_note, write_note, replace_note_content]
         )
 
     # Channels tools - search channels and messages (if builtin category enabled AND channels enabled globally)
-    if is_builtin_tool_enabled("channels") and getattr(request.app.state.config, "ENABLE_CHANNELS", False):
+    if is_builtin_tool_enabled("channels") and getattr(
+        request.app.state.config, "ENABLE_CHANNELS", False
+    ):
         builtin_functions.extend(
             [
                 search_channels,
@@ -497,6 +520,10 @@ def get_builtin_tools(
                 view_channel_message,
             ]
         )
+
+    # Skills tools - view_skill allows model to load full skill instructions on demand
+    if extra_params.get("__skill_ids__"):
+        builtin_functions.append(view_skill)
 
     for func in builtin_functions:
         callable = get_async_tool_function_and_apply_extra_params(
